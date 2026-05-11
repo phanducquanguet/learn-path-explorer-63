@@ -373,10 +373,14 @@ function CoursePage() {
           )}
           {tab === "members" && <MembersView course={course} hideScores />}
           {tab === "scores" && <ScoresView course={course} hue={level.hue} />}
-          {tab === "activities" && <ActivitiesView course={course} hue={level.hue} />}
+          {tab === "activities" && (
+            <ActivitiesView course={course} hue={level.hue} onQuizClick={setQuizOpen} />
+          )}
           {tab === "competence" && <CompetenceView />}
         </main>
       </div>
+
+      <QuizDialog quiz={quizOpen} hue={level.hue} onClose={() => setQuizOpen(null)} />
     </div>
   );
 }
