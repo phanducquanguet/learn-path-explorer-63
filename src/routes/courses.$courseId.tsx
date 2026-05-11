@@ -61,6 +61,7 @@ function CoursePage() {
   const [activeUnitId, setActiveUnitId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("overview");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [quizOpen, setQuizOpen] = useState<Activity | null>(null);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     intro: true,
     [course.units[0].id]: true,
@@ -216,7 +217,11 @@ function CoursePage() {
                         active={activeUnitId === u.id + ":" + a.id}
                         onClick={() => {
                           setActiveUnitId(u.id);
-                          setTab("overview");
+                          if (a.type === "quiz") {
+                            setQuizOpen(a);
+                          } else {
+                            setTab("overview");
+                          }
                         }}
                       />
                     ))}
@@ -368,10 +373,14 @@ function CoursePage() {
           )}
           {tab === "members" && <MembersView course={course} hideScores />}
           {tab === "scores" && <ScoresView course={course} hue={level.hue} />}
-          {tab === "activities" && <ActivitiesView course={course} hue={level.hue} />}
+          {tab === "activities" && (
+            <ActivitiesView course={course} hue={level.hue} onQuizClick={setQuizOpen} />
+          )}
           {tab === "competence" && <CompetenceView />}
         </main>
       </div>
+
+      <QuizDialog quiz={quizOpen} hue={level.hue} onClose={() => setQuizOpen(null)} />
     </div>
   );
 }
@@ -654,6 +663,7 @@ function IntroCard({
 function ActivitiesView({
   course,
   hue,
+  onQuizClick,
 }: {
   course: ReturnType<typeof getCourse> extends infer T
     ? T extends { course: infer C }
@@ -661,6 +671,7 @@ function ActivitiesView({
       : never
     : never;
   hue: number;
+  onQuizClick: (a: Activity) => void;
 }) {
   return (
     <div className="space-y-5">
@@ -679,35 +690,265 @@ function ActivitiesView({
             </div>
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
-            {u.activities.map((a) => (
-              <div
-                key={a.id}
-                className="flex items-center gap-3 rounded-2xl bg-surface-2 p-3 ring-1 ring-border/60"
-              >
-                <div
+            {u.activities.map((a) => {
+              const isQuiz = a.type === "quiz";
+              const Wrapper: any = isQuiz ? "button" : "div";
+              return (
+                <Wrapper
+                  key={a.id}
+                  onClick={isQuiz ? () => onQuizClick(a) : undefined}
                   className={cn(
-                    "flex h-9 w-9 items-center justify-center rounded-xl",
-                    a.done ? "bg-success/15 text-success-foreground" : "bg-primary/10 text-primary",
+                    "flex items-center gap-3 rounded-2xl bg-surface-2 p-3 text-left ring-1 ring-border/60 transition",
+                    isQuiz && "hover:bg-primary/5 hover:ring-primary/40 cursor-pointer",
                   )}
                 >
-                  {activityIcon(a.type)}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium text-foreground">{a.title}</div>
-                  <div className="text-[11px] text-muted-foreground">
-                    {labelType(a.type)} • {a.duration} phút
+                  <div
+                    className={cn(
+                      "flex h-9 w-9 items-center justify-center rounded-xl",
+                      a.done ? "bg-success/15 text-success-foreground" : "bg-primary/10 text-primary",
+                    )}
+                  >
+                    {activityIcon(a.type)}
                   </div>
-                </div>
-                {a.done ? (
-                  <CheckCircle2 className="h-4 w-4 text-success-foreground" />
-                ) : (
-                  <Circle className="h-4 w-4 text-muted-foreground" />
-                )}
-              </div>
-            ))}
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-foreground">{a.title}</div>
+                    <div className="text-[11px] text-muted-foreground">
+                      {labelType(a.type)} • {a.duration} phút
+                      {isQuiz && " • Không giới hạn lượt"}
+                    </div>
+                  </div>
+                  {isQuiz ? (
+                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
+                      Làm bài
+                    </span>
+                  ) : a.done ? (
+                    <CheckCircle2 className="h-4 w-4 text-success-foreground" />
+                  ) : (
+                    <Circle className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Wrapper>
+              );
+            })}
           </div>
         </div>
       ))}
+    </div>
+  );
+}
+
+/* =========== Quiz Dialog =========== */
+
+type QuizAttempt = { id: number; date: string; score: number; durationMin: number };
+
+function buildAttempts(quizId: string): QuizAttempt[] {
+  // deterministic mock attempts based on quiz id
+  let h = 0;
+  for (let i = 0; i < quizId.length; i++) h = (h * 31 + quizId.charCodeAt(i)) >>> 0;
+  const count = h % 4; // 0..3 attempts done
+  const baseDate = new Date("2026-04-15");
+  return Array.from({ length: count }).map((_, i) => {
+    const score = 55 + ((h >> (i * 3)) % 40);
+    const d = new Date(baseDate);
+    d.setDate(baseDate.getDate() + i * 3);
+    return {
+      id: i + 1,
+      date: d.toLocaleDateString("vi-VN"),
+      score,
+      durationMin: 6 + ((h >> (i * 2)) % 7),
+    };
+  });
+}
+
+function QuizDialog({
+  quiz,
+  hue,
+  onClose,
+}: {
+  quiz: Activity | null;
+  hue: number;
+  onClose: () => void;
+}) {
+  if (!quiz) return null;
+  const attempts = buildAttempts(quiz.id);
+  const best = attempts.length ? Math.max(...attempts.map((a) => a.score)) : null;
+  const last = attempts.length ? attempts[attempts.length - 1] : null;
+  const passed = best !== null && best >= 70;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4 backdrop-blur-sm animate-fade-in"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-2xl overflow-hidden rounded-[2rem] bg-surface ring-1 ring-border shadow-elevated"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* header */}
+        <div
+          className="relative overflow-hidden p-6 sm:p-7"
+          style={{
+            background: `linear-gradient(135deg, oklch(0.55 0.2 ${hue}), oklch(0.45 0.22 ${(hue + 40) % 360}))`,
+          }}
+        >
+          <div
+            className="absolute -right-20 -top-20 h-56 w-56 rounded-full opacity-40 blur-3xl"
+            style={{ background: `oklch(0.85 0.18 ${(hue + 60) % 360})` }}
+          />
+          <div className="relative">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white ring-1 ring-white/20 backdrop-blur">
+              <ClipboardList className="h-3.5 w-3.5" /> Bài Quiz
+            </div>
+            <h2 className="mt-3 font-display text-2xl font-semibold text-white">{quiz.title}</h2>
+            <p className="mt-1 text-sm text-white/75">
+              Hoàn thành quiz để xác nhận khả năng nắm bắt nội dung của unit.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25"
+            aria-label="Đóng"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* stats */}
+        <div className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-4 sm:p-6">
+          <QuizStat label="Số lần thử" value="∞" hint="Không giới hạn" />
+          <QuizStat label="Cách lấy điểm" value="Cao nhất" hint="Trong các lần làm" />
+          <QuizStat
+            label="Điểm cao nhất"
+            value={best !== null ? `${best}` : "—"}
+            hint={best !== null ? (passed ? "Đã đạt" : "Chưa đạt") : "Chưa có"}
+            tone={best === null ? "muted" : passed ? "success" : "warning"}
+          />
+          <QuizStat
+            label="Lần làm còn lại"
+            value="∞"
+            hint={`Đã làm ${attempts.length} lần`}
+          />
+        </div>
+
+        {/* meta row */}
+        <div className="mx-5 mb-3 flex flex-wrap items-center gap-3 rounded-2xl bg-muted/40 p-3 text-xs text-muted-foreground sm:mx-6">
+          <span className="inline-flex items-center gap-1.5">
+            <Clock className="h-3.5 w-3.5" /> Thời lượng ~ {quiz.duration} phút
+          </span>
+          <span className="text-muted-foreground/40">•</span>
+          <span>Điểm đạt: 70/100</span>
+          <span className="text-muted-foreground/40">•</span>
+          <span>Hiển thị đáp án sau khi nộp</span>
+        </div>
+
+        {/* attempt history */}
+        <div className="px-5 pb-2 sm:px-6">
+          <div className="mb-2 flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-foreground">Lịch sử làm bài</h3>
+            {last && (
+              <span className="text-[11px] text-muted-foreground">
+                Lần gần nhất: {last.date} • {last.score} điểm
+              </span>
+            )}
+          </div>
+          {attempts.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+              Bạn chưa thực hiện lần thử nào. Hãy bắt đầu ngay!
+            </div>
+          ) : (
+            <div className="overflow-hidden rounded-2xl ring-1 ring-border">
+              <table className="w-full text-sm">
+                <thead className="bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
+                  <tr>
+                    <th className="px-3 py-2 text-left font-medium">Lần</th>
+                    <th className="px-3 py-2 text-left font-medium">Ngày</th>
+                    <th className="px-3 py-2 text-left font-medium">Thời gian</th>
+                    <th className="px-3 py-2 text-right font-medium">Điểm</th>
+                    <th className="px-3 py-2 text-right font-medium">Trạng thái</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {attempts.map((a) => {
+                    const isBest = a.score === best;
+                    const ok = a.score >= 70;
+                    return (
+                      <tr key={a.id} className="border-t border-border">
+                        <td className="px-3 py-2 font-medium text-foreground">#{a.id}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{a.date}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{a.durationMin} phút</td>
+                        <td className="px-3 py-2 text-right font-semibold text-foreground">
+                          {a.score}
+                          {isBest && (
+                            <span className="ml-1.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold text-primary">
+                              BEST
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-3 py-2 text-right">
+                          <span
+                            className={cn(
+                              "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                              ok
+                                ? "bg-success/15 text-success-foreground"
+                                : "bg-warning/15 text-warning-foreground",
+                            )}
+                          >
+                            {ok ? "Đạt" : "Chưa đạt"}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* footer actions */}
+        <div className="flex items-center justify-between gap-3 border-t border-border bg-surface-2/50 px-5 py-4 sm:px-6">
+          <div className="text-[11px] text-muted-foreground">
+            Hệ thống ghi nhận điểm <span className="font-semibold text-foreground">cao nhất</span> trong các lần làm bài để tính vào tổng kết.
+          </div>
+          <button
+            onClick={onClose}
+            className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:opacity-95"
+            style={{
+              background: `linear-gradient(135deg, oklch(0.55 0.2 ${hue}), oklch(0.45 0.22 ${(hue + 40) % 360}))`,
+            }}
+          >
+            <Play className="h-4 w-4" />
+            {attempts.length ? "Làm lại bài" : "Bắt đầu làm bài"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function QuizStat({
+  label,
+  value,
+  hint,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  hint?: string;
+  tone?: "default" | "success" | "warning" | "muted";
+}) {
+  const toneClass = {
+    default: "text-foreground",
+    success: "text-success-foreground",
+    warning: "text-warning-foreground",
+    muted: "text-muted-foreground",
+  }[tone];
+  return (
+    <div className="rounded-2xl bg-surface-2 p-3 ring-1 ring-border/60">
+      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className={cn("mt-1 text-2xl font-bold leading-none", toneClass)}>{value}</div>
+      {hint && <div className="mt-1 text-[10px] text-muted-foreground">{hint}</div>}
     </div>
   );
 }
