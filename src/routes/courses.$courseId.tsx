@@ -850,3 +850,282 @@ function ScoreBadge({ score }: { score: number }) {
     </span>
   );
 }
+
+/* =========== Personal Gradebook =========== */
+
+type GradeRow = {
+  id: string;
+  title: string;
+  category: string;
+  weight: number; // percent of total
+  maxScore: number;
+  score: number | null; // null = chưa có điểm
+  passThreshold: number; // percent of max
+};
+
+function buildGradeRows(course: {
+  units: Unit[];
+}): GradeRow[] {
+  const rows: GradeRow[] = [];
+  const unitWeight = 60 / course.units.length; // units chiếm 60%
+  course.units.forEach((u) => {
+    rows.push({
+      id: `${u.id}-quiz`,
+      title: `${u.title} — Quiz`,
+      category: "Unit Quiz",
+      weight: +unitWeight.toFixed(1),
+      maxScore: 100,
+      score: u.score ?? null,
+      passThreshold: 60,
+    });
+  });
+  rows.push({
+    id: "midterm",
+    title: "Bài kiểm tra giữa kỳ",
+    category: "Midterm",
+    weight: 15,
+    maxScore: 100,
+    score: 82,
+    passThreshold: 70,
+  });
+  rows.push({
+    id: "speaking",
+    title: "Đánh giá Speaking",
+    category: "Performance",
+    weight: 10,
+    maxScore: 100,
+    score: 88,
+    passThreshold: 65,
+  });
+  rows.push({
+    id: "final",
+    title: "Bài kiểm tra cuối khoá",
+    category: "Final Exam",
+    weight: 15,
+    maxScore: 100,
+    score: null,
+    passThreshold: 70,
+  });
+  return rows;
+}
+
+function ratingFor(percent: number): { label: string; tone: string } {
+  if (percent >= 90) return { label: "Xuất sắc", tone: "bg-success/15 text-success-foreground" };
+  if (percent >= 80) return { label: "Giỏi", tone: "bg-info/15 text-info-foreground" };
+  if (percent >= 70) return { label: "Khá", tone: "bg-primary/10 text-primary" };
+  if (percent >= 60) return { label: "Trung bình", tone: "bg-warning/15 text-warning-foreground" };
+  return { label: "Chưa đạt", tone: "bg-destructive/15 text-destructive" };
+}
+
+function ScoresView({
+  course,
+  hue,
+}: {
+  course: ReturnType<typeof getCourse> extends infer T
+    ? T extends { course: infer C }
+      ? C
+      : never
+    : never;
+  hue: number;
+}) {
+  const rows = buildGradeRows(course);
+  const totalWeight = rows.reduce((a, r) => a + r.weight, 0);
+  const totalContribution = rows.reduce((a, r) => {
+    if (r.score === null) return a;
+    return a + (r.score / r.maxScore) * r.weight;
+  }, 0);
+  const completedWeight = rows
+    .filter((r) => r.score !== null)
+    .reduce((a, r) => a + r.weight, 0);
+  const currentAvg = completedWeight > 0 ? (totalContribution / completedWeight) * 100 : 0;
+
+  return (
+    <div className="space-y-5">
+      {/* Tổng quan cá nhân */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <SummaryStat
+          label="Tổng điểm hiện tại"
+          value={`${totalContribution.toFixed(1)}`}
+          suffix={`/${totalWeight}`}
+          hue={hue}
+          hint={`Đã hoàn thành ${completedWeight.toFixed(0)}% trọng số`}
+        />
+        <SummaryStat
+          label="Điểm trung bình"
+          value={`${currentAvg.toFixed(1)}`}
+          suffix="/100"
+          hue={(hue + 50) % 360}
+          hint="Tính trên các bài đã có điểm"
+        />
+        <SummaryStat
+          label="Bài đã hoàn thành"
+          value={`${rows.filter((r) => r.score !== null).length}`}
+          suffix={`/${rows.length}`}
+          hue={(hue + 100) % 360}
+          hint={`${rows.filter((r) => r.score === null).length} bài chưa có điểm`}
+        />
+      </div>
+
+      <div className="overflow-hidden rounded-3xl bg-surface ring-1 ring-border shadow-soft">
+        <div className="flex items-center justify-between border-b border-border p-5">
+          <div>
+            <h3 className="text-base font-semibold text-foreground">Bảng điểm cá nhân</h3>
+            <p className="text-xs text-muted-foreground">
+              Chi tiết các bài học có tính điểm trong khoá {course.title}.
+            </p>
+          </div>
+          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+            Tổng trọng số {totalWeight}%
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-surface-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <th className="px-5 py-3">Bài học</th>
+                <th className="px-3 py-3 text-center">Trọng số</th>
+                <th className="px-3 py-3 text-center">Kết quả</th>
+                <th className="px-3 py-3 text-center">Điểm tối đa</th>
+                <th className="px-3 py-3 text-center">Tỷ lệ đạt</th>
+                <th className="px-3 py-3 text-center">Đánh giá</th>
+                <th className="px-5 py-3 text-right">Đóng góp tổng điểm</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => {
+                const hasScore = r.score !== null;
+                const percent = hasScore ? (r.score! / r.maxScore) * 100 : 0;
+                const contribution = hasScore ? (percent / 100) * r.weight : 0;
+                const rating = hasScore ? ratingFor(percent) : null;
+                return (
+                  <tr key={r.id} className="border-t border-border/60 hover:bg-muted/30">
+                    <td className="px-5 py-3">
+                      <div className="font-medium text-foreground">{r.title}</div>
+                      <div className="text-xs text-muted-foreground">{r.category}</div>
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      <span className="inline-flex items-center rounded-lg bg-muted px-2 py-1 text-xs font-semibold text-foreground">
+                        {r.weight}%
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      {hasScore ? (
+                        <ScoreBadge score={r.score!} />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">Chưa có</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-center text-foreground">{r.maxScore}</td>
+                    <td className="px-3 py-3">
+                      {hasScore ? (
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
+                            <div
+                              className="h-full rounded-full"
+                              style={{
+                                width: `${Math.min(100, percent)}%`,
+                                background: `linear-gradient(90deg, oklch(0.6 0.18 ${hue}), oklch(0.7 0.18 ${(hue + 40) % 360}))`,
+                              }}
+                            />
+                          </div>
+                          <span className="text-xs font-semibold text-foreground">
+                            {percent.toFixed(0)}%
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="text-center text-xs text-muted-foreground">—</div>
+                      )}
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      {rating ? (
+                        <span
+                          className={cn(
+                            "inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold",
+                            rating.tone,
+                          )}
+                        >
+                          {rating.label}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="px-5 py-3 text-right">
+                      {hasScore ? (
+                        <div>
+                          <div className="font-semibold text-foreground">
+                            {contribution.toFixed(2)}
+                          </div>
+                          <div className="text-[11px] text-muted-foreground">
+                            / {r.weight} điểm
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-border bg-surface-2">
+                <td className="px-5 py-3 text-sm font-semibold text-foreground" colSpan={6}>
+                  Tổng điểm tích luỹ
+                </td>
+                <td className="px-5 py-3 text-right">
+                  <div className="text-base font-bold text-foreground">
+                    {totalContribution.toFixed(2)}
+                    <span className="text-xs font-normal text-muted-foreground">
+                      {" "}/ {totalWeight}
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SummaryStat({
+  label,
+  value,
+  suffix,
+  hue,
+  hint,
+}: {
+  label: string;
+  value: string;
+  suffix?: string;
+  hue: number;
+  hint?: string;
+}) {
+  return (
+    <div
+      className="relative overflow-hidden rounded-3xl bg-surface p-5 ring-1 ring-border shadow-soft"
+    >
+      <div
+        className="absolute -right-10 -top-10 h-32 w-32 rounded-full opacity-20 blur-2xl"
+        style={{ background: `oklch(0.7 0.2 ${hue})` }}
+      />
+      <div className="relative">
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          {label}
+        </div>
+        <div className="mt-2 flex items-baseline gap-1">
+          <span
+            className="font-display text-3xl font-bold"
+            style={{ color: `oklch(0.45 0.18 ${hue})` }}
+          >
+            {value}
+          </span>
+          {suffix && <span className="text-sm text-muted-foreground">{suffix}</span>}
+        </div>
+        {hint && <div className="mt-1.5 text-xs text-muted-foreground">{hint}</div>}
+      </div>
+    </div>
+  );
+}
