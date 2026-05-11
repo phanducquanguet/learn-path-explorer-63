@@ -367,7 +367,7 @@ function CoursePage() {
             <OverviewView course={course} hue={level.hue} totalMinutes={totalMinutes} activeUnit={activeUnit} />
           )}
           {tab === "members" && <MembersView course={course} hideScores />}
-          {tab === "scores" && <MembersView course={course} />}
+          {tab === "scores" && <ScoresView course={course} hue={level.hue} />}
           {tab === "activities" && <ActivitiesView course={course} hue={level.hue} />}
           {tab === "competence" && <CompetenceView />}
         </main>
