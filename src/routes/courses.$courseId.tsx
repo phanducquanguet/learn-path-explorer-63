@@ -61,6 +61,7 @@ function CoursePage() {
   const [activeUnitId, setActiveUnitId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("overview");
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [quizOpen, setQuizOpen] = useState<Activity | null>(null);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     intro: true,
     [course.units[0].id]: true,
