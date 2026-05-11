@@ -217,7 +217,11 @@ function CoursePage() {
                         active={activeUnitId === u.id + ":" + a.id}
                         onClick={() => {
                           setActiveUnitId(u.id);
-                          setTab("overview");
+                          if (a.type === "quiz") {
+                            setQuizOpen(a);
+                          } else {
+                            setTab("overview");
+                          }
                         }}
                       />
                     ))}
