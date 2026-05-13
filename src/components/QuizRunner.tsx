@@ -1320,8 +1320,6 @@ function CorrectAnswerHint({ q }: { q: Question }) {
       return <span>Correct order: {q.items.join(" → ")}</span>;
     case "gapmulti":
       return <span>Correct answers: {q.blanks.map((b) => b.options[b.answer]).join(" / ")}</span>;
-    case "essay":
-      return <span>Graded by minimum word count ({q.minWords}) and content quality.</span>;
     case "audio":
       return <span>Pronunciation will be reviewed by your teacher.</span>;
   }
