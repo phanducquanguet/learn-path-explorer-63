@@ -643,8 +643,6 @@ function QuestionBody({
       return <MultiBody q={q} value={(value as number[]) || []} onChange={onChange} locked={locked} />;
     case "fill":
       return <FillBody q={q} value={(value as string[]) || []} onChange={onChange} locked={locked} accent={accent} />;
-    case "essay":
-      return <EssayBody q={q} value={(value as string) || ""} onChange={onChange} locked={locked} accent={accent} />;
     case "match":
       return <MatchBody q={q} value={value as (number | null)[] | undefined} onChange={onChange} locked={locked} />;
     case "rewrite":
