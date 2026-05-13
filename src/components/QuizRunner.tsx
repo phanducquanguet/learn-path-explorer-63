@@ -336,26 +336,18 @@ export function QuizRunner({
   }
 
   return (
-    <div className="space-y-4">
-      {/* status bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface p-3 ring-1 ring-border">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onExit}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <X className="h-3.5 w-3.5" /> Exit
-          </button>
-          <div className="hidden text-xs text-muted-foreground sm:block">
-            Question <span className="font-semibold text-foreground">{q.index}</span> of {questions.length}
-          </div>
+    <div className="space-y-5">
+      {/* Total score bar */}
+      <div className="flex items-center justify-between gap-3 rounded-2xl bg-surface p-3 ring-1 ring-border">
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Total score
         </div>
-        <div className="flex items-center gap-2">
-          <div className="rounded-full bg-muted/60 px-3 py-1 text-xs font-semibold text-foreground">
-            {submittedCount}/{questions.length} submitted
+        <div className="flex items-center gap-3">
+          <div className="text-[11px] text-muted-foreground">
+            {submittedCount}/{questions.length} answered
           </div>
           <div
-            className="rounded-full px-3 py-1 text-xs font-bold text-white"
+            className="rounded-full px-4 py-1.5 text-sm font-bold text-white shadow-soft"
             style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
           >
             {totalEarned}/{totalMax} pts
@@ -363,26 +355,43 @@ export function QuizRunner({
         </div>
       </div>
 
-      {/* progress dots */}
-      <div className="flex flex-wrap items-center gap-1.5">
+      {/* Question pills */}
+      <div className="flex flex-wrap items-center gap-2">
         {questions.map((qq, i) => {
           const r = results[qq.id];
           const active = i === idx;
+          const done = Boolean(r);
           return (
             <button
               key={qq.id}
               onClick={() => setIdx(i)}
-              className={cn(
-                "inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-[11px] font-semibold ring-1 transition",
-                active ? "ring-2 ring-foreground" : "ring-border hover:bg-muted",
-                r?.status === "correct" && "bg-success/15 text-success-foreground",
-                r?.status === "partial" && "bg-warning/15 text-warning-foreground",
-                r?.status === "incorrect" && "bg-destructive/10 text-destructive",
-                !r && !active && "bg-surface text-muted-foreground",
-              )}
               title={`Question ${qq.index}`}
+              className={cn(
+                "group relative inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-xl px-2.5 text-xs font-bold transition",
+                // base — not started
+                !done && !active &&
+                  "bg-surface text-muted-foreground ring-1 ring-border hover:bg-muted hover:text-foreground",
+                // current
+                active && !done &&
+                  "bg-foreground text-background shadow-elevated scale-105",
+                active && done &&
+                  "scale-105 shadow-elevated ring-2 ring-foreground",
+                // done states
+                done && r?.status === "correct" && "bg-success/20 text-success-foreground",
+                done && r?.status === "partial" && "bg-warning/25 text-warning-foreground",
+                done && r?.status === "incorrect" && "bg-destructive/15 text-destructive",
+              )}
             >
-              {qq.index}
+              {done && r?.status === "correct" && <Check className="h-3 w-3" />}
+              {done && r?.status === "incorrect" && <X className="h-3 w-3" />}
+              {done && r?.status === "partial" && <Sparkles className="h-3 w-3" />}
+              <span>{qq.index}</span>
+              {active && (
+                <span
+                  className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full"
+                  style={{ background: accent }}
+                />
+              )}
             </button>
           );
         })}
@@ -390,16 +399,13 @@ export function QuizRunner({
 
       {/* question card */}
       <div className="rounded-3xl bg-surface p-5 ring-1 ring-border sm:p-7">
-        <div className="mb-5 flex items-start justify-between gap-3">
-          <div>
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Question {q.index} • {kindLabel(q.kind)}
-            </div>
-            <h3 className="mt-1 font-display text-lg font-semibold leading-snug text-foreground">
-              {renderPromptHead(q.prompt)}
-            </h3>
+        <div className="mb-5">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Question {q.index} • {kindLabel(q.kind)}
           </div>
-          <ScoreBadge max={q.maxScore} earned={result?.earned} accent={accent} />
+          <h3 className="mt-1 font-display text-lg font-semibold leading-snug text-foreground">
+            {renderPromptHead(q.prompt)}
+          </h3>
         </div>
 
         <QuestionBody
@@ -416,11 +422,10 @@ export function QuizRunner({
       {/* footer */}
       <div className="flex items-center justify-between gap-3">
         <button
-          onClick={prev}
-          disabled={idx === 0}
-          className="inline-flex items-center gap-2 rounded-xl bg-surface px-4 py-2.5 text-sm font-medium text-foreground ring-1 ring-border hover:bg-muted disabled:opacity-40"
+          onClick={onExit}
+          className="inline-flex items-center gap-2 rounded-xl bg-surface px-4 py-2.5 text-sm font-medium text-muted-foreground ring-1 ring-border hover:bg-muted hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" /> Previous
+          <ArrowLeft className="h-4 w-4" /> Back to course
         </button>
         {!result ? (
           <button
