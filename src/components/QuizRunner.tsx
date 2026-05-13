@@ -265,7 +265,7 @@ export function QuizRunner({
     setResults((p) => ({ ...p, [q.id]: grade(q, answers[q.id]) }));
   const next = () =>
     idx < questions.length - 1 ? setIdx(idx + 1) : setPhase("summary");
-  const prev = () => idx > 0 && setIdx(idx - 1);
+  
   const reset = () => {
     setAnswers({});
     setResults({});
