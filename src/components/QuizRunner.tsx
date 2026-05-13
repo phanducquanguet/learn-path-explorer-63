@@ -1201,13 +1201,14 @@ function GapMultiBody({
  * Review card
  * ============================================================ */
 function ReviewCard({
-  q, answer, result, accent,
+  q, answer, result,
 }: {
   q: Question;
   answer: AnswerState;
   result?: Result;
   accent: string;
 }) {
+  void answer;
   const status = result?.status;
   return (
     <div className="rounded-2xl bg-surface p-5 ring-1 ring-border">
@@ -1220,30 +1221,22 @@ function ReviewCard({
             {renderPromptHead(q.prompt)}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {status ? (
-            <span
-              className={cn(
-                "rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                status === "correct" && "bg-success/15 text-success-foreground",
-                status === "partial" && "bg-warning/15 text-warning-foreground",
-                status === "incorrect" && "bg-destructive/10 text-destructive",
-              )}
-            >
-              {FEEDBACK[status].label}
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
-              <CircleDashed className="h-3 w-3" /> Not attempted
-            </span>
-          )}
+        {status ? (
           <span
-            className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
-            style={{ background: accent }}
+            className={cn(
+              "shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold",
+              status === "correct" && "bg-success/15 text-success-foreground",
+              status === "partial" && "bg-warning/15 text-warning-foreground",
+              status === "incorrect" && "bg-destructive/10 text-destructive",
+            )}
           >
-            {result?.earned ?? 0}/{q.maxScore}
+            {FEEDBACK[status].label}
           </span>
-        </div>
+        ) : (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+            <CircleDashed className="h-3 w-3" /> Not attempted
+          </span>
+        )}
       </div>
       <div className="mt-3 text-xs text-muted-foreground">
         <CorrectAnswerHint q={q} />
@@ -1251,7 +1244,6 @@ function ReviewCard({
     </div>
   );
 }
-
 function CorrectAnswerHint({ q }: { q: Question }) {
   switch (q.kind) {
     case "single":
