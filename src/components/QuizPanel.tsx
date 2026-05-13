@@ -31,7 +31,7 @@ export function QuizPanel({
         onClick={onClose}
         className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="h-3.5 w-3.5" /> Back to course
+        <ArrowLeft className="h-3.5 w-3.5" /> Quay lại khóa học
       </button>
 
       {/* Hero card */}
@@ -46,26 +46,26 @@ export function QuizPanel({
           />
           <div className="relative text-background">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider ring-1 ring-white/20 backdrop-blur">
-              <ClipboardList className="h-3.5 w-3.5" /> Practice quiz
+              <ClipboardList className="h-3.5 w-3.5" /> Bài luyện tập
             </div>
             <h1 className="mt-4 font-display text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
               {quiz.title}
             </h1>
             <p className="mt-2 max-w-xl text-sm text-background/70 sm:text-base">
-              Submit each question one by one and receive instant feedback. Your highest score
-              counts toward the course total.
+              Nộp từng câu hỏi một và nhận phản hồi ngay lập tức. Điểm cao nhất sẽ được tính vào
+              tổng điểm khóa học.
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
-              <Pill icon={<Clock className="h-3.5 w-3.5" />}>~{quiz.duration} min</Pill>
-              <Pill icon={<ClipboardList className="h-3.5 w-3.5" />}>10 questions</Pill>
-              <Pill icon={<Sparkles className="h-3.5 w-3.5" />}>Unlimited attempts</Pill>
+              <Pill icon={<Clock className="h-3.5 w-3.5" />}>~{quiz.duration} phút</Pill>
+              <Pill icon={<ClipboardList className="h-3.5 w-3.5" />}>10 câu hỏi</Pill>
+              <Pill icon={<Sparkles className="h-3.5 w-3.5" />}>Không giới hạn lượt</Pill>
             </div>
             <div className="mt-6">
               <button
                 onClick={() => setStarted(true)}
                 className="group inline-flex items-center gap-2 rounded-2xl bg-background px-5 py-3 text-sm font-semibold text-foreground shadow-elevated transition hover:scale-[1.02]"
               >
-                <Play className="h-4 w-4 fill-foreground" /> Start quiz
+                <Play className="h-4 w-4 fill-foreground" /> Bắt đầu làm bài
               </button>
             </div>
           </div>
@@ -74,34 +74,33 @@ export function QuizPanel({
 
       {/* Info grid */}
       <div className="grid gap-3 sm:grid-cols-4">
-        <Info label="Attempts" value="∞" hint="Unlimited" />
-        <Info label="Scoring policy" value="Highest" hint="Across attempts" />
-        <Info label="Pass mark" value="70%" hint="Required to pass" />
-        <Info label="Question types" value="10" hint="Mixed formats" />
+        <Info label="Số lần thử" value="∞" hint="Không giới hạn" />
+        <Info label="Cách tính điểm" value="Cao nhất" hint="Trong các lần thử" />
+        <Info label="Điểm đạt" value="70%" hint="Yêu cầu để qua bài" />
+        <Info label="Dạng câu hỏi" value="10" hint="Đa dạng định dạng" />
       </div>
 
       {/* Instructions */}
       <div className="rounded-2xl bg-surface p-5 ring-1 ring-border">
         <h3 className="mb-3 font-display text-base font-semibold text-foreground">
-          How this practice works
+          Hướng dẫn làm bài
         </h3>
         <ul className="space-y-2 text-sm text-muted-foreground">
           <li className="flex gap-2">
             <span className={cn("mt-1 h-1.5 w-1.5 shrink-0 rounded-full")} style={{ background: accent }} />
-            Each question is submitted individually. You'll see immediate feedback —{" "}
-            <strong className="text-foreground">Correct</strong>,{" "}
-            <strong className="text-foreground">Partially correct</strong>, or{" "}
-            <strong className="text-foreground">Incorrect</strong>.
+            Mỗi câu hỏi được nộp riêng lẻ. Bạn sẽ nhận phản hồi ngay —{" "}
+            <strong className="text-foreground">Đúng</strong>,{" "}
+            <strong className="text-foreground">Đúng một phần</strong>, hoặc{" "}
+            <strong className="text-foreground">Sai</strong>.
           </li>
           <li className="flex gap-2">
             <span className={cn("mt-1 h-1.5 w-1.5 shrink-0 rounded-full")} style={{ background: accent }} />
-            If you answer incorrectly, the correct answer is revealed at the end of the quiz so
-            you can review it.
+            Nếu trả lời sai, đáp án đúng sẽ được hiển thị ở cuối bài để bạn xem lại.
           </li>
           <li className="flex gap-2">
             <span className={cn("mt-1 h-1.5 w-1.5 shrink-0 rounded-full")} style={{ background: accent }} />
-            Once you finish all questions, you'll see your total score and can review every
-            question with the official answer.
+            Sau khi hoàn thành toàn bộ câu hỏi, bạn sẽ thấy tổng điểm và có thể xem lại từng câu
+            cùng đáp án chính thức.
           </li>
         </ul>
       </div>
