@@ -781,33 +781,6 @@ function FillBody({
   );
 }
 
-/* ---------------- Essay ---------------- */
-function EssayBody({
-  q, value, onChange, locked, accent,
-}: { q: QEssay; value: string; onChange: (v: string) => void; locked: boolean; accent: string }) {
-  const words = value.trim().split(/\s+/).filter(Boolean).length;
-  return (
-    <div className="space-y-3">
-      <pre className="whitespace-pre-wrap rounded-2xl bg-muted/40 p-4 font-sans text-sm leading-relaxed text-foreground">
-        {q.brief}
-      </pre>
-      <textarea
-        disabled={locked}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Write your answer here..."
-        className="min-h-[180px] w-full rounded-2xl border border-border bg-surface p-3 text-sm outline-none focus:ring-2"
-        style={{ ["--tw-ring-color" as string]: accent }}
-      />
-      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-        <span>Minimum required: {q.minWords} words</span>
-        <span className={cn(words >= q.minWords && "font-semibold text-success-foreground")}>
-          Word count: {words}
-        </span>
-      </div>
-    </div>
-  );
-}
 
 /* ---------------- Match (Drag & Drop) ---------------- */
 function MatchBody({
