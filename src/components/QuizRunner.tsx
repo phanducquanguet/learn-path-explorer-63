@@ -496,7 +496,6 @@ function kindLabel(k: Question["kind"]) {
     single: "One choice",
     multi: "Multi choice",
     fill: "Fill in the blank",
-    essay: "Essay",
     match: "Matching (drag & drop)",
     rewrite: "Sentence rewrite",
     highlight: "Highlight & correct",
