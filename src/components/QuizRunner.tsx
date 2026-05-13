@@ -880,6 +880,16 @@ function FillBody({
   );
 }
 
+function SummaryStat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="rounded-2xl bg-white/10 p-3 text-center ring-1 ring-white/15 backdrop-blur">
+      <div className="font-display text-2xl font-bold leading-none text-white">{value}</div>
+      <div className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-white/80">
+        {label}
+      </div>
+    </div>
+  );
+}
 
 /* ---------------- Match (Drag & Drop) ---------------- */
 function MatchBody({
