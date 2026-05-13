@@ -455,27 +455,6 @@ export function QuizRunner({
  * Pieces
  * ============================================================ */
 
-function ScoreBadge({
-  max,
-  earned,
-  accent,
-}: {
-  max: number;
-  earned?: number;
-  accent: string;
-}) {
-  return (
-    <div className="shrink-0 rounded-2xl bg-muted/60 px-3 py-2 text-right ring-1 ring-border">
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Score
-      </div>
-      <div className="font-display text-sm font-bold" style={{ color: accent }}>
-        {earned !== undefined ? `${earned} / ${max}` : `— / ${max}`}
-      </div>
-    </div>
-  );
-}
-
 function FeedbackBlock({ status }: { status: Status }) {
   const tone =
     status === "correct"
