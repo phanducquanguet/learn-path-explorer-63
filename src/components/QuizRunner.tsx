@@ -1122,81 +1122,93 @@ function GapMultiBody({
   locked: boolean;
 }) {
   const arr = value ?? q.blanks.map(() => null);
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpenIdx(null);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+
   const update = (i: number, v: number) => {
     const next = [...arr];
     next[i] = v;
     onChange(next);
+    setOpenIdx(null);
   };
+
   const parts = q.prompt.split(/(\{\d+\})/g);
   return (
-    <div className="space-y-4">
-      <div className="text-base leading-loose text-foreground">
-        {parts.map((p, i) => {
-          const m = p.match(/\{(\d+)\}/);
-          if (!m) return <span key={i}>{p}</span>;
-          const idx = parseInt(m[1], 10) - 1;
-          const sel = arr[idx];
-          const opt =
-            sel !== null && sel !== undefined ? q.blanks[idx].options[sel] : `Blank ${idx + 1}`;
-          return (
-            <span
-              key={i}
+    <div ref={wrapRef} className="text-base leading-loose text-foreground">
+      {parts.map((p, i) => {
+        const m = p.match(/\{(\d+)\}/);
+        if (!m) return <span key={i}>{p}</span>;
+        const idx = parseInt(m[1], 10) - 1;
+        const sel = arr[idx];
+        const filled = sel !== null && sel !== undefined;
+        const label = filled ? q.blanks[idx].options[sel as number] : `Choose ${idx + 1}`;
+        const isOpen = openIdx === idx;
+        const ok = locked && sel === q.blanks[idx].answer;
+        const wrong = locked && !ok;
+        return (
+          <span key={i} className="relative mx-1 inline-block align-baseline">
+            <button
+              type="button"
+              disabled={locked}
+              onClick={() => setOpenIdx(isOpen ? null : idx)}
               className={cn(
-                "mx-1 inline-flex items-center rounded-md px-2 py-0.5 text-sm font-semibold ring-1",
-                sel !== null && sel !== undefined
-                  ? "bg-foreground/5 text-foreground ring-foreground/20"
-                  : "bg-muted text-muted-foreground ring-border",
-                locked &&
-                  (sel === q.blanks[idx].answer
-                    ? "bg-success/15 text-success-foreground ring-success/30"
-                    : "bg-destructive/10 text-destructive ring-destructive/30"),
+                "inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-sm font-semibold ring-1 transition",
+                filled
+                  ? "bg-foreground/5 text-foreground ring-foreground/30"
+                  : "bg-muted text-muted-foreground ring-dashed ring-border hover:bg-muted/70",
+                isOpen && "ring-2 ring-foreground",
+                ok && "bg-success/15 text-success-foreground ring-success/40",
+                wrong && "bg-destructive/10 text-destructive ring-destructive/30",
               )}
             >
-              {opt}
-            </span>
-          );
-        })}
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {q.blanks.map((b, i) => (
-          <div key={i} className="rounded-2xl border border-border bg-muted/20 p-3">
-            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Blank {i + 1}
-            </div>
-            <div className="space-y-1.5">
-              {b.options.map((opt, j) => {
-                const selected = arr[i] === j;
-                const isAnswer = locked && j === b.answer;
-                return (
-                  <button
-                    key={j}
-                    disabled={locked}
-                    onClick={() => update(i, j)}
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm",
-                      selected ? "border-foreground bg-foreground/5" : "border-border bg-surface",
-                      isAnswer && "border-success bg-success/10",
-                    )}
-                  >
-                    <span
+              <span>{label}</span>
+              {!locked && <ChevronDown className="h-3.5 w-3.5 opacity-70" />}
+            </button>
+            {isOpen && !locked && (
+              <span
+                role="listbox"
+                className="absolute left-0 top-full z-20 mt-1 block min-w-[180px] overflow-hidden rounded-xl bg-surface p-1 shadow-elevated ring-1 ring-border"
+              >
+                {q.blanks[idx].options.map((opt, j) => {
+                  const selected = sel === j;
+                  return (
+                    <button
+                      key={j}
+                      type="button"
+                      onClick={() => update(idx, j)}
                       className={cn(
-                        "h-3.5 w-3.5 rounded-full border-2",
-                        selected ? "border-foreground bg-foreground" : "border-border",
-                        isAnswer && "border-success bg-success",
+                        "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition",
+                        selected
+                          ? "bg-foreground text-background"
+                          : "text-foreground hover:bg-muted",
                       )}
-                    />
-                    {opt}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
+                    >
+                      {selected && <Check className="h-3.5 w-3.5" />}
+                      <span className="flex-1">{opt}</span>
+                    </button>
+                  );
+                })}
+              </span>
+            )}
+            {locked && wrong && (
+              <span className="ml-2 text-[11px] font-medium text-success-foreground">
+                → {q.blanks[idx].options[q.blanks[idx].answer]}
+              </span>
+            )}
+          </span>
+        );
+      })}
     </div>
   );
 }
-
 /* ============================================================
  * Review card
  * ============================================================ */
