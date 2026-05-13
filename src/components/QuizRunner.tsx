@@ -251,7 +251,8 @@ export function QuizRunner({
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerState>>({});
   const [results, setResults] = useState<Record<string, Result>>({});
-  const [phase, setPhase] = useState<"running" | "summary">("running");
+  const [phase, setPhase] = useState<"running" | "summary" | "review">("running");
+  const [reviewIdx, setReviewIdx] = useState(0);
 
   const q = questions[idx];
   const result = results[q?.id];
