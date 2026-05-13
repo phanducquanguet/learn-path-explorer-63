@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
   Check,
   CheckCircle2,
+  ChevronDown,
   CircleDashed,
   GripVertical,
   Mic,
