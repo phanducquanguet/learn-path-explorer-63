@@ -769,12 +769,12 @@ function QuizDialog({
   hue: number;
   onClose: () => void;
 }) {
+  const [started, setStarted] = useState(false);
   if (!quiz) return null;
   const attempts = buildAttempts(quiz.id);
   const best = attempts.length ? Math.max(...attempts.map((a) => a.score)) : null;
   const last = attempts.length ? attempts[attempts.length - 1] : null;
   const passed = best !== null && best >= 70;
-  const [started, setStarted] = useState(false);
 
   const handleClose = () => {
     setStarted(false);
