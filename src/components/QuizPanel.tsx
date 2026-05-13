@@ -19,13 +19,7 @@ export function QuizPanel({
 
   if (started) {
     return (
-      <section className="space-y-4">
-        <button
-          onClick={onClose}
-          className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" /> Back to course
-        </button>
+      <section>
         <QuizRunner quizId={quiz.id} title={quiz.title} hue={hue} onExit={onClose} />
       </section>
     );
