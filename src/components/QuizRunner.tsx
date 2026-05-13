@@ -4,9 +4,8 @@ import {
   ArrowRight,
   Check,
   CheckCircle2,
-  ChevronDown,
-  ChevronUp,
   CircleDashed,
+  GripVertical,
   Mic,
   RotateCcw,
   Sparkles,
@@ -16,7 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 
 /* ============================================================
- * Types — 10 question kinds based on the LMS sample
+ * Types
  * ============================================================ */
 
 type Status = "correct" | "partial" | "incorrect";
@@ -25,36 +24,18 @@ type BaseQ = {
   id: string;
   index: number;
   prompt: string;
-  hint?: string;
-  /** Maximum score set by teacher */
   maxScore: number;
 };
 
-type QSingle = BaseQ & {
-  kind: "single";
-  options: string[];
-  answer: number; // index
-};
-type QMulti = BaseQ & {
-  kind: "multi";
-  options: string[];
-  answer: number[]; // indices
-};
-type QFill = BaseQ & {
-  kind: "fill";
-  /** prompt has {1} {2} placeholders */
-  blanks: string[]; // expected (lowercased compared)
-};
-type QEssay = BaseQ & {
-  kind: "essay";
-  brief: string;
-  minWords: number;
-};
+type QSingle = BaseQ & { kind: "single"; options: string[]; answer: number };
+type QMulti = BaseQ & { kind: "multi"; options: string[]; answer: number[] };
+type QFill = BaseQ & { kind: "fill"; blanks: string[] };
+type QEssay = BaseQ & { kind: "essay"; brief: string; minWords: number };
 type QMatch = BaseQ & {
   kind: "match";
   left: string[];
-  right: string[]; // labelled A,B,C,D
-  answer: number[]; // for each left item, index into right
+  right: string[];
+  answer: number[];
 };
 type QRewrite = BaseQ & {
   kind: "rewrite";
@@ -62,16 +43,13 @@ type QRewrite = BaseQ & {
 };
 type QHighlight = BaseQ & {
   kind: "highlight";
-  items: { source: string; answer: string }[];
+  /** Each sentence has one wrong word; user clicks it and types the correction. */
+  items: { sentence: string; wrongWord: string; correction: string }[];
 };
-type QSequence = BaseQ & {
-  kind: "sequence";
-  items: string[]; // displayed in correct order; we shuffle
-};
-type QAudio = BaseQ & { kind: "audio" };
+type QSequence = BaseQ & { kind: "sequence"; items: string[] };
+type QAudio = BaseQ & { kind: "audio"; sentence: string };
 type QGapMulti = BaseQ & {
   kind: "gapmulti";
-  /** prompt has {1} {2} placeholders */
   blanks: { options: string[]; answer: number }[];
 };
 
@@ -88,7 +66,7 @@ export type Question =
   | QGapMulti;
 
 /* ============================================================
- * Sample quiz — deterministic from a seed (quizId)
+ * Sample bank (English)
  * ============================================================ */
 
 function hash(str: string) {
@@ -96,7 +74,6 @@ function hash(str: string) {
   for (let i = 0; i < str.length; i++) h = (h * 31 + str.charCodeAt(i)) | 0;
   return Math.abs(h);
 }
-
 function shuffle<T>(arr: T[], seed: number): T[] {
   const a = [...arr];
   let s = seed || 1;
@@ -109,19 +86,18 @@ function shuffle<T>(arr: T[], seed: number): T[] {
 }
 
 export function buildQuiz(quizId: string): Question[] {
-  const _seed = hash(quizId);
   return [
     {
       id: "q1",
       index: 1,
       kind: "single",
       maxScore: 1,
-      prompt: "One choice: chọn 1 đáp án đúng",
+      prompt: "Choose the correct answer: Which sentence uses the present perfect correctly?",
       options: [
-        "Câu trả lời trắc nghiệm đúng",
-        "Câu trả lời trắc nghiệm sai",
-        "Câu trả lời trắc nghiệm sai",
-        "Câu trả lời trắc nghiệm sai",
+        "I have lived in Hanoi since 2018.",
+        "I am living in Hanoi since 2018.",
+        "I lived in Hanoi since 2018.",
+        "I live in Hanoi since 2018.",
       ],
       answer: 0,
     },
@@ -130,31 +106,26 @@ export function buildQuiz(quizId: string): Question[] {
       index: 2,
       kind: "fill",
       maxScore: 2,
-      prompt: "Nước sôi ở {1} khi áp suất khí quyển bằng 1 atm {2}",
-      blanks: ["100 độ C", "đúng"],
+      prompt: "Fill in the blanks: Water boils at {1} when atmospheric pressure equals {2}.",
+      blanks: ["100°C", "1 atm"],
     },
     {
       id: "q3",
       index: 3,
       kind: "multi",
       maxScore: 2,
-      prompt: "Multi choice: chọn nhiều đáp án đúng",
-      options: [
-        "Câu trả lời trắc nghiệm đúng",
-        "Câu trả lời trắc nghiệm sai",
-        "Câu trả lời trắc nghiệm sai",
-        "Câu trả lời trắc nghiệm sai",
-      ],
-      answer: [0],
+      prompt: "Multi choice: Which of the following are renewable energy sources?",
+      options: ["Solar power", "Coal", "Wind power", "Natural gas"],
+      answer: [0, 2],
     },
     {
       id: "q4",
       index: 4,
       kind: "essay",
       maxScore: 3,
-      prompt: "Essay — Part 1: Email",
+      prompt: "Essay — Reply to Jordan",
       brief:
-        "You received this email.\nI'll be travelling to your country with my parents from the 10th to the 18th of next month. We're planning to stay near the city where you live, and I was wondering if we could meet while we're there. It would be lovely to catch up in person!\nPlease let me know if you're available.\nBest, Jordan\n\nWrite an email to Jordan:\n• say why you won't be free to meet when Jordan visits\n• suggest a place Jordan could explore in your area\n• offer another time later in the year when you could meet\nWrite at least 50 words in the box below.",
+        "You received this email.\n\nHi! I'll be travelling to your country with my parents from the 10th to the 18th of next month. We're planning to stay near the city where you live, and I was wondering if we could meet while we're there. It would be lovely to catch up in person!\nPlease let me know if you're available.\nBest, Jordan\n\nWrite an email to Jordan:\n• say why you won't be free to meet when Jordan visits\n• suggest a place Jordan could explore in your area\n• offer another time later in the year when you could meet\n\nWrite at least 50 words in the box below.",
       minWords: 50,
     },
     {
@@ -162,16 +133,17 @@ export function buildQuiz(quizId: string): Question[] {
       index: 5,
       kind: "match",
       maxScore: 4,
-      prompt: "Matching — drag and drop: nối các câu vào đúng vị trí",
+      prompt:
+        "Drag each statement on the right into the matching slot on the left.",
       left: [
-        "Have you ever heard of space junk? You might remember the intense scene in the movie Gravity, where the protagonist is sent spinning into the blackness after their spacecraft is hit by a cloud of waste. {1}",
-        "They are the very real reminders of space exploration, or what happens when we send satellites up into the Earth's atmosphere and don't clean up afterwards. {2}",
+        "Have you ever heard of space junk? You might remember the scene in the movie Gravity, where a spacecraft is hit by a cloud of waste. ___",
+        "They are very real reminders of space exploration — what happens when we send satellites up and don't clean up afterwards. ___",
       ],
       right: [
-        "Space junk can include anything from motors to nuts and bolts, and can vary in size, from tiny bits of paint to huge pieces of metal.",
-        "The sky will be crawling with moving satellites and the number of stars that you would see would be minimal, even in a very dark sky.",
-        "But their numbers are growing so quickly that it threatens those very systems that we so heavily rely on.",
-        "Space junk can travel at speeds of up to 28,000 km per hour — that's roughly seven times faster than a speeding bullet.",
+        "Space junk can include anything from motors to nuts and bolts, varying in size from tiny paint flakes to huge metal pieces.",
+        "The sky will be crawling with moving satellites and the number of stars you can see will be minimal.",
+        "But their numbers are growing so quickly that they threaten the very systems we rely on.",
+        "Space junk can travel at speeds of up to 28,000 km/h — roughly seven times faster than a speeding bullet.",
       ],
       answer: [0, 2],
     },
@@ -180,21 +152,35 @@ export function buildQuiz(quizId: string): Question[] {
       index: 6,
       kind: "rewrite",
       maxScore: 2,
-      prompt: "Viết lại câu theo mẫu",
+      prompt: "Rewrite each sentence using the verb in brackets, keeping the meaning.",
       items: [
-        { source: "He is happy.", answer: "He feels happy." },
-        { source: "She is tired.", answer: "She feels tired." },
+        { source: "He is happy. (feel)", answer: "He feels happy." },
+        { source: "She is tired. (feel)", answer: "She feels tired." },
       ],
     },
     {
       id: "q7",
       index: 7,
       kind: "highlight",
-      maxScore: 2,
-      prompt: "Text Highlight & Input",
+      maxScore: 3,
+      prompt:
+        "Each sentence contains one incorrect word. Click the wrong word, then type the correct version.",
       items: [
-        { source: "He is happy.", answer: "He feels happy." },
-        { source: "She is tired.", answer: "She feels tired." },
+        {
+          sentence: "She don't like coffee in the morning.",
+          wrongWord: "don't",
+          correction: "doesn't",
+        },
+        {
+          sentence: "There is many people waiting outside the office.",
+          wrongWord: "is",
+          correction: "are",
+        },
+        {
+          sentence: "I have went to Paris three times last year.",
+          wrongWord: "went",
+          correction: "been",
+        },
       ],
     },
     {
@@ -202,12 +188,12 @@ export function buildQuiz(quizId: string): Question[] {
       index: 8,
       kind: "sequence",
       maxScore: 4,
-      prompt: "Sequence — sắp xếp các câu theo đúng thứ tự",
+      prompt: "Drag the sentences into the correct order to form a coherent paragraph.",
       items: [
-        "Space junk can include anything from motors to nuts and bolts, and can vary in size, from tiny bits of paint to huge pieces of metal.",
-        "The sky will be crawling with moving satellites and the number of stars that you would see would be minimal, even in a very dark sky.",
-        "But their numbers are growing so quickly that it threatens those very systems that we so heavily rely on.",
-        "Space junk can travel at speeds of up to 28,000 km per hour — that's roughly seven times faster than a speeding bullet.",
+        "Space junk can include anything from motors to nuts and bolts.",
+        "These items vary in size, from tiny paint flakes to huge pieces of metal.",
+        "But their numbers are growing so quickly that they threaten the systems we rely on.",
+        "Some pieces can travel up to 28,000 km/h — seven times faster than a speeding bullet.",
       ],
     },
     {
@@ -215,24 +201,26 @@ export function buildQuiz(quizId: string): Question[] {
       index: 9,
       kind: "audio",
       maxScore: 3,
-      prompt: "Audio record — đọc và ghi âm câu sau",
+      prompt: "Record yourself reading the sentence below.",
+      sentence: "Practice makes perfect — keep going every single day!",
     },
     {
       id: "q10",
       index: 10,
       kind: "gapmulti",
       maxScore: 2,
-      prompt: "Multi choice gap fill: Nước sôi ở {1} khi áp suất khí quyển bằng 1 atm {2}",
+      prompt:
+        "Multi choice gap fill: If you keep practising, you {1} fluent in no time. Failure is just a stepping stone — never accept {2}.",
       blanks: [
-        { options: ["Success", "Fail", "Jail"], answer: 0 },
-        { options: ["Success", "Fail", "Jail"], answer: 0 },
+        { options: ["will become", "would become", "are becoming"], answer: 0 },
+        { options: ["success", "defeat", "victory"], answer: 1 },
       ],
     },
   ];
 }
 
 /* ============================================================
- * Feedback copy
+ * Feedback
  * ============================================================ */
 
 const FEEDBACK: Record<Status, { label: string; message: string }> = {
@@ -261,12 +249,11 @@ type Result = { status: Status; earned: number };
 
 export function QuizRunner({
   quizId,
-  title,
   hue,
   onExit,
 }: {
   quizId: string;
-  title: string;
+  title?: string;
   hue: number;
   onExit: () => void;
 }) {
@@ -284,17 +271,11 @@ export function QuizRunner({
 
   const setAnswer = (val: AnswerState) =>
     setAnswers((a) => ({ ...a, [q.id]: val }));
-
-  const submit = () => {
-    const r = grade(q, answers[q.id]);
-    setResults((p) => ({ ...p, [q.id]: r }));
-  };
-  const next = () => {
-    if (idx < questions.length - 1) setIdx(idx + 1);
-    else setPhase("summary");
-  };
+  const submit = () =>
+    setResults((p) => ({ ...p, [q.id]: grade(q, answers[q.id]) }));
+  const next = () =>
+    idx < questions.length - 1 ? setIdx(idx + 1) : setPhase("summary");
   const prev = () => idx > 0 && setIdx(idx - 1);
-
   const reset = () => {
     setAnswers({});
     setResults({});
@@ -308,163 +289,149 @@ export function QuizRunner({
   if (phase === "summary") {
     const pct = Math.round((totalEarned / totalMax) * 100);
     return (
-      <div className="flex h-full flex-col">
-        <RunnerHeader
-          title={title}
-          subtitle="Tổng kết bài luyện tập"
-          hue={hue}
-          onExit={onExit}
-          right={
-            <div className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold text-white ring-1 ring-white/20">
-              {submittedCount}/{questions.length} câu
-            </div>
-          }
-        />
-        <div className="flex-1 overflow-auto bg-surface-2/40">
-          <div className="mx-auto max-w-3xl space-y-5 p-5 sm:p-7">
-            <div
-              className="overflow-hidden rounded-3xl p-6 text-white shadow-elevated"
-              style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
-            >
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/80">
-                <Trophy className="h-4 w-4" /> Hoàn thành
+      <div className="space-y-5">
+        <div
+          className="overflow-hidden rounded-3xl p-6 text-white shadow-elevated sm:p-8"
+          style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/85">
+                <Trophy className="h-4 w-4" /> Quiz completed
               </div>
               <div className="mt-2 flex items-end gap-3">
-                <div className="font-display text-5xl font-bold">{totalEarned}</div>
-                <div className="pb-2 text-lg text-white/85">/ {totalMax} điểm</div>
+                <div className="font-display text-5xl font-bold leading-none">
+                  {totalEarned}
+                </div>
+                <div className="pb-2 text-lg text-white/85">/ {totalMax} pts</div>
               </div>
               <div className="mt-1 text-sm text-white/85">
-                Tỷ lệ chính xác:{" "}
-                <span className="font-semibold">{pct}%</span> — {pct >= 70 ? "Bạn đã đạt yêu cầu!" : "Hãy ôn tập thêm và thử lại nhé."}
-              </div>
-              <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/20">
-                <div className="h-full rounded-full bg-white" style={{ width: `${pct}%` }} />
+                Accuracy: <span className="font-semibold">{pct}%</span> —{" "}
+                {pct >= 70 ? "Great job, you passed!" : "Review and try again to improve."}
               </div>
             </div>
-
-            <div className="space-y-3">
-              {questions.map((qq) => {
-                const r = results[qq.id];
-                return (
-                  <ReviewCard
-                    key={qq.id}
-                    q={qq}
-                    answer={answers[qq.id]}
-                    result={r}
-                    accent={accent}
-                  />
-                );
-              })}
+            <div className="flex gap-2">
+              <button
+                onClick={reset}
+                className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2.5 text-sm font-semibold text-white ring-1 ring-white/20 backdrop-blur hover:bg-white/25"
+              >
+                <RotateCcw className="h-4 w-4" /> Retake
+              </button>
+              <button
+                onClick={onExit}
+                className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-foreground hover:opacity-90"
+              >
+                Back to course
+              </button>
             </div>
           </div>
+          <div className="mt-5 h-2 w-full overflow-hidden rounded-full bg-white/20">
+            <div className="h-full rounded-full bg-white" style={{ width: `${pct}%` }} />
+          </div>
         </div>
-        <div className="flex items-center justify-between gap-3 border-t border-border bg-surface px-5 py-4 sm:px-7">
-          <button
-            onClick={reset}
-            className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-foreground ring-1 ring-border hover:bg-muted"
-          >
-            <RotateCcw className="h-4 w-4" /> Làm lại bài
-          </button>
-          <button
-            onClick={onExit}
-            className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-soft hover:opacity-95"
-            style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
-          >
-            Quay lại khoá học
-          </button>
+
+        <div className="space-y-3">
+          {questions.map((qq) => (
+            <ReviewCard
+              key={qq.id}
+              q={qq}
+              answer={answers[qq.id]}
+              result={results[qq.id]}
+              accent={accent}
+            />
+          ))}
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <RunnerHeader
-        title={title}
-        subtitle={`Câu ${q.index} / ${questions.length}`}
-        hue={hue}
-        onExit={onExit}
-        right={
-          <div className="flex items-center gap-2 text-white">
-            <div className="rounded-full bg-white/15 px-3 py-1 text-xs font-semibold ring-1 ring-white/20">
-              Đã làm {submittedCount}/{questions.length}
-            </div>
-            <div className="rounded-full bg-white px-3 py-1 text-xs font-bold text-foreground">
-              {totalEarned}/{totalMax} điểm
-            </div>
+    <div className="space-y-4">
+      {/* status bar */}
+      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface p-3 ring-1 ring-border">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={onExit}
+            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <X className="h-3.5 w-3.5" /> Exit
+          </button>
+          <div className="hidden text-xs text-muted-foreground sm:block">
+            Question <span className="font-semibold text-foreground">{q.index}</span> of {questions.length}
           </div>
-        }
-      />
-
-      {/* progress dots */}
-      <div className="border-b border-border bg-surface px-5 py-3 sm:px-7">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {questions.map((qq, i) => {
-            const r = results[qq.id];
-            const active = i === idx;
-            return (
-              <button
-                key={qq.id}
-                onClick={() => setIdx(i)}
-                className={cn(
-                  "inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-[11px] font-semibold ring-1 transition",
-                  active
-                    ? "ring-2 ring-foreground"
-                    : "ring-border hover:bg-muted",
-                  r?.status === "correct" && "bg-success/15 text-success-foreground",
-                  r?.status === "partial" && "bg-warning/15 text-warning-foreground",
-                  r?.status === "incorrect" && "bg-destructive/10 text-destructive",
-                  !r && !active && "bg-surface text-muted-foreground",
-                )}
-                title={`Câu ${qq.index}`}
-              >
-                {qq.index}
-              </button>
-            );
-          })}
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="rounded-full bg-muted/60 px-3 py-1 text-xs font-semibold text-foreground">
+            {submittedCount}/{questions.length} submitted
+          </div>
+          <div
+            className="rounded-full px-3 py-1 text-xs font-bold text-white"
+            style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
+          >
+            {totalEarned}/{totalMax} pts
+          </div>
         </div>
       </div>
 
-      {/* body */}
-      <div className="flex-1 overflow-auto bg-surface-2/40">
-        <div className="mx-auto max-w-3xl p-5 sm:p-7">
-          <div className="rounded-3xl bg-surface p-5 ring-1 ring-border sm:p-7">
-            <div className="mb-4 flex items-start justify-between gap-3">
-              <div>
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Câu {q.index} • {kindLabel(q.kind)}
-                </div>
-                <h3 className="mt-1 font-display text-lg font-semibold text-foreground">
-                  {renderPromptHead(q.prompt)}
-                </h3>
-              </div>
-              <ScoreBadge max={q.maxScore} earned={result?.earned} />
+      {/* progress dots */}
+      <div className="flex flex-wrap items-center gap-1.5">
+        {questions.map((qq, i) => {
+          const r = results[qq.id];
+          const active = i === idx;
+          return (
+            <button
+              key={qq.id}
+              onClick={() => setIdx(i)}
+              className={cn(
+                "inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-[11px] font-semibold ring-1 transition",
+                active ? "ring-2 ring-foreground" : "ring-border hover:bg-muted",
+                r?.status === "correct" && "bg-success/15 text-success-foreground",
+                r?.status === "partial" && "bg-warning/15 text-warning-foreground",
+                r?.status === "incorrect" && "bg-destructive/10 text-destructive",
+                !r && !active && "bg-surface text-muted-foreground",
+              )}
+              title={`Question ${qq.index}`}
+            >
+              {qq.index}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* question card */}
+      <div className="rounded-3xl bg-surface p-5 ring-1 ring-border sm:p-7">
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div>
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Question {q.index} • {kindLabel(q.kind)}
             </div>
-
-            <QuestionBody
-              q={q}
-              value={answers[q.id]}
-              onChange={setAnswer}
-              locked={Boolean(result)}
-              result={result}
-              accent={accent}
-            />
-
-            {result && <FeedbackBlock status={result.status} />}
+            <h3 className="mt-1 font-display text-lg font-semibold leading-snug text-foreground">
+              {renderPromptHead(q.prompt)}
+            </h3>
           </div>
+          <ScoreBadge max={q.maxScore} earned={result?.earned} accent={accent} />
         </div>
+
+        <QuestionBody
+          q={q}
+          value={answers[q.id]}
+          onChange={setAnswer}
+          locked={Boolean(result)}
+          accent={accent}
+        />
+
+        {result && <FeedbackBlock status={result.status} />}
       </div>
 
       {/* footer */}
-      <div className="flex items-center justify-between gap-3 border-t border-border bg-surface px-5 py-4 sm:px-7">
+      <div className="flex items-center justify-between gap-3">
         <button
           onClick={prev}
           disabled={idx === 0}
-          className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium text-foreground ring-1 ring-border hover:bg-muted disabled:opacity-40"
+          className="inline-flex items-center gap-2 rounded-xl bg-surface px-4 py-2.5 text-sm font-medium text-foreground ring-1 ring-border hover:bg-muted disabled:opacity-40"
         >
-          <ArrowLeft className="h-4 w-4" /> Câu trước
+          <ArrowLeft className="h-4 w-4" /> Previous
         </button>
-
         {!result ? (
           <button
             onClick={submit}
@@ -472,7 +439,7 @@ export function QuizRunner({
             className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:opacity-95 disabled:opacity-40"
             style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
           >
-            <Check className="h-4 w-4" /> Nộp câu trả lời
+            <Check className="h-4 w-4" /> Submit answer
           </button>
         ) : (
           <button
@@ -480,7 +447,7 @@ export function QuizRunner({
             className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-soft hover:opacity-95"
             style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
           >
-            {idx === questions.length - 1 ? "Xem kết quả" : "Câu tiếp theo"}{" "}
+            {idx === questions.length - 1 ? "View results" : "Next question"}
             <ArrowRight className="h-4 w-4" />
           </button>
         )}
@@ -490,58 +457,24 @@ export function QuizRunner({
 }
 
 /* ============================================================
- * Header
+ * Pieces
  * ============================================================ */
 
-function RunnerHeader({
-  title,
-  subtitle,
-  hue,
-  onExit,
-  right,
+function ScoreBadge({
+  max,
+  earned,
+  accent,
 }: {
-  title: string;
-  subtitle: string;
-  hue: number;
-  onExit: () => void;
-  right?: React.ReactNode;
+  max: number;
+  earned?: number;
+  accent: string;
 }) {
-  return (
-    <div
-      className="relative flex items-center justify-between gap-3 px-5 py-4 sm:px-7"
-      style={{
-        background: `linear-gradient(135deg, oklch(0.55 0.2 ${hue}), oklch(0.45 0.22 ${(hue + 40) % 360}))`,
-      }}
-    >
-      <div className="min-w-0">
-        <div className="text-[11px] font-semibold uppercase tracking-wider text-white/75">
-          {subtitle}
-        </div>
-        <div className="truncate font-display text-base font-semibold text-white sm:text-lg">
-          {title}
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        {right}
-        <button
-          onClick={onExit}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25"
-          aria-label="Thoát"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function ScoreBadge({ max, earned }: { max: number; earned?: number }) {
   return (
     <div className="shrink-0 rounded-2xl bg-muted/60 px-3 py-2 text-right ring-1 ring-border">
       <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Điểm
+        Score
       </div>
-      <div className="font-display text-sm font-bold text-foreground">
+      <div className="font-display text-sm font-bold" style={{ color: accent }}>
         {earned !== undefined ? `${earned} / ${max}` : `— / ${max}`}
       </div>
     </div>
@@ -568,27 +501,21 @@ function FeedbackBlock({ status }: { status: Status }) {
   );
 }
 
-/* ============================================================
- * Question rendering
- * ============================================================ */
-
 function kindLabel(k: Question["kind"]) {
   return {
     single: "One choice",
     multi: "Multi choice",
     fill: "Fill in the blank",
     essay: "Essay",
-    match: "Matching",
+    match: "Matching (drag & drop)",
     rewrite: "Sentence rewrite",
-    highlight: "Text highlight & input",
-    sequence: "Sequence",
+    highlight: "Highlight & correct",
+    sequence: "Sequence (drag & drop)",
     audio: "Audio record",
     gapmulti: "Multi choice gap fill",
   }[k];
 }
-
 function renderPromptHead(p: string) {
-  // Strip {n} placeholders for the heading
   return p.replace(/\{\d+\}/g, "___");
 }
 
@@ -598,16 +525,19 @@ function hasAnswer(q: Question, v: AnswerState): boolean {
     case "single":
       return typeof v === "number";
     case "multi":
-      return Array.isArray(v) && v.length > 0;
+      return Array.isArray(v) && (v as number[]).length > 0;
     case "fill":
-      return Array.isArray(v) && (v as string[]).every((s) => s && s.trim().length > 0);
+      return Array.isArray(v) && (v as string[]).every((s) => s && s.trim());
     case "essay":
       return typeof v === "string" && v.trim().length > 0;
     case "match":
       return Array.isArray(v) && (v as (number | null)[]).every((x) => x !== null && x !== undefined);
     case "rewrite":
-    case "highlight":
-      return Array.isArray(v) && (v as string[]).every((s) => s && s.trim().length > 0);
+      return Array.isArray(v) && (v as string[]).every((s) => s && s.trim());
+    case "highlight": {
+      const arr = v as { wordIdx: number | null; correction: string }[];
+      return Array.isArray(arr) && arr.every((x) => x && x.wordIdx !== null && x.correction.trim());
+    }
     case "sequence":
       return Array.isArray(v) && (v as string[]).length === q.items.length;
     case "audio":
@@ -637,9 +567,8 @@ function grade(q: Question, v: AnswerState): Result {
       const ans = q.answer;
       const correct = sel.filter((i) => ans.includes(i)).length;
       const wrong = sel.filter((i) => !ans.includes(i)).length;
-      const total = ans.length;
       let s: Status;
-      if (correct === total && wrong === 0) s = "correct";
+      if (correct === ans.length && wrong === 0) s = "correct";
       else if (correct > 0 && wrong === 0) s = "partial";
       else s = "incorrect";
       return { status: s, earned: earn(s, q.maxScore) };
@@ -653,7 +582,8 @@ function grade(q: Question, v: AnswerState): Result {
     case "essay": {
       const text = (v as string) || "";
       const words = text.trim().split(/\s+/).filter(Boolean).length;
-      const s: Status = words >= q.minWords ? "correct" : words >= q.minWords / 2 ? "partial" : "incorrect";
+      const s: Status =
+        words >= q.minWords ? "correct" : words >= q.minWords / 2 ? "partial" : "incorrect";
       return { status: s, earned: earn(s, q.maxScore) };
     }
     case "match": {
@@ -662,12 +592,32 @@ function grade(q: Question, v: AnswerState): Result {
       const s = ratio(ok.filter(Boolean).length, q.answer.length);
       return { status: s, earned: earn(s, q.maxScore) };
     }
-    case "rewrite":
-    case "highlight": {
+    case "rewrite": {
       const arr = (v as string[]) || [];
       const ok = q.items.map(
-        (it, i) => (arr[i] || "").trim().toLowerCase() === it.answer.toLowerCase(),
+        (it, i) =>
+          (arr[i] || "")
+            .trim()
+            .toLowerCase()
+            .replace(/[.!?]+$/, "") ===
+          it.answer.toLowerCase().replace(/[.!?]+$/, ""),
       );
+      const s = ratio(ok.filter(Boolean).length, q.items.length);
+      return { status: s, earned: earn(s, q.maxScore) };
+    }
+    case "highlight": {
+      const arr = (v as { wordIdx: number | null; correction: string }[]) || [];
+      const ok = q.items.map((it, i) => {
+        const a = arr[i];
+        if (!a) return false;
+        const words = it.sentence.split(/\s+/);
+        const clickedWord = a.wordIdx !== null ? words[a.wordIdx]?.replace(/[.,!?]/g, "") : "";
+        const wordOk = clickedWord?.toLowerCase() === it.wrongWord.replace(/[.,!?]/g, "").toLowerCase();
+        const corrOk =
+          a.correction.trim().toLowerCase().replace(/[.,!?]/g, "") ===
+          it.correction.toLowerCase().replace(/[.,!?]/g, "");
+        return wordOk && corrOk;
+      });
       const s = ratio(ok.filter(Boolean).length, q.items.length);
       return { status: s, earned: earn(s, q.maxScore) };
     }
@@ -677,10 +627,8 @@ function grade(q: Question, v: AnswerState): Result {
       const s = ratio(ok.filter(Boolean).length, q.items.length);
       return { status: s, earned: earn(s, q.maxScore) };
     }
-    case "audio": {
-      // recording is mocked — always treat as partial credit
+    case "audio":
       return { status: "partial", earned: Math.round(q.maxScore * 0.7) };
-    }
     case "gapmulti": {
       const arr = (v as (number | null)[]) || [];
       const ok = q.blanks.map((b, i) => arr[i] === b.answer);
@@ -690,470 +638,635 @@ function grade(q: Question, v: AnswerState): Result {
   }
 }
 
+/* ============================================================
+ * Question bodies
+ * ============================================================ */
+
 function QuestionBody({
   q,
   value,
   onChange,
   locked,
-  result,
   accent,
 }: {
   q: Question;
   value: AnswerState;
   onChange: (v: AnswerState) => void;
   locked: boolean;
-  result?: Result;
   accent: string;
 }) {
   switch (q.kind) {
     case "single":
-      return (
-        <div className="space-y-2">
-          {q.options.map((opt, i) => {
-            const selected = value === i;
-            const isAnswer = locked && i === q.answer;
-            const wrongPick = locked && selected && i !== q.answer;
-            return (
-              <button
-                key={i}
-                disabled={locked}
-                onClick={() => onChange(i)}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition",
-                  selected
-                    ? "border-foreground bg-foreground/5"
-                    : "border-border hover:bg-muted/40",
-                  isAnswer && "border-success bg-success/10",
-                  wrongPick && "border-destructive bg-destructive/10",
-                )}
-              >
-                <span
-                  className={cn(
-                    "flex h-5 w-5 items-center justify-center rounded-full border-2",
-                    selected ? "border-foreground" : "border-border",
-                    isAnswer && "border-success bg-success",
-                  )}
-                >
-                  {(selected || isAnswer) && (
-                    <span className="h-2 w-2 rounded-full bg-foreground" style={isAnswer ? { background: "white" } : undefined} />
-                  )}
-                </span>
-                <span>{opt}</span>
-              </button>
-            );
-          })}
-        </div>
-      );
-
-    case "multi": {
-      const sel = (value as number[]) || [];
-      const toggle = (i: number) =>
-        onChange(sel.includes(i) ? sel.filter((x) => x !== i) : [...sel, i]);
-      return (
-        <div className="space-y-2">
-          {q.options.map((opt, i) => {
-            const selected = sel.includes(i);
-            const isAnswer = locked && q.answer.includes(i);
-            const wrongPick = locked && selected && !q.answer.includes(i);
-            return (
-              <button
-                key={i}
-                disabled={locked}
-                onClick={() => toggle(i)}
-                className={cn(
-                  "flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition",
-                  selected
-                    ? "border-foreground bg-foreground/5"
-                    : "border-border hover:bg-muted/40",
-                  isAnswer && "border-success bg-success/10",
-                  wrongPick && "border-destructive bg-destructive/10",
-                )}
-              >
-                <span
-                  className={cn(
-                    "flex h-5 w-5 items-center justify-center rounded-md border-2",
-                    selected ? "border-foreground bg-foreground text-background" : "border-border",
-                    isAnswer && "border-success bg-success text-white",
-                  )}
-                >
-                  {(selected || isAnswer) && <Check className="h-3 w-3" />}
-                </span>
-                <span>{opt}</span>
-              </button>
-            );
-          })}
-        </div>
-      );
-    }
-
-    case "fill": {
-      const arr = (value as string[]) || [];
-      const update = (i: number, v: string) => {
-        const next = [...arr];
-        next[i] = v;
-        onChange(next);
-      };
-      const parts = q.prompt.split(/(\{\d+\})/g);
-      return (
-        <div className="text-sm leading-loose text-foreground">
-          {parts.map((p, i) => {
-            const m = p.match(/\{(\d+)\}/);
-            if (!m) return <span key={i}>{p}</span>;
-            const idx = parseInt(m[1], 10) - 1;
-            return (
-              <input
-                key={i}
-                disabled={locked}
-                value={arr[idx] || ""}
-                onChange={(e) => update(idx, e.target.value)}
-                className={cn(
-                  "mx-1 inline-block min-w-[140px] rounded-md border-b-2 bg-muted/40 px-2 py-1 text-sm outline-none transition focus:bg-surface focus:ring-2",
-                  locked &&
-                    (arr[idx]?.trim().toLowerCase() === q.blanks[idx].toLowerCase()
-                      ? "border-success bg-success/10"
-                      : "border-destructive bg-destructive/10"),
-                  !locked && "border-foreground/40",
-                )}
-                style={!locked ? { ["--tw-ring-color" as string]: accent } : undefined}
-              />
-            );
-          })}
-        </div>
-      );
-    }
-
-    case "essay": {
-      const text = (value as string) || "";
-      const words = text.trim().split(/\s+/).filter(Boolean).length;
-      return (
-        <div className="space-y-3">
-          <pre className="whitespace-pre-wrap rounded-2xl bg-muted/40 p-4 font-sans text-sm leading-relaxed text-foreground">
-            {q.brief}
-          </pre>
-          <textarea
-            disabled={locked}
-            value={text}
-            onChange={(e) => onChange(e.target.value)}
-            placeholder="Viết câu trả lời của bạn ở đây..."
-            className="min-h-[180px] w-full rounded-2xl border border-border bg-surface p-3 text-sm outline-none focus:ring-2"
-            style={{ ["--tw-ring-color" as string]: accent }}
-          />
-          <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-            <span>Yêu cầu tối thiểu: {q.minWords} từ</span>
-            <span className={cn(words >= q.minWords && "font-semibold text-success-foreground")}>
-              Word count: {words}
-            </span>
-          </div>
-        </div>
-      );
-    }
-
-    case "match": {
-      const arr = (value as (number | null)[]) || q.left.map(() => null);
-      const labels = ["A", "B", "C", "D", "E", "F"];
-      const update = (i: number, v: number) => {
-        const next = [...arr];
-        next[i] = v;
-        onChange(next);
-      };
-      return (
-        <div className="grid gap-4 lg:grid-cols-2">
-          <div className="space-y-3">
-            {q.left.map((l, i) => (
-              <div
-                key={i}
-                className="rounded-2xl border border-border bg-muted/30 p-3 text-sm leading-relaxed"
-              >
-                <div className="text-foreground">{l.replace(/\{(\d+)\}/g, "")}</div>
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-[11px] font-semibold text-muted-foreground">
-                    Vị trí {i + 1}:
-                  </span>
-                  <select
-                    disabled={locked}
-                    value={arr[i] ?? ""}
-                    onChange={(e) => update(i, parseInt(e.target.value, 10))}
-                    className={cn(
-                      "rounded-lg border px-2 py-1 text-sm",
-                      locked &&
-                        (arr[i] === q.answer[i]
-                          ? "border-success bg-success/10"
-                          : "border-destructive bg-destructive/10"),
-                      !locked && "border-border bg-surface",
-                    )}
-                  >
-                    <option value="">— Chọn —</option>
-                    {q.right.map((_, j) => (
-                      <option key={j} value={j}>
-                        {labels[j]}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="space-y-2">
-            {q.right.map((r, j) => (
-              <div
-                key={j}
-                className="flex gap-2 rounded-2xl border border-border bg-surface p-3 text-sm leading-relaxed"
-              >
-                <span className="font-semibold text-muted-foreground">{labels[j]}.</span>
-                <span className="text-foreground">{r}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      );
-    }
-
-    case "rewrite": {
-      const arr = (value as string[]) || [];
-      const update = (i: number, v: string) => {
-        const next = [...arr];
-        next[i] = v;
-        onChange(next);
-      };
-      return (
-        <div className="space-y-4">
-          {q.items.map((it, i) => {
-            const ok = locked && (arr[i] || "").trim().toLowerCase() === it.answer.toLowerCase();
-            return (
-              <div key={i}>
-                <div className="text-sm text-foreground">
-                  {i + 1}. {it.source}
-                </div>
-                <div className="mt-1 flex items-center gap-2">
-                  <span className="text-muted-foreground">→</span>
-                  <input
-                    disabled={locked}
-                    value={arr[i] || ""}
-                    onChange={(e) => update(i, e.target.value)}
-                    placeholder="Nhập câu viết lại..."
-                    className={cn(
-                      "flex-1 rounded-lg border bg-muted/40 px-3 py-2 text-sm outline-none focus:bg-surface focus:ring-2",
-                      locked && (ok ? "border-success bg-success/10" : "border-destructive bg-destructive/10"),
-                      !locked && "border-border",
-                    )}
-                    style={!locked ? { ["--tw-ring-color" as string]: accent } : undefined}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      );
-    }
-
-    case "highlight": {
-      const arr = (value as string[]) || [];
-      const update = (i: number, v: string) => {
-        const next = [...arr];
-        next[i] = v;
-        onChange(next);
-      };
-      return (
-        <div className="space-y-4">
-          {q.items.map((it, i) => {
-            const ok = locked && (arr[i] || "").trim().toLowerCase() === it.answer.toLowerCase();
-            return (
-              <div key={i}>
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-foreground">
-                    {i + 1}.{" "}
-                    <mark className="rounded bg-warning/20 px-1 text-foreground">{it.source}</mark>
-                  </span>
-                  <span className="text-muted-foreground">🔗</span>
-                </div>
-                <div className="mt-1 flex items-center gap-2">
-                  <span className="text-muted-foreground">→</span>
-                  <input
-                    disabled={locked}
-                    value={arr[i] || ""}
-                    onChange={(e) => update(i, e.target.value)}
-                    placeholder="Nhập từ/cụm phù hợp..."
-                    className={cn(
-                      "flex-1 rounded-lg border bg-muted/40 px-3 py-2 text-sm outline-none focus:bg-surface focus:ring-2",
-                      locked && (ok ? "border-success bg-success/10" : "border-destructive bg-destructive/10"),
-                      !locked && "border-border",
-                    )}
-                    style={!locked ? { ["--tw-ring-color" as string]: accent } : undefined}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      );
-    }
-
-    case "sequence": {
-      const arr =
-        (value as string[]) ||
-        shuffle(q.items, hash(q.id));
-      // initialize on first render
-      if (!value) onChange(arr);
-      const move = (i: number, dir: -1 | 1) => {
-        const j = i + dir;
-        if (j < 0 || j >= arr.length) return;
-        const next = [...arr];
-        [next[i], next[j]] = [next[j], next[i]];
-        onChange(next);
-      };
-      return (
-        <div className="space-y-2">
-          {arr.map((s, i) => {
-            const ok = locked && q.items[i] === s;
-            return (
-              <div
-                key={i}
-                className={cn(
-                  "flex items-center gap-3 rounded-2xl border px-3 py-2 text-sm",
-                  locked && (ok ? "border-success bg-success/10" : "border-destructive bg-destructive/10"),
-                  !locked && "border-border bg-muted/30",
-                )}
-              >
-                <span className="font-semibold text-muted-foreground">{i + 1}.</span>
-                <span className="flex-1 text-foreground">{s}</span>
-                {!locked && (
-                  <div className="flex flex-col">
-                    <button
-                      onClick={() => move(i, -1)}
-                      className="rounded p-0.5 hover:bg-muted"
-                      aria-label="Lên"
-                    >
-                      <ChevronUp className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => move(i, 1)}
-                      className="rounded p-0.5 hover:bg-muted"
-                      aria-label="Xuống"
-                    >
-                      <ChevronDown className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      );
-    }
-
-    case "audio": {
-      const recorded = value === true;
-      return (
-        <div className="flex flex-col items-center gap-3 rounded-2xl bg-muted/40 p-6 text-center">
-          <div className="text-sm text-muted-foreground">
-            Đọc to câu sau và ghi âm câu trả lời của bạn
-          </div>
-          <div className="font-display text-base font-semibold text-foreground">
-            "Practice makes perfect — keep going!"
-          </div>
-          <button
-            disabled={locked}
-            onClick={() => onChange(true)}
-            className={cn(
-              "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition",
-              recorded ? "bg-success" : "bg-destructive hover:opacity-90",
-            )}
-          >
-            <Mic className="h-4 w-4" />
-            {recorded ? "Đã ghi âm" : "Click here to start"}
-          </button>
-          {recorded && (
-            <div className="text-[11px] text-muted-foreground">Nhấn nộp để gửi bản ghi</div>
-          )}
-        </div>
-      );
-    }
-
-    case "gapmulti": {
-      const arr = (value as (number | null)[]) || q.blanks.map(() => null);
-      const update = (i: number, v: number) => {
-        const next = [...arr];
-        next[i] = v;
-        onChange(next);
-      };
-      const parts = q.prompt.split(/(\{\d+\})/g);
-      return (
-        <div className="space-y-4">
-          <div className="text-sm leading-loose text-foreground">
-            {parts.map((p, i) => {
-              const m = p.match(/\{(\d+)\}/);
-              if (!m) return <span key={i}>{p}</span>;
-              const idx = parseInt(m[1], 10) - 1;
-              const sel = arr[idx];
-              const opt = sel !== null && sel !== undefined ? q.blanks[idx].options[sel] : "___";
-              return (
-                <span
-                  key={i}
-                  className={cn(
-                    "mx-1 inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ring-1",
-                    sel !== null && sel !== undefined
-                      ? "bg-foreground/5 text-foreground ring-foreground/20"
-                      : "bg-muted text-muted-foreground ring-border",
-                    locked &&
-                      (sel === q.blanks[idx].answer
-                        ? "bg-success/15 text-success-foreground ring-success/30"
-                        : "bg-destructive/10 text-destructive ring-destructive/30"),
-                  )}
-                >
-                  {opt}
-                </span>
-              );
-            })}
-          </div>
-          {q.blanks.map((b, i) => (
-            <div key={i} className="rounded-2xl border border-border bg-muted/30 p-3">
-              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Ô trống {i + 1}
-              </div>
-              <div className="space-y-1.5">
-                {b.options.map((opt, j) => {
-                  const selected = arr[i] === j;
-                  const isAnswer = locked && j === b.answer;
-                  return (
-                    <button
-                      key={j}
-                      disabled={locked}
-                      onClick={() => update(i, j)}
-                      className={cn(
-                        "flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm",
-                        selected ? "border-foreground bg-foreground/5" : "border-border bg-surface",
-                        isAnswer && "border-success bg-success/10",
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "h-3.5 w-3.5 rounded-full border-2",
-                          selected ? "border-foreground bg-foreground" : "border-border",
-                          isAnswer && "border-success bg-success",
-                        )}
-                      />
-                      {opt}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      );
-    }
+      return <SingleBody q={q} value={value as number | undefined} onChange={onChange} locked={locked} />;
+    case "multi":
+      return <MultiBody q={q} value={(value as number[]) || []} onChange={onChange} locked={locked} />;
+    case "fill":
+      return <FillBody q={q} value={(value as string[]) || []} onChange={onChange} locked={locked} accent={accent} />;
+    case "essay":
+      return <EssayBody q={q} value={(value as string) || ""} onChange={onChange} locked={locked} accent={accent} />;
+    case "match":
+      return <MatchBody q={q} value={value as (number | null)[] | undefined} onChange={onChange} locked={locked} />;
+    case "rewrite":
+      return <RewriteBody q={q} value={(value as string[]) || []} onChange={onChange} locked={locked} accent={accent} />;
+    case "highlight":
+      return <HighlightBody q={q} value={value as { wordIdx: number | null; correction: string }[] | undefined} onChange={onChange} locked={locked} accent={accent} />;
+    case "sequence":
+      return <SequenceBody q={q} value={value as string[] | undefined} onChange={onChange} locked={locked} />;
+    case "audio":
+      return <AudioBody q={q} value={value === true} onChange={onChange} locked={locked} />;
+    case "gapmulti":
+      return <GapMultiBody q={q} value={value as (number | null)[] | undefined} onChange={onChange} locked={locked} />;
   }
 }
 
-/* ============================================================
- * Review card (summary)
- * ============================================================ */
+/* ---------------- Single ---------------- */
+function SingleBody({
+  q, value, onChange, locked,
+}: { q: QSingle; value?: number; onChange: (v: number) => void; locked: boolean }) {
+  return (
+    <div className="space-y-2">
+      {q.options.map((opt, i) => {
+        const selected = value === i;
+        const isAnswer = locked && i === q.answer;
+        const wrongPick = locked && selected && i !== q.answer;
+        return (
+          <button
+            key={i}
+            disabled={locked}
+            onClick={() => onChange(i)}
+            className={cn(
+              "flex w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left text-sm transition",
+              selected ? "border-foreground bg-foreground/5" : "border-border hover:border-foreground/40 hover:bg-muted/40",
+              isAnswer && "border-success bg-success/10",
+              wrongPick && "border-destructive bg-destructive/10",
+            )}
+          >
+            <span
+              className={cn(
+                "flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2",
+                selected ? "border-foreground" : "border-border",
+                isAnswer && "border-success",
+              )}
+            >
+              {(selected || isAnswer) && (
+                <span
+                  className={cn("h-2 w-2 rounded-full", isAnswer ? "bg-success" : "bg-foreground")}
+                />
+              )}
+            </span>
+            <span>{opt}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
+/* ---------------- Multi ---------------- */
+function MultiBody({
+  q, value, onChange, locked,
+}: { q: QMulti; value: number[]; onChange: (v: number[]) => void; locked: boolean }) {
+  const toggle = (i: number) =>
+    onChange(value.includes(i) ? value.filter((x) => x !== i) : [...value, i]);
+  return (
+    <div className="space-y-2">
+      {q.options.map((opt, i) => {
+        const selected = value.includes(i);
+        const isAnswer = locked && q.answer.includes(i);
+        const wrongPick = locked && selected && !q.answer.includes(i);
+        return (
+          <button
+            key={i}
+            disabled={locked}
+            onClick={() => toggle(i)}
+            className={cn(
+              "flex w-full items-center gap-3 rounded-2xl border-2 px-4 py-3 text-left text-sm transition",
+              selected ? "border-foreground bg-foreground/5" : "border-border hover:border-foreground/40 hover:bg-muted/40",
+              isAnswer && "border-success bg-success/10",
+              wrongPick && "border-destructive bg-destructive/10",
+            )}
+          >
+            <span
+              className={cn(
+                "flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2",
+                selected ? "border-foreground bg-foreground text-background" : "border-border",
+                isAnswer && "border-success bg-success text-white",
+              )}
+            >
+              {(selected || isAnswer) && <Check className="h-3 w-3" />}
+            </span>
+            <span>{opt}</span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ---------------- Fill ---------------- */
+function FillBody({
+  q, value, onChange, locked, accent,
+}: { q: QFill; value: string[]; onChange: (v: string[]) => void; locked: boolean; accent: string }) {
+  const update = (i: number, v: string) => {
+    const next = [...value];
+    next[i] = v;
+    onChange(next);
+  };
+  const parts = q.prompt.split(/(\{\d+\})/g);
+  return (
+    <div className="text-sm leading-loose text-foreground">
+      {parts.map((p, i) => {
+        const m = p.match(/\{(\d+)\}/);
+        if (!m) return <span key={i}>{p}</span>;
+        const idx = parseInt(m[1], 10) - 1;
+        const ok = locked && (value[idx] || "").trim().toLowerCase() === q.blanks[idx].toLowerCase();
+        return (
+          <input
+            key={i}
+            disabled={locked}
+            value={value[idx] || ""}
+            onChange={(e) => update(idx, e.target.value)}
+            placeholder={`Answer ${idx + 1}`}
+            className={cn(
+              "mx-1 inline-block min-w-[140px] rounded-md border-b-2 bg-muted/40 px-2 py-1 text-sm outline-none transition focus:bg-surface focus:ring-2",
+              locked
+                ? ok
+                  ? "border-success bg-success/10"
+                  : "border-destructive bg-destructive/10"
+                : "border-foreground/40",
+            )}
+            style={!locked ? { ["--tw-ring-color" as string]: accent } : undefined}
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+/* ---------------- Essay ---------------- */
+function EssayBody({
+  q, value, onChange, locked, accent,
+}: { q: QEssay; value: string; onChange: (v: string) => void; locked: boolean; accent: string }) {
+  const words = value.trim().split(/\s+/).filter(Boolean).length;
+  return (
+    <div className="space-y-3">
+      <pre className="whitespace-pre-wrap rounded-2xl bg-muted/40 p-4 font-sans text-sm leading-relaxed text-foreground">
+        {q.brief}
+      </pre>
+      <textarea
+        disabled={locked}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="Write your answer here..."
+        className="min-h-[180px] w-full rounded-2xl border border-border bg-surface p-3 text-sm outline-none focus:ring-2"
+        style={{ ["--tw-ring-color" as string]: accent }}
+      />
+      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
+        <span>Minimum required: {q.minWords} words</span>
+        <span className={cn(words >= q.minWords && "font-semibold text-success-foreground")}>
+          Word count: {words}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Match (Drag & Drop) ---------------- */
+function MatchBody({
+  q, value, onChange, locked,
+}: {
+  q: QMatch;
+  value?: (number | null)[];
+  onChange: (v: (number | null)[]) => void;
+  locked: boolean;
+}) {
+  const slots = value ?? q.left.map(() => null);
+  const labels = ["A", "B", "C", "D", "E", "F"];
+  const used = new Set(slots.filter((x) => x !== null) as number[]);
+  const [dragging, setDragging] = useState<number | null>(null);
+
+  const drop = (slotIdx: number) => {
+    if (dragging === null || locked) return;
+    const next = slots.map((v) => (v === dragging ? null : v));
+    next[slotIdx] = dragging;
+    onChange(next);
+    setDragging(null);
+  };
+  const clearSlot = (slotIdx: number) => {
+    const next = [...slots];
+    next[slotIdx] = null;
+    onChange(next);
+  };
+
+  return (
+    <div className="grid gap-5 lg:grid-cols-2">
+      {/* Left slots */}
+      <div className="space-y-3">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Drop the matching item into each slot
+        </div>
+        {q.left.map((l, i) => {
+          const filled = slots[i];
+          const ok = locked && slots[i] === q.answer[i];
+          const wrong = locked && slots[i] !== q.answer[i];
+          return (
+            <div
+              key={i}
+              className={cn(
+                "rounded-2xl border-2 bg-muted/30 p-3 text-sm leading-relaxed transition",
+                !locked && dragging !== null && "border-dashed border-foreground/40",
+                ok && "border-success bg-success/10",
+                wrong && "border-destructive bg-destructive/10",
+                !locked && !ok && !wrong && "border-border",
+              )}
+            >
+              <div className="text-foreground">{l}</div>
+              <div
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={() => drop(i)}
+                className={cn(
+                  "mt-3 flex min-h-[48px] items-center gap-2 rounded-xl border-2 border-dashed px-3 py-2 text-xs",
+                  filled !== null
+                    ? "border-foreground/30 bg-surface"
+                    : "border-border text-muted-foreground",
+                )}
+              >
+                {filled !== null ? (
+                  <>
+                    <span className="rounded-md bg-foreground px-1.5 py-0.5 text-[10px] font-bold text-background">
+                      {labels[filled]}
+                    </span>
+                    <span className="flex-1 text-foreground">{q.right[filled]}</span>
+                    {!locked && (
+                      <button
+                        onClick={() => clearSlot(i)}
+                        className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                        aria-label="Remove"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </>
+                ) : (
+                  <span>Drop an item here</span>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Right pool */}
+      <div className="space-y-2">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Drag from the pool below
+        </div>
+        {q.right.map((r, j) => {
+          const isUsed = used.has(j);
+          return (
+            <div
+              key={j}
+              draggable={!locked && !isUsed}
+              onDragStart={() => setDragging(j)}
+              onDragEnd={() => setDragging(null)}
+              className={cn(
+                "flex cursor-grab items-start gap-2 rounded-2xl border bg-surface p-3 text-sm leading-relaxed shadow-soft transition",
+                isUsed && "opacity-40",
+                !locked && !isUsed && "hover:border-foreground/40 active:cursor-grabbing",
+                locked && "cursor-default",
+              )}
+            >
+              <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
+              <span className="rounded-md bg-foreground px-1.5 py-0.5 text-[10px] font-bold text-background">
+                {labels[j]}
+              </span>
+              <span className="text-foreground">{r}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------- Rewrite ---------------- */
+function RewriteBody({
+  q, value, onChange, locked, accent,
+}: {
+  q: QRewrite;
+  value: string[];
+  onChange: (v: string[]) => void;
+  locked: boolean;
+  accent: string;
+}) {
+  const update = (i: number, v: string) => {
+    const next = [...value];
+    next[i] = v;
+    onChange(next);
+  };
+  return (
+    <div className="space-y-4">
+      {q.items.map((it, i) => {
+        const ok =
+          locked &&
+          (value[i] || "")
+            .trim()
+            .toLowerCase()
+            .replace(/[.!?]+$/, "") ===
+            it.answer.toLowerCase().replace(/[.!?]+$/, "");
+        return (
+          <div key={i}>
+            <div className="text-sm text-foreground">
+              {i + 1}. {it.source}
+            </div>
+            <div className="mt-1 flex items-center gap-2">
+              <span className="text-muted-foreground">→</span>
+              <input
+                disabled={locked}
+                value={value[i] || ""}
+                onChange={(e) => update(i, e.target.value)}
+                placeholder="Type the rewritten sentence..."
+                className={cn(
+                  "flex-1 rounded-lg border bg-muted/40 px-3 py-2 text-sm outline-none focus:bg-surface focus:ring-2",
+                  locked && (ok ? "border-success bg-success/10" : "border-destructive bg-destructive/10"),
+                  !locked && "border-border",
+                )}
+                style={!locked ? { ["--tw-ring-color" as string]: accent } : undefined}
+              />
+            </div>
+            {locked && !ok && (
+              <div className="mt-1 ml-5 text-[11px] text-success-foreground">
+                Suggested: <span className="font-semibold">{it.answer}</span>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ---------------- Highlight ---------------- */
+function HighlightBody({
+  q, value, onChange, locked, accent,
+}: {
+  q: QHighlight;
+  value?: { wordIdx: number | null; correction: string }[];
+  onChange: (v: { wordIdx: number | null; correction: string }[]) => void;
+  locked: boolean;
+  accent: string;
+}) {
+  const arr = value ?? q.items.map(() => ({ wordIdx: null, correction: "" }));
+  const update = (i: number, patch: Partial<{ wordIdx: number | null; correction: string }>) => {
+    const next = [...arr];
+    next[i] = { ...next[i], ...patch };
+    onChange(next);
+  };
+  return (
+    <div className="space-y-5">
+      {q.items.map((it, i) => {
+        const words = it.sentence.split(/\s+/);
+        const a = arr[i] ?? { wordIdx: null, correction: "" };
+        const correctIdx = words.findIndex(
+          (w) => w.replace(/[.,!?]/g, "").toLowerCase() === it.wrongWord.replace(/[.,!?]/g, "").toLowerCase(),
+        );
+        const wordOk = a.wordIdx === correctIdx;
+        const corrOk =
+          a.correction.trim().toLowerCase().replace(/[.,!?]/g, "") ===
+          it.correction.toLowerCase().replace(/[.,!?]/g, "");
+        return (
+          <div key={i} className="rounded-2xl border border-border bg-muted/20 p-4">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Sentence {i + 1} — click the wrong word
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1.5 text-base leading-relaxed">
+              {words.map((w, j) => {
+                const selected = a.wordIdx === j;
+                const showCorrect = locked && j === correctIdx;
+                const showWrongPick = locked && selected && j !== correctIdx;
+                return (
+                  <button
+                    key={j}
+                    disabled={locked}
+                    onClick={() => update(i, { wordIdx: j })}
+                    className={cn(
+                      "rounded-md px-1.5 py-0.5 transition",
+                      !locked && !selected && "hover:bg-warning/20",
+                      selected && !locked && "bg-warning/40 ring-2 ring-warning",
+                      showCorrect && "bg-success/30 ring-2 ring-success text-success-foreground",
+                      showWrongPick && "bg-destructive/20 ring-2 ring-destructive text-destructive line-through",
+                    )}
+                  >
+                    {w}
+                  </button>
+                );
+              })}
+            </div>
+
+            {(a.wordIdx !== null || locked) && (
+              <div className="mt-3 flex items-center gap-2">
+                <span className="text-xs font-semibold text-muted-foreground">Correction:</span>
+                <input
+                  disabled={locked}
+                  value={a.correction}
+                  onChange={(e) => update(i, { correction: e.target.value })}
+                  placeholder="Type the correct word..."
+                  className={cn(
+                    "flex-1 rounded-lg border bg-surface px-3 py-1.5 text-sm outline-none focus:ring-2",
+                    locked && (corrOk && wordOk
+                      ? "border-success bg-success/10"
+                      : "border-destructive bg-destructive/10"),
+                    !locked && "border-border",
+                  )}
+                  style={!locked ? { ["--tw-ring-color" as string]: accent } : undefined}
+                />
+              </div>
+            )}
+            {locked && (!wordOk || !corrOk) && (
+              <div className="mt-2 text-[11px] text-success-foreground">
+                Correct: <span className="font-semibold">{it.wrongWord}</span> →{" "}
+                <span className="font-semibold">{it.correction}</span>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ---------------- Sequence (Drag & Drop reorder) ---------------- */
+function SequenceBody({
+  q, value, onChange, locked,
+}: {
+  q: QSequence;
+  value?: string[];
+  onChange: (v: string[]) => void;
+  locked: boolean;
+}) {
+  const arr = value ?? shuffle(q.items, hash(q.id));
+  if (!value) onChange(arr);
+  const [dragging, setDragging] = useState<number | null>(null);
+
+  const drop = (target: number) => {
+    if (dragging === null || dragging === target || locked) return;
+    const next = [...arr];
+    const [moved] = next.splice(dragging, 1);
+    next.splice(target, 0, moved);
+    onChange(next);
+    setDragging(null);
+  };
+  return (
+    <div className="space-y-2">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        Drag items to reorder
+      </div>
+      {arr.map((s, i) => {
+        const ok = locked && q.items[i] === s;
+        return (
+          <div
+            key={s}
+            draggable={!locked}
+            onDragStart={() => setDragging(i)}
+            onDragOver={(e) => e.preventDefault()}
+            onDrop={() => drop(i)}
+            onDragEnd={() => setDragging(null)}
+            className={cn(
+              "flex items-center gap-3 rounded-2xl border-2 px-3 py-3 text-sm shadow-soft transition",
+              !locked && "cursor-grab active:cursor-grabbing hover:border-foreground/40",
+              dragging === i && "opacity-50",
+              locked && (ok ? "border-success bg-success/10" : "border-destructive bg-destructive/10"),
+              !locked && "border-border bg-surface",
+            )}
+          >
+            <GripVertical className="h-4 w-4 shrink-0 text-muted-foreground" />
+            <span className="font-semibold text-muted-foreground">{i + 1}.</span>
+            <span className="flex-1 text-foreground">{s}</span>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ---------------- Audio ---------------- */
+function AudioBody({
+  q, value, onChange, locked,
+}: { q: QAudio; value: boolean; onChange: (v: boolean) => void; locked: boolean }) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-2xl bg-muted/40 p-6 text-center">
+      <div className="text-sm text-muted-foreground">Read aloud and record your answer</div>
+      <div className="font-display text-base font-semibold text-foreground">
+        "{q.sentence}"
+      </div>
+      <button
+        disabled={locked}
+        onClick={() => onChange(true)}
+        className={cn(
+          "inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition",
+          value ? "bg-success" : "bg-destructive hover:opacity-90",
+        )}
+      >
+        <Mic className="h-4 w-4" />
+        {value ? "Recording saved" : "Click here to start"}
+      </button>
+      {value && (
+        <div className="text-[11px] text-muted-foreground">Submit to send your recording</div>
+      )}
+    </div>
+  );
+}
+
+/* ---------------- Gap multi ---------------- */
+function GapMultiBody({
+  q, value, onChange, locked,
+}: {
+  q: QGapMulti;
+  value?: (number | null)[];
+  onChange: (v: (number | null)[]) => void;
+  locked: boolean;
+}) {
+  const arr = value ?? q.blanks.map(() => null);
+  const update = (i: number, v: number) => {
+    const next = [...arr];
+    next[i] = v;
+    onChange(next);
+  };
+  const parts = q.prompt.split(/(\{\d+\})/g);
+  return (
+    <div className="space-y-4">
+      <div className="text-base leading-loose text-foreground">
+        {parts.map((p, i) => {
+          const m = p.match(/\{(\d+)\}/);
+          if (!m) return <span key={i}>{p}</span>;
+          const idx = parseInt(m[1], 10) - 1;
+          const sel = arr[idx];
+          const opt =
+            sel !== null && sel !== undefined ? q.blanks[idx].options[sel] : `Blank ${idx + 1}`;
+          return (
+            <span
+              key={i}
+              className={cn(
+                "mx-1 inline-flex items-center rounded-md px-2 py-0.5 text-sm font-semibold ring-1",
+                sel !== null && sel !== undefined
+                  ? "bg-foreground/5 text-foreground ring-foreground/20"
+                  : "bg-muted text-muted-foreground ring-border",
+                locked &&
+                  (sel === q.blanks[idx].answer
+                    ? "bg-success/15 text-success-foreground ring-success/30"
+                    : "bg-destructive/10 text-destructive ring-destructive/30"),
+              )}
+            >
+              {opt}
+            </span>
+          );
+        })}
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {q.blanks.map((b, i) => (
+          <div key={i} className="rounded-2xl border border-border bg-muted/20 p-3">
+            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Blank {i + 1}
+            </div>
+            <div className="space-y-1.5">
+              {b.options.map((opt, j) => {
+                const selected = arr[i] === j;
+                const isAnswer = locked && j === b.answer;
+                return (
+                  <button
+                    key={j}
+                    disabled={locked}
+                    onClick={() => update(i, j)}
+                    className={cn(
+                      "flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm",
+                      selected ? "border-foreground bg-foreground/5" : "border-border bg-surface",
+                      isAnswer && "border-success bg-success/10",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "h-3.5 w-3.5 rounded-full border-2",
+                        selected ? "border-foreground bg-foreground" : "border-border",
+                        isAnswer && "border-success bg-success",
+                      )}
+                    />
+                    {opt}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ============================================================
+ * Review card
+ * ============================================================ */
 function ReviewCard({
-  q,
-  answer,
-  result,
-  accent,
+  q, answer, result, accent,
 }: {
   q: Question;
   answer: AnswerState;
@@ -1166,14 +1279,14 @@ function ReviewCard({
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Câu {q.index} • {kindLabel(q.kind)}
+            Question {q.index} • {kindLabel(q.kind)}
           </div>
           <div className="mt-1 text-sm font-semibold text-foreground">
             {renderPromptHead(q.prompt)}
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {status && (
+          {status ? (
             <span
               className={cn(
                 "rounded-full px-2 py-0.5 text-[10px] font-semibold",
@@ -1184,10 +1297,9 @@ function ReviewCard({
             >
               {FEEDBACK[status].label}
             </span>
-          )}
-          {!result && (
+          ) : (
             <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
-              <CircleDashed className="h-3 w-3" /> Chưa làm
+              <CircleDashed className="h-3 w-3" /> Not attempted
             </span>
           )}
           <span
@@ -1208,25 +1320,30 @@ function ReviewCard({
 function CorrectAnswerHint({ q }: { q: Question }) {
   switch (q.kind) {
     case "single":
-      return <span>Đáp án đúng: {q.options[q.answer]}</span>;
+      return <span>Correct answer: {q.options[q.answer]}</span>;
     case "multi":
-      return <span>Đáp án đúng: {q.answer.map((i) => q.options[i]).join(" • ")}</span>;
+      return <span>Correct answers: {q.answer.map((i) => q.options[i]).join(" • ")}</span>;
     case "fill":
-      return <span>Đáp án đúng: {q.blanks.join(" / ")}</span>;
+      return <span>Correct answers: {q.blanks.join(" / ")}</span>;
     case "match": {
       const labels = ["A", "B", "C", "D", "E", "F"];
-      return <span>Đáp án đúng: {q.answer.map((a, i) => `${i + 1}→${labels[a]}`).join(", ")}</span>;
+      return <span>Correct mapping: {q.answer.map((a, i) => `${i + 1}→${labels[a]}`).join(", ")}</span>;
     }
     case "rewrite":
+      return <span>Suggested: {q.items.map((it) => it.answer).join(" / ")}</span>;
     case "highlight":
-      return <span>Đáp án đúng: {q.items.map((it) => it.answer).join(" / ")}</span>;
+      return (
+        <span>
+          Correct: {q.items.map((it) => `${it.wrongWord}→${it.correction}`).join(" / ")}
+        </span>
+      );
     case "sequence":
-      return <span>Thứ tự đúng: {q.items.map((_, i) => i + 1).join(" → ")}</span>;
+      return <span>Correct order: {q.items.join(" → ")}</span>;
     case "gapmulti":
-      return <span>Đáp án đúng: {q.blanks.map((b) => b.options[b.answer]).join(" / ")}</span>;
+      return <span>Correct answers: {q.blanks.map((b) => b.options[b.answer]).join(" / ")}</span>;
     case "essay":
-      return <span>Đánh giá theo độ dài tối thiểu {q.minWords} từ và nội dung.</span>;
+      return <span>Graded by minimum word count ({q.minWords}) and content quality.</span>;
     case "audio":
-      return <span>Đánh giá phát âm sẽ do giáo viên xem xét.</span>;
+      return <span>Pronunciation will be reviewed by your teacher.</span>;
   }
 }
