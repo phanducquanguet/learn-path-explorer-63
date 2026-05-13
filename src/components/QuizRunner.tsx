@@ -567,13 +567,6 @@ function grade(q: Question, v: AnswerState): Result {
       const s = ratio(ok.filter(Boolean).length, q.blanks.length);
       return { status: s, earned: earn(s, q.maxScore) };
     }
-    case "essay": {
-      const text = (v as string) || "";
-      const words = text.trim().split(/\s+/).filter(Boolean).length;
-      const s: Status =
-        words >= q.minWords ? "correct" : words >= q.minWords / 2 ? "partial" : "incorrect";
-      return { status: s, earned: earn(s, q.maxScore) };
-    }
     case "match": {
       const arr = (v as (number | null)[]) || [];
       const ok = q.answer.map((a, i) => arr[i] === a);
