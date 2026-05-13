@@ -735,6 +735,7 @@ function ActivitiesView({
 
 /* =========== Competence View =========== */
 
+function CompetenceView() {
   const skills = [
     { name: "Listening", value: 82, hue: 200 },
     { name: "Speaking", value: 74, hue: 280 },
