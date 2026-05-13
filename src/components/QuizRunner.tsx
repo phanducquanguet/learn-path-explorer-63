@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
   ArrowRight,
   Check,
   CheckCircle2,
+  ChevronDown,
   CircleDashed,
   GripVertical,
   Mic,
@@ -57,7 +58,6 @@ export type Question =
   | QSingle
   | QMulti
   | QFill
-  | QEssay
   | QMatch
   | QRewrite
   | QHighlight
@@ -117,16 +117,6 @@ export function buildQuiz(quizId: string): Question[] {
       prompt: "Multi choice: Which of the following are renewable energy sources?",
       options: ["Solar power", "Coal", "Wind power", "Natural gas"],
       answer: [0, 2],
-    },
-    {
-      id: "q4",
-      index: 4,
-      kind: "essay",
-      maxScore: 3,
-      prompt: "Essay — Reply to Jordan",
-      brief:
-        "You received this email.\n\nHi! I'll be travelling to your country with my parents from the 10th to the 18th of next month. We're planning to stay near the city where you live, and I was wondering if we could meet while we're there. It would be lovely to catch up in person!\nPlease let me know if you're available.\nBest, Jordan\n\nWrite an email to Jordan:\n• say why you won't be free to meet when Jordan visits\n• suggest a place Jordan could explore in your area\n• offer another time later in the year when you could meet\n\nWrite at least 50 words in the box below.",
-      minWords: 50,
     },
     {
       id: "q5",
@@ -275,7 +265,7 @@ export function QuizRunner({
     setResults((p) => ({ ...p, [q.id]: grade(q, answers[q.id]) }));
   const next = () =>
     idx < questions.length - 1 ? setIdx(idx + 1) : setPhase("summary");
-  const prev = () => idx > 0 && setIdx(idx - 1);
+  
   const reset = () => {
     setAnswers({});
     setResults({});
@@ -346,26 +336,18 @@ export function QuizRunner({
   }
 
   return (
-    <div className="space-y-4">
-      {/* status bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-surface p-3 ring-1 ring-border">
-        <div className="flex items-center gap-3">
-          <button
-            onClick={onExit}
-            className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-          >
-            <X className="h-3.5 w-3.5" /> Exit
-          </button>
-          <div className="hidden text-xs text-muted-foreground sm:block">
-            Question <span className="font-semibold text-foreground">{q.index}</span> of {questions.length}
-          </div>
+    <div className="space-y-5">
+      {/* Total score bar */}
+      <div className="flex items-center justify-between gap-3 rounded-2xl bg-surface p-3 ring-1 ring-border">
+        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          Total score
         </div>
-        <div className="flex items-center gap-2">
-          <div className="rounded-full bg-muted/60 px-3 py-1 text-xs font-semibold text-foreground">
-            {submittedCount}/{questions.length} submitted
+        <div className="flex items-center gap-3">
+          <div className="text-[11px] text-muted-foreground">
+            {submittedCount}/{questions.length} answered
           </div>
           <div
-            className="rounded-full px-3 py-1 text-xs font-bold text-white"
+            className="rounded-full px-4 py-1.5 text-sm font-bold text-white shadow-soft"
             style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
           >
             {totalEarned}/{totalMax} pts
@@ -373,26 +355,43 @@ export function QuizRunner({
         </div>
       </div>
 
-      {/* progress dots */}
-      <div className="flex flex-wrap items-center gap-1.5">
+      {/* Question pills */}
+      <div className="flex flex-wrap items-center gap-2">
         {questions.map((qq, i) => {
           const r = results[qq.id];
           const active = i === idx;
+          const done = Boolean(r);
           return (
             <button
               key={qq.id}
               onClick={() => setIdx(i)}
-              className={cn(
-                "inline-flex h-7 min-w-7 items-center justify-center rounded-full px-2 text-[11px] font-semibold ring-1 transition",
-                active ? "ring-2 ring-foreground" : "ring-border hover:bg-muted",
-                r?.status === "correct" && "bg-success/15 text-success-foreground",
-                r?.status === "partial" && "bg-warning/15 text-warning-foreground",
-                r?.status === "incorrect" && "bg-destructive/10 text-destructive",
-                !r && !active && "bg-surface text-muted-foreground",
-              )}
               title={`Question ${qq.index}`}
+              className={cn(
+                "group relative inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-xl px-2.5 text-xs font-bold transition",
+                // base — not started
+                !done && !active &&
+                  "bg-surface text-muted-foreground ring-1 ring-border hover:bg-muted hover:text-foreground",
+                // current
+                active && !done &&
+                  "bg-foreground text-background shadow-elevated scale-105",
+                active && done &&
+                  "scale-105 shadow-elevated ring-2 ring-foreground",
+                // done states
+                done && r?.status === "correct" && "bg-success/20 text-success-foreground",
+                done && r?.status === "partial" && "bg-warning/25 text-warning-foreground",
+                done && r?.status === "incorrect" && "bg-destructive/15 text-destructive",
+              )}
             >
-              {qq.index}
+              {done && r?.status === "correct" && <Check className="h-3 w-3" />}
+              {done && r?.status === "incorrect" && <X className="h-3 w-3" />}
+              {done && r?.status === "partial" && <Sparkles className="h-3 w-3" />}
+              <span>{qq.index}</span>
+              {active && (
+                <span
+                  className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full"
+                  style={{ background: accent }}
+                />
+              )}
             </button>
           );
         })}
@@ -400,16 +399,13 @@ export function QuizRunner({
 
       {/* question card */}
       <div className="rounded-3xl bg-surface p-5 ring-1 ring-border sm:p-7">
-        <div className="mb-5 flex items-start justify-between gap-3">
-          <div>
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Question {q.index} • {kindLabel(q.kind)}
-            </div>
-            <h3 className="mt-1 font-display text-lg font-semibold leading-snug text-foreground">
-              {renderPromptHead(q.prompt)}
-            </h3>
+        <div className="mb-5">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Question {q.index} • {kindLabel(q.kind)}
           </div>
-          <ScoreBadge max={q.maxScore} earned={result?.earned} accent={accent} />
+          <h3 className="mt-1 font-display text-lg font-semibold leading-snug text-foreground">
+            {renderPromptHead(q.prompt)}
+          </h3>
         </div>
 
         <QuestionBody
@@ -426,11 +422,10 @@ export function QuizRunner({
       {/* footer */}
       <div className="flex items-center justify-between gap-3">
         <button
-          onClick={prev}
-          disabled={idx === 0}
-          className="inline-flex items-center gap-2 rounded-xl bg-surface px-4 py-2.5 text-sm font-medium text-foreground ring-1 ring-border hover:bg-muted disabled:opacity-40"
+          onClick={onExit}
+          className="inline-flex items-center gap-2 rounded-xl bg-surface px-4 py-2.5 text-sm font-medium text-muted-foreground ring-1 ring-border hover:bg-muted hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" /> Previous
+          <ArrowLeft className="h-4 w-4" /> Back to course
         </button>
         {!result ? (
           <button
@@ -460,27 +455,6 @@ export function QuizRunner({
  * Pieces
  * ============================================================ */
 
-function ScoreBadge({
-  max,
-  earned,
-  accent,
-}: {
-  max: number;
-  earned?: number;
-  accent: string;
-}) {
-  return (
-    <div className="shrink-0 rounded-2xl bg-muted/60 px-3 py-2 text-right ring-1 ring-border">
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Score
-      </div>
-      <div className="font-display text-sm font-bold" style={{ color: accent }}>
-        {earned !== undefined ? `${earned} / ${max}` : `— / ${max}`}
-      </div>
-    </div>
-  );
-}
-
 function FeedbackBlock({ status }: { status: Status }) {
   const tone =
     status === "correct"
@@ -506,7 +480,6 @@ function kindLabel(k: Question["kind"]) {
     single: "One choice",
     multi: "Multi choice",
     fill: "Fill in the blank",
-    essay: "Essay",
     match: "Matching (drag & drop)",
     rewrite: "Sentence rewrite",
     highlight: "Highlight & correct",
@@ -528,8 +501,6 @@ function hasAnswer(q: Question, v: AnswerState): boolean {
       return Array.isArray(v) && (v as number[]).length > 0;
     case "fill":
       return Array.isArray(v) && (v as string[]).every((s) => s && s.trim());
-    case "essay":
-      return typeof v === "string" && v.trim().length > 0;
     case "match":
       return Array.isArray(v) && (v as (number | null)[]).every((x) => x !== null && x !== undefined);
     case "rewrite":
@@ -577,13 +548,6 @@ function grade(q: Question, v: AnswerState): Result {
       const arr = (v as string[]) || [];
       const ok = q.blanks.map((b, i) => (arr[i] || "").trim().toLowerCase() === b.toLowerCase());
       const s = ratio(ok.filter(Boolean).length, q.blanks.length);
-      return { status: s, earned: earn(s, q.maxScore) };
-    }
-    case "essay": {
-      const text = (v as string) || "";
-      const words = text.trim().split(/\s+/).filter(Boolean).length;
-      const s: Status =
-        words >= q.minWords ? "correct" : words >= q.minWords / 2 ? "partial" : "incorrect";
       return { status: s, earned: earn(s, q.maxScore) };
     }
     case "match": {
@@ -662,8 +626,6 @@ function QuestionBody({
       return <MultiBody q={q} value={(value as number[]) || []} onChange={onChange} locked={locked} />;
     case "fill":
       return <FillBody q={q} value={(value as string[]) || []} onChange={onChange} locked={locked} accent={accent} />;
-    case "essay":
-      return <EssayBody q={q} value={(value as string) || ""} onChange={onChange} locked={locked} accent={accent} />;
     case "match":
       return <MatchBody q={q} value={value as (number | null)[] | undefined} onChange={onChange} locked={locked} />;
     case "rewrite":
@@ -803,33 +765,6 @@ function FillBody({
   );
 }
 
-/* ---------------- Essay ---------------- */
-function EssayBody({
-  q, value, onChange, locked, accent,
-}: { q: QEssay; value: string; onChange: (v: string) => void; locked: boolean; accent: string }) {
-  const words = value.trim().split(/\s+/).filter(Boolean).length;
-  return (
-    <div className="space-y-3">
-      <pre className="whitespace-pre-wrap rounded-2xl bg-muted/40 p-4 font-sans text-sm leading-relaxed text-foreground">
-        {q.brief}
-      </pre>
-      <textarea
-        disabled={locked}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder="Write your answer here..."
-        className="min-h-[180px] w-full rounded-2xl border border-border bg-surface p-3 text-sm outline-none focus:ring-2"
-        style={{ ["--tw-ring-color" as string]: accent }}
-      />
-      <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-        <span>Minimum required: {q.minWords} words</span>
-        <span className={cn(words >= q.minWords && "font-semibold text-success-foreground")}>
-          Word count: {words}
-        </span>
-      </div>
-    </div>
-  );
-}
 
 /* ---------------- Match (Drag & Drop) ---------------- */
 function MatchBody({
@@ -1187,92 +1122,105 @@ function GapMultiBody({
   locked: boolean;
 }) {
   const arr = value ?? q.blanks.map(() => null);
+  const [openIdx, setOpenIdx] = useState<number | null>(null);
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function onDocClick(e: MouseEvent) {
+      if (!wrapRef.current?.contains(e.target as Node)) setOpenIdx(null);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, []);
+
   const update = (i: number, v: number) => {
     const next = [...arr];
     next[i] = v;
     onChange(next);
+    setOpenIdx(null);
   };
+
   const parts = q.prompt.split(/(\{\d+\})/g);
   return (
-    <div className="space-y-4">
-      <div className="text-base leading-loose text-foreground">
-        {parts.map((p, i) => {
-          const m = p.match(/\{(\d+)\}/);
-          if (!m) return <span key={i}>{p}</span>;
-          const idx = parseInt(m[1], 10) - 1;
-          const sel = arr[idx];
-          const opt =
-            sel !== null && sel !== undefined ? q.blanks[idx].options[sel] : `Blank ${idx + 1}`;
-          return (
-            <span
-              key={i}
+    <div ref={wrapRef} className="text-base leading-loose text-foreground">
+      {parts.map((p, i) => {
+        const m = p.match(/\{(\d+)\}/);
+        if (!m) return <span key={i}>{p}</span>;
+        const idx = parseInt(m[1], 10) - 1;
+        const sel = arr[idx];
+        const filled = sel !== null && sel !== undefined;
+        const label = filled ? q.blanks[idx].options[sel as number] : `Choose ${idx + 1}`;
+        const isOpen = openIdx === idx;
+        const ok = locked && sel === q.blanks[idx].answer;
+        const wrong = locked && !ok;
+        return (
+          <span key={i} className="relative mx-1 inline-block align-baseline">
+            <button
+              type="button"
+              disabled={locked}
+              onClick={() => setOpenIdx(isOpen ? null : idx)}
               className={cn(
-                "mx-1 inline-flex items-center rounded-md px-2 py-0.5 text-sm font-semibold ring-1",
-                sel !== null && sel !== undefined
-                  ? "bg-foreground/5 text-foreground ring-foreground/20"
-                  : "bg-muted text-muted-foreground ring-border",
-                locked &&
-                  (sel === q.blanks[idx].answer
-                    ? "bg-success/15 text-success-foreground ring-success/30"
-                    : "bg-destructive/10 text-destructive ring-destructive/30"),
+                "inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-sm font-semibold ring-1 transition",
+                filled
+                  ? "bg-foreground/5 text-foreground ring-foreground/30"
+                  : "bg-muted text-muted-foreground ring-dashed ring-border hover:bg-muted/70",
+                isOpen && "ring-2 ring-foreground",
+                ok && "bg-success/15 text-success-foreground ring-success/40",
+                wrong && "bg-destructive/10 text-destructive ring-destructive/30",
               )}
             >
-              {opt}
-            </span>
-          );
-        })}
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2">
-        {q.blanks.map((b, i) => (
-          <div key={i} className="rounded-2xl border border-border bg-muted/20 p-3">
-            <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Blank {i + 1}
-            </div>
-            <div className="space-y-1.5">
-              {b.options.map((opt, j) => {
-                const selected = arr[i] === j;
-                const isAnswer = locked && j === b.answer;
-                return (
-                  <button
-                    key={j}
-                    disabled={locked}
-                    onClick={() => update(i, j)}
-                    className={cn(
-                      "flex w-full items-center gap-2 rounded-lg border px-3 py-2 text-left text-sm",
-                      selected ? "border-foreground bg-foreground/5" : "border-border bg-surface",
-                      isAnswer && "border-success bg-success/10",
-                    )}
-                  >
-                    <span
+              <span>{label}</span>
+              {!locked && <ChevronDown className="h-3.5 w-3.5 opacity-70" />}
+            </button>
+            {isOpen && !locked && (
+              <span
+                role="listbox"
+                className="absolute left-0 top-full z-20 mt-1 block min-w-[180px] overflow-hidden rounded-xl bg-surface p-1 shadow-elevated ring-1 ring-border"
+              >
+                {q.blanks[idx].options.map((opt, j) => {
+                  const selected = sel === j;
+                  return (
+                    <button
+                      key={j}
+                      type="button"
+                      onClick={() => update(idx, j)}
                       className={cn(
-                        "h-3.5 w-3.5 rounded-full border-2",
-                        selected ? "border-foreground bg-foreground" : "border-border",
-                        isAnswer && "border-success bg-success",
+                        "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm transition",
+                        selected
+                          ? "bg-foreground text-background"
+                          : "text-foreground hover:bg-muted",
                       )}
-                    />
-                    {opt}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
-      </div>
+                    >
+                      {selected && <Check className="h-3.5 w-3.5" />}
+                      <span className="flex-1">{opt}</span>
+                    </button>
+                  );
+                })}
+              </span>
+            )}
+            {locked && wrong && (
+              <span className="ml-2 text-[11px] font-medium text-success-foreground">
+                → {q.blanks[idx].options[q.blanks[idx].answer]}
+              </span>
+            )}
+          </span>
+        );
+      })}
     </div>
   );
 }
-
 /* ============================================================
  * Review card
  * ============================================================ */
 function ReviewCard({
-  q, answer, result, accent,
+  q, answer, result,
 }: {
   q: Question;
   answer: AnswerState;
   result?: Result;
   accent: string;
 }) {
+  void answer;
   const status = result?.status;
   return (
     <div className="rounded-2xl bg-surface p-5 ring-1 ring-border">
@@ -1285,30 +1233,22 @@ function ReviewCard({
             {renderPromptHead(q.prompt)}
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          {status ? (
-            <span
-              className={cn(
-                "rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                status === "correct" && "bg-success/15 text-success-foreground",
-                status === "partial" && "bg-warning/15 text-warning-foreground",
-                status === "incorrect" && "bg-destructive/10 text-destructive",
-              )}
-            >
-              {FEEDBACK[status].label}
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
-              <CircleDashed className="h-3 w-3" /> Not attempted
-            </span>
-          )}
+        {status ? (
           <span
-            className="rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
-            style={{ background: accent }}
+            className={cn(
+              "shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold",
+              status === "correct" && "bg-success/15 text-success-foreground",
+              status === "partial" && "bg-warning/15 text-warning-foreground",
+              status === "incorrect" && "bg-destructive/10 text-destructive",
+            )}
           >
-            {result?.earned ?? 0}/{q.maxScore}
+            {FEEDBACK[status].label}
           </span>
-        </div>
+        ) : (
+          <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+            <CircleDashed className="h-3 w-3" /> Not attempted
+          </span>
+        )}
       </div>
       <div className="mt-3 text-xs text-muted-foreground">
         <CorrectAnswerHint q={q} />
@@ -1316,7 +1256,6 @@ function ReviewCard({
     </div>
   );
 }
-
 function CorrectAnswerHint({ q }: { q: Question }) {
   switch (q.kind) {
     case "single":
@@ -1341,8 +1280,6 @@ function CorrectAnswerHint({ q }: { q: Question }) {
       return <span>Correct order: {q.items.join(" → ")}</span>;
     case "gapmulti":
       return <span>Correct answers: {q.blanks.map((b) => b.options[b.answer]).join(" / ")}</span>;
-    case "essay":
-      return <span>Graded by minimum word count ({q.minWords}) and content quality.</span>;
     case "audio":
       return <span>Pronunciation will be reviewed by your teacher.</span>;
   }
