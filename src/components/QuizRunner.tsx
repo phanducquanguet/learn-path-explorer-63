@@ -518,8 +518,6 @@ function hasAnswer(q: Question, v: AnswerState): boolean {
       return Array.isArray(v) && (v as number[]).length > 0;
     case "fill":
       return Array.isArray(v) && (v as string[]).every((s) => s && s.trim());
-    case "essay":
-      return typeof v === "string" && v.trim().length > 0;
     case "match":
       return Array.isArray(v) && (v as (number | null)[]).every((x) => x !== null && x !== undefined);
     case "rewrite":
