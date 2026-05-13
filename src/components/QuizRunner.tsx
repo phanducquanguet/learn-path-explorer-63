@@ -119,16 +119,6 @@ export function buildQuiz(quizId: string): Question[] {
       answer: [0, 2],
     },
     {
-      id: "q4",
-      index: 4,
-      kind: "essay",
-      maxScore: 3,
-      prompt: "Essay — Reply to Jordan",
-      brief:
-        "You received this email.\n\nHi! I'll be travelling to your country with my parents from the 10th to the 18th of next month. We're planning to stay near the city where you live, and I was wondering if we could meet while we're there. It would be lovely to catch up in person!\nPlease let me know if you're available.\nBest, Jordan\n\nWrite an email to Jordan:\n• say why you won't be free to meet when Jordan visits\n• suggest a place Jordan could explore in your area\n• offer another time later in the year when you could meet\n\nWrite at least 50 words in the box below.",
-      minWords: 50,
-    },
-    {
       id: "q5",
       index: 5,
       kind: "match",
