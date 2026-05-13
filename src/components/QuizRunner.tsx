@@ -279,58 +279,172 @@ export function QuizRunner({
 
   if (phase === "summary") {
     const pct = Math.round((totalEarned / totalMax) * 100);
+    const correctCount = Object.values(results).filter((r) => r.status === "correct").length;
+    const partialCount = Object.values(results).filter((r) => r.status === "partial").length;
+    const incorrectCount = Object.values(results).filter((r) => r.status === "incorrect").length;
     return (
       <div className="space-y-5">
         <div
           className="overflow-hidden rounded-3xl p-6 text-white shadow-elevated sm:p-8"
           style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
         >
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/85">
-                <Trophy className="h-4 w-4" /> Quiz completed
-              </div>
-              <div className="mt-2 flex items-end gap-3">
-                <div className="font-display text-5xl font-bold leading-none">
-                  {totalEarned}
-                </div>
-                <div className="pb-2 text-lg text-white/85">/ {totalMax} pts</div>
-              </div>
-              <div className="mt-1 text-sm text-white/85">
-                Accuracy: <span className="font-semibold">{pct}%</span> —{" "}
-                {pct >= 70 ? "Great job, you passed!" : "Review and try again to improve."}
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={reset}
-                className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2.5 text-sm font-semibold text-white ring-1 ring-white/20 backdrop-blur hover:bg-white/25"
-              >
-                <RotateCcw className="h-4 w-4" /> Retake
-              </button>
-              <button
-                onClick={onExit}
-                className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-foreground hover:opacity-90"
-              >
-                Back to course
-              </button>
-            </div>
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/85">
+            <Trophy className="h-4 w-4" /> Quiz completed
+          </div>
+          <div className="mt-3 flex items-end gap-3">
+            <div className="font-display text-6xl font-bold leading-none">{totalEarned}</div>
+            <div className="pb-2 text-xl text-white/85">/ {totalMax} pts</div>
+          </div>
+          <div className="mt-2 text-sm text-white/85">
+            Accuracy: <span className="font-semibold">{pct}%</span> —{" "}
+            {pct >= 70 ? "Great job, you passed!" : "Review and try again to improve."}
           </div>
           <div className="mt-5 h-2 w-full overflow-hidden rounded-full bg-white/20">
             <div className="h-full rounded-full bg-white" style={{ width: `${pct}%` }} />
           </div>
+          <div className="mt-6 grid grid-cols-3 gap-3">
+            <SummaryStat label="Correct" value={correctCount} />
+            <SummaryStat label="Partial" value={partialCount} />
+            <SummaryStat label="Incorrect" value={incorrectCount} />
+          </div>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <button
+              onClick={() => {
+                setReviewIdx(0);
+                setPhase("review");
+              }}
+              className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-foreground hover:opacity-90"
+            >
+              <Sparkles className="h-4 w-4" /> Review results
+            </button>
+            <button
+              onClick={reset}
+              className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2.5 text-sm font-semibold text-white ring-1 ring-white/20 backdrop-blur hover:bg-white/25"
+            >
+              <RotateCcw className="h-4 w-4" /> Retake
+            </button>
+            <button
+              onClick={onExit}
+              className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2.5 text-sm font-semibold text-white ring-1 ring-white/20 hover:bg-white/20"
+            >
+              Back to course
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (phase === "review") {
+    const rq = questions[reviewIdx];
+    const rResult = results[rq.id];
+    return (
+      <div className="space-y-5">
+        {/* Header */}
+        <div className="flex items-center justify-between gap-3 rounded-2xl bg-surface p-3 ring-1 ring-border">
+          <button
+            onClick={() => setPhase("summary")}
+            className="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+          >
+            <ArrowLeft className="h-3.5 w-3.5" /> Back to results
+          </button>
+          <div
+            className="rounded-full px-4 py-1.5 text-sm font-bold text-white shadow-soft"
+            style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
+          >
+            {totalEarned}/{totalMax} pts
+          </div>
         </div>
 
-        <div className="space-y-3">
-          {questions.map((qq) => (
-            <ReviewCard
-              key={qq.id}
-              q={qq}
-              answer={answers[qq.id]}
-              result={results[qq.id]}
-              accent={accent}
-            />
-          ))}
+        {/* Question pills */}
+        <div className="flex flex-wrap items-center gap-2">
+          {questions.map((qq, i) => {
+            const r = results[qq.id];
+            const active = i === reviewIdx;
+            return (
+              <button
+                key={qq.id}
+                onClick={() => setReviewIdx(i)}
+                className={cn(
+                  "inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-xl px-2.5 text-xs font-bold transition",
+                  active && "scale-105 shadow-elevated ring-2 ring-foreground",
+                  r?.status === "correct" && "bg-success/20 text-success-foreground",
+                  r?.status === "partial" && "bg-warning/25 text-warning-foreground",
+                  r?.status === "incorrect" && "bg-destructive/15 text-destructive",
+                  !r && "bg-surface text-muted-foreground ring-1 ring-border",
+                )}
+              >
+                {r?.status === "correct" && <Check className="h-3 w-3" />}
+                {r?.status === "incorrect" && <X className="h-3 w-3" />}
+                {r?.status === "partial" && <Sparkles className="h-3 w-3" />}
+                <span>{qq.index}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Locked question with correct answer revealed */}
+        <div className="rounded-3xl bg-surface p-5 ring-1 ring-border sm:p-7">
+          <div className="mb-5 flex items-start justify-between gap-3">
+            <div>
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Question {rq.index} • {kindLabel(rq.kind)}
+              </div>
+              <h3 className="mt-1 font-display text-lg font-semibold leading-snug text-foreground">
+                {renderPromptHead(rq.prompt)}
+              </h3>
+            </div>
+            {rResult && (
+              <span
+                className={cn(
+                  "shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold",
+                  rResult.status === "correct" && "bg-success/15 text-success-foreground",
+                  rResult.status === "partial" && "bg-warning/15 text-warning-foreground",
+                  rResult.status === "incorrect" && "bg-destructive/10 text-destructive",
+                )}
+              >
+                {FEEDBACK[rResult.status].label}
+              </span>
+            )}
+          </div>
+
+          <QuestionBody
+            q={rq}
+            value={answers[rq.id]}
+            onChange={() => {}}
+            locked
+            accent={accent}
+          />
+
+          <div className="mt-5 rounded-2xl bg-muted/40 p-4 text-xs text-muted-foreground ring-1 ring-border">
+            <div className="font-semibold text-foreground">Correct answer</div>
+            <div className="mt-1">
+              <CorrectAnswerHint q={rq} />
+            </div>
+          </div>
+        </div>
+
+        {/* Footer nav */}
+        <div className="flex items-center justify-between gap-3">
+          <button
+            onClick={() => setReviewIdx(Math.max(0, reviewIdx - 1))}
+            disabled={reviewIdx === 0}
+            className="inline-flex items-center gap-2 rounded-xl bg-surface px-4 py-2.5 text-sm font-medium text-foreground ring-1 ring-border hover:bg-muted disabled:opacity-40"
+          >
+            <ArrowLeft className="h-4 w-4" /> Previous
+          </button>
+          <button
+            onClick={() =>
+              reviewIdx < questions.length - 1
+                ? setReviewIdx(reviewIdx + 1)
+                : setPhase("summary")
+            }
+            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-soft hover:opacity-95"
+            style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
+          >
+            {reviewIdx === questions.length - 1 ? "Back to results" : "Next"}
+            <ArrowRight className="h-4 w-4" />
+          </button>
         </div>
       </div>
     );
