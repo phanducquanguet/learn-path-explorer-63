@@ -58,7 +58,6 @@ export type Question =
   | QSingle
   | QMulti
   | QFill
-  | QEssay
   | QMatch
   | QRewrite
   | QHighlight
