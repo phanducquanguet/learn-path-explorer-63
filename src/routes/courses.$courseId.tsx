@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { getCourse, type Activity, type Unit } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
+import { QuizRunner } from "@/components/QuizRunner";
 
 export const Route = createFileRoute("/courses/$courseId")({
   head: ({ params }) => ({
