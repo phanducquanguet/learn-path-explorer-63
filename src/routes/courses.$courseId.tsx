@@ -24,7 +24,7 @@ import {
 } from "lucide-react";
 import { getCourse, type Activity, type Unit } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
-import { QuizRunner } from "@/components/QuizRunner";
+import { QuizPanel } from "@/components/QuizPanel";
 
 export const Route = createFileRoute("/courses/$courseId")({
   head: ({ params }) => ({
@@ -235,153 +235,149 @@ function CoursePage() {
 
         {/* Main */}
         <main className="min-w-0 flex-1 space-y-6">
-          {/* HERO */}
-          <section
-            className="relative overflow-hidden rounded-[2rem] p-1 shadow-elevated"
-            style={{
-              background: `linear-gradient(135deg, oklch(0.55 0.2 ${level.hue}), oklch(0.45 0.22 ${(level.hue + 40) % 360}))`,
-            }}
-          >
-            <div className="relative overflow-hidden rounded-[1.85rem] bg-gradient-to-br from-foreground/95 via-foreground/90 to-foreground/95 p-8 sm:p-10">
-              {/* glow orbs */}
-              <div
-                className="absolute -right-24 -top-24 h-72 w-72 rounded-full opacity-40 blur-3xl"
-                style={{ background: `oklch(0.7 0.22 ${level.hue})` }}
-              />
-              <div
-                className="absolute -bottom-32 left-1/3 h-72 w-72 rounded-full opacity-30 blur-3xl"
-                style={{ background: `oklch(0.7 0.22 ${(level.hue + 60) % 360})` }}
-              />
+          {quizOpen ? (
+            <QuizPanel quiz={quizOpen} hue={level.hue} onClose={() => setQuizOpen(null)} />
+          ) : (
+            <>
+              {/* HERO */}
+              <section
+                className="relative overflow-hidden rounded-[2rem] p-1 shadow-elevated"
+                style={{
+                  background: `linear-gradient(135deg, oklch(0.55 0.2 ${level.hue}), oklch(0.45 0.22 ${(level.hue + 40) % 360}))`,
+                }}
+              >
+                <div className="relative overflow-hidden rounded-[1.85rem] bg-gradient-to-br from-foreground/95 via-foreground/90 to-foreground/95 p-8 sm:p-10">
+                  <div
+                    className="absolute -right-24 -top-24 h-72 w-72 rounded-full opacity-40 blur-3xl"
+                    style={{ background: `oklch(0.7 0.22 ${level.hue})` }}
+                  />
+                  <div
+                    className="absolute -bottom-32 left-1/3 h-72 w-72 rounded-full opacity-30 blur-3xl"
+                    style={{ background: `oklch(0.7 0.22 ${(level.hue + 60) % 360})` }}
+                  />
 
-              <div className="relative grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-center">
-                <div className="text-background">
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider backdrop-blur ring-1 ring-white/20">
-                    <Sparkles className="h-3.5 w-3.5" />
-                    Cấp độ {level.code} • {level.name}
-                  </div>
-                  <h1 className="mt-4 font-display text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-                    {course.title}
-                  </h1>
-                  <p className="mt-2 max-w-xl text-sm text-background/70 sm:text-base">
-                    {course.subtitle}. Hành trình {course.units.length} units giúp bạn
-                    nâng tầm kỹ năng nghe — nói — đọc — viết.
-                  </p>
-
-                  {/* meta pills */}
-                  <div className="mt-5 flex flex-wrap gap-2">
-                    <HeroPill icon={<Clock className="h-3.5 w-3.5" />}>
-                      {course.hours}h học tập
-                    </HeroPill>
-                    <HeroPill icon={<BookOpen className="h-3.5 w-3.5" />}>
-                      {course.units.length} units
-                    </HeroPill>
-                    <HeroPill icon={<ClipboardList className="h-3.5 w-3.5" />}>
-                      {totalActivities} hoạt động
-                    </HeroPill>
-                    <HeroPill icon={<Users className="h-3.5 w-3.5" />}>
-                      {course.classmates.length} học viên
-                    </HeroPill>
-                  </div>
-
-                  {/* CTA + progress */}
-                  <div className="mt-6 flex flex-wrap items-center gap-4">
-                    <button
-                      className="group inline-flex items-center gap-2 rounded-2xl bg-background px-5 py-3 text-sm font-semibold text-foreground shadow-elevated transition hover:scale-[1.02]"
-                    >
-                      <Play className="h-4 w-4 fill-foreground" />
-                      {course.progress > 0 ? "Tiếp tục học" : "Bắt đầu học"}
-                    </button>
-                    <div className="min-w-[200px] flex-1">
-                      <div className="flex items-center justify-between text-xs text-background/70">
-                        <span>{doneActivities}/{totalActivities} hoạt động</span>
-                        <span className="font-semibold text-background">{course.progress}%</span>
+                  <div className="relative grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-center">
+                    <div className="text-background">
+                      <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider backdrop-blur ring-1 ring-white/20">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        Cấp độ {level.code} • {level.name}
                       </div>
-                      <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/15">
-                        <div
-                          className="h-full rounded-full"
-                          style={{
-                            width: `${course.progress}%`,
-                            background: `linear-gradient(90deg, oklch(0.85 0.18 ${level.hue}), oklch(0.92 0.15 ${(level.hue + 60) % 360}))`,
-                          }}
-                        />
+                      <h1 className="mt-4 font-display text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
+                        {course.title}
+                      </h1>
+                      <p className="mt-2 max-w-xl text-sm text-background/70 sm:text-base">
+                        {course.subtitle}. Hành trình {course.units.length} units giúp bạn
+                        nâng tầm kỹ năng nghe — nói — đọc — viết.
+                      </p>
+
+                      <div className="mt-5 flex flex-wrap gap-2">
+                        <HeroPill icon={<Clock className="h-3.5 w-3.5" />}>
+                          {course.hours}h học tập
+                        </HeroPill>
+                        <HeroPill icon={<BookOpen className="h-3.5 w-3.5" />}>
+                          {course.units.length} units
+                        </HeroPill>
+                        <HeroPill icon={<ClipboardList className="h-3.5 w-3.5" />}>
+                          {totalActivities} hoạt động
+                        </HeroPill>
+                        <HeroPill icon={<Users className="h-3.5 w-3.5" />}>
+                          {course.classmates.length} học viên
+                        </HeroPill>
+                      </div>
+
+                      <div className="mt-6 flex flex-wrap items-center gap-4">
+                        <button className="group inline-flex items-center gap-2 rounded-2xl bg-background px-5 py-3 text-sm font-semibold text-foreground shadow-elevated transition hover:scale-[1.02]">
+                          <Play className="h-4 w-4 fill-foreground" />
+                          {course.progress > 0 ? "Tiếp tục học" : "Bắt đầu học"}
+                        </button>
+                        <div className="min-w-[200px] flex-1">
+                          <div className="flex items-center justify-between text-xs text-background/70">
+                            <span>{doneActivities}/{totalActivities} hoạt động</span>
+                            <span className="font-semibold text-background">{course.progress}%</span>
+                          </div>
+                          <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-white/15">
+                            <div
+                              className="h-full rounded-full"
+                              style={{
+                                width: `${course.progress}%`,
+                                background: `linear-gradient(90deg, oklch(0.85 0.18 ${level.hue}), oklch(0.92 0.15 ${(level.hue + 60) % 360}))`,
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="relative">
+                      <div
+                        className="relative aspect-[4/3] overflow-hidden rounded-3xl ring-1 ring-white/15"
+                        style={{
+                          background: `linear-gradient(135deg, oklch(0.6 0.22 ${level.hue}), oklch(0.45 0.22 ${(level.hue + 60) % 360}))`,
+                        }}
+                      >
+                        <div className="absolute inset-0 opacity-40 mix-blend-overlay [background-image:radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.4),transparent_40%),radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.2),transparent_40%)]" />
+                        <div className="absolute inset-0 flex flex-col justify-between p-6 text-background">
+                          <div className="flex items-start justify-between">
+                            <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold backdrop-blur">
+                              {level.code}
+                            </span>
+                            <GraduationCap className="h-7 w-7 opacity-80" />
+                          </div>
+                          <div>
+                            <div className="font-display text-5xl font-bold tracking-tight">
+                              EMPOWER
+                            </div>
+                            <div className="mt-1 text-xs uppercase tracking-[0.2em] opacity-80">
+                              Cambridge • Online Access
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="absolute -bottom-4 -left-4 rounded-2xl bg-background px-4 py-3 shadow-elevated ring-1 ring-border">
+                        <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          Điểm TB
+                        </div>
+                        <div className="text-xl font-bold text-foreground">86<span className="text-xs text-muted-foreground">/100</span></div>
                       </div>
                     </div>
                   </div>
                 </div>
+              </section>
 
-                {/* Cover */}
-                <div className="relative">
-                  <div
-                    className="relative aspect-[4/3] overflow-hidden rounded-3xl ring-1 ring-white/15"
-                    style={{
-                      background: `linear-gradient(135deg, oklch(0.6 0.22 ${level.hue}), oklch(0.45 0.22 ${(level.hue + 60) % 360}))`,
-                    }}
-                  >
-                    <div className="absolute inset-0 opacity-40 mix-blend-overlay [background-image:radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.4),transparent_40%),radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.2),transparent_40%)]" />
-                    <div className="absolute inset-0 flex flex-col justify-between p-6 text-background">
-                      <div className="flex items-start justify-between">
-                        <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold backdrop-blur">
-                          {level.code}
-                        </span>
-                        <GraduationCap className="h-7 w-7 opacity-80" />
-                      </div>
-                      <div>
-                        <div className="font-display text-5xl font-bold tracking-tight">
-                          EMPOWER
-                        </div>
-                        <div className="mt-1 text-xs uppercase tracking-[0.2em] opacity-80">
-                          Cambridge • Online Access
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  {/* small floating stat */}
-                  <div className="absolute -bottom-4 -left-4 rounded-2xl bg-background px-4 py-3 shadow-elevated ring-1 ring-border">
-                    <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
-                      Điểm TB
-                    </div>
-                    <div className="text-xl font-bold text-foreground">86<span className="text-xs text-muted-foreground">/100</span></div>
-                  </div>
+              {/* TABS */}
+              <div className="sticky top-[4.25rem] z-20 -mx-1 px-1">
+                <div className="flex gap-1 overflow-x-auto rounded-2xl bg-surface/80 p-1.5 ring-1 ring-border shadow-soft backdrop-blur">
+                  <Tab active={tab === "overview"} onClick={() => setTab("overview")} icon={<BookOpen className="h-4 w-4" />}>
+                    Khoá học
+                  </Tab>
+                  <Tab active={tab === "members"} onClick={() => setTab("members")} icon={<Users className="h-4 w-4" />}>
+                    Danh sách thành viên
+                  </Tab>
+                  <Tab active={tab === "scores"} onClick={() => setTab("scores")} icon={<Trophy className="h-4 w-4" />}>
+                    Điểm số
+                  </Tab>
+                  <Tab active={tab === "activities"} onClick={() => setTab("activities")} icon={<ClipboardList className="h-4 w-4" />}>
+                    Các hoạt động
+                  </Tab>
+                  <Tab active={tab === "competence"} onClick={() => setTab("competence")} icon={<Sparkles className="h-4 w-4" />}>
+                    Năng lực
+                  </Tab>
                 </div>
               </div>
-            </div>
-          </section>
 
-          {/* TABS */}
-          <div className="sticky top-[4.25rem] z-20 -mx-1 px-1">
-            <div className="flex gap-1 overflow-x-auto rounded-2xl bg-surface/80 p-1.5 ring-1 ring-border shadow-soft backdrop-blur">
-              <Tab active={tab === "overview"} onClick={() => setTab("overview")} icon={<BookOpen className="h-4 w-4" />}>
-                Khoá học
-              </Tab>
-              <Tab active={tab === "members"} onClick={() => setTab("members")} icon={<Users className="h-4 w-4" />}>
-                Danh sách thành viên
-              </Tab>
-              <Tab active={tab === "scores"} onClick={() => setTab("scores")} icon={<Trophy className="h-4 w-4" />}>
-                Điểm số
-              </Tab>
-              <Tab active={tab === "activities"} onClick={() => setTab("activities")} icon={<ClipboardList className="h-4 w-4" />}>
-                Các hoạt động
-              </Tab>
-              <Tab active={tab === "competence"} onClick={() => setTab("competence")} icon={<Sparkles className="h-4 w-4" />}>
-                Năng lực
-              </Tab>
-            </div>
-          </div>
-
-          {/* CONTENT */}
-          {tab === "overview" && (
-            <OverviewView course={course} hue={level.hue} totalMinutes={totalMinutes} activeUnit={activeUnit} />
+              {tab === "overview" && (
+                <OverviewView course={course} hue={level.hue} totalMinutes={totalMinutes} activeUnit={activeUnit} />
+              )}
+              {tab === "members" && <MembersView course={course} hideScores />}
+              {tab === "scores" && <ScoresView course={course} hue={level.hue} />}
+              {tab === "activities" && (
+                <ActivitiesView course={course} hue={level.hue} onQuizClick={setQuizOpen} />
+              )}
+              {tab === "competence" && <CompetenceView />}
+            </>
           )}
-          {tab === "members" && <MembersView course={course} hideScores />}
-          {tab === "scores" && <ScoresView course={course} hue={level.hue} />}
-          {tab === "activities" && (
-            <ActivitiesView course={course} hue={level.hue} onQuizClick={setQuizOpen} />
-          )}
-          {tab === "competence" && <CompetenceView />}
         </main>
       </div>
-
-      <QuizDialog quiz={quizOpen} hue={level.hue} onClose={() => setQuizOpen(null)} />
     </div>
   );
 }
@@ -737,244 +733,7 @@ function ActivitiesView({
   );
 }
 
-/* =========== Quiz Dialog =========== */
-
-type QuizAttempt = { id: number; date: string; score: number; durationMin: number };
-
-function buildAttempts(quizId: string): QuizAttempt[] {
-  // deterministic mock attempts based on quiz id
-  let h = 0;
-  for (let i = 0; i < quizId.length; i++) h = (h * 31 + quizId.charCodeAt(i)) >>> 0;
-  const count = h % 4; // 0..3 attempts done
-  const baseDate = new Date("2026-04-15");
-  return Array.from({ length: count }).map((_, i) => {
-    const score = 55 + ((h >> (i * 3)) % 40);
-    const d = new Date(baseDate);
-    d.setDate(baseDate.getDate() + i * 3);
-    return {
-      id: i + 1,
-      date: d.toLocaleDateString("vi-VN"),
-      score,
-      durationMin: 6 + ((h >> (i * 2)) % 7),
-    };
-  });
-}
-
-function QuizDialog({
-  quiz,
-  hue,
-  onClose,
-}: {
-  quiz: Activity | null;
-  hue: number;
-  onClose: () => void;
-}) {
-  const [started, setStarted] = useState(false);
-  if (!quiz) return null;
-  const attempts = buildAttempts(quiz.id);
-  const best = attempts.length ? Math.max(...attempts.map((a) => a.score)) : null;
-  const last = attempts.length ? attempts[attempts.length - 1] : null;
-  const passed = best !== null && best >= 70;
-
-  const handleClose = () => {
-    setStarted(false);
-    onClose();
-  };
-
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4 backdrop-blur-sm animate-fade-in"
-      onClick={handleClose}
-    >
-      <div
-        className={cn(
-          "relative flex max-h-[92vh] w-full overflow-hidden rounded-[2rem] bg-surface ring-1 ring-border shadow-elevated",
-          started ? "max-w-5xl" : "max-w-2xl",
-        )}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {started ? (
-          <div className="flex h-[92vh] w-full flex-col">
-            <QuizRunner
-              quizId={quiz.id}
-              title={quiz.title}
-              hue={hue}
-              onExit={handleClose}
-            />
-          </div>
-        ) : (
-          <div className="flex w-full flex-col overflow-auto">
-            {/* header */}
-            <div
-              className="relative overflow-hidden p-6 sm:p-7"
-              style={{
-                background: `linear-gradient(135deg, oklch(0.55 0.2 ${hue}), oklch(0.45 0.22 ${(hue + 40) % 360}))`,
-              }}
-            >
-              <div
-                className="absolute -right-20 -top-20 h-56 w-56 rounded-full opacity-40 blur-3xl"
-                style={{ background: `oklch(0.85 0.18 ${(hue + 60) % 360})` }}
-              />
-              <div className="relative">
-                <div className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white ring-1 ring-white/20 backdrop-blur">
-                  <ClipboardList className="h-3.5 w-3.5" /> Bài Quiz
-                </div>
-                <h2 className="mt-3 font-display text-2xl font-semibold text-white">{quiz.title}</h2>
-                <p className="mt-1 text-sm text-white/75">
-                  Bài luyện tập — nộp từng câu, nhận phản hồi tức thì.
-                </p>
-              </div>
-              <button
-                onClick={handleClose}
-                className="absolute right-4 top-4 inline-flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25"
-                aria-label="Đóng"
-              >
-                ✕
-              </button>
-            </div>
-
-            {/* stats */}
-            <div className="grid grid-cols-2 gap-3 p-5 sm:grid-cols-4 sm:p-6">
-              <QuizStat label="Số lần thử" value="∞" hint="Không giới hạn" />
-              <QuizStat label="Cách lấy điểm" value="Cao nhất" hint="Trong các lần làm" />
-              <QuizStat
-                label="Điểm cao nhất"
-                value={best !== null ? `${best}` : "—"}
-                hint={best !== null ? (passed ? "Đã đạt" : "Chưa đạt") : "Chưa có"}
-                tone={best === null ? "muted" : passed ? "success" : "warning"}
-              />
-              <QuizStat
-                label="Lần làm còn lại"
-                value="∞"
-                hint={`Đã làm ${attempts.length} lần`}
-              />
-            </div>
-
-            {/* meta row */}
-            <div className="mx-5 mb-3 flex flex-wrap items-center gap-3 rounded-2xl bg-muted/40 p-3 text-xs text-muted-foreground sm:mx-6">
-              <span className="inline-flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5" /> Thời lượng ~ {quiz.duration} phút
-              </span>
-              <span className="text-muted-foreground/40">•</span>
-              <span>Điểm đạt: 70/100</span>
-              <span className="text-muted-foreground/40">•</span>
-              <span>Hiển thị đáp án sau khi nộp</span>
-            </div>
-
-            {/* attempt history */}
-            <div className="px-5 pb-2 sm:px-6">
-              <div className="mb-2 flex items-center justify-between">
-                <h3 className="text-sm font-semibold text-foreground">Lịch sử làm bài</h3>
-                {last && (
-                  <span className="text-[11px] text-muted-foreground">
-                    Lần gần nhất: {last.date} • {last.score} điểm
-                  </span>
-                )}
-              </div>
-              {attempts.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
-                  Bạn chưa thực hiện lần thử nào. Hãy bắt đầu ngay!
-                </div>
-              ) : (
-                <div className="overflow-hidden rounded-2xl ring-1 ring-border">
-                  <table className="w-full text-sm">
-                    <thead className="bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground">
-                      <tr>
-                        <th className="px-3 py-2 text-left font-medium">Lần</th>
-                        <th className="px-3 py-2 text-left font-medium">Ngày</th>
-                        <th className="px-3 py-2 text-left font-medium">Thời gian</th>
-                        <th className="px-3 py-2 text-right font-medium">Điểm</th>
-                        <th className="px-3 py-2 text-right font-medium">Trạng thái</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {attempts.map((a) => {
-                        const isBest = a.score === best;
-                        const ok = a.score >= 70;
-                        return (
-                          <tr key={a.id} className="border-t border-border">
-                            <td className="px-3 py-2 font-medium text-foreground">#{a.id}</td>
-                            <td className="px-3 py-2 text-muted-foreground">{a.date}</td>
-                            <td className="px-3 py-2 text-muted-foreground">{a.durationMin} phút</td>
-                            <td className="px-3 py-2 text-right font-semibold text-foreground">
-                              {a.score}
-                              {isBest && (
-                                <span className="ml-1.5 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold text-primary">
-                                  BEST
-                                </span>
-                              )}
-                            </td>
-                            <td className="px-3 py-2 text-right">
-                              <span
-                                className={cn(
-                                  "rounded-full px-2 py-0.5 text-[10px] font-semibold",
-                                  ok
-                                    ? "bg-success/15 text-success-foreground"
-                                    : "bg-warning/15 text-warning-foreground",
-                                )}
-                              >
-                                {ok ? "Đạt" : "Chưa đạt"}
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            {/* footer actions */}
-            <div className="flex items-center justify-between gap-3 border-t border-border bg-surface-2/50 px-5 py-4 sm:px-6">
-              <div className="text-[11px] text-muted-foreground">
-                Hệ thống ghi nhận điểm <span className="font-semibold text-foreground">cao nhất</span> trong các lần làm bài để tính vào tổng kết.
-              </div>
-              <button
-                onClick={() => setStarted(true)}
-                className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:opacity-95"
-                style={{
-                  background: `linear-gradient(135deg, oklch(0.55 0.2 ${hue}), oklch(0.45 0.22 ${(hue + 40) % 360}))`,
-                }}
-              >
-                <Play className="h-4 w-4" />
-                {attempts.length ? "Làm lại bài" : "Bắt đầu làm bài"}
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function QuizStat({
-  label,
-  value,
-  hint,
-  tone = "default",
-}: {
-  label: string;
-  value: string;
-  hint?: string;
-  tone?: "default" | "success" | "warning" | "muted";
-}) {
-  const toneClass = {
-    default: "text-foreground",
-    success: "text-success-foreground",
-    warning: "text-warning-foreground",
-    muted: "text-muted-foreground",
-  }[tone];
-  return (
-    <div className="rounded-2xl bg-surface-2 p-3 ring-1 ring-border/60">
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-        {label}
-      </div>
-      <div className={cn("mt-1 text-2xl font-bold leading-none", toneClass)}>{value}</div>
-      {hint && <div className="mt-1 text-[10px] text-muted-foreground">{hint}</div>}
-    </div>
-  );
-}
+/* =========== Competence View =========== */
 
 function CompetenceView() {
   const skills = [
