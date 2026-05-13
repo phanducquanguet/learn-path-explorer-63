@@ -774,6 +774,12 @@ function QuizDialog({
   const best = attempts.length ? Math.max(...attempts.map((a) => a.score)) : null;
   const last = attempts.length ? attempts[attempts.length - 1] : null;
   const passed = best !== null && best >= 70;
+  const [started, setStarted] = useState(false);
+
+  const handleClose = () => {
+    setStarted(false);
+    onClose();
+  };
 
   return (
     <div
