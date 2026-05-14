@@ -770,6 +770,12 @@ function grade(q: Question, v: AnswerState): Result {
       const s = ratio(ok.filter(Boolean).length, q.blanks.length);
       return { status: s, earned: earn(s, q.maxScore) };
     }
+    case "listening": {
+      const arr = (v as (number | null)[]) || [];
+      const ok = q.subQuestions.map((sq, i) => arr[i] === sq.answer);
+      const s = ratio(ok.filter(Boolean).length, q.subQuestions.length);
+      return { status: s, earned: earn(s, q.maxScore) };
+    }
   }
 }
 
