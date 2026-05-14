@@ -127,19 +127,19 @@ function DashboardPage() {
             >
               <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
               <div className="absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-fuchsia-400/20 blur-3xl" />
-              <div className="absolute right-8 top-8 opacity-20">
-                <GraduationCap className="h-32 w-32 text-white" />
+              <div className="absolute right-4 top-4 opacity-15">
+                <GraduationCap className="h-20 w-20 text-white" />
               </div>
 
               <div className="relative">
                 <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white backdrop-blur">
                   <Rocket className="h-3.5 w-3.5" /> Tiếp tục học
                 </div>
-                <div className="mt-6 text-sm font-medium text-white/70">Cấp độ {currentLevel.code}</div>
-                <h2 className="mt-1 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                <div className="mt-5 text-xs font-medium text-white/70">Cấp độ {currentLevel.code}</div>
+                <h2 className="mt-1 font-display text-xl font-bold tracking-tight text-white sm:text-2xl">
                   {currentCourse.title}
                 </h2>
-                <p className="mt-2 max-w-md text-sm text-white/75">{currentCourse.subtitle}</p>
+                <p className="mt-1.5 text-xs text-white/75 line-clamp-2">{currentCourse.subtitle}</p>
 
                 <div className="mt-6 max-w-md">
                   <div className="flex items-center justify-between text-xs font-medium text-white/80">
