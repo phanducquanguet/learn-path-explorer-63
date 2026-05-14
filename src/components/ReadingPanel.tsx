@@ -1,12 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
+  Bot,
+  GraduationCap,
   Headphones,
+  ListMusic,
   NotebookPen,
   Pause,
   Play,
   Plus,
+  Send,
+  Sparkles,
   StickyNote,
+  User as UserIcon,
   Volume2,
   X,
 } from "lucide-react";
