@@ -104,7 +104,7 @@ function DashboardPage() {
                   {s.name} 👋
                 </span>
               </h1>
-              <p className="mt-3 max-w-md text-sm text-muted-foreground sm:text-base">
+              <p className="mt-3 text-sm text-muted-foreground sm:text-base">
                 Hôm nay là một ngày tuyệt vời để học. Bạn đang trên chuỗi{" "}
                 <b className="text-foreground">{s.weeklyStreak} ngày</b> liên tục — hãy giữ vững nhé!
               </p>
