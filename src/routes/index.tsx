@@ -398,62 +398,169 @@ function StatCard({
   );
 }
 
-function LevelCard({ lv, delay }: { lv: (typeof levels)[number]; delay: number }) {
+function LevelCard({
+  lv,
+  delay,
+  prevLevelCode,
+}: {
+  lv: (typeof levels)[number];
+  delay: number;
+  prevLevelCode?: string;
+}) {
   const locked = lv.status === "locked";
   const completed = lv.status === "completed";
+  const active = lv.status === "in-progress";
 
-  const card = (
+  // Sizing per state — active is biggest
+  const sizing = active
+    ? "w-[340px] md:w-[380px]"
+    : "w-[300px] md:w-[320px]";
+
+  // ---------- LOCKED ----------
+  if (locked) {
+    return (
+      <div
+        aria-disabled="true"
+        className={cn(
+          "snap-start shrink-0 animate-fade-in",
+          sizing,
+        )}
+        style={{ animationDelay: `${delay}ms` }}
+      >
+        <div
+          className="group relative h-full overflow-hidden rounded-3xl p-6 ring-1 ring-white/10 cursor-not-allowed transition-all duration-300 hover:shadow-elevated"
+          style={{
+            background:
+              "linear-gradient(135deg, oklch(0.22 0.025 265) 0%, oklch(0.30 0.04 285) 100%)",
+            minHeight: 320,
+          }}
+        >
+          {/* diagonal stripes */}
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.07]"
+            style={{
+              backgroundImage:
+                "repeating-linear-gradient(135deg, white 0 1px, transparent 1px 14px)",
+            }}
+          />
+          {/* glow behind lock */}
+          <div
+            className="pointer-events-none absolute left-1/2 top-16 -translate-x-1/2 h-40 w-40 rounded-full blur-3xl opacity-60"
+            style={{ background: `oklch(0.65 0.2 ${lv.hue})` }}
+          />
+
+          <div className="relative flex items-center justify-between">
+            <span
+              className="text-3xl font-black tracking-tight text-white/40"
+              style={{ filter: "blur(2px)" }}
+            >
+              {lv.code}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/80 ring-1 ring-white/15 backdrop-blur">
+              <Lock className="h-3 w-3" /> Đã khoá
+            </span>
+          </div>
+
+          {/* big lock medallion */}
+          <div className="relative mt-6 flex justify-center">
+            <div className="relative">
+              <div
+                className="absolute inset-0 -m-3 rounded-full opacity-60 blur-2xl"
+                style={{ background: `oklch(0.7 0.2 ${lv.hue})` }}
+              />
+              <div
+                className="absolute inset-0 -m-2 rounded-full ring-2 ring-dashed ring-white/25 animate-spin"
+                style={{ animationDuration: "12s" }}
+              />
+              <div
+                className="relative flex h-20 w-20 items-center justify-center rounded-full text-white shadow-elevated"
+                style={{
+                  background: `linear-gradient(135deg, oklch(0.55 0.2 ${lv.hue}), oklch(0.72 0.16 ${(lv.hue + 30) % 360}))`,
+                  boxShadow: `0 18px 40px -12px oklch(0.6 0.22 ${lv.hue} / 0.7)`,
+                }}
+              >
+                <Lock className="h-8 w-8" strokeWidth={2.4} />
+              </div>
+              <Sparkle className="absolute -right-2 -top-1 h-4 w-4 text-white/80" />
+            </div>
+          </div>
+
+          <div className="relative mt-5 text-center">
+            <h3 className="text-lg font-bold tracking-tight text-white">{lv.name}</h3>
+            <p className="mt-1 text-xs text-white/60 line-clamp-2">{lv.description}</p>
+          </div>
+
+          <div className="relative mt-5 border-t border-white/10 pt-4 text-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-white/80 ring-1 ring-white/15">
+              <Sparkles className="h-3 w-3" />
+              {prevLevelCode
+                ? `Mở khoá khi hoàn thành ${prevLevelCode}`
+                : "Sắp mở"}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ---------- ACTIVE / COMPLETED ----------
+  const cardInner = (
     <div
       className={cn(
-        "group relative h-full overflow-hidden rounded-3xl p-6 transition-all duration-300",
-        locked
-          ? "bg-surface-2/60 ring-1 ring-border"
-          : "ring-1 ring-border shadow-soft hover:shadow-glow hover:-translate-y-2 cursor-pointer",
+        "group relative h-full overflow-hidden rounded-3xl p-6 transition-all duration-300 cursor-pointer",
+        active
+          ? "ring-2 shadow-glow hover:-translate-y-2"
+          : "ring-1 ring-border shadow-soft hover:shadow-elevated hover:-translate-y-1 opacity-95",
       )}
       style={{
-        animationDelay: `${delay}ms`,
-        background: locked
-          ? undefined
-          : `linear-gradient(135deg, oklch(0.99 0.005 260) 0%, oklch(0.96 0.05 ${lv.hue}) 100%)`,
+        minHeight: 320,
+        ...(active
+          ? {
+              background: `linear-gradient(135deg, oklch(0.99 0.005 260) 0%, oklch(0.95 0.07 ${lv.hue}) 100%)`,
+              // ring color via boxShadow trick
+              boxShadow: `0 0 0 2px oklch(0.65 0.2 ${lv.hue} / 0.5), 0 20px 50px -20px oklch(0.6 0.22 ${lv.hue} / 0.45)`,
+            }
+          : {
+              background: `linear-gradient(135deg, oklch(0.99 0.003 260) 0%, oklch(0.97 0.025 ${lv.hue}) 100%)`,
+            }),
       }}
     >
       {/* Decorative orbs */}
-      {!locked && (
-        <>
-          <div
-            className="pointer-events-none absolute -right-20 -top-20 h-52 w-52 rounded-full opacity-50 blur-3xl transition-all duration-500 group-hover:opacity-80 group-hover:scale-110"
-            style={{ background: `oklch(0.78 0.18 ${lv.hue})` }}
-          />
-          <div
-            className="pointer-events-none absolute -left-16 -bottom-16 h-44 w-44 rounded-full opacity-30 blur-3xl"
-            style={{ background: `oklch(0.8 0.15 ${(lv.hue + 60) % 360})` }}
-          />
-        </>
-      )}
+      <div
+        className={cn(
+          "pointer-events-none absolute -right-20 -top-20 h-52 w-52 rounded-full blur-3xl transition-all duration-500 group-hover:scale-110",
+          active ? "opacity-70 group-hover:opacity-90" : "opacity-30",
+        )}
+        style={{ background: `oklch(0.78 0.18 ${lv.hue})` }}
+      />
+      <div
+        className={cn(
+          "pointer-events-none absolute -left-16 -bottom-16 h-44 w-44 rounded-full blur-3xl",
+          active ? "opacity-40" : "opacity-20",
+        )}
+        style={{ background: `oklch(0.8 0.15 ${(lv.hue + 60) % 360})` }}
+      />
 
       {/* Big level badge */}
       <div className="relative flex items-start justify-between">
         <div
           className={cn(
-            "relative flex h-20 w-20 items-center justify-center rounded-3xl text-2xl font-black tracking-tight text-white transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3",
-            locked && "opacity-60",
+            "relative flex items-center justify-center rounded-3xl font-black tracking-tight text-white transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3",
+            active ? "h-24 w-24 text-3xl" : "h-20 w-20 text-2xl",
           )}
           style={{
-            background: locked
-              ? "linear-gradient(135deg, oklch(0.7 0.01 260), oklch(0.75 0.01 260))"
+            background: completed
+              ? `linear-gradient(135deg, oklch(0.7 0.05 ${lv.hue}), oklch(0.78 0.04 ${(lv.hue + 30) % 360}))`
               : `linear-gradient(135deg, oklch(0.5 0.2 ${lv.hue}), oklch(0.65 0.18 ${(lv.hue + 30) % 360}))`,
-            boxShadow: locked ? undefined : `0 12px 30px -10px oklch(0.55 0.2 ${lv.hue} / 0.6)`,
+            boxShadow: active
+              ? `0 16px 40px -10px oklch(0.55 0.22 ${lv.hue} / 0.7), inset 0 0 0 2px oklch(1 0 0 / 0.3)`
+              : `0 12px 30px -10px oklch(0.55 0.2 ${lv.hue} / 0.4)`,
           }}
         >
           {lv.code}
           {completed && (
-            <div className="absolute -right-1.5 -top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-success ring-4 ring-background">
-              <CheckCircle2 className="h-4 w-4 text-white" />
-            </div>
-          )}
-          {locked && (
-            <div className="absolute inset-0 flex items-center justify-center rounded-3xl bg-foreground/30 backdrop-blur-sm">
-              <Lock className="h-7 w-7 text-white" />
+            <div className="absolute -right-2 -top-2 flex h-9 w-9 items-center justify-center rounded-full bg-success ring-4 ring-background shadow-soft">
+              <CheckCircle2 className="h-5 w-5 text-white" />
             </div>
           )}
         </div>
@@ -461,65 +568,66 @@ function LevelCard({ lv, delay }: { lv: (typeof levels)[number]; delay: number }
       </div>
 
       <div className="relative mt-5">
-        <h3 className="text-xl font-bold tracking-tight text-foreground">{lv.name}</h3>
+        <h3 className={cn("font-bold tracking-tight text-foreground", active ? "text-2xl" : "text-xl")}>
+          {lv.name}
+        </h3>
         <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{lv.description}</p>
       </div>
 
-      {!locked ? (
-        <>
-          <div className="relative mt-5">
-            <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
-              <span>Tiến độ</span>
-              <span className="text-foreground">{lv.progress}%</span>
-            </div>
-            <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full transition-all duration-700"
-                style={{
-                  width: `${lv.progress}%`,
-                  background: `linear-gradient(90deg, oklch(0.6 0.2 ${lv.hue}), oklch(0.72 0.16 ${(lv.hue + 30) % 360}))`,
-                  boxShadow: `0 0 12px oklch(0.65 0.2 ${lv.hue} / 0.5)`,
-                }}
-              />
-            </div>
-          </div>
-
-          <div className="relative mt-5 flex items-center justify-between border-t border-border/60 pt-4">
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <BookOpen className="h-3.5 w-3.5" />
-              <span className="font-medium">{lv.courses.length} khoá học</span>
-            </div>
-            <span
-              className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-semibold text-white shadow-soft transition-all group-hover:gap-2.5 group-hover:shadow-elevated"
-              style={{
-                background: `linear-gradient(135deg, oklch(0.55 0.2 ${lv.hue}), oklch(0.68 0.18 ${(lv.hue + 30) % 360}))`,
-              }}
-            >
-              {completed ? "Xem lại" : "Học ngay"}
-              <ArrowUpRight className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-            </span>
-          </div>
-        </>
-      ) : (
-        <div className="relative mt-5 border-t border-border/60 pt-4">
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Lock className="h-3.5 w-3.5" />
-            <span>Hoàn thành cấp độ trước để mở khoá</span>
-          </div>
+      <div className="relative mt-5">
+        <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
+          <span>Tiến độ</span>
+          <span className="text-foreground">{lv.progress}%</span>
         </div>
-      )}
+        <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full transition-all duration-700"
+            style={{
+              width: `${lv.progress}%`,
+              background: completed
+                ? "var(--success)"
+                : `linear-gradient(90deg, oklch(0.6 0.2 ${lv.hue}), oklch(0.72 0.16 ${(lv.hue + 30) % 360}))`,
+              boxShadow: active
+                ? `0 0 14px oklch(0.65 0.2 ${lv.hue} / 0.6)`
+                : undefined,
+            }}
+          />
+        </div>
+      </div>
+
+      <div className="relative mt-5 flex items-center justify-between border-t border-border/60 pt-4">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <BookOpen className="h-3.5 w-3.5" />
+          <span className="font-medium">{lv.courses.length} khoá học</span>
+        </div>
+        {active ? (
+          <span
+            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-elevated transition-all group-hover:gap-2.5"
+            style={{
+              background: `linear-gradient(135deg, oklch(0.55 0.2 ${lv.hue}), oklch(0.68 0.18 ${(lv.hue + 30) % 360}))`,
+            }}
+          >
+            Học tiếp
+            <ArrowUpRight className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </span>
+        ) : (
+          <span className="inline-flex items-center gap-1.5 rounded-xl bg-surface px-3 py-1.5 text-sm font-semibold text-foreground/80 ring-1 ring-border transition-all group-hover:gap-2.5 group-hover:text-foreground">
+            Xem lại
+            <ArrowUpRight className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+          </span>
+        )}
+      </div>
     </div>
   );
 
-  if (locked) return <div className="animate-fade-in" style={{ animationDelay: `${delay}ms` }}>{card}</div>;
   return (
     <Link
       to="/levels/$level"
       params={{ level: lv.code.toLowerCase() }}
-      className="animate-fade-in block"
+      className={cn("snap-start shrink-0 animate-fade-in block", sizing)}
       style={{ animationDelay: `${delay}ms` }}
     >
-      {card}
+      {cardInner}
     </Link>
   );
 }
