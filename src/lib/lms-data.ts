@@ -49,7 +49,6 @@ const mkUnits = (prefix: string, n: number): Unit[] =>
     activities: [
       { id: `${prefix}-u${i + 1}-a1`, title: "Video bài giảng", type: "video", duration: 12, done: i < 3 },
       { id: `${prefix}-u${i + 1}-a2`, title: "Đọc hiểu", type: "reading", duration: 15, done: i < 3 },
-      { id: `${prefix}-u${i + 1}-a3`, title: "Luyện nói", type: "speaking", duration: 20, done: i < 2 },
       { id: `${prefix}-u${i + 1}-a4`, title: "Quiz cuối bài", type: "quiz", duration: 10, done: i < 2 },
     ],
   }));
