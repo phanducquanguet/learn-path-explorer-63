@@ -41,6 +41,33 @@ function DashboardPage() {
   const levelsScrollRef = useRef<HTMLDivElement>(null);
   const scrollLevels = (dir: 1 | -1) =>
     levelsScrollRef.current?.scrollBy({ left: dir * 380, behavior: "smooth" });
+  const dragState = useRef({ down: false, startX: 0, startLeft: 0, moved: false });
+  const onDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = levelsScrollRef.current;
+    if (!el) return;
+    dragState.current = { down: true, startX: e.pageX, startLeft: el.scrollLeft, moved: false };
+    el.style.cursor = "grabbing";
+  };
+  const onDragMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = levelsScrollRef.current;
+    if (!el || !dragState.current.down) return;
+    const dx = e.pageX - dragState.current.startX;
+    if (Math.abs(dx) > 4) dragState.current.moved = true;
+    el.scrollLeft = dragState.current.startLeft - dx;
+  };
+  const onDragEnd = () => {
+    const el = levelsScrollRef.current;
+    if (!el) return;
+    el.style.cursor = "";
+    dragState.current.down = false;
+  };
+  const onDragClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (dragState.current.moved) {
+      e.preventDefault();
+      e.stopPropagation();
+      dragState.current.moved = false;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
