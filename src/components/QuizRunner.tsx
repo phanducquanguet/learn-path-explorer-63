@@ -212,6 +212,51 @@ export function buildQuiz(quizId: string): Question[] {
         { options: ["success", "defeat", "victory"], answer: 1 },
       ],
     },
+    {
+      id: "q11",
+      index: 11,
+      kind: "listening",
+      maxScore: 5,
+      prompt:
+        "Listen to the conversation between Anna and Mark at the supermarket, then answer the 5 questions below.",
+      audio: {
+        code: "1.84",
+        label: "Conversation: At the supermarket",
+        durationLabel: "1:42",
+      },
+      subQuestions: [
+        {
+          id: "q11-1",
+          prompt: "1. Where are Anna and Mark?",
+          options: ["At a restaurant", "At a supermarket", "At Anna's house", "At a market stall"],
+          answer: 1,
+        },
+        {
+          id: "q11-2",
+          prompt: "2. What does Anna want to buy first?",
+          options: ["Bread and eggs", "Fruit and vegetables", "Meat and rice", "Fish and bread"],
+          answer: 1,
+        },
+        {
+          id: "q11-3",
+          prompt: "3. Why doesn't Mark want fish?",
+          options: ["It is too expensive", "He doesn't like fish", "He is allergic to fish", "There is no fish today"],
+          answer: 1,
+        },
+        {
+          id: "q11-4",
+          prompt: "4. How many eggs do they buy?",
+          options: ["Six", "Ten", "Twelve", "Twenty"],
+          answer: 2,
+        },
+        {
+          id: "q11-5",
+          prompt: "5. What do they decide to cook for dinner?",
+          options: ["Rice with vegetables", "Meat with bread", "Fish and rice", "Eggs and fruit"],
+          answer: 0,
+        },
+      ],
+    },
   ];
 }
 
