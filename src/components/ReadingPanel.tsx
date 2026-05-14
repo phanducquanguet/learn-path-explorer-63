@@ -787,7 +787,7 @@ function AiTab({
   draft: string;
   setDraft: (v: string) => void;
   onSend: () => void;
-  endRef: React.RefObject<HTMLDivElement>;
+  endRef: React.RefObject<HTMLDivElement | null>;
   hue: number;
 }) {
   return (
