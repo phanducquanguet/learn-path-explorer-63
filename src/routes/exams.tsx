@@ -33,7 +33,7 @@ const exams: Exam[] = [
   { id: "toefl-mini-1", title: "TOEFL iBT — Reading Mini", level: "B2", duration: 35, questions: 14, type: "Mini test", hue: 25, attempts: 0 },
 ];
 
-const TEST_PORTAL_BASE = "https://test-portal.example.com";
+const TEST_PORTAL_BASE = "https://exam-portal.ubos.vn";
 
 function ExamsPage() {
   return (
