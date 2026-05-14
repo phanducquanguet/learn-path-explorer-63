@@ -36,7 +36,12 @@ type Block =
   | { kind: "speechBubble"; text: string }
   | { kind: "soundTable"; columns: { label: string; items: string[] }[] }
   | { kind: "passage"; text: string; tag?: string }
-  | { kind: "passages"; items: { tag: string; text: string }[] };
+  | { kind: "passages"; items: { tag: string; text: string }[] }
+  | {
+      kind: "mcq";
+      prompt?: string;
+      questions: { id: string; q: string; options: string[]; answer: number }[];
+    };
 
 type Task = {
   id: string;
@@ -188,6 +193,67 @@ const samplePages: Page[] = [
                   { tag: "a", text: "They eat a lot of fruit and vegetables every day. And they eat meat with rice. They like eggs, but they don't eat bread or fish. They don't like fish." },
                   { tag: "b", text: "They eat meat and eggs every day, but they don't eat fish. And they don't eat vegetables, but they eat fruit. They really like bread." },
                   { tag: "c", text: "They eat a lot of rice and vegetables. They like fruit and they eat bread. They don't eat fish or meat. They are vegetarians." },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        id: "s11",
+        number: 11,
+        title: "LISTENING PRACTICE",
+        subtitle: "Listen to the conversation and answer the questions",
+        accent: "red",
+        tasks: [
+          {
+            id: "11a",
+            letter: "a",
+            audio: {
+              id: "t-q11",
+              code: "1.84",
+              label: "Conversation: At the supermarket",
+              durationLabel: "1:42",
+            },
+            blocks: [
+              {
+                kind: "instruction",
+                text: "Câu hỏi 11. Nghe đoạn hội thoại giữa Anna và Mark khi họ đi siêu thị. Sau đó chọn đáp án đúng (A, B, C hoặc D) cho mỗi câu hỏi dưới đây.",
+              },
+              {
+                kind: "mcq",
+                prompt: "Dựa vào audio phía trên, chọn đáp án đúng cho 5 câu hỏi sau:",
+                questions: [
+                  {
+                    id: "q11-1",
+                    q: "1. Where are Anna and Mark?",
+                    options: ["At a restaurant", "At a supermarket", "At Anna's house", "At a market stall"],
+                    answer: 1,
+                  },
+                  {
+                    id: "q11-2",
+                    q: "2. What does Anna want to buy first?",
+                    options: ["Bread and eggs", "Fruit and vegetables", "Meat and rice", "Fish and bread"],
+                    answer: 1,
+                  },
+                  {
+                    id: "q11-3",
+                    q: "3. Why doesn't Mark want fish?",
+                    options: ["It is too expensive", "He doesn't like fish", "He is allergic to fish", "There is no fish today"],
+                    answer: 1,
+                  },
+                  {
+                    id: "q11-4",
+                    q: "4. How many eggs do they buy?",
+                    options: ["Six", "Ten", "Twelve", "Twenty"],
+                    answer: 2,
+                  },
+                  {
+                    id: "q11-5",
+                    q: "5. What do they decide to cook for dinner?",
+                    options: ["Rice with vegetables", "Meat with bread", "Fish and rice", "Eggs and fruit"],
+                    answer: 0,
+                  },
                 ],
               },
             ],
@@ -1202,5 +1268,106 @@ function BlockView({ block, accent }: { block: Block; accent: Section["accent"] 
           ))}
         </div>
       );
+
+    case "mcq":
+      return <McqBlock block={block} accent={accent} />;
   }
+}
+
+function McqBlock({
+  block,
+  accent,
+}: {
+  block: Extract<Block, { kind: "mcq" }>;
+  accent: Section["accent"];
+}) {
+  const a = ACCENTS[accent];
+  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [submitted, setSubmitted] = useState(false);
+
+  const total = block.questions.length;
+  const answered = Object.keys(answers).length;
+  const correct = block.questions.filter((q) => answers[q.id] === q.answer).length;
+
+  return (
+    <div className="rounded-xl border border-neutral-200 bg-white p-4 space-y-4">
+      {block.prompt && (
+        <p className="text-[13px] font-medium text-neutral-700">{block.prompt}</p>
+      )}
+      <ol className="space-y-4">
+        {block.questions.map((q) => {
+          const picked = answers[q.id];
+          return (
+            <li key={q.id} className="space-y-2">
+              <p className="text-[14px] font-semibold text-neutral-900">{q.q}</p>
+              <div className="grid gap-1.5 sm:grid-cols-2">
+                {q.options.map((opt, i) => {
+                  const selected = picked === i;
+                  const isCorrect = i === q.answer;
+                  const showState = submitted && (selected || isCorrect);
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => !submitted && setAnswers((s) => ({ ...s, [q.id]: i }))}
+                      className={cn(
+                        "flex items-start gap-2 rounded-lg border px-3 py-2 text-left text-[13px] transition",
+                        !submitted && selected && "border-neutral-900 bg-neutral-50",
+                        !submitted && !selected && "border-neutral-200 hover:border-neutral-400 bg-white",
+                        submitted && isCorrect && "border-emerald-500 bg-emerald-50 text-emerald-900",
+                        submitted && selected && !isCorrect && "border-rose-500 bg-rose-50 text-rose-900",
+                        submitted && !selected && !isCorrect && "border-neutral-200 bg-white text-neutral-500",
+                        submitted && "cursor-default",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold",
+                          selected ? "border-current" : "border-neutral-300",
+                          !submitted && selected && a.text,
+                        )}
+                      >
+                        {String.fromCharCode(65 + i)}
+                      </span>
+                      <span className="leading-snug">{opt}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+      <div className="flex items-center justify-between border-t border-neutral-200 pt-3">
+        <span className="text-[12px] text-neutral-600">
+          {submitted
+            ? `Kết quả: ${correct}/${total} câu đúng`
+            : `Đã trả lời ${answered}/${total}`}
+        </span>
+        <div className="flex items-center gap-2">
+          {submitted && (
+            <button
+              onClick={() => {
+                setAnswers({});
+                setSubmitted(false);
+              }}
+              className="rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+            >
+              Làm lại
+            </button>
+          )}
+          <button
+            onClick={() => setSubmitted(true)}
+            disabled={submitted || answered < total}
+            className={cn(
+              "rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40",
+              a.bg,
+            )}
+          >
+            Nộp bài
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
