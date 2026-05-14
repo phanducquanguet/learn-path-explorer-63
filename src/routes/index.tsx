@@ -157,14 +157,25 @@ function DashboardPage() {
                   </div>
                   <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full bg-foreground transition-all"
-                      style={{ width: `${currentCourse.progress}%` }}
+                      className="h-full rounded-full transition-all"
+                      style={{
+                        width: `${currentCourse.progress}%`,
+                        background:
+                          "linear-gradient(90deg, oklch(0.6 0.2 260), oklch(0.72 0.16 290))",
+                        boxShadow: "0 0 12px oklch(0.65 0.2 260 / 0.55)",
+                      }}
                     />
                   </div>
                 </div>
 
                 <div className="mt-5 flex items-center gap-2">
-                  <span className="inline-flex items-center gap-2 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background shadow-soft transition group-hover:gap-2.5">
+                  <span
+                    className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-elevated transition group-hover:gap-2.5"
+                    style={{
+                      background:
+                        "linear-gradient(135deg, oklch(0.55 0.2 260), oklch(0.68 0.18 290))",
+                    }}
+                  >
                     <Play className="h-3.5 w-3.5 fill-current" /> Vào học
                   </span>
                 </div>
