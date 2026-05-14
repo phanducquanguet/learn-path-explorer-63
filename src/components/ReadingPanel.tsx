@@ -1,12 +1,18 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowLeft,
+  Bot,
+  GraduationCap,
   Headphones,
+  ListMusic,
   NotebookPen,
   Pause,
   Play,
   Plus,
+  Send,
+  Sparkles,
   StickyNote,
+  User as UserIcon,
   Volume2,
   X,
 } from "lucide-react";
@@ -196,6 +202,19 @@ const samplePages: Page[] = [
 
 type Note = { id: string; text: string; scope: string; scopeLabel: string; ts: number };
 
+type TeacherQ = {
+  id: string;
+  text: string;
+  scopeLabel: string;
+  ts: number;
+  status: "pending" | "answered";
+  answer?: string;
+};
+
+type ChatMsg = { id: string; role: "user" | "ai"; text: string; ts: number };
+
+type SidebarTab = "tracks" | "notes" | "teacher" | "ai";
+
 /* ---------- Main panel ---------- */
 
 export function ReadingPanel({
@@ -207,7 +226,8 @@ export function ReadingPanel({
   hue: number;
   onClose: () => void;
 }) {
-  const [notesOpen, setNotesOpen] = useState(true);
+  const [sideTab, setSideTab] = useState<SidebarTab>("tracks");
+  const [sideOpen, setSideOpen] = useState(true);
   const [notes, setNotes] = useState<Note[]>([]);
   const [draft, setDraft] = useState("");
   const [draftScope, setDraftScope] = useState<{ id: string; label: string }>({
@@ -216,15 +236,44 @@ export function ReadingPanel({
   });
   const [playingId, setPlayingId] = useState<string | null>(null);
 
+  const [teacherDraft, setTeacherDraft] = useState("");
+  const [teacherScope, setTeacherScope] = useState<{ id: string; label: string }>({
+    id: "unit",
+    label: "Toàn bài",
+  });
+  const [teacherQs, setTeacherQs] = useState<TeacherQ[]>([]);
+
+  const [chat, setChat] = useState<ChatMsg[]>([
+    {
+      id: "ai-hello",
+      role: "ai",
+      text: "Xin chào! Mình là AI luyện tập của bạn. Hỏi mình về từ vựng, phát âm, ngữ pháp, hoặc thử hội thoại theo chủ đề bài học nhé!",
+      ts: Date.now(),
+    },
+  ]);
+  const [chatDraft, setChatDraft] = useState("");
+  const chatEndRef = useRef<HTMLDivElement>(null);
+
   const accent = useMemo(() => `oklch(0.55 0.18 ${hue})`, [hue]);
 
-  const allTracks = useMemo(
+  const tracksByTask = useMemo(
     () =>
       samplePages.flatMap((p) =>
-        p.sections.flatMap((s) => s.tasks.filter((t) => t.audio).map((t) => t.audio!)),
+        p.sections.flatMap((s) =>
+          s.tasks
+            .filter((t) => t.audio)
+            .map((t) => ({
+              taskKey: `${s.number}${t.letter}`,
+              sectionTitle: s.title,
+              accent: s.accent,
+              track: t.audio!,
+            })),
+        ),
       ),
     [],
   );
+
+  const allTracks = useMemo(() => tracksByTask.map((x) => x.track), [tracksByTask]);
 
   const addNote = () => {
     const text = draft.trim();
@@ -234,6 +283,52 @@ export function ReadingPanel({
       ...n,
     ]);
     setDraft("");
+  };
+
+  const askTeacher = () => {
+    const text = teacherDraft.trim();
+    if (!text) return;
+    setTeacherQs((q) => [
+      {
+        id: crypto.randomUUID(),
+        text,
+        scopeLabel: teacherScope.label,
+        ts: Date.now(),
+        status: "pending",
+      },
+      ...q,
+    ]);
+    setTeacherDraft("");
+  };
+
+  const sendChat = () => {
+    const text = chatDraft.trim();
+    if (!text) return;
+    const userMsg: ChatMsg = { id: crypto.randomUUID(), role: "user", text, ts: Date.now() };
+    setChat((c) => [...c, userMsg]);
+    setChatDraft("");
+    setTimeout(() => {
+      setChat((c) => [
+        ...c,
+        {
+          id: crypto.randomUUID(),
+          role: "ai",
+          text: `Câu hỏi hay! Liên quan đến "${text.slice(0, 40)}${text.length > 40 ? "…" : ""}". Mình gợi ý: thử dùng cấu trúc Present simple với "I/you/we/they" như trong bài, ví dụ: "I like fish, but I don't eat meat." Bạn thử nói lại theo sở thích của mình nhé!`,
+          ts: Date.now(),
+        },
+      ]);
+    }, 600);
+  };
+
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [chat]);
+
+  const sideBadge: Record<SidebarTab, number> = {
+    tracks: allTracks.length,
+    notes: notes.length,
+    teacher: teacherQs.length,
+    ai: chat.filter((m) => m.role === "user").length,
   };
 
   return (
@@ -271,22 +366,22 @@ export function ReadingPanel({
             <Headphones className="h-3.5 w-3.5" /> {allTracks.length} audio tracks
           </span>
           <button
-            onClick={() => setNotesOpen((v) => !v)}
+            onClick={() => setSideOpen((v) => !v)}
             className={cn(
               "inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold ring-1 transition",
-              notesOpen
+              sideOpen
                 ? "bg-foreground text-background ring-foreground"
                 : "bg-surface text-foreground ring-border hover:bg-muted",
             )}
           >
             <NotebookPen className="h-3.5 w-3.5" />
-            {notesOpen ? "Ẩn ghi chú" : `Ghi chú (${notes.length})`}
+            {sideOpen ? "Ẩn bảng phụ" : "Mở bảng phụ"}
           </button>
         </div>
       </div>
 
       {/* Body */}
-      <div className={cn("grid gap-0", notesOpen ? "lg:grid-cols-[1fr_360px]" : "grid-cols-1")}>
+      <div className={cn("grid gap-0", sideOpen ? "lg:grid-cols-[1fr_400px]" : "grid-cols-1")}>
         {/* PDF viewer */}
         <div className="bg-[oklch(0.97_0.005_260)] p-4 sm:p-6 lg:p-8 max-h-[calc(100vh-12rem)] overflow-y-auto">
           <div className="mx-auto max-w-3xl space-y-6">
@@ -298,98 +393,483 @@ export function ReadingPanel({
                 onTogglePlay={(id) => setPlayingId((cur) => (cur === id ? null : id))}
                 onTakeNote={(scopeId, scopeLabel) => {
                   setDraftScope({ id: scopeId, label: scopeLabel });
-                  setNotesOpen(true);
+                  setSideTab("notes");
+                  setSideOpen(true);
                 }}
               />
             ))}
           </div>
         </div>
 
-        {/* Notes panel */}
-        {notesOpen && (
+        {/* Right tabbed panel */}
+        {sideOpen && (
           <aside className="border-t lg:border-t-0 lg:border-l border-border/70 bg-surface flex flex-col max-h-[calc(100vh-12rem)]">
-            <div className="px-4 py-3 border-b border-border/70 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <StickyNote className="h-4 w-4 text-muted-foreground" />
-                <div className="text-sm font-semibold text-foreground">Sổ tay của tôi</div>
-              </div>
-              <span className="text-[11px] text-muted-foreground">{notes.length} ghi chú</span>
-            </div>
-
-            <div className="p-3 border-b border-border/70 space-y-2 bg-surface-2/40">
-              <div className="flex flex-wrap gap-1">
-                <ScopeChip
-                  active={draftScope.id === "unit"}
-                  onClick={() => setDraftScope({ id: "unit", label: "Toàn bài" })}
-                >
-                  Toàn bài
-                </ScopeChip>
-                {allTracks.map((t) => (
-                  <ScopeChip
+            <div className="flex border-b border-border/70 bg-surface-2/40">
+              {(
+                [
+                  { id: "tracks", label: "Tracks", icon: ListMusic },
+                  { id: "notes", label: "Ghi chú", icon: StickyNote },
+                  { id: "teacher", label: "Giáo viên", icon: GraduationCap },
+                  { id: "ai", label: "AI", icon: Bot },
+                ] as { id: SidebarTab; label: string; icon: typeof ListMusic }[]
+              ).map((t) => {
+                const active = sideTab === t.id;
+                const Icon = t.icon;
+                return (
+                  <button
                     key={t.id}
-                    active={draftScope.id === t.id}
-                    onClick={() => setDraftScope({ id: t.id, label: `${t.code} ${t.label}` })}
+                    onClick={() => setSideTab(t.id)}
+                    className={cn(
+                      "flex-1 inline-flex items-center justify-center gap-1.5 px-2 py-2.5 text-[11px] font-semibold transition border-b-2",
+                      active
+                        ? "text-foreground border-foreground bg-surface"
+                        : "text-muted-foreground border-transparent hover:text-foreground",
+                    )}
                   >
-                    {t.code}
-                  </ScopeChip>
-                ))}
-              </div>
-              <textarea
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                placeholder={`Take a note for "${draftScope.label}"...`}
-                rows={3}
-                className="w-full resize-none rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-              />
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-muted-foreground">
-                  Gắn với: <span className="font-medium text-foreground">{draftScope.label}</span>
-                </span>
-                <button
-                  onClick={addNote}
-                  disabled={!draft.trim()}
-                  className="inline-flex items-center gap-1 rounded-lg bg-foreground px-3 py-1.5 text-xs font-semibold text-background disabled:opacity-40"
-                >
-                  <Plus className="h-3 w-3" /> Lưu ghi chú
-                </button>
-              </div>
+                    <Icon className="h-3.5 w-3.5" />
+                    <span>{t.label}</span>
+                    {sideBadge[t.id] > 0 && (
+                      <span
+                        className={cn(
+                          "rounded-full px-1.5 text-[9px] font-bold",
+                          active ? "bg-foreground text-background" : "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        {sideBadge[t.id]}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
-            <div className="flex-1 overflow-y-auto p-3 space-y-2">
-              {notes.length === 0 ? (
-                <div className="text-center text-xs text-muted-foreground py-10 px-4">
-                  Chưa có ghi chú nào. Bạn có thể take note cho cả unit hoặc cho từng track audio.
-                </div>
-              ) : (
-                notes.map((n) => (
-                  <div key={n.id} className="rounded-xl bg-surface-2/60 ring-1 ring-border/60 p-3">
-                    <div className="flex items-center justify-between mb-1">
-                      <span
-                        className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
-                        style={{
-                          background: `oklch(0.95 0.04 ${hue})`,
-                          color: `oklch(0.35 0.15 ${hue})`,
-                        }}
-                      >
-                        {n.scopeLabel}
-                      </span>
-                      <button
-                        onClick={() => setNotes((all) => all.filter((x) => x.id !== n.id))}
-                        className="text-muted-foreground hover:text-foreground"
-                        aria-label="Xoá"
-                      >
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                    <p className="text-[13px] text-foreground whitespace-pre-wrap">{n.text}</p>
-                  </div>
-                ))
-              )}
-            </div>
+            {sideTab === "tracks" && (
+              <TracksTab
+                tracksByTask={tracksByTask}
+                playingId={playingId}
+                onTogglePlay={(id) => setPlayingId((cur) => (cur === id ? null : id))}
+                hue={hue}
+              />
+            )}
+            {sideTab === "notes" && (
+              <NotesTab
+                notes={notes}
+                draft={draft}
+                setDraft={setDraft}
+                draftScope={draftScope}
+                setDraftScope={setDraftScope}
+                allTracks={allTracks}
+                addNote={addNote}
+                onDelete={(id) => setNotes((all) => all.filter((x) => x.id !== id))}
+                hue={hue}
+              />
+            )}
+            {sideTab === "teacher" && (
+              <TeacherTab
+                draft={teacherDraft}
+                setDraft={setTeacherDraft}
+                scope={teacherScope}
+                setScope={setTeacherScope}
+                allTracks={allTracks}
+                items={teacherQs}
+                onAsk={askTeacher}
+                onDelete={(id) => setTeacherQs((all) => all.filter((x) => x.id !== id))}
+                hue={hue}
+              />
+            )}
+            {sideTab === "ai" && (
+              <AiTab
+                chat={chat}
+                draft={chatDraft}
+                setDraft={setChatDraft}
+                onSend={sendChat}
+                endRef={chatEndRef}
+                hue={hue}
+              />
+            )}
           </aside>
         )}
       </div>
     </div>
+  );
+}
+
+/* ---------- Sidebar tabs ---------- */
+
+function TracksTab({
+  tracksByTask,
+  playingId,
+  onTogglePlay,
+  hue,
+}: {
+  tracksByTask: { taskKey: string; sectionTitle: string; accent: Section["accent"]; track: AudioTrack }[];
+  playingId: string | null;
+  onTogglePlay: (id: string) => void;
+  hue: number;
+}) {
+  return (
+    <div className="flex-1 overflow-y-auto p-3 space-y-2">
+      <div className="px-1 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+        Danh sách audio theo từng bài
+      </div>
+      {tracksByTask.map(({ taskKey, sectionTitle, accent, track }) => {
+        const playing = playingId === track.id;
+        const a = ACCENTS[accent];
+        return (
+          <div
+            key={track.id}
+            className={cn(
+              "rounded-xl ring-1 p-3 transition",
+              playing ? "bg-surface-2 ring-foreground/30 shadow-soft" : "bg-surface-2/50 ring-border/60 hover:bg-surface-2",
+            )}
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              <span
+                className="rounded-md px-1.5 py-0.5 text-[10px] font-bold text-white"
+                style={{ background: `oklch(0.55 0.18 ${hue})` }}
+              >
+                Task {taskKey}
+              </span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold truncate">
+                {sectionTitle}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => onTogglePlay(track.id)}
+                className={cn(
+                  "inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white shadow-sm transition active:scale-95",
+                  a.bg,
+                )}
+                aria-label={playing ? "Pause" : "Play"}
+              >
+                {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 translate-x-[1px]" />}
+              </button>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-1.5">
+                  <span className={cn("font-mono text-[12px] font-bold", a.text)}>{track.code}</span>
+                  <span className="text-[11px] text-muted-foreground">· {track.durationLabel}</span>
+                </div>
+                <div className="truncate text-[12px] text-foreground">{track.label}</div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+function NotesTab({
+  notes,
+  draft,
+  setDraft,
+  draftScope,
+  setDraftScope,
+  allTracks,
+  addNote,
+  onDelete,
+  hue,
+}: {
+  notes: Note[];
+  draft: string;
+  setDraft: (v: string) => void;
+  draftScope: { id: string; label: string };
+  setDraftScope: (s: { id: string; label: string }) => void;
+  allTracks: AudioTrack[];
+  addNote: () => void;
+  onDelete: (id: string) => void;
+  hue: number;
+}) {
+  return (
+    <>
+      <div className="p-3 border-b border-border/70 space-y-2 bg-surface-2/40">
+        <div className="flex flex-wrap gap-1">
+          <ScopeChip
+            active={draftScope.id === "unit"}
+            onClick={() => setDraftScope({ id: "unit", label: "Toàn bài" })}
+          >
+            Toàn bài
+          </ScopeChip>
+          {allTracks.map((t) => (
+            <ScopeChip
+              key={t.id}
+              active={draftScope.id === t.id}
+              onClick={() => setDraftScope({ id: t.id, label: `${t.code} ${t.label}` })}
+            >
+              {t.code}
+            </ScopeChip>
+          ))}
+        </div>
+        <textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder={`Take a note for "${draftScope.label}"...`}
+          rows={3}
+          className="w-full resize-none rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-muted-foreground">
+            Gắn với: <span className="font-medium text-foreground">{draftScope.label}</span>
+          </span>
+          <button
+            onClick={addNote}
+            disabled={!draft.trim()}
+            className="inline-flex items-center gap-1 rounded-lg bg-foreground px-3 py-1.5 text-xs font-semibold text-background disabled:opacity-40"
+          >
+            <Plus className="h-3 w-3" /> Lưu ghi chú
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+        {notes.length === 0 ? (
+          <div className="text-center text-xs text-muted-foreground py-10 px-4">
+            Chưa có ghi chú nào. Bạn có thể take note cho cả unit hoặc cho từng track audio.
+          </div>
+        ) : (
+          notes.map((n) => (
+            <div key={n.id} className="rounded-xl bg-surface-2/60 ring-1 ring-border/60 p-3">
+              <div className="flex items-center justify-between mb-1">
+                <span
+                  className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                  style={{
+                    background: `oklch(0.95 0.04 ${hue})`,
+                    color: `oklch(0.35 0.15 ${hue})`,
+                  }}
+                >
+                  {n.scopeLabel}
+                </span>
+                <button
+                  onClick={() => onDelete(n.id)}
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label="Xoá"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+              <p className="text-[13px] text-foreground whitespace-pre-wrap">{n.text}</p>
+            </div>
+          ))
+        )}
+      </div>
+    </>
+  );
+}
+
+function TeacherTab({
+  draft,
+  setDraft,
+  scope,
+  setScope,
+  allTracks,
+  items,
+  onAsk,
+  onDelete,
+  hue,
+}: {
+  draft: string;
+  setDraft: (v: string) => void;
+  scope: { id: string; label: string };
+  setScope: (s: { id: string; label: string }) => void;
+  allTracks: AudioTrack[];
+  items: TeacherQ[];
+  onAsk: () => void;
+  onDelete: (id: string) => void;
+  hue: number;
+}) {
+  return (
+    <>
+      <div className="p-3 border-b border-border/70 space-y-2 bg-surface-2/40">
+        <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+          <GraduationCap className="h-3.5 w-3.5" />
+          Câu hỏi sẽ được gửi đến giáo viên phụ trách lớp.
+        </div>
+        <div className="flex flex-wrap gap-1">
+          <ScopeChip active={scope.id === "unit"} onClick={() => setScope({ id: "unit", label: "Toàn bài" })}>
+            Toàn bài
+          </ScopeChip>
+          {allTracks.map((t) => (
+            <ScopeChip
+              key={t.id}
+              active={scope.id === t.id}
+              onClick={() => setScope({ id: t.id, label: `${t.code} ${t.label}` })}
+            >
+              {t.code}
+            </ScopeChip>
+          ))}
+        </div>
+        <textarea
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          placeholder="Em chưa hiểu phần... thầy/cô có thể giải thích lại không ạ?"
+          rows={3}
+          className="w-full resize-none rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        />
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-muted-foreground">
+            Gắn với: <span className="font-medium text-foreground">{scope.label}</span>
+          </span>
+          <button
+            onClick={onAsk}
+            disabled={!draft.trim()}
+            className="inline-flex items-center gap-1 rounded-lg bg-foreground px-3 py-1.5 text-xs font-semibold text-background disabled:opacity-40"
+          >
+            <Send className="h-3 w-3" /> Gửi
+          </button>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-3 space-y-2">
+        {items.length === 0 ? (
+          <div className="text-center text-xs text-muted-foreground py-10 px-4">
+            Chưa có câu hỏi nào. Hãy đặt câu hỏi cho giáo viên về phần bạn đang gặp khó khăn.
+          </div>
+        ) : (
+          items.map((q) => (
+            <div key={q.id} className="rounded-xl bg-surface-2/60 ring-1 ring-border/60 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                    style={{
+                      background: `oklch(0.95 0.04 ${hue})`,
+                      color: `oklch(0.35 0.15 ${hue})`,
+                    }}
+                  >
+                    {q.scopeLabel}
+                  </span>
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider",
+                      q.status === "pending"
+                        ? "bg-amber-100 text-amber-700"
+                        : "bg-emerald-100 text-emerald-700",
+                    )}
+                  >
+                    {q.status === "pending" ? "Chờ trả lời" : "Đã trả lời"}
+                  </span>
+                </div>
+                <button
+                  onClick={() => onDelete(q.id)}
+                  className="text-muted-foreground hover:text-foreground"
+                  aria-label="Xoá"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+              <p className="text-[13px] text-foreground whitespace-pre-wrap">{q.text}</p>
+              {q.answer && (
+                <div className="rounded-lg bg-emerald-50 ring-1 ring-emerald-100 p-2 text-[12px] text-emerald-900">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 mb-0.5">
+                    Giáo viên
+                  </div>
+                  {q.answer}
+                </div>
+              )}
+            </div>
+          ))
+        )}
+      </div>
+    </>
+  );
+}
+
+function AiTab({
+  chat,
+  draft,
+  setDraft,
+  onSend,
+  endRef,
+  hue,
+}: {
+  chat: ChatMsg[];
+  draft: string;
+  setDraft: (v: string) => void;
+  onSend: () => void;
+  endRef: React.RefObject<HTMLDivElement | null>;
+  hue: number;
+}) {
+  return (
+    <>
+      <div className="px-3 py-2 border-b border-border/70 bg-surface-2/40 flex items-center gap-2">
+        <div
+          className="flex h-7 w-7 items-center justify-center rounded-full text-white"
+          style={{ background: `linear-gradient(135deg, oklch(0.55 0.2 ${hue}), oklch(0.65 0.18 ${(hue + 60) % 360}))` }}
+        >
+          <Sparkles className="h-3.5 w-3.5" />
+        </div>
+        <div className="min-w-0">
+          <div className="text-[12px] font-semibold text-foreground">AI luyện tập</div>
+          <div className="text-[10px] text-muted-foreground truncate">
+            Hỏi đáp & hội thoại theo nội dung bài
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-3 space-y-3">
+        {chat.map((m) => {
+          const isUser = m.role === "user";
+          return (
+            <div key={m.id} className={cn("flex gap-2", isUser && "flex-row-reverse")}>
+              <div
+                className={cn(
+                  "h-7 w-7 shrink-0 rounded-full flex items-center justify-center text-white",
+                  isUser ? "bg-foreground" : "",
+                )}
+                style={
+                  isUser
+                    ? undefined
+                    : { background: `linear-gradient(135deg, oklch(0.55 0.2 ${hue}), oklch(0.65 0.18 ${(hue + 60) % 360}))` }
+                }
+              >
+                {isUser ? <UserIcon className="h-3.5 w-3.5" /> : <Bot className="h-3.5 w-3.5" />}
+              </div>
+              <div
+                className={cn(
+                  "max-w-[80%] rounded-2xl px-3 py-2 text-[13px] leading-relaxed",
+                  isUser
+                    ? "bg-foreground text-background rounded-tr-sm"
+                    : "bg-surface-2 ring-1 ring-border/60 text-foreground rounded-tl-sm",
+                )}
+              >
+                {m.text}
+              </div>
+            </div>
+          );
+        })}
+        <div ref={endRef} />
+      </div>
+
+      <div className="p-3 border-t border-border/70 bg-surface-2/40">
+        <div className="flex items-end gap-2">
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                onSend();
+              }
+            }}
+            placeholder="Hỏi AI hoặc luyện hội thoại..."
+            rows={2}
+            className="flex-1 resize-none rounded-xl border border-border bg-surface px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+          <button
+            onClick={onSend}
+            disabled={!draft.trim()}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-foreground text-background disabled:opacity-40"
+            aria-label="Gửi"
+          >
+            <Send className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="mt-1 text-[10px] text-muted-foreground">
+          Enter để gửi · Shift+Enter để xuống dòng
+        </div>
+      </div>
+    </>
   );
 }
 
