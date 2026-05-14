@@ -26,6 +26,7 @@ import { getCourse, type Activity, type Unit } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
 import { QuizPanel } from "@/components/QuizPanel";
 import { ReadingPanel } from "@/components/ReadingPanel";
+import { VideoPanel } from "@/components/VideoPanel";
 
 export const Route = createFileRoute("/courses/$courseId")({
   head: ({ params }) => ({
@@ -65,6 +66,7 @@ function CoursePage() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [quizOpen, setQuizOpen] = useState<Activity | null>(null);
   const [readingOpen, setReadingOpen] = useState<Activity | null>(null);
+  const [videoOpen, setVideoOpen] = useState<Activity | null>(null);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     intro: true,
     [course.units[0].id]: true,
@@ -223,12 +225,19 @@ function CoursePage() {
                           if (a.type === "quiz") {
                             setQuizOpen(a);
                             setReadingOpen(null);
+                            setVideoOpen(null);
                           } else if (a.type === "reading") {
                             setReadingOpen(a);
                             setQuizOpen(null);
+                            setVideoOpen(null);
+                          } else if (a.type === "video") {
+                            setVideoOpen(a);
+                            setQuizOpen(null);
+                            setReadingOpen(null);
                           } else {
                             setQuizOpen(null);
                             setReadingOpen(null);
+                            setVideoOpen(null);
                             setTab("overview");
                           }
                         }}
@@ -247,6 +256,8 @@ function CoursePage() {
             <QuizPanel quiz={quizOpen} hue={level.hue} onClose={() => setQuizOpen(null)} />
           ) : readingOpen ? (
             <ReadingPanel activity={readingOpen} hue={level.hue} onClose={() => setReadingOpen(null)} />
+          ) : videoOpen ? (
+            <VideoPanel activity={videoOpen} hue={level.hue} onClose={() => setVideoOpen(null)} />
           ) : (
             <>
               {/* HERO */}
