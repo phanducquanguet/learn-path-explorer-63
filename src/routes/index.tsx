@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { levels, studentStats, getLevel } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
+import { TopNav } from "@/components/TopNav";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -36,6 +37,7 @@ function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <TopNav />
       {/* Hero background */}
       <div className="relative">
         <div
@@ -53,8 +55,6 @@ function DashboardPage() {
         />
 
         <div className="mx-auto max-w-7xl px-6 pt-8 pb-12 sm:px-8">
-          <Header />
-
           {/* Hero: greeting + continue learning */}
           <section className="mt-8 grid gap-6 lg:grid-cols-5">
             <div className="lg:col-span-2 flex flex-col justify-center animate-fade-in">
