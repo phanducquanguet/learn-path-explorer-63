@@ -199,6 +199,67 @@ const samplePages: Page[] = [
           },
         ],
       },
+      {
+        id: "s11",
+        number: 11,
+        title: "LISTENING PRACTICE",
+        subtitle: "Listen to the conversation and answer the questions",
+        accent: "red",
+        tasks: [
+          {
+            id: "11a",
+            letter: "a",
+            audio: {
+              id: "t-q11",
+              code: "1.84",
+              label: "Conversation: At the supermarket",
+              durationLabel: "1:42",
+            },
+            blocks: [
+              {
+                kind: "instruction",
+                text: "Câu hỏi 11. Nghe đoạn hội thoại giữa Anna và Mark khi họ đi siêu thị. Sau đó chọn đáp án đúng (A, B, C hoặc D) cho mỗi câu hỏi dưới đây.",
+              },
+              {
+                kind: "mcq",
+                prompt: "Dựa vào audio phía trên, chọn đáp án đúng cho 5 câu hỏi sau:",
+                questions: [
+                  {
+                    id: "q11-1",
+                    q: "1. Where are Anna and Mark?",
+                    options: ["At a restaurant", "At a supermarket", "At Anna's house", "At a market stall"],
+                    answer: 1,
+                  },
+                  {
+                    id: "q11-2",
+                    q: "2. What does Anna want to buy first?",
+                    options: ["Bread and eggs", "Fruit and vegetables", "Meat and rice", "Fish and bread"],
+                    answer: 1,
+                  },
+                  {
+                    id: "q11-3",
+                    q: "3. Why doesn't Mark want fish?",
+                    options: ["It is too expensive", "He doesn't like fish", "He is allergic to fish", "There is no fish today"],
+                    answer: 1,
+                  },
+                  {
+                    id: "q11-4",
+                    q: "4. How many eggs do they buy?",
+                    options: ["Six", "Ten", "Twelve", "Twenty"],
+                    answer: 2,
+                  },
+                  {
+                    id: "q11-5",
+                    q: "5. What do they decide to cook for dinner?",
+                    options: ["Rice with vegetables", "Meat with bread", "Fish and rice", "Eggs and fruit"],
+                    answer: 0,
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
     ],
   },
 ];
