@@ -119,43 +119,42 @@ function DashboardPage() {
             <Link
               to="/courses/$courseId"
               params={{ courseId: currentCourse.id }}
-              className="group lg:col-span-1 relative overflow-hidden rounded-[2rem] p-6 ring-1 ring-white/15 shadow-elevated transition hover:-translate-y-1 hover:shadow-glow animate-scale-in"
-              style={{
-                background:
-                  "linear-gradient(135deg, oklch(0.45 0.2 270) 0%, oklch(0.55 0.22 290) 50%, oklch(0.6 0.18 320) 100%)",
-              }}
+              className="group lg:col-span-1 relative overflow-hidden rounded-[2rem] p-6 bg-surface ring-1 ring-border shadow-elevated transition hover:-translate-y-1 hover:shadow-glow animate-scale-in"
             >
-              <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
-              <div className="absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-fuchsia-400/20 blur-3xl" />
-              <div className="absolute right-4 top-4 opacity-15">
-                <GraduationCap className="h-20 w-20 text-white" />
+              {/* Subtle neutral accent */}
+              <div
+                className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full opacity-60 blur-3xl"
+                style={{ background: "oklch(0.94 0.02 260)" }}
+              />
+              <div className="absolute right-4 top-4 opacity-[0.06]">
+                <GraduationCap className="h-20 w-20 text-foreground" />
               </div>
 
               <div className="relative">
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white backdrop-blur">
-                  <Rocket className="h-3.5 w-3.5" /> Tiếp tục học
+                <div className="inline-flex items-center gap-2 rounded-full bg-foreground/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-foreground/70 ring-1 ring-border">
+                  <Rocket className="h-3.5 w-3.5 text-primary" /> Tiếp tục học
                 </div>
-                <div className="mt-5 text-xs font-medium text-white/70">Cấp độ {currentLevel.code}</div>
-                <h2 className="mt-1 font-display text-xl font-bold tracking-tight text-white sm:text-2xl">
+                <div className="mt-5 text-xs font-medium text-muted-foreground">Cấp độ {currentLevel.code}</div>
+                <h2 className="mt-1 font-display text-xl font-bold tracking-tight text-foreground sm:text-2xl">
                   {currentCourse.title}
                 </h2>
-                <p className="mt-1.5 text-xs text-white/75 line-clamp-2">{currentCourse.subtitle}</p>
+                <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2">{currentCourse.subtitle}</p>
 
                 <div className="mt-5">
-                  <div className="flex items-center justify-between text-xs font-medium text-white/80">
+                  <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
                     <span>Tiến độ</span>
-                    <span>{currentCourse.progress}%</span>
+                    <span className="text-foreground font-semibold">{currentCourse.progress}%</span>
                   </div>
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/15 backdrop-blur">
+                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.5)]"
+                      className="h-full rounded-full bg-foreground transition-all"
                       style={{ width: `${currentCourse.progress}%` }}
                     />
                   </div>
                 </div>
 
                 <div className="mt-5 flex items-center gap-2">
-                  <span className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-foreground shadow-soft transition group-hover:gap-2.5">
+                  <span className="inline-flex items-center gap-2 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background shadow-soft transition group-hover:gap-2.5">
                     <Play className="h-3.5 w-3.5 fill-current" /> Vào học
                   </span>
                 </div>
