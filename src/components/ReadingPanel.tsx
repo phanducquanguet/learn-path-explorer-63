@@ -36,7 +36,12 @@ type Block =
   | { kind: "speechBubble"; text: string }
   | { kind: "soundTable"; columns: { label: string; items: string[] }[] }
   | { kind: "passage"; text: string; tag?: string }
-  | { kind: "passages"; items: { tag: string; text: string }[] };
+  | { kind: "passages"; items: { tag: string; text: string }[] }
+  | {
+      kind: "mcq";
+      prompt?: string;
+      questions: { id: string; q: string; options: string[]; answer: number }[];
+    };
 
 type Task = {
   id: string;
