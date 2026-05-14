@@ -53,6 +53,11 @@ type QGapMulti = BaseQ & {
   kind: "gapmulti";
   blanks: { options: string[]; answer: number }[];
 };
+type QListening = BaseQ & {
+  kind: "listening";
+  audio: { code: string; label: string; durationLabel: string };
+  subQuestions: { id: string; prompt: string; options: string[]; answer: number }[];
+};
 
 export type Question =
   | QSingle
@@ -63,7 +68,8 @@ export type Question =
   | QHighlight
   | QSequence
   | QAudio
-  | QGapMulti;
+  | QGapMulti
+  | QListening;
 
 /* ============================================================
  * Sample bank (English)
@@ -204,6 +210,51 @@ export function buildQuiz(quizId: string): Question[] {
       blanks: [
         { options: ["will become", "would become", "are becoming"], answer: 0 },
         { options: ["success", "defeat", "victory"], answer: 1 },
+      ],
+    },
+    {
+      id: "q11",
+      index: 11,
+      kind: "listening",
+      maxScore: 5,
+      prompt:
+        "Listen to the conversation between Anna and Mark at the supermarket, then answer the 5 questions below.",
+      audio: {
+        code: "1.84",
+        label: "Conversation: At the supermarket",
+        durationLabel: "1:42",
+      },
+      subQuestions: [
+        {
+          id: "q11-1",
+          prompt: "1. Where are Anna and Mark?",
+          options: ["At a restaurant", "At a supermarket", "At Anna's house", "At a market stall"],
+          answer: 1,
+        },
+        {
+          id: "q11-2",
+          prompt: "2. What does Anna want to buy first?",
+          options: ["Bread and eggs", "Fruit and vegetables", "Meat and rice", "Fish and bread"],
+          answer: 1,
+        },
+        {
+          id: "q11-3",
+          prompt: "3. Why doesn't Mark want fish?",
+          options: ["It is too expensive", "He doesn't like fish", "He is allergic to fish", "There is no fish today"],
+          answer: 1,
+        },
+        {
+          id: "q11-4",
+          prompt: "4. How many eggs do they buy?",
+          options: ["Six", "Ten", "Twelve", "Twenty"],
+          answer: 2,
+        },
+        {
+          id: "q11-5",
+          prompt: "5. What do they decide to cook for dinner?",
+          options: ["Rice with vegetables", "Meat with bread", "Fish and rice", "Eggs and fruit"],
+          answer: 0,
+        },
       ],
     },
   ];
@@ -601,6 +652,7 @@ function kindLabel(k: Question["kind"]) {
     sequence: "Sequence (drag & drop)",
     audio: "Audio record",
     gapmulti: "Multi choice gap fill",
+    listening: "Listening + multi questions",
   }[k];
 }
 function renderPromptHead(p: string) {
@@ -630,6 +682,10 @@ function hasAnswer(q: Question, v: AnswerState): boolean {
       return v === true;
     case "gapmulti":
       return Array.isArray(v) && (v as (number | null)[]).every((x) => x !== null && x !== undefined);
+    case "listening": {
+      const arr = v as (number | null)[] | undefined;
+      return Array.isArray(arr) && arr.length === q.subQuestions.length && arr.every((x) => x !== null && x !== undefined);
+    }
   }
 }
 
@@ -714,6 +770,12 @@ function grade(q: Question, v: AnswerState): Result {
       const s = ratio(ok.filter(Boolean).length, q.blanks.length);
       return { status: s, earned: earn(s, q.maxScore) };
     }
+    case "listening": {
+      const arr = (v as (number | null)[]) || [];
+      const ok = q.subQuestions.map((sq, i) => arr[i] === sq.answer);
+      const s = ratio(ok.filter(Boolean).length, q.subQuestions.length);
+      return { status: s, earned: earn(s, q.maxScore) };
+    }
   }
 }
 
@@ -753,6 +815,8 @@ function QuestionBody({
       return <AudioBody q={q} value={value === true} onChange={onChange} locked={locked} />;
     case "gapmulti":
       return <GapMultiBody q={q} value={value as (number | null)[] | undefined} onChange={onChange} locked={locked} />;
+    case "listening":
+      return <ListeningBody q={q} value={value as (number | null)[] | undefined} onChange={onChange} locked={locked} accent={accent} />;
   }
 }
 
@@ -1407,5 +1471,127 @@ function CorrectAnswerHint({ q }: { q: Question }) {
       return <span>Correct answers: {q.blanks.map((b) => b.options[b.answer]).join(" / ")}</span>;
     case "audio":
       return <span>Pronunciation will be reviewed by your teacher.</span>;
+    case "listening":
+      return (
+        <span>
+          Correct answers:{" "}
+          {q.subQuestions
+            .map((sq, i) => `${i + 1}→${String.fromCharCode(65 + sq.answer)}`)
+            .join(" • ")}
+        </span>
+      );
   }
+}
+
+/* ---------------- Listening (audio + multi sub-questions) ---------------- */
+function ListeningBody({
+  q,
+  value,
+  onChange,
+  locked,
+  accent,
+}: {
+  q: QListening;
+  value?: (number | null)[];
+  onChange: (v: (number | null)[]) => void;
+  locked: boolean;
+  accent: string;
+}) {
+  const answers = value ?? q.subQuestions.map(() => null);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  useEffect(() => {
+    if (!playing) return;
+    const id = window.setInterval(() => {
+      setProgress((p) => (p >= 100 ? (setPlaying(false), 0) : p + 1.2));
+    }, 120);
+    return () => window.clearInterval(id);
+  }, [playing]);
+
+  const pick = (qi: number, oi: number) => {
+    if (locked) return;
+    const next = [...answers];
+    next[qi] = oi;
+    onChange(next);
+  };
+
+  return (
+    <div className="space-y-5">
+      {/* Audio player */}
+      <div
+        className="flex items-center gap-3 rounded-2xl p-4 ring-1 ring-border"
+        style={{ background: `linear-gradient(135deg, color-mix(in oklab, ${accent} 8%, transparent), transparent)` }}
+      >
+        <button
+          type="button"
+          onClick={() => setPlaying((v) => !v)}
+          className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-white shadow-soft transition active:scale-95"
+          style={{ background: accent }}
+          aria-label={playing ? "Pause" : "Play"}
+        >
+          {playing ? <X className="h-4 w-4" /> : <ArrowRight className="h-4 w-4 translate-x-[1px]" />}
+        </button>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="font-mono text-xs font-bold" style={{ color: accent }}>
+              {q.audio.code}
+            </span>
+            <span className="text-[11px] text-muted-foreground">· {q.audio.durationLabel}</span>
+          </div>
+          <div className="truncate text-sm font-medium text-foreground">{q.audio.label}</div>
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full transition-[width] duration-100"
+              style={{ width: `${progress}%`, background: accent }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Sub-questions */}
+      <ol className="space-y-5">
+        {q.subQuestions.map((sq, qi) => {
+          const picked = answers[qi];
+          return (
+            <li key={sq.id} className="space-y-2">
+              <div className="text-sm font-semibold text-foreground">{sq.prompt}</div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {sq.options.map((opt, oi) => {
+                  const selected = picked === oi;
+                  const isAnswer = locked && oi === sq.answer;
+                  const wrongPick = locked && selected && oi !== sq.answer;
+                  return (
+                    <button
+                      key={oi}
+                      type="button"
+                      disabled={locked}
+                      onClick={() => pick(qi, oi)}
+                      className={cn(
+                        "flex items-start gap-2 rounded-xl border-2 px-3 py-2.5 text-left text-sm transition",
+                        selected ? "border-foreground bg-foreground/5" : "border-border hover:border-foreground/40 hover:bg-muted/40",
+                        isAnswer && "border-success bg-success/10",
+                        wrongPick && "border-destructive bg-destructive/10",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 text-[10px] font-bold",
+                          selected ? "border-foreground" : "border-border",
+                          isAnswer && "border-success text-success-foreground",
+                        )}
+                      >
+                        {String.fromCharCode(65 + oi)}
+                      </span>
+                      <span className="leading-snug">{opt}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
 }

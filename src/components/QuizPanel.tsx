@@ -57,7 +57,7 @@ export function QuizPanel({
             </p>
             <div className="mt-5 flex flex-wrap gap-2">
               <Pill icon={<Clock className="h-3.5 w-3.5" />}>~{quiz.duration} phút</Pill>
-              <Pill icon={<ClipboardList className="h-3.5 w-3.5" />}>10 câu hỏi</Pill>
+              <Pill icon={<ClipboardList className="h-3.5 w-3.5" />}>11 câu hỏi</Pill>
               <Pill icon={<Sparkles className="h-3.5 w-3.5" />}>Không giới hạn lượt</Pill>
             </div>
             <div className="mt-6">
@@ -77,7 +77,7 @@ export function QuizPanel({
         <Info label="Số lần thử" value="∞" hint="Không giới hạn" />
         <Info label="Cách tính điểm" value="Cao nhất" hint="Trong các lần thử" />
         <Info label="Điểm đạt" value="70%" hint="Yêu cầu để qua bài" />
-        <Info label="Dạng câu hỏi" value="10" hint="Đa dạng định dạng" />
+        <Info label="Dạng câu hỏi" value="11" hint="Đa dạng định dạng" />
       </div>
 
       {/* Instructions */}
