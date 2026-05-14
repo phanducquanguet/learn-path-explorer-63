@@ -181,39 +181,40 @@ function DashboardPage() {
                 <span className="hidden rounded-full bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground ring-1 ring-border sm:inline-flex">
                   {levels.filter((l) => l.status !== "locked").length}/{levels.length} cấp đã mở
                 </span>
-                <div className="hidden md:flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    aria-label="Cuộn trái"
-                    onClick={() => scrollLevels(-1)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-surface ring-1 ring-border text-foreground/70 hover:text-foreground hover:shadow-soft transition"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Cuộn phải"
-                    onClick={() => scrollLevels(1)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-surface ring-1 ring-border text-foreground/70 hover:text-foreground hover:shadow-soft transition"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
               </div>
             </div>
 
-            <div
-              className="relative mt-6 -mx-6 sm:-mx-8"
-              style={{
-                maskImage:
-                  "linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent)",
-                WebkitMaskImage:
-                  "linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent)",
-              }}
-            >
+            <div className="relative mt-6 -mx-6 sm:-mx-8">
+              {/* Side fade overlays — don't clip card shadows vertically */}
+              <div className="pointer-events-none absolute left-0 top-0 bottom-4 w-12 z-10 bg-gradient-to-r from-background to-transparent" />
+              <div className="pointer-events-none absolute right-0 top-0 bottom-4 w-12 z-10 bg-gradient-to-l from-background to-transparent" />
+
+              {/* Overlay arrows */}
+              <button
+                type="button"
+                aria-label="Cuộn trái"
+                onClick={() => scrollLevels(-1)}
+                className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-background ring-1 ring-border text-foreground shadow-elevated hover:shadow-glow hover:scale-105 transition"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                aria-label="Cuộn phải"
+                onClick={() => scrollLevels(1)}
+                className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-background ring-1 ring-border text-foreground shadow-elevated hover:shadow-glow hover:scale-105 transition"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+
               <div
                 ref={levelsScrollRef}
-                className="flex gap-5 overflow-x-auto px-6 sm:px-8 pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                onMouseDown={onDragStart}
+                onMouseMove={onDragMove}
+                onMouseUp={onDragEnd}
+                onMouseLeave={onDragEnd}
+                onClickCapture={onDragClickCapture}
+                className="flex gap-5 overflow-x-auto px-6 sm:px-8 pt-3 pb-6 snap-x snap-mandatory cursor-grab select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               >
                 {levels.map((lv, i) => {
                   const prev = i > 0 ? levels[i - 1] : undefined;
