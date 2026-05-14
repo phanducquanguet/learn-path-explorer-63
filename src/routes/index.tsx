@@ -38,6 +38,9 @@ function DashboardPage() {
   const goalPct = Math.round((s.studyMinutesThisWeek / s.studyMinutesGoal) * 100);
   const currentLevel = getLevel("b2")!;
   const currentCourse = currentLevel.courses[0];
+  const levelsScrollRef = useRef<HTMLDivElement>(null);
+  const scrollLevels = (dir: 1 | -1) =>
+    levelsScrollRef.current?.scrollBy({ left: dir * 380, behavior: "smooth" });
 
   return (
     <div className="min-h-screen bg-background">
