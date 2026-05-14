@@ -41,6 +41,33 @@ function DashboardPage() {
   const levelsScrollRef = useRef<HTMLDivElement>(null);
   const scrollLevels = (dir: 1 | -1) =>
     levelsScrollRef.current?.scrollBy({ left: dir * 380, behavior: "smooth" });
+  const dragState = useRef({ down: false, startX: 0, startLeft: 0, moved: false });
+  const onDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = levelsScrollRef.current;
+    if (!el) return;
+    dragState.current = { down: true, startX: e.pageX, startLeft: el.scrollLeft, moved: false };
+    el.style.cursor = "grabbing";
+  };
+  const onDragMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = levelsScrollRef.current;
+    if (!el || !dragState.current.down) return;
+    const dx = e.pageX - dragState.current.startX;
+    if (Math.abs(dx) > 4) dragState.current.moved = true;
+    el.scrollLeft = dragState.current.startLeft - dx;
+  };
+  const onDragEnd = () => {
+    const el = levelsScrollRef.current;
+    if (!el) return;
+    el.style.cursor = "";
+    dragState.current.down = false;
+  };
+  const onDragClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (dragState.current.moved) {
+      e.preventDefault();
+      e.stopPropagation();
+      dragState.current.moved = false;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -63,7 +90,7 @@ function DashboardPage() {
 
         <div className="mx-auto max-w-7xl px-6 pt-8 pb-12 sm:px-8">
           {/* Hero: greeting + continue learning */}
-          <section className="mt-8 grid gap-6 lg:grid-cols-5">
+          <section className="mt-8 grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 flex flex-col justify-center animate-fade-in">
               <span className="inline-flex w-fit items-center gap-2 rounded-full bg-surface/80 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur ring-1 ring-border">
                 <Sparkles className="h-3.5 w-3.5 text-primary" /> Chào mừng trở lại
@@ -92,7 +119,7 @@ function DashboardPage() {
             <Link
               to="/courses/$courseId"
               params={{ courseId: currentCourse.id }}
-              className="group lg:col-span-3 relative overflow-hidden rounded-[2rem] p-8 ring-1 ring-white/15 shadow-elevated transition hover:-translate-y-1 hover:shadow-glow animate-scale-in"
+              className="group lg:col-span-1 relative overflow-hidden rounded-[2rem] p-6 ring-1 ring-white/15 shadow-elevated transition hover:-translate-y-1 hover:shadow-glow animate-scale-in"
               style={{
                 background:
                   "linear-gradient(135deg, oklch(0.45 0.2 270) 0%, oklch(0.55 0.22 290) 50%, oklch(0.6 0.18 320) 100%)",
@@ -100,26 +127,26 @@ function DashboardPage() {
             >
               <div className="absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
               <div className="absolute -bottom-16 -left-16 h-56 w-56 rounded-full bg-fuchsia-400/20 blur-3xl" />
-              <div className="absolute right-8 top-8 opacity-20">
-                <GraduationCap className="h-32 w-32 text-white" />
+              <div className="absolute right-4 top-4 opacity-15">
+                <GraduationCap className="h-20 w-20 text-white" />
               </div>
 
               <div className="relative">
                 <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-white backdrop-blur">
                   <Rocket className="h-3.5 w-3.5" /> Tiếp tục học
                 </div>
-                <div className="mt-6 text-sm font-medium text-white/70">Cấp độ {currentLevel.code}</div>
-                <h2 className="mt-1 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                <div className="mt-5 text-xs font-medium text-white/70">Cấp độ {currentLevel.code}</div>
+                <h2 className="mt-1 font-display text-xl font-bold tracking-tight text-white sm:text-2xl">
                   {currentCourse.title}
                 </h2>
-                <p className="mt-2 max-w-md text-sm text-white/75">{currentCourse.subtitle}</p>
+                <p className="mt-1.5 text-xs text-white/75 line-clamp-2">{currentCourse.subtitle}</p>
 
-                <div className="mt-6 max-w-md">
+                <div className="mt-5">
                   <div className="flex items-center justify-between text-xs font-medium text-white/80">
-                    <span>Tiến độ khoá học</span>
+                    <span>Tiến độ</span>
                     <span>{currentCourse.progress}%</span>
                   </div>
-                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/15 backdrop-blur">
+                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/15 backdrop-blur">
                     <div
                       className="h-full rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.5)]"
                       style={{ width: `${currentCourse.progress}%` }}
@@ -127,14 +154,9 @@ function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="mt-6 flex items-center gap-3">
-                  <span
-                    className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-2.5 text-sm font-semibold text-foreground shadow-soft transition group-hover:gap-3"
-                  >
-                    <Play className="h-4 w-4 fill-current" /> Vào học ngay
-                  </span>
-                  <span className="text-xs text-white/70">
-                    Unit kế tiếp: <b className="text-white">Travel Stories</b>
+                <div className="mt-5 flex items-center gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-foreground shadow-soft transition group-hover:gap-2.5">
+                    <Play className="h-3.5 w-3.5 fill-current" /> Vào học
                   </span>
                 </div>
               </div>
@@ -159,39 +181,40 @@ function DashboardPage() {
                 <span className="hidden rounded-full bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground ring-1 ring-border sm:inline-flex">
                   {levels.filter((l) => l.status !== "locked").length}/{levels.length} cấp đã mở
                 </span>
-                <div className="hidden md:flex items-center gap-1.5">
-                  <button
-                    type="button"
-                    aria-label="Cuộn trái"
-                    onClick={() => scrollLevels(-1)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-surface ring-1 ring-border text-foreground/70 hover:text-foreground hover:shadow-soft transition"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Cuộn phải"
-                    onClick={() => scrollLevels(1)}
-                    className="flex h-9 w-9 items-center justify-center rounded-full bg-surface ring-1 ring-border text-foreground/70 hover:text-foreground hover:shadow-soft transition"
-                  >
-                    <ChevronRight className="h-4 w-4" />
-                  </button>
-                </div>
               </div>
             </div>
 
-            <div
-              className="relative mt-6 -mx-6 sm:-mx-8"
-              style={{
-                maskImage:
-                  "linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent)",
-                WebkitMaskImage:
-                  "linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent)",
-              }}
-            >
+            <div className="relative mt-6 -mx-6 sm:-mx-8">
+              {/* Side fade overlays — don't clip card shadows vertically */}
+              <div className="pointer-events-none absolute left-0 top-0 bottom-4 w-12 z-10 bg-gradient-to-r from-background to-transparent" />
+              <div className="pointer-events-none absolute right-0 top-0 bottom-4 w-12 z-10 bg-gradient-to-l from-background to-transparent" />
+
+              {/* Overlay arrows */}
+              <button
+                type="button"
+                aria-label="Cuộn trái"
+                onClick={() => scrollLevels(-1)}
+                className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-background ring-1 ring-border text-foreground shadow-elevated hover:shadow-glow hover:scale-105 transition"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                type="button"
+                aria-label="Cuộn phải"
+                onClick={() => scrollLevels(1)}
+                className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-background ring-1 ring-border text-foreground shadow-elevated hover:shadow-glow hover:scale-105 transition"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+
               <div
                 ref={levelsScrollRef}
-                className="flex gap-5 overflow-x-auto px-6 sm:px-8 pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                onMouseDown={onDragStart}
+                onMouseMove={onDragMove}
+                onMouseUp={onDragEnd}
+                onMouseLeave={onDragEnd}
+                onClickCapture={onDragClickCapture}
+                className="flex gap-5 overflow-x-auto px-6 sm:px-8 pt-3 pb-6 snap-x snap-mandatory cursor-grab select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               >
                 {levels.map((lv, i) => {
                   const prev = i > 0 ? levels[i - 1] : undefined;
