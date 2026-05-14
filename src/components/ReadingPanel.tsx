@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
   FileText,
@@ -422,22 +422,13 @@ function AudioSegment({
 }) {
   // Fake progress driven by interval when playing
   const [progress, setProgress] = useState(0);
-  const rafRef = useRef<number | null>(null);
 
-  // simple animated progress (visual only)
-  useMemo(() => {
-    if (rafRef.current) {
-      window.clearInterval(rafRef.current);
-      rafRef.current = null;
-    }
-    if (isPlaying) {
-      rafRef.current = window.setInterval(() => {
-        setProgress((p) => (p >= 100 ? 0 : p + 1.2));
-      }, 120);
-    }
-    return () => {
-      if (rafRef.current) window.clearInterval(rafRef.current);
-    };
+  useEffect(() => {
+    if (!isPlaying) return;
+    const id = window.setInterval(() => {
+      setProgress((p) => (p >= 100 ? 0 : p + 1.2));
+    }, 120);
+    return () => window.clearInterval(id);
   }, [isPlaying]);
 
   return (
