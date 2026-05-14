@@ -1268,5 +1268,106 @@ function BlockView({ block, accent }: { block: Block; accent: Section["accent"] 
           ))}
         </div>
       );
+
+    case "mcq":
+      return <McqBlock block={block} accent={accent} />;
   }
+}
+
+function McqBlock({
+  block,
+  accent,
+}: {
+  block: Extract<Block, { kind: "mcq" }>;
+  accent: Section["accent"];
+}) {
+  const a = ACCENTS[accent];
+  const [answers, setAnswers] = useState<Record<string, number>>({});
+  const [submitted, setSubmitted] = useState(false);
+
+  const total = block.questions.length;
+  const answered = Object.keys(answers).length;
+  const correct = block.questions.filter((q) => answers[q.id] === q.answer).length;
+
+  return (
+    <div className="rounded-xl border border-neutral-200 bg-white p-4 space-y-4">
+      {block.prompt && (
+        <p className="text-[13px] font-medium text-neutral-700">{block.prompt}</p>
+      )}
+      <ol className="space-y-4">
+        {block.questions.map((q) => {
+          const picked = answers[q.id];
+          return (
+            <li key={q.id} className="space-y-2">
+              <p className="text-[14px] font-semibold text-neutral-900">{q.q}</p>
+              <div className="grid gap-1.5 sm:grid-cols-2">
+                {q.options.map((opt, i) => {
+                  const selected = picked === i;
+                  const isCorrect = i === q.answer;
+                  const showState = submitted && (selected || isCorrect);
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => !submitted && setAnswers((s) => ({ ...s, [q.id]: i }))}
+                      className={cn(
+                        "flex items-start gap-2 rounded-lg border px-3 py-2 text-left text-[13px] transition",
+                        !submitted && selected && "border-neutral-900 bg-neutral-50",
+                        !submitted && !selected && "border-neutral-200 hover:border-neutral-400 bg-white",
+                        submitted && isCorrect && "border-emerald-500 bg-emerald-50 text-emerald-900",
+                        submitted && selected && !isCorrect && "border-rose-500 bg-rose-50 text-rose-900",
+                        submitted && !selected && !isCorrect && "border-neutral-200 bg-white text-neutral-500",
+                        submitted && "cursor-default",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border text-[10px] font-bold",
+                          selected ? "border-current" : "border-neutral-300",
+                          !submitted && selected && a.text,
+                        )}
+                      >
+                        {String.fromCharCode(65 + i)}
+                      </span>
+                      <span className="leading-snug">{opt}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+      <div className="flex items-center justify-between border-t border-neutral-200 pt-3">
+        <span className="text-[12px] text-neutral-600">
+          {submitted
+            ? `Kết quả: ${correct}/${total} câu đúng`
+            : `Đã trả lời ${answered}/${total}`}
+        </span>
+        <div className="flex items-center gap-2">
+          {submitted && (
+            <button
+              onClick={() => {
+                setAnswers({});
+                setSubmitted(false);
+              }}
+              className="rounded-lg border border-neutral-300 bg-white px-3 py-1.5 text-xs font-semibold text-neutral-700 hover:bg-neutral-50"
+            >
+              Làm lại
+            </button>
+          )}
+          <button
+            onClick={() => setSubmitted(true)}
+            disabled={submitted || answered < total}
+            className={cn(
+              "rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-40",
+              a.bg,
+            )}
+          >
+            Nộp bài
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
