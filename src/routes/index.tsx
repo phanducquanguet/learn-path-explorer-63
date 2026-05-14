@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Clock,
@@ -14,6 +15,9 @@ import {
   Rocket,
   GraduationCap,
   Zap,
+  ChevronLeft,
+  ChevronRight,
+  Sparkle,
 } from "lucide-react";
 import { levels, studentStats, getLevel } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
