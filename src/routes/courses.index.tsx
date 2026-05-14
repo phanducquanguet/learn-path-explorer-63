@@ -548,13 +548,8 @@ function CourseRow({
         !isLast && "border-b border-border",
       )}
     >
-      <div
-        className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-primary-foreground"
-        style={{
-          background: `linear-gradient(135deg, oklch(0.5 0.18 ${level.hue}), oklch(0.65 0.18 ${(level.hue + 30) % 360}))`,
-        }}
-      >
-        <GraduationCap className="h-4 w-4" />
+      <div className="h-12 w-16 shrink-0 overflow-hidden rounded-lg ring-1 ring-border">
+        <CourseCover course={course} level={level} category={category} size="sm" />
       </div>
 
       <div className="min-w-0 flex-1">
