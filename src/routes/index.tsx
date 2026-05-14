@@ -141,12 +141,12 @@ function DashboardPage() {
                 </h2>
                 <p className="mt-1.5 text-xs text-white/75 line-clamp-2">{currentCourse.subtitle}</p>
 
-                <div className="mt-6 max-w-md">
+                <div className="mt-5">
                   <div className="flex items-center justify-between text-xs font-medium text-white/80">
-                    <span>Tiến độ khoá học</span>
+                    <span>Tiến độ</span>
                     <span>{currentCourse.progress}%</span>
                   </div>
-                  <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/15 backdrop-blur">
+                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/15 backdrop-blur">
                     <div
                       className="h-full rounded-full bg-white shadow-[0_0_20px_rgba(255,255,255,0.5)]"
                       style={{ width: `${currentCourse.progress}%` }}
@@ -154,14 +154,9 @@ function DashboardPage() {
                   </div>
                 </div>
 
-                <div className="mt-6 flex items-center gap-3">
-                  <span
-                    className="inline-flex items-center gap-2 rounded-2xl bg-white px-5 py-2.5 text-sm font-semibold text-foreground shadow-soft transition group-hover:gap-3"
-                  >
-                    <Play className="h-4 w-4 fill-current" /> Vào học ngay
-                  </span>
-                  <span className="text-xs text-white/70">
-                    Unit kế tiếp: <b className="text-white">Travel Stories</b>
+                <div className="mt-5 flex items-center gap-2">
+                  <span className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-sm font-semibold text-foreground shadow-soft transition group-hover:gap-2.5">
+                    <Play className="h-3.5 w-3.5 fill-current" /> Vào học
                   </span>
                 </div>
               </div>
