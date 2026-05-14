@@ -1,114 +1,202 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft,
-  FileText,
   Headphones,
   NotebookPen,
   Pause,
   Play,
   Plus,
   StickyNote,
+  Volume2,
   X,
 } from "lucide-react";
 import type { Activity } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
 
-type AudioClip = {
+/* ---------- Types ---------- */
+
+type AudioTrack = {
   id: string;
-  label: string;
-  speakers: string;
+  code: string; // e.g. "1.72"
+  label: string; // descriptive label
   durationLabel: string;
-  transcript: { who: string; text: string }[];
+  transcript?: { who?: string; text: string }[];
 };
 
-type ReadingPage = {
+type Block =
+  | { kind: "instruction"; text: string }
+  | { kind: "wordbox"; words: string[] }
+  | { kind: "imageGrid"; items: { n: number; emoji: string; caption: string }[] }
+  | { kind: "speechBubble"; text: string }
+  | { kind: "soundTable"; columns: { label: string; items: string[] }[] }
+  | { kind: "passage"; text: string; tag?: string }
+  | { kind: "passages"; items: { tag: string; text: string }[] };
+
+type Task = {
+  id: string;
+  letter: string; // a, b, c, d, e
+  audio?: AudioTrack;
+  blocks: Block[];
+};
+
+type Section = {
   id: string;
   number: number;
   title: string;
-  kicker: string;
-  paragraphs: string[];
-  callout?: { title: string; text: string };
-  vocab?: { word: string; meaning: string }[];
-  audio?: AudioClip;
+  subtitle?: string;
+  accent: "red" | "orange";
+  tasks: Task[];
 };
 
-const samplePages: ReadingPage[] = [
+type Page = {
+  id: string;
+  pageNumber: number;
+  badge: string; // "3A"
+  title: string;
+  tags: { kind: "G" | "V"; text: string }[];
+  sections: Section[];
+};
+
+/* ---------- Sample content (mirrors the uploaded textbook page) ---------- */
+
+const samplePages: Page[] = [
   {
-    id: "p1",
-    number: 1,
-    title: "Lesson 3A — Living abroad",
-    kicker: "Reading & Listening",
-    paragraphs: [
-      "Moving to a new country can be both exciting and overwhelming. Most people experience a phase called the honeymoon, when everything feels fresh and inspiring — the food, the streets, even the way strangers greet each other.",
-      "After a few months, however, small frustrations start to build up. Simple tasks like opening a bank account or understanding a doctor's appointment can suddenly feel exhausting. Researchers call this stage culture shock.",
+    id: "p22",
+    pageNumber: 22,
+    badge: "3A",
+    title: "Do you like fish?",
+    tags: [
+      { kind: "G", text: "Present simple: I / you / we / they" },
+      { kind: "V", text: "Food 1" },
     ],
-    callout: {
-      title: "Before you read",
-      text: "Discuss with a partner: What would you miss most if you moved to another country for a year?",
-    },
-  },
-  {
-    id: "p2",
-    number: 2,
-    title: "Conversation 1 — Getting settled",
-    kicker: "Listening practice",
-    paragraphs: [
-      "Listen to two students, Mia and Karim, talking about their first weeks studying abroad in Manchester. Take notes on what surprised each of them and how they handled it.",
+    sections: [
+      {
+        id: "s1",
+        number: 1,
+        title: "VOCABULARY",
+        subtitle: "Food 1",
+        accent: "red",
+        tasks: [
+          {
+            id: "1a",
+            letter: "a",
+            audio: { id: "t-172a", code: "1.72", label: "Match & listen", durationLabel: "0:48" },
+            blocks: [
+              { kind: "instruction", text: "Match pictures 1–7 with the words in the box. Then listen and check." },
+              { kind: "wordbox", words: ["fruit", "rice", "meat", "bread", "vegetables", "eggs", "fish"] },
+              {
+                kind: "imageGrid",
+                items: [
+                  { n: 1, emoji: "🥩", caption: "" },
+                  { n: 2, emoji: "🐟", caption: "" },
+                  { n: 3, emoji: "🥬", caption: "" },
+                  { n: 4, emoji: "🍌", caption: "" },
+                  { n: 5, emoji: "🍚", caption: "" },
+                  { n: 6, emoji: "🥚", caption: "" },
+                  { n: 7, emoji: "🍞", caption: "" },
+                ],
+              },
+            ],
+          },
+          {
+            id: "1b",
+            letter: "b",
+            audio: { id: "t-172b", code: "1.72", label: "Pronunciation", durationLabel: "0:36" },
+            blocks: [
+              {
+                kind: "instruction",
+                text: "Pronunciation Listen to the words in 1a again. Which word has more than one syllable? Underline the stressed syllable.",
+              },
+            ],
+          },
+          {
+            id: "1c",
+            letter: "c",
+            blocks: [
+              { kind: "instruction", text: "Say two things you like." },
+              { kind: "speechBubble", text: "I like fruit and I like fish." },
+            ],
+          },
+          {
+            id: "1d",
+            letter: "d",
+            audio: { id: "t-173", code: "1.73", label: "Sound and spelling", durationLabel: "1:04" },
+            blocks: [
+              { kind: "instruction", text: "Sound and spelling /iː/, /ɪ/ and /aɪ/. Listen and practise these sounds: 1 /iː/ meat   2 /ɪ/ fish   3 /aɪ/ I'm" },
+              {
+                kind: "soundTable",
+                columns: [
+                  { label: "Sound 1 /iː/", items: ["meat"] },
+                  { label: "Sound 2 /ɪ/", items: ["fish"] },
+                  { label: "Sound 3 /aɪ/", items: ["I'm"] },
+                ],
+              },
+            ],
+          },
+          {
+            id: "1e",
+            letter: "e",
+            blocks: [{ kind: "instruction", text: "Now go to Vocabulary Focus 3A online." }],
+          },
+        ],
+      },
+      {
+        id: "s2",
+        number: 2,
+        title: "READING AND GRAMMAR",
+        subtitle: "Present simple: I / you / we / they — positive and negative",
+        accent: "orange",
+        tasks: [
+          {
+            id: "2a",
+            letter: "a",
+            blocks: [
+              {
+                kind: "instruction",
+                text: "Which words in 1a can you see in pictures 1–3? Which word isn't in the pictures?",
+              },
+            ],
+          },
+          {
+            id: "2b",
+            letter: "b",
+            audio: {
+              id: "t-177",
+              code: "1.77",
+              label: "Food for one week — read & listen",
+              durationLabel: "1:52",
+              transcript: [
+                { who: "a", text: "They eat a lot of fruit and vegetables every day. And they eat meat with rice. They like eggs, but they don't eat bread or fish. They don't like fish." },
+                { who: "b", text: "They eat meat and eggs every day, but they don't eat fish. And they don't eat vegetables, but they eat fruit. They really like bread." },
+                { who: "c", text: "They eat a lot of rice and vegetables. They like fruit and they eat bread. They don't eat fish or meat. They are vegetarians." },
+              ],
+            },
+            blocks: [
+              {
+                kind: "instruction",
+                text: "Read and listen to texts a–c. Match them with the families in pictures 1–3.",
+              },
+              {
+                kind: "passages",
+                items: [
+                  { tag: "a", text: "They eat a lot of fruit and vegetables every day. And they eat meat with rice. They like eggs, but they don't eat bread or fish. They don't like fish." },
+                  { tag: "b", text: "They eat meat and eggs every day, but they don't eat fish. And they don't eat vegetables, but they eat fruit. They really like bread." },
+                  { tag: "c", text: "They eat a lot of rice and vegetables. They like fruit and they eat bread. They don't eat fish or meat. They are vegetarians." },
+                ],
+              },
+            ],
+          },
+        ],
+      },
     ],
-    audio: {
-      id: "a1",
-      label: "Track 3.1 — Mia & Karim",
-      speakers: "Mia · Karim",
-      durationLabel: "2:14",
-      transcript: [
-        { who: "Mia", text: "Honestly, the first week was a blur. I kept getting lost on the bus." },
-        { who: "Karim", text: "Same here! I missed my stop three times on day one." },
-        { who: "Mia", text: "What helped me was just asking people. Everyone's been really friendly." },
-        { who: "Karim", text: "Yeah, and the corner shop near campus basically adopted me." },
-      ],
-    },
-  },
-  {
-    id: "p3",
-    number: 3,
-    title: "Conversation 2 — Making it home",
-    kicker: "Listening practice",
-    paragraphs: [
-      "Now listen to a follow-up chat three months later. Notice how their tone changes when they talk about routines, friends, and food they actually cook now.",
-    ],
-    audio: {
-      id: "a2",
-      label: "Track 3.2 — Three months in",
-      speakers: "Mia · Karim",
-      durationLabel: "1:48",
-      transcript: [
-        { who: "Karim", text: "I finally cooked a proper meal last night — not just instant noodles." },
-        { who: "Mia", text: "Look at you! I joined a climbing club, it's basically my second family now." },
-        { who: "Karim", text: "That's the trick, right? Find your people and the city starts to feel like home." },
-      ],
-    },
-    vocab: [
-      { word: "settle in", meaning: "to start feeling comfortable in a new place" },
-      { word: "homesick", meaning: "sad because you miss home" },
-      { word: "pick up (a language)", meaning: "to learn something gradually" },
-    ],
-  },
-  {
-    id: "p4",
-    number: 4,
-    title: "After reading",
-    kicker: "Reflection",
-    paragraphs: [
-      "Write a short paragraph (60–80 words) about a time you adapted to something new. Use at least three words from the vocabulary list above.",
-    ],
-    callout: {
-      title: "Tip",
-      text: "Try to include one example of past simple and one example of present perfect in your answer.",
-    },
   },
 ];
 
+/* ---------- Notes ---------- */
+
 type Note = { id: string; text: string; scope: string; scopeLabel: string; ts: number };
+
+/* ---------- Main panel ---------- */
 
 export function ReadingPanel({
   activity,
@@ -124,11 +212,19 @@ export function ReadingPanel({
   const [draft, setDraft] = useState("");
   const [draftScope, setDraftScope] = useState<{ id: string; label: string }>({
     id: "unit",
-    label: "Whole unit",
+    label: "Toàn bài",
   });
   const [playingId, setPlayingId] = useState<string | null>(null);
 
   const accent = useMemo(() => `oklch(0.55 0.18 ${hue})`, [hue]);
+
+  const allTracks = useMemo(
+    () =>
+      samplePages.flatMap((p) =>
+        p.sections.flatMap((s) => s.tasks.filter((t) => t.audio).map((t) => t.audio!)),
+      ),
+    [],
+  );
 
   const addNote = () => {
     const text = draft.trim();
@@ -158,10 +254,10 @@ export function ReadingPanel({
             <ArrowLeft className="h-4 w-4" />
           </button>
           <div
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl text-white font-display font-bold"
             style={{ background: `linear-gradient(135deg, ${accent}, oklch(0.65 0.18 ${(hue + 40) % 360}))` }}
           >
-            <FileText className="h-5 w-5" />
+            3A
           </div>
           <div className="min-w-0">
             <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -172,7 +268,7 @@ export function ReadingPanel({
         </div>
         <div className="flex items-center gap-2">
           <span className="hidden md:inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-xs text-muted-foreground ring-1 ring-border">
-            <Headphones className="h-3.5 w-3.5" /> {samplePages.filter((p) => p.audio).length} audio segments
+            <Headphones className="h-3.5 w-3.5" /> {allTracks.length} audio tracks
           </span>
           <button
             onClick={() => setNotesOpen((v) => !v)}
@@ -198,11 +294,8 @@ export function ReadingPanel({
               <PdfPage
                 key={page.id}
                 page={page}
-                hue={hue}
-                isPlaying={playingId === page.audio?.id}
-                onTogglePlay={() =>
-                  setPlayingId((cur) => (cur === page.audio?.id ? null : page.audio?.id ?? null))
-                }
+                playingId={playingId}
+                onTogglePlay={(id) => setPlayingId((cur) => (cur === id ? null : id))}
                 onTakeNote={(scopeId, scopeLabel) => {
                   setDraftScope({ id: scopeId, label: scopeLabel });
                   setNotesOpen(true);
@@ -227,21 +320,19 @@ export function ReadingPanel({
               <div className="flex flex-wrap gap-1">
                 <ScopeChip
                   active={draftScope.id === "unit"}
-                  onClick={() => setDraftScope({ id: "unit", label: "Whole unit" })}
+                  onClick={() => setDraftScope({ id: "unit", label: "Toàn bài" })}
                 >
                   Toàn bài
                 </ScopeChip>
-                {samplePages
-                  .filter((p) => p.audio)
-                  .map((p) => (
-                    <ScopeChip
-                      key={p.audio!.id}
-                      active={draftScope.id === p.audio!.id}
-                      onClick={() => setDraftScope({ id: p.audio!.id, label: p.audio!.label })}
-                    >
-                      {p.audio!.label}
-                    </ScopeChip>
-                  ))}
+                {allTracks.map((t) => (
+                  <ScopeChip
+                    key={t.id}
+                    active={draftScope.id === t.id}
+                    onClick={() => setDraftScope({ id: t.id, label: `${t.code} ${t.label}` })}
+                  >
+                    {t.code}
+                  </ScopeChip>
+                ))}
               </div>
               <textarea
                 value={draft}
@@ -267,14 +358,11 @@ export function ReadingPanel({
             <div className="flex-1 overflow-y-auto p-3 space-y-2">
               {notes.length === 0 ? (
                 <div className="text-center text-xs text-muted-foreground py-10 px-4">
-                  Chưa có ghi chú nào. Bạn có thể take note cho cả unit hoặc cho từng audio segment.
+                  Chưa có ghi chú nào. Bạn có thể take note cho cả unit hoặc cho từng track audio.
                 </div>
               ) : (
                 notes.map((n) => (
-                  <div
-                    key={n.id}
-                    className="rounded-xl bg-surface-2/60 ring-1 ring-border/60 p-3"
-                  >
+                  <div key={n.id} className="rounded-xl bg-surface-2/60 ring-1 ring-border/60 p-3">
                     <div className="flex items-center justify-between mb-1">
                       <span
                         className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold"
@@ -305,6 +393,8 @@ export function ReadingPanel({
   );
 }
 
+/* ---------- Building blocks ---------- */
+
 function ScopeChip({
   active,
   onClick,
@@ -329,167 +419,308 @@ function ScopeChip({
   );
 }
 
+const ACCENTS: Record<Section["accent"], { bg: string; text: string; ring: string; soft: string }> = {
+  red: { bg: "bg-rose-600", text: "text-rose-700", ring: "ring-rose-200", soft: "bg-rose-50" },
+  orange: { bg: "bg-orange-500", text: "text-orange-700", ring: "ring-orange-200", soft: "bg-orange-50" },
+};
+
 function PdfPage({
   page,
-  hue,
-  isPlaying,
+  playingId,
   onTogglePlay,
   onTakeNote,
 }: {
-  page: ReadingPage;
-  hue: number;
-  isPlaying: boolean;
-  onTogglePlay: () => void;
+  page: Page;
+  playingId: string | null;
+  onTogglePlay: (id: string) => void;
   onTakeNote: (scopeId: string, scopeLabel: string) => void;
 }) {
   return (
     <article className="relative bg-white rounded-xl shadow-[0_8px_30px_-12px_rgba(0,0,0,0.18)] ring-1 ring-black/5 overflow-hidden">
-      {/* page header strip */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-black/5 bg-[oklch(0.99_0.005_260)]">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.2em] text-neutral-500">
-          {page.kicker}
+      {/* Page header — black + orange band like the textbook */}
+      <div className="relative">
+        <div className="flex items-stretch">
+          <div className="flex items-center gap-4 bg-neutral-900 px-6 py-5 text-white flex-1 [clip-path:polygon(0_0,100%_0,calc(100%-28px)_100%,0_100%)]">
+            <div className="font-display text-4xl font-bold leading-none">{page.badge}</div>
+            <div className="font-display text-2xl font-semibold">{page.title}</div>
+          </div>
+          <div className="flex flex-col justify-center bg-orange-500 px-6 py-3 text-white text-xs font-semibold space-y-0.5 [clip-path:polygon(28px_0,100%_0,100%_100%,0_100%)] -ml-7">
+            {page.tags.map((t, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-white/25 text-[10px] font-bold">
+                  {t.kind}
+                </span>
+                <span className="italic">{t.text}</span>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="text-[10px] text-neutral-400">Page {page.number}</div>
       </div>
 
-      <div className="px-6 sm:px-10 py-8 space-y-5">
-        <h2 className="font-display text-2xl font-bold text-neutral-900">{page.title}</h2>
-
-        {page.paragraphs.map((p, i) => (
-          <p key={i} className="text-[15px] leading-relaxed text-neutral-700">
-            {p}
-          </p>
-        ))}
-
-        {page.callout && (
-          <div
-            className="rounded-2xl p-4 ring-1"
-            style={{
-              background: `oklch(0.97 0.03 ${hue})`,
-              borderColor: `oklch(0.85 0.08 ${hue})`,
-              boxShadow: `inset 3px 0 0 oklch(0.6 0.18 ${hue})`,
-            }}
-          >
-            <div className="text-[10px] font-bold uppercase tracking-wider text-neutral-600">
-              {page.callout.title}
-            </div>
-            <div className="mt-1 text-sm text-neutral-700">{page.callout.text}</div>
-          </div>
-        )}
-
-        {page.audio && (
-          <AudioSegment
-            clip={page.audio}
-            hue={hue}
-            isPlaying={isPlaying}
+      <div className="p-6 sm:p-8 space-y-7">
+        {page.sections.map((section) => (
+          <SectionView
+            key={section.id}
+            section={section}
+            playingId={playingId}
             onTogglePlay={onTogglePlay}
-            onTakeNote={() => onTakeNote(page.audio!.id, page.audio!.label)}
+            onTakeNote={onTakeNote}
           />
-        )}
+        ))}
+      </div>
 
-        {page.vocab && (
-          <div className="rounded-2xl border border-dashed border-neutral-300 p-4">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-neutral-500 mb-2">
-              Key vocabulary
-            </div>
-            <ul className="grid gap-1.5 sm:grid-cols-2">
-              {page.vocab.map((v) => (
-                <li key={v.word} className="text-sm text-neutral-700">
-                  <span className="font-semibold text-neutral-900">{v.word}</span>
-                  <span className="text-neutral-500"> — {v.meaning}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+      <div className="px-6 py-3 border-t border-black/5 flex items-center justify-between bg-[oklch(0.99_0.005_260)]">
+        <div className="text-[10px] text-neutral-400">Page {page.pageNumber}</div>
+        <div className="text-[10px] text-neutral-400">UNICOM • Reading & Listening</div>
       </div>
     </article>
   );
 }
 
-function AudioSegment({
-  clip,
-  hue,
-  isPlaying,
+function SectionView({
+  section,
+  playingId,
   onTogglePlay,
   onTakeNote,
 }: {
-  clip: AudioClip;
-  hue: number;
-  isPlaying: boolean;
+  section: Section;
+  playingId: string | null;
+  onTogglePlay: (id: string) => void;
+  onTakeNote: (scopeId: string, scopeLabel: string) => void;
+}) {
+  const a = ACCENTS[section.accent];
+  return (
+    <section>
+      <div className="flex items-baseline gap-2 mb-3">
+        <span
+          className={cn(
+            "inline-flex h-6 w-6 items-center justify-center rounded-sm text-white text-xs font-bold",
+            a.bg,
+          )}
+        >
+          {section.number}
+        </span>
+        <h3 className="font-display text-base font-bold uppercase tracking-wider text-neutral-900">
+          {section.title}
+        </h3>
+        {section.subtitle && (
+          <span className="text-sm italic text-neutral-700">{section.subtitle}</span>
+        )}
+      </div>
+
+      <div className="space-y-4 pl-1">
+        {section.tasks.map((task) => (
+          <TaskView
+            key={task.id}
+            task={task}
+            accent={section.accent}
+            playing={!!task.audio && playingId === task.audio.id}
+            onTogglePlay={() => task.audio && onTogglePlay(task.audio.id)}
+            onTakeNote={() =>
+              task.audio
+                ? onTakeNote(task.audio.id, `${task.audio.code} ${task.audio.label}`)
+                : onTakeNote(task.id, `Task ${section.number}${task.letter}`)
+            }
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function TaskView({
+  task,
+  accent,
+  playing,
+  onTogglePlay,
+  onTakeNote,
+}: {
+  task: Task;
+  accent: Section["accent"];
+  playing: boolean;
   onTogglePlay: () => void;
   onTakeNote: () => void;
 }) {
-  // Fake progress driven by interval when playing
+  const a = ACCENTS[accent];
+  return (
+    <div className="flex gap-3">
+      <span className={cn("font-display font-bold text-base shrink-0 w-5 leading-7", a.text)}>
+        {task.letter}
+      </span>
+      <div className="flex-1 min-w-0 space-y-3">
+        {task.audio && (
+          <AudioChip
+            track={task.audio}
+            accent={accent}
+            playing={playing}
+            onToggle={onTogglePlay}
+            onTakeNote={onTakeNote}
+          />
+        )}
+        {task.blocks.map((block, i) => (
+          <BlockView key={i} block={block} accent={accent} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AudioChip({
+  track,
+  accent,
+  playing,
+  onToggle,
+  onTakeNote,
+}: {
+  track: AudioTrack;
+  accent: Section["accent"];
+  playing: boolean;
+  onToggle: () => void;
+  onTakeNote: () => void;
+}) {
+  const a = ACCENTS[accent];
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    if (!isPlaying) return;
+    if (!playing) return;
     const id = window.setInterval(() => {
-      setProgress((p) => (p >= 100 ? 0 : p + 1.2));
+      setProgress((p) => (p >= 100 ? 0 : p + 1.5));
     }, 120);
     return () => window.clearInterval(id);
-  }, [isPlaying]);
+  }, [playing]);
 
   return (
-    <div
-      className="rounded-2xl p-4 ring-1"
-      style={{
-        background: `linear-gradient(120deg, oklch(0.98 0.02 ${hue}), oklch(0.96 0.03 ${(hue + 40) % 360}))`,
-        borderColor: `oklch(0.9 0.05 ${hue})`,
-      }}
-    >
-      <div className="flex items-center gap-3">
-        <button
-          onClick={onTogglePlay}
-          className="inline-flex h-11 w-11 items-center justify-center rounded-full text-white shadow-md transition active:scale-95"
-          style={{ background: `oklch(0.55 0.18 ${hue})` }}
-          aria-label={isPlaying ? "Pause" : "Play"}
-        >
-          {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 translate-x-[1px]" />}
-        </button>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <div className="truncate text-sm font-semibold text-neutral-800">{clip.label}</div>
-            <div className="text-[11px] text-neutral-500">{clip.durationLabel}</div>
-          </div>
-          <div className="text-[11px] text-neutral-500">{clip.speakers}</div>
-          <div className="mt-2 h-1.5 rounded-full bg-black/10 overflow-hidden">
-            <div
-              className="h-full rounded-full transition-[width] duration-100"
-              style={{
-                width: `${progress}%`,
-                background: `oklch(0.55 0.18 ${hue})`,
-              }}
+    <div className={cn("inline-flex items-center gap-2 rounded-full pl-1 pr-3 py-1 ring-1", a.soft, a.ring)}>
+      <button
+        onClick={onToggle}
+        className={cn(
+          "inline-flex h-7 w-7 items-center justify-center rounded-full text-white shadow-sm transition active:scale-95",
+          a.bg,
+        )}
+        aria-label={playing ? "Pause" : "Play"}
+      >
+        {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5 translate-x-[1px]" />}
+      </button>
+      <span className={cn("font-mono text-[11px] font-bold", a.text)}>{track.code}</span>
+      <span className="text-[11px] text-neutral-600 hidden sm:inline">· {track.label}</span>
+      {playing && (
+        <span className="hidden sm:flex items-center gap-1.5">
+          <span className="h-1 w-20 rounded-full bg-black/10 overflow-hidden">
+            <span
+              className={cn("block h-full rounded-full transition-[width] duration-100", a.bg)}
+              style={{ width: `${progress}%` }}
             />
-          </div>
-        </div>
-        <button
-          onClick={onTakeNote}
-          className="inline-flex items-center gap-1.5 rounded-xl bg-white px-3 py-2 text-xs font-semibold text-neutral-800 ring-1 ring-black/10 hover:bg-neutral-50"
-        >
-          <NotebookPen className="h-3.5 w-3.5" /> Take note
-        </button>
-      </div>
+          </span>
+          <span className="text-[10px] text-neutral-500">{track.durationLabel}</span>
+        </span>
+      )}
+      <button
+        onClick={onTakeNote}
+        className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-semibold text-neutral-700 ring-1 ring-black/5 hover:bg-white"
+        title="Take note for this audio"
+      >
+        <NotebookPen className="h-3 w-3" /> Note
+      </button>
+    </div>
+  );
+}
 
-      <details className="mt-3 group">
-        <summary className="cursor-pointer text-[11px] font-semibold uppercase tracking-wider text-neutral-500 hover:text-neutral-700">
-          Show transcript
-        </summary>
-        <div className="mt-2 space-y-1.5 rounded-xl bg-white/70 p-3 ring-1 ring-black/5">
-          {clip.transcript.map((line, i) => (
-            <div key={i} className="text-sm text-neutral-700">
-              <span
-                className="font-semibold"
-                style={{ color: `oklch(0.4 0.15 ${hue + (i % 2 ? 40 : 0)})` }}
-              >
-                {line.who}:
-              </span>{" "}
-              {line.text}
+function BlockView({ block, accent }: { block: Block; accent: Section["accent"] }) {
+  const a = ACCENTS[accent];
+  switch (block.kind) {
+    case "instruction":
+      return <p className="text-[14px] leading-relaxed text-neutral-800">{block.text}</p>;
+
+    case "wordbox":
+      return (
+        <div className="inline-flex flex-wrap gap-x-4 gap-y-1 rounded border border-neutral-300 bg-neutral-50 px-3 py-1.5 text-sm font-medium text-neutral-800">
+          {block.words.map((w) => (
+            <span key={w}>{w}</span>
+          ))}
+        </div>
+      );
+
+    case "imageGrid":
+      return (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {block.items.map((it) => (
+            <div
+              key={it.n}
+              className="relative aspect-square rounded-lg ring-1 ring-black/10 overflow-hidden bg-gradient-to-br from-neutral-50 to-neutral-100 grid place-items-center"
+            >
+              <span className="text-5xl">{it.emoji}</span>
+              <span className="absolute top-1.5 left-1.5 inline-flex h-5 w-5 items-center justify-center rounded-full border border-rose-500 bg-white text-[10px] font-bold text-rose-600">
+                {it.n}
+              </span>
             </div>
           ))}
         </div>
-      </details>
-    </div>
-  );
+      );
+
+    case "speechBubble":
+      return (
+        <div className="inline-block rounded-2xl bg-pink-100 text-neutral-800 px-4 py-2 text-sm shadow-sm">
+          {block.text}
+        </div>
+      );
+
+    case "soundTable":
+      return (
+        <div className="overflow-hidden rounded border border-neutral-300">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-neutral-50">
+                {block.columns.map((c) => (
+                  <th
+                    key={c.label}
+                    className="text-left px-3 py-1.5 font-semibold text-neutral-700 border-r last:border-r-0 border-neutral-300"
+                  >
+                    {c.label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                {block.columns.map((c, i) => (
+                  <td key={i} className="px-3 py-2 text-neutral-700 border-r last:border-r-0 border-t border-neutral-300 italic">
+                    {c.items.join(", ")}
+                  </td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      );
+
+    case "passage":
+      return (
+        <div className="relative rounded-md bg-amber-50/60 px-4 py-3 text-sm text-neutral-800 italic">
+          {block.tag && (
+            <span className={cn("absolute -left-2 -top-2 inline-flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold text-white", a.bg)}>
+              {block.tag}
+            </span>
+          )}
+          {block.text}
+        </div>
+      );
+
+    case "passages":
+      return (
+        <div className="grid gap-3 sm:grid-cols-3">
+          {block.items.map((p) => (
+            <div
+              key={p.tag}
+              className="relative rounded-md bg-amber-50/70 ring-1 ring-amber-100 px-4 py-3 text-[13px] text-neutral-800 italic"
+            >
+              <span className={cn("absolute -left-2 -top-2 inline-flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold text-white shadow", a.bg)}>
+                {p.tag}
+              </span>
+              <Volume2 className="absolute right-2 top-2 h-3 w-3 text-amber-600/60" />
+              {p.text}
+            </div>
+          ))}
+        </div>
+      );
+  }
 }
