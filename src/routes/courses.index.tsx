@@ -329,55 +329,191 @@ function FilterSelect({
   );
 }
 
+// ----- Course Cover (textbook-style avatar generated from category + level) -----
+const CATEGORY_STYLE: Record<
+  Category,
+  { label: string; bg: string; accent: string; emoji: string }
+> = {
+  Empower: { label: "EMPOWER", bg: "#1a1a1a", accent: "#ef4444", emoji: "🏔️" },
+  "Speaking & Listening Lab": {
+    label: "SPEAK•LAB",
+    bg: "#0f172a",
+    accent: "#38bdf8",
+    emoji: "🎙️",
+  },
+  "Luyện thi KET/PET": {
+    label: "CAMBRIDGE",
+    bg: "#064e3b",
+    accent: "#fbbf24",
+    emoji: "🏆",
+  },
+  "Luyện thi IELTS": {
+    label: "IELTS",
+    bg: "#1e1b4b",
+    accent: "#a78bfa",
+    emoji: "📘",
+  },
+  "Luyện thi Linguaskill": {
+    label: "LINGUASKILL",
+    bg: "#fbbf24",
+    accent: "#1f2937",
+    emoji: "🎓",
+  },
+  "Luyện thi EST": {
+    label: "EST",
+    bg: "#7c2d12",
+    accent: "#fb923c",
+    emoji: "📝",
+  },
+  "Học liệu bồi dưỡng": {
+    label: "RESOURCE",
+    bg: "#134e4a",
+    accent: "#5eead4",
+    emoji: "📚",
+  },
+  Khác: { label: "COURSE", bg: "#374151", accent: "#f3f4f6", emoji: "✨" },
+};
+
+function CourseCover({
+  course,
+  level,
+  category,
+  size = "md",
+}: {
+  course: Course;
+  level: Level;
+  category: Category;
+  size?: "sm" | "md";
+}) {
+  const style = CATEGORY_STYLE[category];
+  const isLight = category === "Luyện thi Linguaskill";
+  const titleSize = size === "sm" ? "text-[10px]" : "text-lg sm:text-xl";
+  const badgeSize = size === "sm" ? "h-5 w-5 text-[9px]" : "h-9 w-9 text-sm";
+  return (
+    <div
+      className="relative h-full w-full overflow-hidden"
+      style={{ background: style.bg }}
+    >
+      {/* Zigzag pattern band */}
+      <div
+        className="absolute inset-x-0 top-0 h-1/3 opacity-90"
+        style={{
+          background: `repeating-linear-gradient(135deg, ${style.bg} 0 8px, ${style.accent}33 8px 16px)`,
+        }}
+      />
+      {/* Diagonal accent ribbon */}
+      <div
+        className="absolute -right-8 top-3 h-6 w-32 origin-center rotate-12"
+        style={{ background: style.accent }}
+      />
+      {/* Big tilted brand text */}
+      <div
+        className={cn(
+          "absolute left-3 top-1/2 -translate-y-1/2 -rotate-6 font-black tracking-tight",
+          isLight ? "text-foreground" : "text-white",
+          size === "sm" ? "text-sm" : "text-2xl sm:text-3xl",
+        )}
+        style={{ textShadow: isLight ? "none" : "0 2px 8px rgba(0,0,0,0.4)" }}
+      >
+        {style.label}
+      </div>
+      {/* Emoji decoration */}
+      <div
+        className={cn(
+          "absolute right-2 bottom-2 opacity-90",
+          size === "sm" ? "text-base" : "text-3xl sm:text-4xl",
+        )}
+      >
+        {style.emoji}
+      </div>
+      {/* Level badge ribbon */}
+      <div
+        className={cn(
+          "absolute left-0 bottom-0 flex items-center justify-center font-black text-white shadow-lg",
+          badgeSize,
+        )}
+        style={{
+          background: `linear-gradient(135deg, oklch(0.55 0.2 ${level.hue}), oklch(0.7 0.18 ${(level.hue + 40) % 360}))`,
+          clipPath: "polygon(0 0, 100% 0, 85% 100%, 0 100%)",
+          paddingRight: size === "sm" ? 4 : 8,
+        }}
+      >
+        {level.code}
+      </div>
+      {/* Initials watermark */}
+      <div
+        className={cn(
+          "absolute right-3 top-2 font-bold opacity-30",
+          isLight ? "text-foreground" : "text-white",
+          size === "sm" ? "text-[8px]" : "text-[10px]",
+        )}
+      >
+        {course.title
+          .split(" ")
+          .slice(0, 3)
+          .map((w) => w[0])
+          .join("")
+          .toUpperCase()}
+      </div>
+      {/* Title overlay (only for sm thumbnail – nothing) */}
+      {size === "md" && (
+        <div className={cn("absolute inset-x-0 bottom-0 h-px", titleSize)} />
+      )}
+    </div>
+  );
+}
+
 // ----- Card -----
-function CourseCard({ course, level }: { course: Course; level: Level }) {
+function CourseCard({
+  course,
+  level,
+  category,
+}: {
+  course: Course;
+  level: Level;
+  category: Category;
+}) {
   const done = course.progress >= 100;
   const started = course.progress > 0;
   return (
     <Link
       to="/courses/$courseId"
       params={{ courseId: course.id }}
-      className="group relative overflow-hidden rounded-3xl bg-surface p-5 ring-1 ring-border shadow-soft transition hover:-translate-y-1 hover:shadow-elevated"
+      className="group relative flex flex-col overflow-hidden rounded-3xl bg-surface ring-1 ring-border shadow-soft transition hover:-translate-y-1 hover:shadow-elevated"
     >
-      <div
-        className="pointer-events-none absolute -right-16 -top-16 h-40 w-40 rounded-full opacity-30 blur-3xl transition group-hover:opacity-60"
-        style={{ background: `oklch(0.78 0.18 ${level.hue})` }}
-      />
-      <div className="relative flex items-start justify-between">
-        <div
-          className="flex h-12 w-12 items-center justify-center rounded-2xl text-primary-foreground"
-          style={{
-            background: `linear-gradient(135deg, oklch(0.5 0.18 ${level.hue}), oklch(0.65 0.18 ${(level.hue + 30) % 360}))`,
-          }}
-        >
-          <GraduationCap className="h-5 w-5" />
+      {/* Cover */}
+      <div className="relative aspect-[16/10] w-full overflow-hidden">
+        <CourseCover course={course} level={level} category={category} />
+        <div className="absolute right-3 top-3">
+          <StatusBadge done={done} started={started} />
         </div>
-        <StatusBadge done={done} started={started} />
       </div>
 
-      <div className="relative mt-4">
+      <div className="flex flex-1 flex-col p-5">
         <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-          Cấp độ {level.code}
+          {category} • Cấp độ {level.code}
         </div>
-        <h3 className="mt-1 text-lg font-semibold text-foreground">{course.title}</h3>
-        <p className="mt-1 text-xs text-muted-foreground">{course.subtitle}</p>
-      </div>
+        <h3 className="mt-1 text-base font-semibold text-foreground">{course.title}</h3>
+        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+          {course.subtitle}
+        </p>
 
-      <div className="relative mt-4">
-        <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <Clock className="h-3 w-3" /> {course.hours}h • {course.units.length} units
-          </span>
-          <span>{course.progress}%</span>
-        </div>
-        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full rounded-full"
-            style={{
-              width: `${course.progress}%`,
-              background: `linear-gradient(90deg, oklch(0.55 0.2 ${level.hue}), oklch(0.7 0.18 ${(level.hue + 40) % 360}))`,
-            }}
-          />
+        <div className="mt-auto pt-4">
+          <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
+            <span className="inline-flex items-center gap-1">
+              <Clock className="h-3 w-3" /> {course.hours}h • {course.units.length} units
+            </span>
+            <span>{course.progress}%</span>
+          </div>
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${course.progress}%`,
+                background: `linear-gradient(90deg, oklch(0.55 0.2 ${level.hue}), oklch(0.7 0.18 ${(level.hue + 40) % 360}))`,
+              }}
+            />
+          </div>
         </div>
       </div>
     </Link>
