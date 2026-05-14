@@ -53,6 +53,11 @@ type QGapMulti = BaseQ & {
   kind: "gapmulti";
   blanks: { options: string[]; answer: number }[];
 };
+type QListening = BaseQ & {
+  kind: "listening";
+  audio: { code: string; label: string; durationLabel: string };
+  subQuestions: { id: string; prompt: string; options: string[]; answer: number }[];
+};
 
 export type Question =
   | QSingle
@@ -63,7 +68,8 @@ export type Question =
   | QHighlight
   | QSequence
   | QAudio
-  | QGapMulti;
+  | QGapMulti
+  | QListening;
 
 /* ============================================================
  * Sample bank (English)
