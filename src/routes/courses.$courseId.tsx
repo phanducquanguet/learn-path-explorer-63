@@ -25,6 +25,7 @@ import {
 import { getCourse, type Activity, type Unit } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
 import { QuizPanel } from "@/components/QuizPanel";
+import { ReadingPanel } from "@/components/ReadingPanel";
 
 export const Route = createFileRoute("/courses/$courseId")({
   head: ({ params }) => ({
@@ -63,6 +64,7 @@ function CoursePage() {
   const [tab, setTab] = useState<TabKey>("overview");
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [quizOpen, setQuizOpen] = useState<Activity | null>(null);
+  const [readingOpen, setReadingOpen] = useState<Activity | null>(null);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     intro: true,
     [course.units[0].id]: true,
@@ -220,7 +222,13 @@ function CoursePage() {
                           setActiveUnitId(u.id);
                           if (a.type === "quiz") {
                             setQuizOpen(a);
+                            setReadingOpen(null);
+                          } else if (a.type === "reading") {
+                            setReadingOpen(a);
+                            setQuizOpen(null);
                           } else {
+                            setQuizOpen(null);
+                            setReadingOpen(null);
                             setTab("overview");
                           }
                         }}
@@ -237,6 +245,8 @@ function CoursePage() {
         <main className="min-w-0 flex-1 space-y-6">
           {quizOpen ? (
             <QuizPanel quiz={quizOpen} hue={level.hue} onClose={() => setQuizOpen(null)} />
+          ) : readingOpen ? (
+            <ReadingPanel activity={readingOpen} hue={level.hue} onClose={() => setReadingOpen(null)} />
           ) : (
             <>
               {/* HERO */}
