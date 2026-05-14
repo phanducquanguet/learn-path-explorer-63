@@ -119,7 +119,7 @@ function DashboardPage() {
             <Link
               to="/courses/$courseId"
               params={{ courseId: currentCourse.id }}
-              className="group lg:col-span-3 relative overflow-hidden rounded-[2rem] p-8 ring-1 ring-white/15 shadow-elevated transition hover:-translate-y-1 hover:shadow-glow animate-scale-in"
+              className="group lg:col-span-1 relative overflow-hidden rounded-[2rem] p-6 ring-1 ring-white/15 shadow-elevated transition hover:-translate-y-1 hover:shadow-glow animate-scale-in"
               style={{
                 background:
                   "linear-gradient(135deg, oklch(0.45 0.2 270) 0%, oklch(0.55 0.22 290) 50%, oklch(0.6 0.18 320) 100%)",
