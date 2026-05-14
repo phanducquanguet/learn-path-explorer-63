@@ -16,6 +16,17 @@ import {
 import { levels, type Course, type Level } from "@/lib/lms-data";
 import { TopNav } from "@/components/TopNav";
 import { cn } from "@/lib/utils";
+import coverA1 from "@/assets/cover-empower-a1.png";
+import coverA2 from "@/assets/cover-empower-a2.png";
+import coverB1 from "@/assets/cover-empower-b1.png";
+import coverB2 from "@/assets/cover-empower-b2.png";
+
+const LEVEL_COVERS: Record<string, string> = {
+  A1: coverA1,
+  A2: coverA2,
+  B1: coverB1,
+  B2: coverB2,
+};
 
 export const Route = createFileRoute("/courses/")({
   head: () => ({
