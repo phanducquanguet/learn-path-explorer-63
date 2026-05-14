@@ -401,6 +401,19 @@ function CourseCover({
   category: Category;
   size?: "sm" | "md";
 }) {
+  const photoCover = LEVEL_COVERS[level.code.toUpperCase()];
+  if (photoCover) {
+    return (
+      <div className="relative h-full w-full overflow-hidden bg-[#0a0a0a]">
+        <img
+          src={photoCover}
+          alt={`${course.title} — bìa Empower ${level.code}`}
+          loading="lazy"
+          className="h-full w-full object-cover object-center"
+        />
+      </div>
+    );
+  }
   const style = CATEGORY_STYLE[category];
   const isLight = category === "Luyện thi Linguaskill";
   const titleSize = size === "sm" ? "text-[10px]" : "text-lg sm:text-xl";
