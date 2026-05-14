@@ -56,7 +56,7 @@ function ExamsPage() {
           {exams.map((e) => (
             <a
               key={e.id}
-              href={`${TEST_PORTAL_BASE}/exams/${e.id}`}
+              href={TEST_PORTAL_BASE}
               target="_blank"
               rel="noreferrer"
               className="group relative overflow-hidden rounded-3xl bg-surface p-5 ring-1 ring-border shadow-soft transition hover:-translate-y-1 hover:shadow-elevated"
