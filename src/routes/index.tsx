@@ -328,23 +328,44 @@ function DashboardPage() {
           </div>
 
           <a
-            href="https://test-portal.example.com"
+            href="https://exam-portal.ubos.vn"
             target="_blank"
             rel="noreferrer"
-            className="group relative overflow-hidden rounded-3xl p-6 text-primary-foreground ring-1 ring-border shadow-elevated transition hover:-translate-y-1"
+            className="group relative overflow-hidden rounded-3xl p-6 text-primary-foreground ring-1 ring-border shadow-elevated transition hover:-translate-y-1 hover:shadow-2xl"
             style={{ background: "var(--gradient-brand)" }}
           >
-            <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
+            <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/15 blur-3xl transition group-hover:scale-125" />
+            <div className="absolute -bottom-12 -left-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
             <div className="relative">
-              <div className="inline-flex rounded-2xl bg-white/15 p-2.5 backdrop-blur">
-                <ExternalLink className="h-5 w-5" />
+              <div className="flex items-center justify-between">
+                <div className="inline-flex rounded-2xl bg-white/15 p-2.5 ring-1 ring-white/20 backdrop-blur">
+                  <ClipboardCheck className="h-5 w-5" />
+                </div>
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-white/20 backdrop-blur">
+                  <Sparkles className="h-3 w-3" /> Live
+                </span>
               </div>
-              <h3 className="mt-5 text-lg font-semibold">Test Portal</h3>
-              <p className="mt-1 text-sm text-white/80">
-                Truy cập hệ thống thi & đánh giá năng lực bên ngoài.
+              <h3 className="mt-5 font-display text-xl font-semibold tracking-tight">Cổng thi</h3>
+              <p className="mt-1.5 text-sm leading-relaxed text-white/85">
+                Thực hiện các bài luyện thi đánh giá năng lực toàn diện với 4 kỹ năng Nghe, Nói, Đọc, Viết trên hệ thống thi chuyên biệt.
               </p>
-              <div className="mt-6 inline-flex items-center gap-2 text-sm font-medium">
-                Mở Test Portal
+              <div className="mt-5 flex flex-wrap gap-1.5">
+                {[
+                  { icon: Headphones, label: "Nghe" },
+                  { icon: Mic, label: "Nói" },
+                  { icon: BookOpen, label: "Đọc" },
+                  { icon: PenLine, label: "Viết" },
+                ].map((s) => (
+                  <span
+                    key={s.label}
+                    className="inline-flex items-center gap-1 rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-medium ring-1 ring-white/15 backdrop-blur"
+                  >
+                    <s.icon className="h-3 w-3" /> {s.label}
+                  </span>
+                ))}
+              </div>
+              <div className="mt-6 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold ring-1 ring-white/25 backdrop-blur transition group-hover:bg-white/25">
+                Vào cổng thi
                 <ArrowUpRight className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </div>
             </div>
