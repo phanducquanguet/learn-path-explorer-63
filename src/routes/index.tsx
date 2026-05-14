@@ -90,7 +90,7 @@ function DashboardPage() {
 
         <div className="mx-auto max-w-7xl px-6 pt-8 pb-12 sm:px-8">
           {/* Hero: greeting + continue learning */}
-          <section className="mt-8 grid gap-6 lg:grid-cols-5">
+          <section className="mt-8 grid gap-6 lg:grid-cols-3">
             <div className="lg:col-span-2 flex flex-col justify-center animate-fade-in">
               <span className="inline-flex w-fit items-center gap-2 rounded-full bg-surface/80 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur ring-1 ring-border">
                 <Sparkles className="h-3.5 w-3.5 text-primary" /> Chào mừng trở lại
