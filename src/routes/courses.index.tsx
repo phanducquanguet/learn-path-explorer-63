@@ -277,8 +277,13 @@ function CoursesListPage() {
 
             {view === "grid" ? (
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {group.items.map(({ course, level }) => (
-                  <CourseCard key={course.id} course={course} level={level} />
+                {group.items.map(({ course, level, category }) => (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    level={level}
+                    category={category}
+                  />
                 ))}
               </div>
             ) : (
