@@ -127,17 +127,21 @@ function DashboardPage() {
                   "0 0 0 2px oklch(0.65 0.18 260 / 0.35), 0 24px 50px -20px oklch(0.55 0.2 260 / 0.35)",
               }}
             >
-              {/* Subtle neutral accent */}
+              {/* Decorative orbs like level cards */}
               <div
-                className="pointer-events-none absolute -right-24 -top-24 h-56 w-56 rounded-full opacity-60 blur-3xl"
-                style={{ background: "oklch(0.94 0.02 260)" }}
+                className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full opacity-70 blur-3xl transition-all duration-500 group-hover:opacity-90 group-hover:scale-110"
+                style={{ background: "oklch(0.78 0.18 260)" }}
               />
-              <div className="absolute right-4 top-4 opacity-[0.06]">
+              <div
+                className="pointer-events-none absolute -left-16 -bottom-16 h-44 w-44 rounded-full opacity-40 blur-3xl"
+                style={{ background: "oklch(0.8 0.15 320)" }}
+              />
+              <div className="absolute right-4 top-4 opacity-[0.08]">
                 <GraduationCap className="h-20 w-20 text-foreground" />
               </div>
 
               <div className="relative">
-                <div className="inline-flex items-center gap-2 rounded-full bg-foreground/5 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-foreground/70 ring-1 ring-border">
+                <div className="inline-flex items-center gap-2 rounded-full bg-background/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-foreground/80 ring-1 ring-border backdrop-blur">
                   <Rocket className="h-3.5 w-3.5 text-primary" /> Tiếp tục học
                 </div>
                 <div className="mt-5 text-xs font-medium text-muted-foreground">Cấp độ {currentLevel.code}</div>
