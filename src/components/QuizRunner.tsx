@@ -652,6 +652,7 @@ function kindLabel(k: Question["kind"]) {
     sequence: "Sequence (drag & drop)",
     audio: "Audio record",
     gapmulti: "Multi choice gap fill",
+    listening: "Listening + multi questions",
   }[k];
 }
 function renderPromptHead(p: string) {
