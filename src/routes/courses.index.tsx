@@ -16,6 +16,17 @@ import {
 import { levels, type Course, type Level } from "@/lib/lms-data";
 import { TopNav } from "@/components/TopNav";
 import { cn } from "@/lib/utils";
+import coverA1 from "@/assets/cover-empower-a1.png";
+import coverA2 from "@/assets/cover-empower-a2.png";
+import coverB1 from "@/assets/cover-empower-b1.png";
+import coverB2 from "@/assets/cover-empower-b2.png";
+
+const LEVEL_COVERS: Record<string, string> = {
+  A1: coverA1,
+  A2: coverA2,
+  B1: coverB1,
+  B2: coverB2,
+};
 
 export const Route = createFileRoute("/courses/")({
   head: () => ({
@@ -390,6 +401,19 @@ function CourseCover({
   category: Category;
   size?: "sm" | "md";
 }) {
+  const photoCover = LEVEL_COVERS[level.code.toUpperCase()];
+  if (photoCover) {
+    return (
+      <div className="relative h-full w-full overflow-hidden bg-[#0a0a0a]">
+        <img
+          src={photoCover}
+          alt={`${course.title} — bìa Empower ${level.code}`}
+          loading="lazy"
+          className="h-full w-full object-cover object-center"
+        />
+      </div>
+    );
+  }
   const style = CATEGORY_STYLE[category];
   const isLight = category === "Luyện thi Linguaskill";
   const titleSize = size === "sm" ? "text-[10px]" : "text-lg sm:text-xl";
