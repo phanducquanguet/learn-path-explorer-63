@@ -682,6 +682,10 @@ function hasAnswer(q: Question, v: AnswerState): boolean {
       return v === true;
     case "gapmulti":
       return Array.isArray(v) && (v as (number | null)[]).every((x) => x !== null && x !== undefined);
+    case "listening": {
+      const arr = v as (number | null)[] | undefined;
+      return Array.isArray(arr) && arr.length === q.subQuestions.length && arr.every((x) => x !== null && x !== undefined);
+    }
   }
 }
 
