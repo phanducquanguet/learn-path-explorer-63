@@ -635,7 +635,7 @@ function LevelCard({
 function StatusPill({ status }: { status: "completed" | "in-progress" | "locked" }) {
   const map = {
     completed: { text: "Hoàn thành", cls: "bg-success/20 text-success-foreground", icon: <CheckCircle2 className="h-3.5 w-3.5" /> },
-    "in-progress": { text: "Đang học", cls: "bg-primary/15 text-primary", icon: <Play className="h-3 w-3 fill-current" /> },
+    "in-progress": { text: "Đang học", cls: "bg-primary text-primary-foreground shadow-soft", icon: <span className="relative flex h-2 w-2"><span className="absolute inset-0 rounded-full bg-white/80 animate-ping" /><span className="relative inline-flex h-2 w-2 rounded-full bg-white" /></span> },
     locked: { text: "Đã khoá", cls: "bg-muted text-muted-foreground", icon: <Lock className="h-3.5 w-3.5" /> },
   } as const;
   const m = map[status];
