@@ -143,7 +143,7 @@ function DashboardPage() {
 
           {/* LEVELS — moved UP, hero feature */}
           <section className="mt-12 animate-fade-in">
-            <div className="flex items-end justify-between">
+            <div className="flex items-end justify-between gap-4">
               <div>
                 <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
                   <Sparkles className="h-3.5 w-3.5" /> Lộ trình học của bạn
@@ -152,18 +152,59 @@ function DashboardPage() {
                   Chọn cấp độ để bắt đầu 🚀
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Từ A1 đến C2 — chinh phục hành trình tiếng Anh của riêng bạn.
+                  Từ A1 đến C2 — vuốt ngang để khám phá hành trình của bạn.
                 </p>
               </div>
-              <span className="hidden rounded-full bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground ring-1 ring-border sm:inline-flex">
-                {levels.filter((l) => l.status !== "locked").length}/{levels.length} cấp đã mở
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="hidden rounded-full bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground ring-1 ring-border sm:inline-flex">
+                  {levels.filter((l) => l.status !== "locked").length}/{levels.length} cấp đã mở
+                </span>
+                <div className="hidden md:flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    aria-label="Cuộn trái"
+                    onClick={() => scrollLevels(-1)}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-surface ring-1 ring-border text-foreground/70 hover:text-foreground hover:shadow-soft transition"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Cuộn phải"
+                    onClick={() => scrollLevels(1)}
+                    className="flex h-9 w-9 items-center justify-center rounded-full bg-surface ring-1 ring-border text-foreground/70 hover:text-foreground hover:shadow-soft transition"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
             </div>
 
-            <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              {levels.map((lv, i) => (
-                <LevelCard key={lv.id} lv={lv} delay={i * 60} />
-              ))}
+            <div
+              className="relative mt-6 -mx-6 sm:-mx-8"
+              style={{
+                maskImage:
+                  "linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent)",
+                WebkitMaskImage:
+                  "linear-gradient(to right, transparent, black 24px, black calc(100% - 24px), transparent)",
+              }}
+            >
+              <div
+                ref={levelsScrollRef}
+                className="flex gap-5 overflow-x-auto px-6 sm:px-8 pb-4 snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+              >
+                {levels.map((lv, i) => {
+                  const prev = i > 0 ? levels[i - 1] : undefined;
+                  return (
+                    <LevelCard
+                      key={lv.id}
+                      lv={lv}
+                      delay={i * 60}
+                      prevLevelCode={prev?.code}
+                    />
+                  );
+                })}
+              </div>
             </div>
           </section>
         </div>
