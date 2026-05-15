@@ -9,7 +9,7 @@ import {
   TrendingUp,
   Sparkles,
   ArrowUpRight,
-  Upload,
+  BarChart3,
   ClipboardCheck,
 } from "lucide-react";
 
@@ -55,10 +55,10 @@ function TeacherOverview() {
           </div>
           <div className="flex gap-2">
             <Link
-              to="/teacher/upload"
+              to="/teacher/reports"
               className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-3.5 py-2 text-xs font-semibold text-background hover:opacity-90"
             >
-              <Upload className="h-3.5 w-3.5" /> Tải lên khóa học
+              <BarChart3 className="h-3.5 w-3.5" /> Báo cáo & Phân tích
             </Link>
             <Link
               to="/teacher/exams"
