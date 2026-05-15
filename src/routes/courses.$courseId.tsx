@@ -27,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { QuizPanel } from "@/components/QuizPanel";
 import { ReadingPanel } from "@/components/ReadingPanel";
 import { VideoPanel } from "@/components/VideoPanel";
+import { useRole } from "@/contexts/RoleContext";
 
 export const Route = createFileRoute("/courses/$courseId")({
   head: ({ params }) => ({
@@ -57,6 +58,8 @@ type TabKey = "overview" | "members" | "scores" | "activities" | "competence";
 
 function CoursePage() {
   const { courseId } = Route.useParams();
+  const { role } = useRole();
+  const isTeacher = role === "teacher";
   const data = getCourse(courseId);
   if (!data) throw notFound();
   const { course, level } = data;
@@ -371,9 +374,11 @@ function CoursePage() {
                   <Tab active={tab === "overview"} onClick={() => setTab("overview")} icon={<BookOpen className="h-4 w-4" />}>
                     Khoá học
                   </Tab>
-                  <Tab active={tab === "members"} onClick={() => setTab("members")} icon={<Users className="h-4 w-4" />}>
-                    Danh sách thành viên
-                  </Tab>
+                  {isTeacher && (
+                    <Tab active={tab === "members"} onClick={() => setTab("members")} icon={<Users className="h-4 w-4" />}>
+                      Thành viên lớp học
+                    </Tab>
+                  )}
                   <Tab active={tab === "scores"} onClick={() => setTab("scores")} icon={<Trophy className="h-4 w-4" />}>
                     Điểm số
                   </Tab>
