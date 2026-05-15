@@ -776,6 +776,13 @@ function ActivitiesView({
   course,
   hue,
   onQuizClick,
+  editMode = false,
+  onAddUnit,
+  onUpdateUnit,
+  onRemoveUnit,
+  onAddActivity,
+  onUpdateActivity,
+  onRemoveActivity,
 }: {
   course: ReturnType<typeof getCourse> extends infer T
     ? T extends { course: infer C }
@@ -784,34 +791,65 @@ function ActivitiesView({
     : never;
   hue: number;
   onQuizClick: (a: Activity) => void;
+  editMode?: boolean;
+  onAddUnit?: () => void;
+  onUpdateUnit?: (id: string, patch: Partial<Unit>) => void;
+  onRemoveUnit?: (id: string) => void;
+  onAddActivity?: (unitId: string, type: Activity["type"]) => void;
+  onUpdateActivity?: (unitId: string, id: string, patch: Partial<Activity>) => void;
+  onRemoveActivity?: (unitId: string, id: string) => void;
 }) {
   return (
     <div className="space-y-5">
+      {editMode && (
+        <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-xs font-medium text-amber-800">
+          ✎ Chế độ chỉnh sửa: bạn có thể thêm/sửa/xóa unit và activity. Thay đổi sẽ áp dụng cho toàn bộ học viên đang theo khóa này.
+        </div>
+      )}
+
       {course.units.map((u) => (
         <div key={u.id} className="rounded-3xl bg-surface p-5 ring-1 ring-border shadow-soft">
           <div className="mb-3 flex items-center gap-3">
             <div
-              className="flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold text-white"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white"
               style={{ background: `linear-gradient(135deg, oklch(0.55 0.18 ${hue}), oklch(0.7 0.18 ${(hue + 40) % 360}))` }}
             >
               {u.index}
             </div>
-            <div>
-              <div className="text-sm font-semibold text-foreground">{u.title}</div>
+            <div className="min-w-0 flex-1">
+              {editMode ? (
+                <input
+                  value={u.title}
+                  onChange={(e) => onUpdateUnit?.(u.id, { title: e.target.value })}
+                  className="w-full rounded-lg border border-border bg-background px-2 py-1 text-sm font-semibold text-foreground outline-none focus:border-primary"
+                />
+              ) : (
+                <div className="truncate text-sm font-semibold text-foreground">{u.title}</div>
+              )}
               <div className="text-xs text-muted-foreground">{u.description}</div>
             </div>
+            {editMode && (
+              <button
+                onClick={() => onRemoveUnit?.(u.id)}
+                className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                title="Xóa unit"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
           </div>
           <div className="grid gap-2 sm:grid-cols-2">
             {u.activities.map((a) => {
               const isQuiz = a.type === "quiz";
-              const Wrapper: any = isQuiz ? "button" : "div";
+              const interactive = isQuiz && !editMode;
+              const Wrapper: any = interactive ? "button" : "div";
               return (
                 <Wrapper
                   key={a.id}
-                  onClick={isQuiz ? () => onQuizClick(a) : undefined}
+                  onClick={interactive ? () => onQuizClick(a) : undefined}
                   className={cn(
                     "flex items-center gap-3 rounded-2xl bg-surface-2 p-3 text-left ring-1 ring-border/60 transition",
-                    isQuiz && "hover:bg-primary/5 hover:ring-primary/40 cursor-pointer",
+                    interactive && "hover:bg-primary/5 hover:ring-primary/40 cursor-pointer",
                   )}
                 >
                   <div
@@ -823,13 +861,45 @@ function ActivitiesView({
                     {activityIcon(a.type)}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium text-foreground">{a.title}</div>
-                    <div className="text-[11px] text-muted-foreground">
-                      {labelType(a.type)} • {a.duration} phút
-                      {isQuiz && " • Không giới hạn lượt"}
-                    </div>
+                    {editMode ? (
+                      <>
+                        <input
+                          value={a.title}
+                          onChange={(e) => onUpdateActivity?.(u.id, a.id, { title: e.target.value })}
+                          className="w-full rounded-md border border-border bg-background px-2 py-0.5 text-sm font-medium text-foreground outline-none focus:border-primary"
+                        />
+                        <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                          <span>{labelType(a.type)} •</span>
+                          <input
+                            type="number"
+                            value={a.duration}
+                            onChange={(e) =>
+                              onUpdateActivity?.(u.id, a.id, { duration: Number(e.target.value) })
+                            }
+                            className="w-14 rounded border border-border bg-background px-1 py-0 text-[11px]"
+                          />
+                          <span>phút</span>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="truncate text-sm font-medium text-foreground">{a.title}</div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {labelType(a.type)} • {a.duration} phút
+                          {isQuiz && " • Không giới hạn lượt"}
+                        </div>
+                      </>
+                    )}
                   </div>
-                  {isQuiz ? (
+                  {editMode ? (
+                    <button
+                      onClick={() => onRemoveActivity?.(u.id, a.id)}
+                      className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      title="Xóa"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  ) : isQuiz ? (
                     <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
                       Làm bài
                     </span>
@@ -842,8 +912,31 @@ function ActivitiesView({
               );
             })}
           </div>
+
+          {editMode && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {(["video", "reading", "quiz", "writing"] as Activity["type"][]).map((t) => (
+                <button
+                  key={t}
+                  onClick={() => onAddActivity?.(u.id, t)}
+                  className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary hover:text-primary"
+                >
+                  <Plus className="h-3 w-3" /> {labelType(t)}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       ))}
+
+      {editMode && (
+        <button
+          onClick={() => onAddUnit?.()}
+          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-surface px-4 py-4 text-sm font-medium text-muted-foreground hover:border-primary hover:text-primary"
+        >
+          <Plus className="h-4 w-4" /> Thêm Unit mới
+        </button>
+      )}
     </div>
   );
 }
