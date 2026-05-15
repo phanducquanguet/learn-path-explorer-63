@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/teacher/classes")({
+export const Route = createFileRoute("/teacher/classes/")({
   head: () => ({ meta: [{ title: "Lớp học của tôi — UNICOM LMS" }] }),
   component: TeacherClassesPage,
 });
