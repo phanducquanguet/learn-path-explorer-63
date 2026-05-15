@@ -8,6 +8,9 @@ export type ClassRoom = {
   attendance: number;
   schedule: string;
   weeklyMinutes: number[];
+  role: "primary" | "assistant"; // vai trò giáo viên trong lớp này
+  room?: string;
+  startedAt?: string;
 };
 
 export type TeacherStudent = {
@@ -39,6 +42,9 @@ export const classes: ClassRoom[] = [
     attendance: 94,
     schedule: "T2-T4-T6 • 8:00",
     weeklyMinutes: [40, 55, 30, 60, 45, 20, 10],
+    role: "primary",
+    room: "P.302",
+    startedAt: "08/2025",
   },
   {
     id: "cls-a1-evening",
@@ -50,6 +56,9 @@ export const classes: ClassRoom[] = [
     attendance: 89,
     schedule: "T3-T5 • 19:00",
     weeklyMinutes: [25, 35, 40, 28, 50, 30, 18],
+    role: "primary",
+    room: "P.305",
+    startedAt: "09/2025",
   },
   {
     id: "cls-a2-weekend",
@@ -61,6 +70,9 @@ export const classes: ClassRoom[] = [
     attendance: 91,
     schedule: "T7-CN • 9:00",
     weeklyMinutes: [10, 20, 15, 18, 22, 70, 65],
+    role: "primary",
+    room: "P.401",
+    startedAt: "07/2025",
   },
   {
     id: "cls-b1-fast",
@@ -72,6 +84,23 @@ export const classes: ClassRoom[] = [
     attendance: 96,
     schedule: "T2-T4-T6 • 18:30",
     weeklyMinutes: [30, 40, 50, 35, 45, 25, 15],
+    role: "assistant",
+    room: "P.210",
+    startedAt: "10/2025",
+  },
+  {
+    id: "cls-b1-evening",
+    name: "B1 — Evening Pro",
+    levelCode: "B1",
+    studentCount: 13,
+    avgProgress: 48,
+    avgScore: 76,
+    attendance: 87,
+    schedule: "T3-T5 • 18:00",
+    weeklyMinutes: [22, 30, 35, 28, 40, 18, 12],
+    role: "assistant",
+    room: "P.215",
+    startedAt: "11/2025",
   },
 ];
 
