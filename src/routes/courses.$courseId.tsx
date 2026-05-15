@@ -475,7 +475,18 @@ function CoursePage() {
               {tab === "members" && <MembersView course={course} hideScores />}
               {tab === "scores" && <ScoresView course={course} hue={level.hue} />}
               {tab === "activities" && (
-                <ActivitiesView course={course} hue={level.hue} onQuizClick={setQuizOpen} />
+                <ActivitiesView
+                  course={course}
+                  hue={level.hue}
+                  onQuizClick={setQuizOpen}
+                  editMode={isTeacher && editMode}
+                  onAddUnit={addUnit}
+                  onUpdateUnit={updateUnit}
+                  onRemoveUnit={removeUnit}
+                  onAddActivity={addActivity}
+                  onUpdateActivity={updateActivity}
+                  onRemoveActivity={removeActivity}
+                />
               )}
               {tab === "competence" && <CompetenceView />}
             </>
