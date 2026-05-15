@@ -114,7 +114,11 @@ function ClassCard({ cls }: { cls: ClassRoom }) {
   const isPrimary = cls.role === "primary";
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-border bg-surface p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated">
+    <Link
+      to="/teacher/classes/$classId"
+      params={{ classId: cls.id }}
+      className="group relative block overflow-hidden rounded-2xl border border-border bg-surface p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated"
+    >
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">
