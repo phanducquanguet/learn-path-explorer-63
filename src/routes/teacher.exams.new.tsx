@@ -79,13 +79,22 @@ function ExamBuilder() {
     [groups],
   );
 
+  const navigate = useNavigate();
   const save = () => {
     if (typeof window !== "undefined") {
       const drafts = JSON.parse(window.localStorage.getItem("unicom.exams") || "[]");
-      drafts.push({ ...meta, skills: selectedSkills, groups, savedAt: new Date().toISOString() });
+      drafts.push({
+        id: `exam-${Date.now()}`,
+        ...meta,
+        skills: selectedSkills,
+        groups,
+        totalQuestions,
+        savedAt: new Date().toISOString(),
+      });
       window.localStorage.setItem("unicom.exams", JSON.stringify(drafts));
     }
     setSaved(true);
+    setTimeout(() => navigate({ to: "/teacher/exams" }), 700);
   };
 
   const isMulti = selectedSkills.length > 1;
