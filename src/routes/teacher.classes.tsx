@@ -148,10 +148,10 @@ function ClassCard({ cls }: { cls: ClassRoom }) {
           </div>
         </div>
         <Link
-          to="/teacher/reports"
-          search={{ classId: cls.id } as never}
+          to="/teacher/classes/$classId"
+          params={{ classId: cls.id }}
           className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-muted-foreground transition hover:bg-foreground hover:text-background"
-          title="Xem báo cáo lớp"
+          title="Xem chi tiết lớp"
         >
           <ArrowUpRight className="h-4 w-4" />
         </Link>
