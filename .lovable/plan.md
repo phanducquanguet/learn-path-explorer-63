@@ -1,63 +1,80 @@
+# Kế hoạch: Chế độ Giáo viên (Teacher Mode)
 
-## Mục tiêu
+## 1. Chuyển đổi vai trò
+- Thêm `RoleContext` (role: "student" | "teacher") lưu ở `localStorage`.
+- Trong `TopNav`, phần avatar bên phải → biến thành dropdown (avatar + tên) với lựa chọn:
+  - Hồ sơ
+  - **Chuyển sang giao diện Giáo viên / Học viên** (toggle)
+  - Đăng xuất (mock)
+- Khi role = teacher: tabs trong TopNav đổi thành: Tổng quan · Lớp học · Khóa học · Luyện thi · Tải lên.
+- Khi role = student: giữ nguyên tabs hiện tại.
 
-Trên trang chủ (`src/routes/index.tsx`), section **"Chọn cấp độ để bắt đầu 🚀"** hiện đang là grid 3 cột. Đổi thành **1 hàng trượt ngang duy nhất** với 3 trạng thái thẻ rất khác biệt về thị giác:
+## 2. Dữ liệu mock cho Giáo viên (`src/lib/teacher-data.ts`)
+- `classes`: 4 lớp (vd: A1-Morning, A1-Evening, A2-Weekend, B1-Fastrack), mỗi lớp gắn 1 `levelCode`, danh sách học viên (8–15 người), tiến độ TB, điểm TB, attendance.
+- `students`: tên, email, lớp, lần truy cập gần nhất (ISO), vai trò ("Học viên"/"Lớp trưởng"), điểm theo unit.
+- Re-use `levels` từ `lms-data.ts` cho khóa học.
 
-1. **Đang học** — thẻ nổi bật nhất, lớn hơn, có glow + viền gradient động, nhấn mạnh CTA "Học tiếp".
-2. **Đã hoàn thành** — thẻ trầm hơn, tone pastel/độ bão hoà thấp, có dấu tick lớn, CTA "Xem lại".
-3. **Đã khoá** — thẻ tối màu / phủ hiệu ứng mờ, ổ khoá nổi bật (nền tròn gradient + halo + dotted ring + nhãn "Sắp mở"), không click được.
+## 3. Các route mới (chỉ hiện khi role=teacher)
+```
+src/routes/
+  teacher.index.tsx          // /teacher  – Tổng quan
+  teacher.classes.tsx        // /teacher/classes – DS lớp + drill-down
+  teacher.classes.$classId.tsx
+  teacher.upload.tsx         // /teacher/upload – Upload khóa học
+  teacher.exams.tsx          // /teacher/exams – Tạo bài luyện thi
+```
 
-## Thay đổi UI
+### 3a. Tổng quan (`/teacher`)
+- Hero stats: tổng số lớp, tổng học viên, giờ giảng tuần, điểm TB.
+- Grid card "Lớp của tôi" — mỗi card: tên lớp, cấp độ badge, sĩ số, progress bar TB, điểm TB, mini sparkline 7 ngày, CTA "Xem chi tiết".
+- Bảng "Hoạt động học viên gần đây".
 
-### 1. Bố cục hàng ngang
-- Thay `grid sm:grid-cols-2 lg:grid-cols-3` bằng container `overflow-x-auto` + `flex gap-5 snap-x snap-mandatory`, padding 2 bên + `scroll-pl-6`.
-- Mỗi `LevelCard` set `min-w-[300px] md:min-w-[340px] snap-start`, `shrink-0`.
-- Ẩn scrollbar (utility class hoặc inline `[&::-webkit-scrollbar]:hidden`), giữ scroll bằng trackpad/drag.
-- Thêm 2 nút mũi tên trái/phải (chỉ hiện ở `md:`) để cuộn `±360px`. Fade-mask hai mép trái/phải bằng `mask-image: linear-gradient(...)`.
-- Hiện dòng hint nhỏ "← Vuốt để xem các cấp độ khác →" ở mobile.
+### 3b. Khóa học (re-use `/courses` + `/courses/$courseId`)
+- Khi role=teacher, `CoursePage` hiển thị thêm tab **"Thành viên lớp học"** (giữa "Nội dung" và "Điểm").
+  - Bảng: Avatar · Tên · **Lớp** (filter dropdown theo lớp cùng cấp độ) · Lần truy cập gần nhất · Vai trò.
+  - Bộ lọc: theo lớp, theo vai trò, search tên.
+- Tab **"Điểm & Năng lực"** mở rộng:
+  - Toggle "Cả lớp / Từng học viên".
+  - Cả lớp: bar chart điểm TB từng unit, radar 4 kỹ năng (Nghe/Nói/Đọc/Viết - mock vì đã bỏ speaking activity nhưng vẫn track skill), bảng phân phối điểm.
+  - Từng học viên: chọn HS → line chart tiến trình điểm + radar cá nhân.
+- Học viên (role=student): ẩn tab Thành viên (đã đúng hành vi cũ).
 
-### 2. Phân hạng thị giác theo trạng thái
+### 3c. Upload khóa học (`/teacher/upload`)
+- Form 3 bước (Tabs/Steps):
+  1. **Khóa học**: tiêu đề, mô tả, cấp độ (select A1–C2), thumbnail upload, số giờ.
+  2. **Units**: list builder — thêm unit (title, mô tả, mục tiêu).
+  3. **Activities** trong từng unit: chọn loại (`video`, `reading-pdf`, `quiz`) + 11 dạng bài tập:
+     - Multiple choice, Fill in the blank, Matching, Drag & drop, True/False, Short answer, Reorder, Listening (audio), Cloze, Picture choice, Vocabulary card.
+     - Tùy loại hiện form upload (video file/URL, PDF file, hoặc question editor).
+- Lưu vào `localStorage` (mock) — preview trực tiếp trong `/courses` của giáo viên.
 
-Trong `LevelCard`, thêm nhánh style theo `status`:
+### 3d. Tạo bài luyện thi (`/teacher/exams`)
+- Form: tên bài thi, cấp độ, thời lượng, mô tả.
+- Chọn **kỹ năng tích hợp** (multi-select: Listening, Reading, Writing, Speaking, Use of English).
+- Editor câu hỏi:
+  - Nếu chọn nhiều kỹ năng → UI có **sidebar trái** liệt kê group theo từng kỹ năng, click vào group để soạn câu hỏi cho group đó. Mỗi group có thể thêm passage/audio chung + N câu hỏi.
+  - Nếu chỉ 1 kỹ năng → 1 cột câu hỏi tuyến tính.
+- Preview popup mô phỏng đúng layout học viên sẽ thấy.
+- Lưu mock vào `localStorage`.
 
-**`in-progress` (nổi bật nhất)**
-- Card hơi to hơn: `min-w-[340px] md:min-w-[380px]`, `scale-[1.02]`.
-- Viền gradient động: lớp `::before` (hoặc div absolute) dùng `background: conic-gradient(...)` quay chậm, blur nhẹ → tạo "aura".
-- Shadow `shadow-glow` mặc định + tăng khi hover.
-- Badge "Đang học" có chấm tròn pulse.
-- Big level badge giữ gradient theo `lv.hue` + thêm ring sáng.
-- CTA `Học tiếp` là button đầy màu, có icon mũi tên trượt khi hover.
+## 4. Components mới
+- `src/components/RoleSwitcher.tsx` (dropdown trong TopNav).
+- `src/contexts/RoleContext.tsx`.
+- `src/components/teacher/ClassCard.tsx`, `ClassMembersTable.tsx`, `GradeAnalytics.tsx`.
+- `src/components/teacher/CourseUploader.tsx` (3 steps).
+- `src/components/teacher/ExamBuilder.tsx` (sidebar skill-groups).
 
-**`completed`**
-- Nền `bg-surface` trầm, gradient màu giảm độ bão hoà (mix với trắng/grey).
-- Big level badge dùng tone xám-nhạt + dấu `CheckCircle2` lớn (kích thước to hơn hiện tại) đè ở góc.
-- Progress bar 100% màu `success`.
-- CTA "Xem lại" dạng `outline`/ghost, không nổi bằng "Đang học".
-- Opacity tổng ~0.92 để lùi về sau so với card đang học.
+## 5. Styling
+Theo workspace knowledge: nền trắng, neutral grayscale, accent xanh đậm (đã có trong `styles.css` qua `--gradient-brand`), Inter font, soft shadow, rounded, 8px grid. Mobile-friendly.
 
-**`locked` (lock đẹp hơn, bắt mắt)**
-- Nền dark gradient: `linear-gradient(135deg, oklch(0.22 0.02 260), oklch(0.30 0.04 280))`, text trắng/mute.
-- Lớp noise/diagonal stripes mờ (repeating-linear-gradient 8% opacity) để tạo cảm giác "khu vực chưa mở".
-- Phần level code bị làm mờ (`blur-[2px]` + opacity 50%).
-- Ổ khoá:
-  - Vòng tròn lớn ~64px ở giữa card phía trên, gradient `oklch(0.55 0.18 ${hue})` → `oklch(0.7 0.15 ${hue+30})`.
-  - Halo: 2 vòng `ring` dotted bên ngoài + blur glow màu `hue` 30% opacity.
-  - Icon `Lock` size 28, white.
-  - Animation: float nhẹ (translateY ±2px) + glow pulse.
-- Badge nhỏ "🔒 Sắp mở" hoặc "Mở khoá khi hoàn thành {prevLevel}".
-- Card không phải là `Link`, `cursor-not-allowed`, hover chỉ tăng nhẹ shadow.
+## 6. Phạm vi out-of-scope (mock)
+- Không cần backend/Cloud — toàn bộ upload chỉ giữ trong `localStorage` + memory state để preview.
+- Không thực sự xử lý file video/PDF — chỉ giữ tên file & metadata.
 
-### 3. Header section
-- Cập nhật subtitle: nhắc người dùng có thể vuốt ngang.
-- Pill "X/Y cấp đã mở" giữ nguyên, đặt cùng hàng nút điều hướng cuộn.
+---
+**Khối lượng**: ~10 file mới + chỉnh sửa `TopNav`, `courses.$courseId.tsx`, `__root.tsx`. Ước tính 1 lượt build lớn.
 
-## Phạm vi file
-- Chỉ sửa `src/routes/index.tsx` (component `LevelCard`, `StatusPill` nếu cần thêm tone, và section bao quanh).
-- Có thể thêm 1-2 keyframes `@keyframes` vào `src/styles.css` cho animation halo/aura nếu chưa có sẵn (`pulse-glow`, `float-soft`).
-- Không động vào dữ liệu `lms-data` hay logic khác.
-
-## Kỹ thuật
-- Tokens màu: dùng biến trong `src/styles.css` (`--success`, `--primary`, `--muted`, `--surface`, gradient theo `lv.hue` đã có).
-- Scroll container dùng CSS thuần, không cần thêm thư viện.
-- Đảm bảo keyboard accessible: arrow buttons có `aria-label`, các card `Link` vẫn focusable; locked card dùng `<div aria-disabled="true">`.
-- Responsive: mobile hiển thị 1.1 card / màn hình (peek), tablet 2.2, desktop 3+.
+Bạn duyệt kế hoạch này chứ? Có muốn:
+- (a) Backend thật bằng Lovable Cloud (lưu khóa học/bài thi vào DB) thay vì mock localStorage?
+- (b) Bỏ bớt phần nào (vd: tạm chưa làm Exam Builder)?
+- (c) Đi thẳng theo plan trên?
