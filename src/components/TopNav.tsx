@@ -6,7 +6,8 @@ import {
   GraduationCap,
   ClipboardCheck,
   LayoutDashboard,
-  Upload,
+  BarChart3,
+  Users,
   ChevronDown,
   UserCog,
   LogOut,
@@ -24,9 +25,10 @@ const studentTabs = [
 
 const teacherTabs = [
   { to: "/teacher" as const, label: "Tổng quan", icon: LayoutDashboard },
+  { to: "/teacher/classes" as const, label: "Lớp học", icon: Users },
   { to: "/courses" as const, label: "Khóa học", icon: GraduationCap },
   { to: "/teacher/exams" as const, label: "Luyện thi", icon: ClipboardCheck },
-  { to: "/teacher/upload" as const, label: "Tải lên", icon: Upload },
+  { to: "/teacher/reports" as const, label: "Báo cáo", icon: BarChart3 },
 ];
 
 export function TopNav() {
