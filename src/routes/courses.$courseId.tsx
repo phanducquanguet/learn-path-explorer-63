@@ -158,13 +158,22 @@ function CoursePage() {
             >
               {sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
             </button>
-            <Link
-              to="/levels/$level"
-              params={{ level: level.code.toLowerCase() }}
-              className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              <ArrowLeft className="h-4 w-4" /> Trở lại {level.code}
-            </Link>
+            {isTeacher ? (
+              <Link
+                to="/courses"
+                className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4" /> Trở lại danh sách khóa học
+              </Link>
+            ) : (
+              <Link
+                to="/levels/$level"
+                params={{ level: level.code.toLowerCase() }}
+                className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <ArrowLeft className="h-4 w-4" /> Trở lại {level.code}
+              </Link>
+            )}
             <span className="hidden text-muted-foreground/50 md:inline">/</span>
             <div className="hidden md:block">
               <div className="text-xs text-muted-foreground">Khoá học</div>
@@ -172,16 +181,32 @@ function CoursePage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden items-center gap-3 md:flex">
-              <div className="text-xs text-muted-foreground">Tiến độ</div>
-              <div className="h-2 w-44 overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{ width: `${course.progress}%`, background: "var(--gradient-brand)" }}
-                />
+            {isTeacher && (
+              <button
+                onClick={() => setEditMode((v) => !v)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition",
+                  editMode
+                    ? "bg-amber-500 text-white hover:bg-amber-600"
+                    : "border border-border bg-surface text-foreground hover:bg-muted",
+                )}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                {editMode ? "Đang chỉnh sửa" : "Chỉnh sửa khóa học"}
+              </button>
+            )}
+            {!isTeacher && (
+              <div className="hidden items-center gap-3 md:flex">
+                <div className="text-xs text-muted-foreground">Tiến độ</div>
+                <div className="h-2 w-44 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{ width: `${course.progress}%`, background: "var(--gradient-brand)" }}
+                  />
+                </div>
+                <div className="text-sm font-semibold text-foreground">{course.progress}%</div>
               </div>
-              <div className="text-sm font-semibold text-foreground">{course.progress}%</div>
-            </div>
+            )}
             <a
               href="https://example.com/test-portal"
               target="_blank"
