@@ -182,7 +182,7 @@ function ClassCard({ cls }: { cls: ClassRoom }) {
           />
         </svg>
       </div>
-    </div>
+    </Link>
   );
 }
 
