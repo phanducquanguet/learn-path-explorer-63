@@ -114,7 +114,11 @@ function ClassCard({ cls }: { cls: ClassRoom }) {
   const isPrimary = cls.role === "primary";
 
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-border bg-surface p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated">
+    <Link
+      to="/teacher/classes/$classId"
+      params={{ classId: cls.id }}
+      className="group relative block overflow-hidden rounded-2xl border border-border bg-surface p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated"
+    >
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-2">
@@ -147,14 +151,12 @@ function ClassCard({ cls }: { cls: ClassRoom }) {
             )}
           </div>
         </div>
-        <Link
-          to="/teacher/reports"
-          search={{ classId: cls.id } as never}
-          className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-muted-foreground transition hover:bg-foreground hover:text-background"
-          title="Xem báo cáo lớp"
+        <span
+          className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-muted text-muted-foreground transition group-hover:bg-foreground group-hover:text-background"
+          title="Xem chi tiết lớp"
         >
           <ArrowUpRight className="h-4 w-4" />
-        </Link>
+        </span>
       </div>
 
       <div className="mt-4 grid grid-cols-3 gap-3">
@@ -180,7 +182,7 @@ function ClassCard({ cls }: { cls: ClassRoom }) {
           />
         </svg>
       </div>
-    </div>
+    </Link>
   );
 }
 
