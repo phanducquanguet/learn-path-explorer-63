@@ -188,7 +188,7 @@ function OverviewTab({
 }: {
   cls: (typeof classes)[number];
   members: TeacherStudent[];
-  courses: ReturnType<typeof levels>[number]["courses"];
+  courses: Course[];
 }) {
   const days = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
   const weekly = cls.weeklyMinutes.map((m, i) => ({ day: days[i], minutes: m }));
@@ -266,7 +266,7 @@ function OverviewTab({
 }
 
 /* ----------------------------- Courses tab ----------------------------- */
-function CoursesTab({ courses }: { courses: ReturnType<typeof levels>[number]["courses"] }) {
+function CoursesTab({ courses }: { courses: Course[] }) {
   if (courses.length === 0) {
     return (
       <div className="rounded-3xl border border-dashed border-border bg-surface/40 p-12 text-center">
@@ -293,7 +293,7 @@ function CoursesTab({ courses }: { courses: ReturnType<typeof levels>[number]["c
 function CourseMiniCard({
   course,
 }: {
-  course: ReturnType<typeof levels>[number]["courses"][number];
+  course: Course;
 }) {
   return (
     <Link
