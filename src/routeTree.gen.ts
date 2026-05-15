@@ -78,9 +78,9 @@ const TeacherExamsNewRoute = TeacherExamsNewRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const TeacherClassesClassIdRoute = TeacherClassesClassIdRouteImport.update({
-  id: '/$classId',
-  path: '/$classId',
-  getParentRoute: () => TeacherClassesRoute,
+  id: '/teacher/classes/$classId',
+  path: '/teacher/classes/$classId',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -180,6 +180,7 @@ export interface RootRouteChildren {
   TeacherUploadRoute: typeof TeacherUploadRoute
   CoursesIndexRoute: typeof CoursesIndexRoute
   TeacherIndexRoute: typeof TeacherIndexRoute
+  TeacherClassesClassIdRoute: typeof TeacherClassesClassIdRoute
   TeacherExamsNewRoute: typeof TeacherExamsNewRoute
   TeacherClassesIndexRoute: typeof TeacherClassesIndexRoute
   TeacherExamsIndexRoute: typeof TeacherExamsIndexRoute
@@ -266,10 +267,10 @@ declare module '@tanstack/react-router' {
     }
     '/teacher/classes/$classId': {
       id: '/teacher/classes/$classId'
-      path: '/$classId'
+      path: '/teacher/classes/$classId'
       fullPath: '/teacher/classes/$classId'
       preLoaderRoute: typeof TeacherClassesClassIdRouteImport
-      parentRoute: typeof TeacherClassesRoute
+      parentRoute: typeof rootRouteImport
     }
   }
 }
@@ -283,6 +284,7 @@ const rootRouteChildren: RootRouteChildren = {
   TeacherUploadRoute: TeacherUploadRoute,
   CoursesIndexRoute: CoursesIndexRoute,
   TeacherIndexRoute: TeacherIndexRoute,
+  TeacherClassesClassIdRoute: TeacherClassesClassIdRoute,
   TeacherExamsNewRoute: TeacherExamsNewRoute,
   TeacherClassesIndexRoute: TeacherClassesIndexRoute,
   TeacherExamsIndexRoute: TeacherExamsIndexRoute,
