@@ -65,7 +65,11 @@ function CoursePage() {
   const isTeacher = role === "teacher";
   const data = getCourse(courseId);
   if (!data) throw notFound();
-  const { course, level } = data;
+  const { course: baseCourse, level } = data;
+
+  // Local mutable copy so teacher can add/edit/delete (mock, not persisted)
+  const [course, setCourse] = useState(baseCourse);
+  const [editMode, setEditMode] = useState(false);
 
   const [activeUnitId, setActiveUnitId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("overview");
@@ -88,6 +92,52 @@ function CoursePage() {
     (a, u) => a + u.activities.reduce((b, x) => b + x.duration, 0),
     0,
   );
+
+  // ----- Teacher edit helpers -----
+  const addUnit = () => {
+    const idx = course.units.length + 1;
+    const newUnit: Unit = {
+      id: `${course.id}-u-new-${Date.now()}`,
+      index: idx,
+      title: `Unit ${idx}: New Unit`,
+      description: "Mô tả unit mới",
+      activities: [],
+    };
+    setCourse({ ...course, units: [...course.units, newUnit] });
+  };
+  const updateUnit = (id: string, patch: Partial<Unit>) =>
+    setCourse({
+      ...course,
+      units: course.units.map((u) => (u.id === id ? { ...u, ...patch } : u)),
+    });
+  const removeUnit = (id: string) =>
+    setCourse({ ...course, units: course.units.filter((u) => u.id !== id) });
+  const addActivity = (unitId: string, type: Activity["type"]) => {
+    const a: Activity = {
+      id: `act-${Date.now()}`,
+      title: type === "video" ? "Video mới" : type === "reading" ? "Tài liệu mới" : "Quiz mới",
+      type,
+      duration: 10,
+    };
+    updateUnit(unitId, {
+      activities: [
+        ...(course.units.find((u) => u.id === unitId)?.activities ?? []),
+        a,
+      ],
+    });
+  };
+  const updateActivity = (unitId: string, id: string, patch: Partial<Activity>) => {
+    const u = course.units.find((x) => x.id === unitId);
+    if (!u) return;
+    updateUnit(unitId, {
+      activities: u.activities.map((a) => (a.id === id ? { ...a, ...patch } : a)),
+    });
+  };
+  const removeActivity = (unitId: string, id: string) => {
+    const u = course.units.find((x) => x.id === unitId);
+    if (!u) return;
+    updateUnit(unitId, { activities: u.activities.filter((a) => a.id !== id) });
+  };
 
   return (
     <div
