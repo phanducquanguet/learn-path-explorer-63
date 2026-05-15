@@ -21,7 +21,7 @@ import {
 } from "recharts";
 import { TopNav } from "@/components/TopNav";
 import { classes, students, type TeacherStudent } from "@/lib/teacher-data";
-import { levels } from "@/lib/lms-data";
+import { levels, type Course } from "@/lib/lms-data";
 import {
   ArrowLeft,
   BookOpen,
