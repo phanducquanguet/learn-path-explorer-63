@@ -612,6 +612,7 @@ export function QuizRunner({
           )}
         </div>
       </div>
+      </div>
 
       {/* Sidebar: Question board grouped by skill */}
       <aside className="lg:sticky lg:top-24 self-start rounded-3xl bg-surface p-4 ring-1 ring-border">
@@ -671,54 +672,6 @@ export function QuizRunner({
         >
           Thoát bài luyện
         </button>
-      </aside>
-
-      {/* Sidebar: Question board grouped by skill */}
-      <aside className="lg:sticky lg:top-24 self-start rounded-3xl bg-surface p-4 ring-1 ring-border">
-        <div className="mb-3 text-sm font-semibold text-foreground">Bảng câu hỏi</div>
-        <div className="space-y-4">
-          {grouped.map((g) => {
-            const doneCount = g.items.filter(({ qq }) => results[qq.id]).length;
-            return (
-              <div key={g.skill}>
-                <div className="mb-2 flex items-center justify-between">
-                  <div className="text-xs font-semibold text-foreground">
-                    {SKILL_LABEL_VI[g.skill]}
-                  </div>
-                  <div className="text-[10px] text-muted-foreground">
-                    {doneCount}/{g.items.length}
-                  </div>
-                </div>
-                <div className="grid grid-cols-5 gap-1.5">
-                  {g.items.map(({ qq, i }) => {
-                    const r = results[qq.id];
-                    const active = i === idx;
-                    const done = Boolean(r);
-                    return (
-                      <button
-                        key={qq.id}
-                        onClick={() => setIdx(i)}
-                        title={`Câu ${qq.index}`}
-                        className={cn(
-                          "inline-flex h-9 items-center justify-center rounded-lg text-xs font-bold transition",
-                          !done && !active &&
-                            "bg-background text-muted-foreground ring-1 ring-border hover:bg-muted hover:text-foreground",
-                          active && !done && "bg-foreground text-background shadow-elevated",
-                          active && done && "ring-2 ring-foreground shadow-elevated",
-                          done && r?.status === "correct" && "bg-success/20 text-success-foreground",
-                          done && r?.status === "partial" && "bg-warning/25 text-warning-foreground",
-                          done && r?.status === "incorrect" && "bg-destructive/15 text-destructive",
-                        )}
-                      >
-                        {qq.index}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-        </div>
       </aside>
     </div>
   );
