@@ -304,25 +304,47 @@ export function QuizRunner({
   const [results, setResults] = useState<Record<string, Result>>({});
   const [phase, setPhase] = useState<"running" | "summary" | "review">("running");
   const [reviewIdx, setReviewIdx] = useState(0);
+  const [notes, setNotes] = useState<Record<string, string[]>>({});
+  const [noteDraft, setNoteDraft] = useState("");
 
   const q = questions[idx];
   const result = results[q?.id];
   const totalMax = questions.reduce((s, x) => s + x.maxScore, 0);
   const totalEarned = Object.values(results).reduce((s, r) => s + r.earned, 0);
-  const submittedCount = Object.keys(results).length;
+  const answeredCount = questions.filter((qq) => hasAnswer(qq, answers[qq.id])).length;
 
   const setAnswer = (val: AnswerState) =>
     setAnswers((a) => ({ ...a, [q.id]: val }));
-  const submit = () =>
-    setResults((p) => ({ ...p, [q.id]: grade(q, answers[q.id]) }));
-  const next = () =>
-    idx < questions.length - 1 ? setIdx(idx + 1) : setPhase("summary");
-  
+  const next = () => {
+    if (idx < questions.length - 1) setIdx(idx + 1);
+  };
+  const prev = () => {
+    if (idx > 0) setIdx(idx - 1);
+  };
+  const finishQuiz = () => {
+    const graded: Record<string, Result> = {};
+    for (const qq of questions) {
+      graded[qq.id] = hasAnswer(qq, answers[qq.id])
+        ? grade(qq, answers[qq.id])
+        : { status: "incorrect", earned: 0 };
+    }
+    setResults(graded);
+    setPhase("summary");
+  };
+
   const reset = () => {
     setAnswers({});
     setResults({});
+    setNotes({});
     setIdx(0);
     setPhase("running");
+  };
+
+  const addNote = (qid: string, text: string) => {
+    const t = text.trim();
+    if (!t) return;
+    setNotes((n) => ({ ...n, [qid]: [...(n[qid] ?? []), t] }));
+    setNoteDraft("");
   };
 
   const accent = `oklch(0.55 0.2 ${hue})`;
