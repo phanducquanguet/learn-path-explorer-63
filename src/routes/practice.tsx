@@ -147,16 +147,6 @@ function PracticePage() {
       <div className="min-h-screen bg-background">
         <TopNav />
         <div className="mx-auto max-w-6xl px-6 pb-20 pt-6 sm:px-8">
-          <button
-            onClick={() => {
-              setActive(null);
-              setPhase("info");
-            }}
-            className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" /> Trở lại danh sách luyện thi
-          </button>
-
           {phase === "info" ? (
             <div className="overflow-hidden rounded-3xl bg-surface ring-1 ring-border shadow-soft">
               <div
