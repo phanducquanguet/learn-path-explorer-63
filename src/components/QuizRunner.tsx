@@ -490,9 +490,55 @@ export function QuizRunner({
           />
 
           <div className="mt-5 rounded-2xl bg-muted/40 p-4 text-xs text-muted-foreground ring-1 ring-border">
-            <div className="font-semibold text-foreground">Correct answer</div>
+            <div className="font-semibold text-foreground">Đáp án đúng</div>
             <div className="mt-1">
               <CorrectAnswerHint q={rq} />
+            </div>
+          </div>
+
+          {/* Notes / questions to teacher */}
+          <div className="mt-5 rounded-2xl bg-background p-4 ring-1 ring-border">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-sm font-semibold text-foreground">
+                Ghi chú / câu hỏi cho giáo viên
+              </div>
+              <span className="text-[11px] text-muted-foreground">
+                {(notes[rq.id]?.length ?? 0)} ghi chú
+              </span>
+            </div>
+
+            {(notes[rq.id]?.length ?? 0) > 0 && (
+              <ul className="mt-3 space-y-2">
+                {notes[rq.id]!.map((n, i) => (
+                  <li
+                    key={i}
+                    className="rounded-xl bg-surface p-3 text-xs text-foreground ring-1 ring-border"
+                  >
+                    <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Đã gửi giáo viên
+                    </div>
+                    {n}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <textarea
+                value={noteDraft}
+                onChange={(e) => setNoteDraft(e.target.value)}
+                placeholder="Nhập câu hỏi hoặc thắc mắc về câu này để gửi giáo viên..."
+                rows={2}
+                className="min-h-[60px] flex-1 resize-y rounded-xl bg-surface px-3 py-2 text-sm text-foreground ring-1 ring-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <button
+                onClick={() => addNote(rq.id, noteDraft)}
+                disabled={!noteDraft.trim()}
+                className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 self-end rounded-xl px-4 text-xs font-semibold text-white shadow-soft hover:opacity-95 disabled:opacity-40"
+                style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
+              >
+                Gửi giáo viên
+              </button>
             </div>
           </div>
         </div>
