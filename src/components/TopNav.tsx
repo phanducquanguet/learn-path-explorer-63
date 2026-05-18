@@ -23,7 +23,8 @@ import { useRole, type Role } from "@/contexts/RoleContext";
 const studentTabs = [
   { to: "/" as const, label: "Trang chủ", icon: Home },
   { to: "/courses" as const, label: "Khóa học", icon: GraduationCap },
-  { to: "/exams" as const, label: "Luyện thi", icon: ClipboardCheck },
+  { to: "/practice" as const, label: "Luyện thi", icon: ClipboardCheck },
+  { to: "/exams" as const, label: "Thi cử", icon: ScrollText },
 ];
 
 const teacherTabs = [

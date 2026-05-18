@@ -24,6 +24,8 @@ import {
   Trophy,
   Users,
   GraduationCap,
+  MessageSquare,
+  Send,
 } from "lucide-react";
 import { getCourse, type Activity, type Unit } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
@@ -57,13 +59,13 @@ const activityIcon = (t: Activity["type"]) => {
 const labelType = (t: Activity["type"]) =>
   ({ video: "Video", reading: "Đọc", quiz: "Quiz", speaking: "Nói", writing: "Viết" })[t];
 
-type TabKey = "overview" | "members" | "scores" | "activities" | "competence";
+type TabKey = "overview" | "members" | "scores" | "activities" | "competence" | "qa";
 
 function CoursePage() {
   const { courseId } = Route.useParams();
   const { role } = useRole();
   const isStaff = role !== "student";
-  const isTeacher = role === "admin"; // gate edit features on admin only
+  const isAdmin = role === "admin"; // only admin can add/edit/delete
   const data = getCourse(courseId);
   if (!data) throw notFound();
   const { course: baseCourse, level } = data;
@@ -182,7 +184,7 @@ function CoursePage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {isTeacher && (
+            {isAdmin && (
               <button
                 onClick={() => setEditMode((v) => !v)}
                 className={cn(
@@ -453,7 +455,7 @@ function CoursePage() {
                   <Tab active={tab === "overview"} onClick={() => setTab("overview")} icon={<BookOpen className="h-4 w-4" />}>
                     Khoá học
                   </Tab>
-                  {isTeacher && (
+                  {isAdmin && (
                     <Tab active={tab === "members"} onClick={() => setTab("members")} icon={<Users className="h-4 w-4" />}>
                       Thành viên lớp học
                     </Tab>
@@ -467,6 +469,11 @@ function CoursePage() {
                   <Tab active={tab === "competence"} onClick={() => setTab("competence")} icon={<Sparkles className="h-4 w-4" />}>
                     Năng lực
                   </Tab>
+                  {isStaff && (
+                    <Tab active={tab === "qa"} onClick={() => setTab("qa")} icon={<MessageSquare className="h-4 w-4" />}>
+                      Hỏi đáp
+                    </Tab>
+                  )}
                 </div>
               </div>
 
@@ -480,7 +487,7 @@ function CoursePage() {
                   course={course}
                   hue={level.hue}
                   onQuizClick={setQuizOpen}
-                  editMode={isTeacher && editMode}
+                  editMode={isAdmin && editMode}
                   onAddUnit={addUnit}
                   onUpdateUnit={updateUnit}
                   onRemoveUnit={removeUnit}
@@ -490,6 +497,7 @@ function CoursePage() {
                 />
               )}
               {tab === "competence" && <CompetenceView />}
+              {tab === "qa" && isStaff && <CourseQAView courseId={course.id} role={role} />}
             </>
           )}
         </main>
@@ -1357,6 +1365,172 @@ function SummaryStat({
           {suffix && <span className="text-sm text-muted-foreground">{suffix}</span>}
         </div>
         {hint && <div className="mt-1.5 text-xs text-muted-foreground">{hint}</div>}
+      </div>
+    </div>
+  );
+}
+
+/* =========== Course Q&A View =========== */
+
+import { courseQuestions as _courseQuestions, type CourseQuestion, type QAAnswer } from "@/lib/qa-data";
+
+function CourseQAView({ courseId, role }: { courseId: string; role: "student" | "teacher" | "admin" }) {
+  const initial = _courseQuestions.filter((q) => q.courseId === courseId);
+  const [list, setList] = useState<CourseQuestion[]>(initial);
+  const [filter, setFilter] = useState<"all" | "open" | "answered">("all");
+  const [activeId, setActiveId] = useState<string | null>(initial[0]?.id ?? null);
+  const [draft, setDraft] = useState("");
+
+  const filtered = list.filter((q) =>
+    filter === "all" ? true : filter === "answered" ? q.answers.length > 0 : q.answers.length === 0,
+  );
+  const active = list.find((q) => q.id === activeId) ?? null;
+
+  const submit = () => {
+    if (!active || !draft.trim()) return;
+    const a: QAAnswer = {
+      id: `a-${Date.now()}`,
+      authorName: role === "admin" ? "Admin UNICOM" : "Cô Mai Lan",
+      authorRole: role === "admin" ? "admin" : "teacher",
+      content: draft,
+      answeredAt: new Date().toISOString(),
+    };
+    setList((prev) =>
+      prev.map((q) => (q.id === active.id ? { ...q, answers: [...q.answers, a] } : q)),
+    );
+    setDraft("");
+  };
+
+  if (list.length === 0) {
+    return (
+      <div className="rounded-3xl border border-dashed border-border bg-surface p-10 text-center">
+        <MessageSquare className="mx-auto h-8 w-8 text-muted-foreground" />
+        <p className="mt-3 text-sm text-muted-foreground">
+          Chưa có câu hỏi nào của học viên trong khoá học này.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
+      <div className="rounded-3xl border border-border bg-surface p-3 shadow-soft">
+        <div className="mb-2 flex gap-1 rounded-xl bg-muted/60 p-1 text-xs font-semibold">
+          {(["all", "open", "answered"] as const).map((k) => (
+            <button
+              key={k}
+              onClick={() => setFilter(k)}
+              className={cn(
+                "flex-1 rounded-lg px-2 py-1.5 transition",
+                filter === k ? "bg-background text-foreground shadow-soft" : "text-muted-foreground",
+              )}
+            >
+              {k === "all" ? "Tất cả" : k === "open" ? "Chưa trả lời" : "Đã trả lời"}
+            </button>
+          ))}
+        </div>
+        <div className="space-y-1.5 max-h-[560px] overflow-y-auto">
+          {filtered.map((q) => {
+            const answered = q.answers.length > 0;
+            return (
+              <button
+                key={q.id}
+                onClick={() => setActiveId(q.id)}
+                className={cn(
+                  "w-full rounded-xl border p-3 text-left transition",
+                  activeId === q.id
+                    ? "border-primary/40 bg-primary/5"
+                    : "border-transparent hover:bg-muted/60",
+                )}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-sm font-semibold text-foreground line-clamp-1">
+                    {q.studentName}
+                  </span>
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                      answered
+                        ? "bg-emerald-100 text-emerald-700"
+                        : "bg-amber-100 text-amber-700",
+                    )}
+                  >
+                    {answered ? <CheckCircle2 className="h-3 w-3" /> : null}
+                    {answered ? "Đã trả lời" : "Chưa trả lời"}
+                  </span>
+                </div>
+                <div className="mt-0.5 text-[11px] text-muted-foreground">{q.unitTitle}</div>
+                <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{q.content}</p>
+              </button>
+            );
+          })}
+          {filtered.length === 0 && (
+            <div className="p-6 text-center text-xs text-muted-foreground">Không có câu hỏi.</div>
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-3xl border border-border bg-surface p-6 shadow-soft">
+        {!active ? (
+          <div className="text-sm text-muted-foreground">Chọn một câu hỏi để xem chi tiết.</div>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <div className="text-sm font-semibold text-foreground">{active.studentName}</div>
+                <div className="text-xs text-muted-foreground">
+                  {active.studentClass} • {active.unitTitle} •{" "}
+                  {new Date(active.askedAt).toLocaleString("vi-VN")}
+                </div>
+              </div>
+            </div>
+            <p className="mt-4 rounded-2xl bg-muted/50 p-4 text-sm text-foreground">
+              {active.content}
+            </p>
+
+            <div className="mt-5 space-y-3">
+              {active.answers.map((a) => (
+                <div key={a.id} className="rounded-2xl border border-border p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-semibold text-foreground">
+                      {a.authorName}{" "}
+                      <span className="ml-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+                        {a.authorRole === "admin" ? "Admin" : "Giáo viên"}
+                      </span>
+                    </div>
+                    <div className="text-[11px] text-muted-foreground">
+                      {new Date(a.answeredAt).toLocaleString("vi-VN")}
+                    </div>
+                  </div>
+                  <p className="mt-1.5 text-sm text-foreground">{a.content}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-5">
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Trả lời của bạn
+              </label>
+              <textarea
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                rows={4}
+                placeholder="Nhập nội dung trả lời..."
+                className="mt-1.5 w-full rounded-2xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+              />
+              <div className="mt-2 flex justify-end">
+                <button
+                  onClick={submit}
+                  disabled={!draft.trim()}
+                  className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft disabled:opacity-50"
+                  style={{ background: "var(--gradient-brand)" }}
+                >
+                  <Send className="h-4 w-4" /> Gửi trả lời
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

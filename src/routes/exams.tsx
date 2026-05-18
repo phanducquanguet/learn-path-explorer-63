@@ -5,8 +5,8 @@ import { TopNav } from "@/components/TopNav";
 export const Route = createFileRoute("/exams")({
   head: () => ({
     meta: [
-      { title: "Luyện thi — UNICOM LMS" },
-      { name: "description", content: "Danh sách bài luyện thi và cổng thi." },
+      { title: "Thi cử — UNICOM LMS" },
+      { name: "description", content: "Vào cổng thi để thực hiện các bài thi chính thức." },
     ],
   }),
   component: ExamsPage,
@@ -42,13 +42,13 @@ function ExamsPage() {
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
         <div className="flex flex-col gap-2">
           <span className="inline-flex w-fit items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-            <Sparkles className="h-3.5 w-3.5" /> Phòng luyện thi
+            <Sparkles className="h-3.5 w-3.5" /> Cổng thi chính thức
           </span>
           <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            Bài luyện thi
+            Thi cử
           </h1>
           <p className="text-sm text-muted-foreground">
-            Chọn một bài thi để chuyển sang cổng thi (Test Portal) và bắt đầu làm bài.
+            Chọn một kỳ thi để chuyển sang cổng thi (Test Portal) và bắt đầu làm bài chính thức.
           </p>
         </div>
 
