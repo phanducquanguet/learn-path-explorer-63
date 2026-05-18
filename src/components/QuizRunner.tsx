@@ -501,120 +501,155 @@ export function QuizRunner({
     );
   }
 
+  // Group questions by skill for the sidebar board
+  const SKILL_ORDER: Array<"reading" | "listening" | "writing" | "speaking"> = [
+    "reading",
+    "listening",
+    "writing",
+    "speaking",
+  ];
+  const SKILL_LABEL_VI: Record<string, string> = {
+    reading: "Reading",
+    listening: "Listening",
+    writing: "Writing",
+    speaking: "Speaking",
+  };
+  const grouped = SKILL_ORDER.map((s) => ({
+    skill: s,
+    items: questions
+      .map((qq, i) => ({ qq, i }))
+      .filter(({ qq }) => questionSkill(qq.kind) === s),
+  })).filter((g) => g.items.length > 0);
+
   return (
-    <div className="space-y-5">
-      {/* Total score bar */}
-      <div className="flex items-center justify-between gap-3 rounded-2xl bg-surface p-3 ring-1 ring-border">
-        <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-          Total score
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="text-[11px] text-muted-foreground">
-            {submittedCount}/{questions.length} answered
+    <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
+      <div className="space-y-5 min-w-0">
+        {/* Total score bar */}
+        <div className="flex items-center justify-between gap-3 rounded-2xl bg-surface p-3 ring-1 ring-border">
+          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Tổng điểm
           </div>
-          <div
-            className="rounded-full px-4 py-1.5 text-sm font-bold text-white shadow-soft"
-            style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
-          >
-            {totalEarned}/{totalMax} pts
-          </div>
-        </div>
-      </div>
-
-      {/* Question pills */}
-      <div className="flex flex-wrap items-center gap-2">
-        {questions.map((qq, i) => {
-          const r = results[qq.id];
-          const active = i === idx;
-          const done = Boolean(r);
-          return (
-            <button
-              key={qq.id}
-              onClick={() => setIdx(i)}
-              title={`Question ${qq.index}`}
-              className={cn(
-                "group relative inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-xl px-2.5 text-xs font-bold transition",
-                // base — not started
-                !done && !active &&
-                  "bg-surface text-muted-foreground ring-1 ring-border hover:bg-muted hover:text-foreground",
-                // current
-                active && !done &&
-                  "bg-foreground text-background shadow-elevated scale-105",
-                active && done &&
-                  "scale-105 shadow-elevated ring-2 ring-foreground",
-                // done states
-                done && r?.status === "correct" && "bg-success/20 text-success-foreground",
-                done && r?.status === "partial" && "bg-warning/25 text-warning-foreground",
-                done && r?.status === "incorrect" && "bg-destructive/15 text-destructive",
-              )}
+          <div className="flex items-center gap-3">
+            <div className="text-[11px] text-muted-foreground">
+              {submittedCount}/{questions.length} đã làm
+            </div>
+            <div
+              className="rounded-full px-4 py-1.5 text-sm font-bold text-white shadow-soft"
+              style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
             >
-              {done && r?.status === "correct" && <Check className="h-3 w-3" />}
-              {done && r?.status === "incorrect" && <X className="h-3 w-3" />}
-              {done && r?.status === "partial" && <Sparkles className="h-3 w-3" />}
-              <span>{qq.index}</span>
-              {active && (
-                <span
-                  className="absolute -bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full"
-                  style={{ background: accent }}
-                />
-              )}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* question card */}
-      <div className="rounded-3xl bg-surface p-5 ring-1 ring-border sm:p-7">
-        <div className="mb-5">
-          <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Question {q.index} • {kindLabel(q.kind)}
+              {totalEarned}/{totalMax} điểm
+            </div>
           </div>
-          <h3 className="mt-1 font-display text-lg font-semibold leading-snug text-foreground">
-            {renderPromptHead(q.prompt)}
-          </h3>
         </div>
 
-        <QuestionBody
-          q={q}
-          value={answers[q.id]}
-          onChange={setAnswer}
-          locked={Boolean(result)}
-          accent={accent}
-        />
+        {/* question card */}
+        <div className="rounded-3xl bg-surface p-5 ring-1 ring-border sm:p-7">
+          <div className="mb-5">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {SKILL_LABEL_VI[questionSkill(q.kind)]} • Câu {q.index} • {kindLabel(q.kind)}
+            </div>
+            <h3 className="mt-1 font-display text-lg font-semibold leading-snug text-foreground">
+              {renderPromptHead(q.prompt)}
+            </h3>
+          </div>
 
-        {result && <FeedbackBlock status={result.status} />}
+          <QuestionBody
+            q={q}
+            value={answers[q.id]}
+            onChange={setAnswer}
+            locked={Boolean(result)}
+            accent={accent}
+          />
+
+          {result && <FeedbackBlock status={result.status} />}
+        </div>
+
+        {/* footer */}
+        <div className="flex items-center justify-between gap-3">
+          <button
+            onClick={onExit}
+            className="inline-flex items-center gap-2 rounded-xl bg-surface px-4 py-2.5 text-sm font-medium text-muted-foreground ring-1 ring-border hover:bg-muted hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" /> Thoát
+          </button>
+          {!result ? (
+            <button
+              onClick={submit}
+              disabled={!hasAnswer(q, answers[q.id])}
+              className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:opacity-95 disabled:opacity-40"
+              style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
+            >
+              <Check className="h-4 w-4" /> Nộp câu trả lời
+            </button>
+          ) : (
+            <button
+              onClick={next}
+              className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-soft hover:opacity-95"
+              style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
+            >
+              {idx === questions.length - 1 ? "Xem kết quả" : "Câu tiếp"}
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* footer */}
-      <div className="flex items-center justify-between gap-3">
-        <button
-          onClick={onExit}
-          className="inline-flex items-center gap-2 rounded-xl bg-surface px-4 py-2.5 text-sm font-medium text-muted-foreground ring-1 ring-border hover:bg-muted hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" /> Back to course
-        </button>
-        {!result ? (
-          <button
-            onClick={submit}
-            disabled={!hasAnswer(q, answers[q.id])}
-            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:opacity-95 disabled:opacity-40"
-            style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
-          >
-            <Check className="h-4 w-4" /> Submit answer
-          </button>
-        ) : (
-          <button
-            onClick={next}
-            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-soft hover:opacity-95"
-            style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
-          >
-            {idx === questions.length - 1 ? "View results" : "Next question"}
-            <ArrowRight className="h-4 w-4" />
-          </button>
-        )}
-      </div>
+      {/* Sidebar: Question board grouped by skill */}
+      <aside className="lg:sticky lg:top-24 self-start rounded-3xl bg-surface p-4 ring-1 ring-border">
+        <div className="mb-3 text-sm font-semibold text-foreground">Bảng câu hỏi</div>
+        <div className="space-y-4">
+          {grouped.map((g) => {
+            const doneCount = g.items.filter(({ qq }) => results[qq.id]).length;
+            return (
+              <div key={g.skill}>
+                <div className="mb-2 flex items-center justify-between">
+                  <div className="text-xs font-semibold text-foreground">
+                    {SKILL_LABEL_VI[g.skill]}
+                  </div>
+                  <div className="text-[10px] text-muted-foreground">
+                    {doneCount}/{g.items.length}
+                  </div>
+                </div>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {g.items.map(({ qq, i }) => {
+                    const r = results[qq.id];
+                    const active = i === idx;
+                    const done = Boolean(r);
+                    return (
+                      <button
+                        key={qq.id}
+                        onClick={() => setIdx(i)}
+                        title={`Câu ${qq.index}`}
+                        className={cn(
+                          "inline-flex h-9 items-center justify-center rounded-lg text-xs font-bold transition",
+                          !done && !active &&
+                            "bg-background text-muted-foreground ring-1 ring-border hover:bg-muted hover:text-foreground",
+                          active && !done && "bg-foreground text-background shadow-elevated",
+                          active && done && "ring-2 ring-foreground shadow-elevated",
+                          done && r?.status === "correct" && "bg-success/20 text-success-foreground",
+                          done && r?.status === "partial" && "bg-warning/25 text-warning-foreground",
+                          done && r?.status === "incorrect" && "bg-destructive/15 text-destructive",
+                        )}
+                      >
+                        {qq.index}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </aside>
     </div>
   );
+}
+
+function questionSkill(kind: Question["kind"]): "reading" | "listening" | "writing" | "speaking" {
+  if (kind === "listening") return "listening";
+  if (kind === "audio") return "speaking";
+  if (kind === "rewrite" || kind === "highlight") return "writing";
+  return "reading";
 }
 
 /* ============================================================
