@@ -467,6 +467,11 @@ function CoursePage() {
                   <Tab active={tab === "competence"} onClick={() => setTab("competence")} icon={<Sparkles className="h-4 w-4" />}>
                     Năng lực
                   </Tab>
+                  {isStaff && (
+                    <Tab active={tab === "qa"} onClick={() => setTab("qa")} icon={<MessageSquare className="h-4 w-4" />}>
+                      Hỏi đáp
+                    </Tab>
+                  )}
                 </div>
               </div>
 
