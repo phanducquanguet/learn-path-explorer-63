@@ -5,8 +5,8 @@ import { TopNav } from "@/components/TopNav";
 export const Route = createFileRoute("/exams")({
   head: () => ({
     meta: [
-      { title: "Luyện thi — UNICOM LMS" },
-      { name: "description", content: "Danh sách bài luyện thi và cổng thi." },
+      { title: "Thi cử — UNICOM LMS" },
+      { name: "description", content: "Vào cổng thi để thực hiện các bài thi chính thức." },
     ],
   }),
   component: ExamsPage,
