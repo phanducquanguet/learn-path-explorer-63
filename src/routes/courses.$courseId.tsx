@@ -182,7 +182,7 @@ function CoursePage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {isTeacher && (
+            {isAdmin && (
               <button
                 onClick={() => setEditMode((v) => !v)}
                 className={cn(
@@ -453,7 +453,7 @@ function CoursePage() {
                   <Tab active={tab === "overview"} onClick={() => setTab("overview")} icon={<BookOpen className="h-4 w-4" />}>
                     Khoá học
                   </Tab>
-                  {isTeacher && (
+                  {isAdmin && (
                     <Tab active={tab === "members"} onClick={() => setTab("members")} icon={<Users className="h-4 w-4" />}>
                       Thành viên lớp học
                     </Tab>
@@ -480,7 +480,7 @@ function CoursePage() {
                   course={course}
                   hue={level.hue}
                   onQuizClick={setQuizOpen}
-                  editMode={isTeacher && editMode}
+                  editMode={isAdmin && editMode}
                   onAddUnit={addUnit}
                   onUpdateUnit={updateUnit}
                   onRemoveUnit={removeUnit}
