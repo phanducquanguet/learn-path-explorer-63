@@ -495,7 +495,7 @@ function CoursePage() {
                 />
               )}
               {tab === "competence" && <CompetenceView />}
-              {tab === "qa" && isStaff && <CourseQAView courseId={course.id} role={role} />}
+              {tab === "qa" && <CourseQAView courseId={course.id} role={role} />}
             </>
           )}
         </main>
