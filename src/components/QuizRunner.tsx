@@ -414,6 +414,26 @@ export function QuizRunner({
   if (phase === "review") {
     const rq = questions[reviewIdx];
     const rResult = results[rq.id];
+
+    const SKILL_ORDER: Array<"reading" | "listening" | "writing" | "speaking"> = [
+      "reading",
+      "listening",
+      "writing",
+      "speaking",
+    ];
+    const LABEL: Record<string, string> = {
+      reading: "Reading",
+      listening: "Listening",
+      writing: "Writing",
+      speaking: "Speaking",
+    };
+    const grouped = SKILL_ORDER.map((s) => ({
+      skill: s,
+      items: questions
+        .map((qq, i) => ({ qq, i }))
+        .filter(({ qq }) => questionSkill(qq.kind) === s),
+    })).filter((g) => g.items.length > 0);
+
     return (
       <div className="space-y-5">
         {/* Header */}
@@ -422,151 +442,176 @@ export function QuizRunner({
             onClick={() => setPhase("summary")}
             className="inline-flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
           >
-            <ArrowLeft className="h-3.5 w-3.5" /> Back to results
+            <ArrowLeft className="h-3.5 w-3.5" /> Quay lại kết quả
           </button>
           <div
             className="rounded-full px-4 py-1.5 text-sm font-bold text-white shadow-soft"
             style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
           >
-            {totalEarned}/{totalMax} pts
+            {totalEarned}/{totalMax} điểm
           </div>
         </div>
 
-        {/* Question pills */}
-        <div className="flex flex-wrap items-center gap-2">
-          {questions.map((qq, i) => {
-            const r = results[qq.id];
-            const active = i === reviewIdx;
-            return (
-              <button
-                key={qq.id}
-                onClick={() => setReviewIdx(i)}
-                className={cn(
-                  "inline-flex h-9 min-w-9 items-center justify-center gap-1.5 rounded-xl px-2.5 text-xs font-bold transition",
-                  active && "scale-105 shadow-elevated ring-2 ring-foreground",
-                  r?.status === "correct" && "bg-success/20 text-success-foreground",
-                  r?.status === "partial" && "bg-warning/25 text-warning-foreground",
-                  r?.status === "incorrect" && "bg-destructive/15 text-destructive",
-                  !r && "bg-surface text-muted-foreground ring-1 ring-border",
-                )}
-              >
-                {r?.status === "correct" && <Check className="h-3 w-3" />}
-                {r?.status === "incorrect" && <X className="h-3 w-3" />}
-                {r?.status === "partial" && <Sparkles className="h-3 w-3" />}
-                <span>{qq.index}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Locked question with correct answer revealed */}
-        <div className="rounded-3xl bg-surface p-5 ring-1 ring-border sm:p-7">
-          <div className="mb-5 flex items-start justify-between gap-3">
-            <div>
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Question {rq.index} • {kindLabel(rq.kind)}
-              </div>
-              <h3 className="mt-1 font-display text-lg font-semibold leading-snug text-foreground">
-                {renderPromptHead(rq.prompt)}
-              </h3>
-            </div>
-            {rResult && (
-              <span
-                className={cn(
-                  "shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold",
-                  rResult.status === "correct" && "bg-success/15 text-success-foreground",
-                  rResult.status === "partial" && "bg-warning/15 text-warning-foreground",
-                  rResult.status === "incorrect" && "bg-destructive/10 text-destructive",
-                )}
-              >
-                {FEEDBACK[rResult.status].label}
-              </span>
-            )}
-          </div>
-
-          <QuestionBody
-            q={rq}
-            value={answers[rq.id]}
-            onChange={() => {}}
-            locked
-            accent={accent}
-          />
-
-          <div className="mt-5 rounded-2xl bg-muted/40 p-4 text-xs text-muted-foreground ring-1 ring-border">
-            <div className="font-semibold text-foreground">Đáp án đúng</div>
-            <div className="mt-1">
-              <CorrectAnswerHint q={rq} />
-            </div>
-          </div>
-
-          {/* Notes / questions to teacher */}
-          <div className="mt-5 rounded-2xl bg-background p-4 ring-1 ring-border">
-            <div className="flex items-center justify-between gap-2">
-              <div className="text-sm font-semibold text-foreground">
-                Ghi chú / câu hỏi cho giáo viên
-              </div>
-              <span className="text-[11px] text-muted-foreground">
-                {(notes[rq.id]?.length ?? 0)} ghi chú
-              </span>
-            </div>
-
-            {(notes[rq.id]?.length ?? 0) > 0 && (
-              <ul className="mt-3 space-y-2">
-                {notes[rq.id]!.map((n, i) => (
-                  <li
-                    key={i}
-                    className="rounded-xl bg-surface p-3 text-xs text-foreground ring-1 ring-border"
+        <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
+          <div className="space-y-5 min-w-0">
+            {/* Locked question with correct answer revealed */}
+            <div className="rounded-3xl bg-surface p-5 ring-1 ring-border sm:p-7">
+              <div className="mb-5 flex items-start justify-between gap-3">
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {LABEL[questionSkill(rq.kind)]} • Câu {rq.index} • {kindLabel(rq.kind)}
+                  </div>
+                  <h3 className="mt-1 font-display text-lg font-semibold leading-snug text-foreground">
+                    {renderPromptHead(rq.prompt)}
+                  </h3>
+                </div>
+                {rResult && (
+                  <span
+                    className={cn(
+                      "shrink-0 rounded-full px-2.5 py-0.5 text-[10px] font-semibold",
+                      rResult.status === "correct" && "bg-success/15 text-success-foreground",
+                      rResult.status === "partial" && "bg-warning/15 text-warning-foreground",
+                      rResult.status === "incorrect" && "bg-destructive/10 text-destructive",
+                    )}
                   >
-                    <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      Đã gửi giáo viên
-                    </div>
-                    {n}
-                  </li>
-                ))}
-              </ul>
-            )}
+                    {FEEDBACK[rResult.status].label}
+                  </span>
+                )}
+              </div>
 
-            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-              <textarea
-                value={noteDraft}
-                onChange={(e) => setNoteDraft(e.target.value)}
-                placeholder="Nhập câu hỏi hoặc thắc mắc về câu này để gửi giáo viên..."
-                rows={2}
-                className="min-h-[60px] flex-1 resize-y rounded-xl bg-surface px-3 py-2 text-sm text-foreground ring-1 ring-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              <QuestionBody
+                q={rq}
+                value={answers[rq.id]}
+                onChange={() => {}}
+                locked
+                accent={accent}
               />
+
+              <div className="mt-5 rounded-2xl bg-muted/40 p-4 text-xs text-muted-foreground ring-1 ring-border">
+                <div className="font-semibold text-foreground">Đáp án đúng</div>
+                <div className="mt-1">
+                  <CorrectAnswerHint q={rq} />
+                </div>
+              </div>
+
+              {/* Notes / questions to teacher */}
+              <div className="mt-5 rounded-2xl bg-background p-4 ring-1 ring-border">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-sm font-semibold text-foreground">
+                    Ghi chú / câu hỏi cho giáo viên
+                  </div>
+                  <span className="text-[11px] text-muted-foreground">
+                    {(notes[rq.id]?.length ?? 0)} ghi chú
+                  </span>
+                </div>
+
+                {(notes[rq.id]?.length ?? 0) > 0 && (
+                  <ul className="mt-3 space-y-2">
+                    {notes[rq.id]!.map((n, i) => (
+                      <li
+                        key={i}
+                        className="rounded-xl bg-surface p-3 text-xs text-foreground ring-1 ring-border"
+                      >
+                        <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          Đã gửi giáo viên
+                        </div>
+                        {n}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                  <textarea
+                    value={noteDraft}
+                    onChange={(e) => setNoteDraft(e.target.value)}
+                    placeholder="Nhập câu hỏi hoặc thắc mắc về câu này để gửi giáo viên..."
+                    rows={2}
+                    className="min-h-[60px] flex-1 resize-y rounded-xl bg-surface px-3 py-2 text-sm text-foreground ring-1 ring-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <button
+                    onClick={() => addNote(rq.id, noteDraft)}
+                    disabled={!noteDraft.trim()}
+                    className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 self-end rounded-xl px-4 text-xs font-semibold text-white shadow-soft hover:opacity-95 disabled:opacity-40"
+                    style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
+                  >
+                    Gửi giáo viên
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer nav */}
+            <div className="flex items-center justify-between gap-3">
               <button
-                onClick={() => addNote(rq.id, noteDraft)}
-                disabled={!noteDraft.trim()}
-                className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 self-end rounded-xl px-4 text-xs font-semibold text-white shadow-soft hover:opacity-95 disabled:opacity-40"
+                onClick={() => setReviewIdx(Math.max(0, reviewIdx - 1))}
+                disabled={reviewIdx === 0}
+                className="inline-flex items-center gap-2 rounded-xl bg-surface px-4 py-2.5 text-sm font-medium text-foreground ring-1 ring-border hover:bg-muted disabled:opacity-40"
+              >
+                <ArrowLeft className="h-4 w-4" /> Câu trước
+              </button>
+              <button
+                onClick={() =>
+                  reviewIdx < questions.length - 1
+                    ? setReviewIdx(reviewIdx + 1)
+                    : setPhase("summary")
+                }
+                className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-soft hover:opacity-95"
                 style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
               >
-                Gửi giáo viên
+                {reviewIdx === questions.length - 1 ? "Về kết quả" : "Câu tiếp"}
+                <ArrowRight className="h-4 w-4" />
               </button>
             </div>
           </div>
-        </div>
 
-        {/* Footer nav */}
-        <div className="flex items-center justify-between gap-3">
-          <button
-            onClick={() => setReviewIdx(Math.max(0, reviewIdx - 1))}
-            disabled={reviewIdx === 0}
-            className="inline-flex items-center gap-2 rounded-xl bg-surface px-4 py-2.5 text-sm font-medium text-foreground ring-1 ring-border hover:bg-muted disabled:opacity-40"
-          >
-            <ArrowLeft className="h-4 w-4" /> Previous
-          </button>
-          <button
-            onClick={() =>
-              reviewIdx < questions.length - 1
-                ? setReviewIdx(reviewIdx + 1)
-                : setPhase("summary")
-            }
-            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-soft hover:opacity-95"
-            style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
-          >
-            {reviewIdx === questions.length - 1 ? "Back to results" : "Next"}
-            <ArrowRight className="h-4 w-4" />
-          </button>
+          {/* Sidebar grouped by skill */}
+          <aside className="lg:sticky lg:top-24 self-start rounded-3xl bg-surface p-4 ring-1 ring-border">
+            <div className="mb-3 text-sm font-semibold text-foreground">Bảng câu hỏi</div>
+            <div className="space-y-4">
+              {grouped.map((g) => {
+                const correctN = g.items.filter(({ qq }) => results[qq.id]?.status === "correct").length;
+                return (
+                  <div key={g.skill}>
+                    <div className="mb-2 flex items-center justify-between">
+                      <div className="text-xs font-semibold text-foreground">
+                        {LABEL[g.skill]}
+                      </div>
+                      <div className="text-[10px] text-muted-foreground">
+                        {correctN}/{g.items.length} đúng
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-5 gap-1.5">
+                      {g.items.map(({ qq, i }) => {
+                        const r = results[qq.id];
+                        const active = i === reviewIdx;
+                        return (
+                          <button
+                            key={qq.id}
+                            onClick={() => setReviewIdx(i)}
+                            title={`Câu ${qq.index}`}
+                            className={cn(
+                              "inline-flex h-9 items-center justify-center gap-1 rounded-lg text-xs font-bold transition",
+                              active && "ring-2 ring-foreground shadow-elevated",
+                              r?.status === "correct" && "bg-success/20 text-success-foreground",
+                              r?.status === "partial" && "bg-warning/25 text-warning-foreground",
+                              r?.status === "incorrect" && "bg-destructive/15 text-destructive",
+                              !r && "bg-background text-muted-foreground ring-1 ring-border",
+                            )}
+                          >
+                            {r?.status === "correct" && <Check className="h-3 w-3" />}
+                            {r?.status === "incorrect" && <X className="h-3 w-3" />}
+                            {r?.status === "partial" && <Sparkles className="h-3 w-3" />}
+                            {qq.index}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </aside>
         </div>
       </div>
     );
