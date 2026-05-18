@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { EXAM_SKILLS } from "@/lib/teacher-data";
+import { useRole } from "@/contexts/RoleContext";
 import {
   ClipboardCheck,
   Plus,
@@ -11,6 +12,8 @@ import {
   Trash2,
   FileQuestion,
   Pencil,
+  Eye,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -65,6 +68,8 @@ const SEED: SavedExam[] = [
 ];
 
 function ExamsList() {
+  const { role } = useRole();
+  const isAdmin = role === "admin";
   const [exams, setExams] = useState<SavedExam[]>([]);
 
   useEffect(() => {
@@ -109,13 +114,23 @@ function ExamsList() {
               Danh sách các bài luyện thi đã tạo. Tạo mới để bổ sung vào kho bài thi.
             </p>
           </div>
-          <Link
-            to="/teacher/exams/new"
-            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
-            style={{ background: "var(--gradient-brand)" }}
-          >
-            <Plus className="h-4 w-4" /> Tạo bài thi mới
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Link
+              to="/teacher/qa"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-sm font-semibold text-foreground hover:bg-muted"
+            >
+              <MessageSquare className="h-4 w-4" /> Hỏi đáp học viên
+            </Link>
+            {isAdmin && (
+              <Link
+                to="/teacher/exams/new"
+                className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
+                style={{ background: "var(--gradient-brand)" }}
+              >
+                <Plus className="h-4 w-4" /> Tạo bài thi mới
+              </Link>
+            )}
+          </div>
         </div>
 
         {/* Stats */}
@@ -162,13 +177,15 @@ function ExamsList() {
                   <div className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-primary">
                     {exam.levelCode}
                   </div>
-                  <button
-                    onClick={() => remove(idx)}
-                    className="rounded-lg p-1.5 text-muted-foreground opacity-0 transition hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
-                    aria-label="Xóa bài thi"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  {isAdmin && (
+                    <button
+                      onClick={() => remove(idx)}
+                      className="rounded-lg p-1.5 text-muted-foreground opacity-0 transition hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                      aria-label="Xóa bài thi"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
 
                 <h3 className="mt-3 font-display text-lg font-semibold text-foreground line-clamp-1">
@@ -204,16 +221,22 @@ function ExamsList() {
                 </div>
 
                 <div className="mt-4 flex gap-2">
-                  <button
-                    className={cn(
-                      "flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted",
-                    )}
+                  <Link
+                    to="/teacher/exams/$examId/submissions"
+                    params={{ examId: exam.id ?? String(idx) }}
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-foreground px-3 py-2 text-xs font-semibold text-background hover:opacity-90"
                   >
-                    <Pencil className="h-3.5 w-3.5" /> Chỉnh sửa
-                  </button>
-                  <button className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-foreground px-3 py-2 text-xs font-semibold text-background hover:opacity-90">
-                    Xem trước
-                  </button>
+                    <Eye className="h-3.5 w-3.5" /> Xem bài làm
+                  </Link>
+                  {isAdmin && (
+                    <button
+                      className={cn(
+                        "inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted",
+                      )}
+                    >
+                      <Pencil className="h-3.5 w-3.5" /> Sửa
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
