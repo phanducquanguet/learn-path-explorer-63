@@ -20,7 +20,7 @@ export const Route = createFileRoute("/admin/tests/new")({
 });
 
 const LEVELS: QLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
-const SKILLS: QSkill[] = ["listening", "reading", "writing", "speaking", "use"];
+const SKILLS: QSkill[] = ["listening", "reading", "writing", "speaking"];
 
 const STEPS = [
   { id: 1, label: "Thông tin chung" },

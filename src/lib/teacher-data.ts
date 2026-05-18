@@ -198,5 +198,4 @@ export const EXAM_SKILLS = [
   { id: "reading", label: "Đọc (Reading)" },
   { id: "writing", label: "Viết (Writing)" },
   { id: "speaking", label: "Nói (Speaking)" },
-  { id: "use", label: "Use of English" },
 ] as const;

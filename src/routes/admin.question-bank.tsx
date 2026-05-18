@@ -38,7 +38,7 @@ export const Route = createFileRoute("/admin/question-bank")({
   component: BankPage,
 });
 
-const SKILLS: QSkill[] = ["listening", "reading", "writing", "speaking", "use"];
+const SKILLS: QSkill[] = ["listening", "reading", "writing", "speaking"];
 const LEVELS: QLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
 const PAGE_SIZE = 20;
 
@@ -49,7 +49,6 @@ const SKILL_COLOR: Record<QSkill, string> = {
   reading: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   writing: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
   speaking: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  use: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
 };
 
 function BankPage() {
