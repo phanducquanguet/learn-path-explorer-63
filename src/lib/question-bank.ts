@@ -30,7 +30,6 @@ export const SKILL_LABEL: Record<QSkill, string> = {
   reading: "Đọc",
   writing: "Viết",
   speaking: "Nói",
-  use: "Use of English",
 };
 
 export const TYPE_LABEL: Record<QType, string> = {
@@ -71,15 +70,9 @@ const SAMPLE_CONTENTS: Record<QSkill, string[]> = {
     "Compare two pictures and say which one you prefer.",
     "Give your opinion about online learning.",
   ],
-  use: [
-    "Choose the correct form: She ___ to Paris last year.",
-    "Fill in the blank with the correct preposition.",
-    "Transform the sentence using passive voice.",
-    "Choose the synonym of the underlined word.",
-  ],
 };
 
-const SKILLS: QSkill[] = ["listening", "reading", "writing", "speaking", "use"];
+const SKILLS: QSkill[] = ["listening", "reading", "writing", "speaking"];
 const TYPES: QType[] = ["mcq", "mcq-multi", "fill", "tf", "short", "essay", "matching", "cloze"];
 const LEVELS: QLevel[] = ["A1", "A2", "B1", "B2", "C1"];
 

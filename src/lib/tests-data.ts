@@ -67,7 +67,7 @@ export const tests: Test[] = [
       { skill: "reading", type: "mcq", level: "B1", count: 10 },
       { skill: "listening", type: "mcq", level: "B1", count: 8 },
       { skill: "writing", type: "essay", level: "B1", count: 1 },
-      { skill: "use", type: "fill", level: "B1", count: 6 },
+      { skill: "reading", type: "fill", level: "B1", count: 6 },
     ],
     registered: 10,
     submitted: 9,
@@ -86,7 +86,7 @@ export const tests: Test[] = [
     closeAt: days(2),
     mode: "fixed",
     structure: [
-      { skill: "use", type: "mcq", level: "A1", count: 10 },
+      { skill: "reading", type: "mcq", level: "A1", count: 10 },
       { skill: "reading", type: "tf", level: "A1", count: 5 },
     ],
     registered: 14,
@@ -128,7 +128,7 @@ export const tests: Test[] = [
     structure: [
       { skill: "reading", type: "mcq", level: "B1", count: 12 },
       { skill: "listening", type: "mcq", level: "B1", count: 10 },
-      { skill: "use", type: "cloze", level: "B1", count: 5 },
+      { skill: "reading", type: "cloze", level: "B1", count: 5 },
       { skill: "writing", type: "essay", level: "B1", count: 1 },
     ],
     registered: 13,
