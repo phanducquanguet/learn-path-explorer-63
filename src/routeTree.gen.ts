@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as ExamsRouteImport } from './routes/exams'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TeacherIndexRouteImport } from './routes/teacher.index'
@@ -28,6 +29,11 @@ import { Route as TeacherClassesClassIdRouteImport } from './routes/teacher.clas
 import { Route as AdminTestsNewRouteImport } from './routes/admin.tests.new'
 import { Route as TeacherExamsExamIdSubmissionsRouteImport } from './routes/teacher.exams.$examId.submissions'
 
+const PracticeRoute = PracticeRouteImport.update({
+  id: '/practice',
+  path: '/practice',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExamsRoute = ExamsRouteImport.update({
   id: '/exams',
   path: '/exams',
@@ -123,6 +129,7 @@ const TeacherExamsExamIdSubmissionsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/exams': typeof ExamsRoute
+  '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -143,6 +150,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/exams': typeof ExamsRoute
+  '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -164,6 +172,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/exams': typeof ExamsRoute
+  '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -186,6 +195,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/exams'
+    | '/practice'
     | '/admin/question-bank'
     | '/courses/$courseId'
     | '/levels/$level'
@@ -206,6 +216,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/exams'
+    | '/practice'
     | '/admin/question-bank'
     | '/courses/$courseId'
     | '/levels/$level'
@@ -226,6 +237,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/exams'
+    | '/practice'
     | '/admin/question-bank'
     | '/courses/$courseId'
     | '/levels/$level'
@@ -247,6 +259,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ExamsRoute: typeof ExamsRoute
+  PracticeRoute: typeof PracticeRoute
   AdminQuestionBankRoute: typeof AdminQuestionBankRoute
   CoursesCourseIdRoute: typeof CoursesCourseIdRoute
   LevelsLevelRoute: typeof LevelsLevelRoute
@@ -267,6 +280,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/practice': {
+      id: '/practice'
+      path: '/practice'
+      fullPath: '/practice'
+      preLoaderRoute: typeof PracticeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/exams': {
       id: '/exams'
       path: '/exams'
@@ -399,6 +419,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ExamsRoute: ExamsRoute,
+  PracticeRoute: PracticeRoute,
   AdminQuestionBankRoute: AdminQuestionBankRoute,
   CoursesCourseIdRoute: CoursesCourseIdRoute,
   LevelsLevelRoute: LevelsLevelRoute,
@@ -419,3 +440,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
