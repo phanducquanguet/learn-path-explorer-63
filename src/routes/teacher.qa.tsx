@@ -3,7 +3,7 @@ import { useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { useRole } from "@/contexts/RoleContext";
 import { courseQuestions, type CourseQuestion, type QAAnswer } from "@/lib/qa-data";
-import { ArrowLeft, MessageSquare, Send, CheckCircle2, Filter } from "lucide-react";
+import { ArrowLeft, MessageSquare, Send, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/teacher/qa")({

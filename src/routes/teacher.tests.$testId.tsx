@@ -10,7 +10,7 @@ import {
   Clock,
   Users,
   CheckCircle2,
-  AlertCircle,
+  
   Hourglass,
   X,
   Send,
