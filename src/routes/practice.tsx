@@ -124,26 +124,142 @@ const practices: Practice[] = [
   },
 ];
 
+function InfoTile({ label, value, hint }: { label: string; value: string; hint: string }) {
+  return (
+    <div className="rounded-2xl bg-background p-4 ring-1 ring-border">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        {label}
+      </div>
+      <div className="mt-1 font-display text-2xl font-semibold text-foreground">{value}</div>
+      <div className="mt-1 text-xs text-muted-foreground">{hint}</div>
+    </div>
+  );
+}
+
 function PracticePage() {
   const [active, setActive] = useState<Practice | null>(null);
+  const [phase, setPhase] = useState<"info" | "running">("info");
 
   if (active) {
+    const meta = SKILL_META[active.skill];
+    const Icon = meta.icon;
     return (
       <div className="min-h-screen bg-background">
         <TopNav />
-        <div className="mx-auto max-w-5xl px-6 pb-20 pt-6 sm:px-8">
+        <div className="mx-auto max-w-6xl px-6 pb-20 pt-6 sm:px-8">
           <button
-            onClick={() => setActive(null)}
+            onClick={() => {
+              setActive(null);
+              setPhase("info");
+            }}
             className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Trở lại danh sách luyện thi
           </button>
-          <QuizRunner
-            quizId={active.id}
-            title={active.title}
-            hue={active.hue}
-            onExit={() => setActive(null)}
-          />
+
+          {phase === "info" ? (
+            <div className="overflow-hidden rounded-3xl bg-surface ring-1 ring-border shadow-soft">
+              <div
+                className="relative p-7 text-white sm:p-9"
+                style={{
+                  background: `linear-gradient(135deg, oklch(0.45 0.22 ${active.hue}), oklch(0.6 0.18 ${(active.hue + 40) % 360}))`,
+                }}
+              >
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-white/85">
+                  <Sparkles className="h-3.5 w-3.5" /> Sắp bắt đầu bài luyện
+                </div>
+                <h1 className="mt-3 font-display text-3xl font-semibold sm:text-4xl">
+                  {active.title}
+                </h1>
+                <p className="mt-2 max-w-2xl text-sm text-white/85">{active.description}</p>
+                <div className="mt-5 flex flex-wrap items-center gap-2 text-xs">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 ring-1 ring-white/20">
+                    <Icon className="h-3.5 w-3.5" /> {meta.label}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 ring-1 ring-white/20">
+                    Cấp độ {active.level}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 ring-1 ring-white/20">
+                    <Clock className="h-3.5 w-3.5" /> {active.duration} phút
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 ring-1 ring-white/20">
+                    {active.questions} câu
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid gap-4 p-7 sm:grid-cols-3 sm:p-9">
+                <InfoTile
+                  label="Thời lượng gợi ý"
+                  value={`${active.duration} phút`}
+                  hint="Bài luyện không bắt buộc thời gian."
+                />
+                <InfoTile
+                  label="Số câu"
+                  value={`${active.questions} câu`}
+                  hint="Đa dạng dạng câu hỏi và kỹ năng."
+                />
+                <InfoTile
+                  label="Lượt đã làm"
+                  value={`${active.attempts}`}
+                  hint={
+                    active.bestScore !== undefined
+                      ? `Điểm cao nhất: ${active.bestScore}`
+                      : "Bạn chưa từng làm bài này."
+                  }
+                />
+              </div>
+
+              <div className="border-t border-border p-7 sm:p-9">
+                <div className="text-sm font-semibold text-foreground">Hướng dẫn làm bài</div>
+                <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+                  <li className="flex gap-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                    Mỗi câu được chấm và giải thích ngay sau khi nộp.
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                    Có bảng câu hỏi nhóm theo từng kỹ năng để dễ theo dõi và chuyển nhanh.
+                  </li>
+                  <li className="flex gap-2">
+                    <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground" />
+                    Hoàn thành sẽ có bảng tổng kết kèm đáp án chi tiết.
+                  </li>
+                </ul>
+
+                <div className="mt-6 flex flex-wrap items-center justify-between gap-3">
+                  <button
+                    onClick={() => {
+                      setActive(null);
+                      setPhase("info");
+                    }}
+                    className="inline-flex items-center gap-2 rounded-xl bg-surface px-4 py-2.5 text-sm font-medium text-muted-foreground ring-1 ring-border hover:bg-muted hover:text-foreground"
+                  >
+                    Huỷ
+                  </button>
+                  <button
+                    onClick={() => setPhase("running")}
+                    className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-soft hover:opacity-95"
+                    style={{
+                      background: `linear-gradient(135deg, oklch(0.5 0.2 ${active.hue}), oklch(0.65 0.18 ${(active.hue + 30) % 360}))`,
+                    }}
+                  >
+                    <Play className="h-4 w-4" /> Bắt đầu làm bài
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <QuizRunner
+              quizId={active.id}
+              title={active.title}
+              hue={active.hue}
+              onExit={() => {
+                setActive(null);
+                setPhase("info");
+              }}
+            />
+          )}
         </div>
       </div>
     );
