@@ -404,6 +404,9 @@ export function QuizRunner({
             </button>
           </div>
         </div>
+
+        {/* Per-skill breakdown */}
+        <SkillBreakdown questions={questions} results={results} />
       </div>
     );
   }
@@ -1062,6 +1065,89 @@ function SummaryStat({ label, value }: { label: string; value: number }) {
       <div className="font-display text-2xl font-bold leading-none text-white">{value}</div>
       <div className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-white/80">
         {label}
+      </div>
+    </div>
+  );
+}
+
+function SkillBreakdown({
+  questions,
+  results,
+}: {
+  questions: Question[];
+  results: Record<string, Result>;
+}) {
+  const SKILL_ORDER: Array<"reading" | "listening" | "writing" | "speaking"> = [
+    "reading",
+    "listening",
+    "writing",
+    "speaking",
+  ];
+  const LABEL: Record<string, string> = {
+    reading: "Reading",
+    listening: "Listening",
+    writing: "Writing",
+    speaking: "Speaking",
+  };
+  const groups = SKILL_ORDER.map((s) => {
+    const items = questions.filter((q) => questionSkill(q.kind) === s);
+    const totalMax = items.reduce((acc, q) => acc + q.maxScore, 0);
+    const earned = items.reduce((acc, q) => acc + (results[q.id]?.earned ?? 0), 0);
+    const correct = items.filter((q) => results[q.id]?.status === "correct").length;
+    const partial = items.filter((q) => results[q.id]?.status === "partial").length;
+    const incorrect = items.filter((q) => results[q.id]?.status === "incorrect").length;
+    const pct = totalMax > 0 ? Math.round((earned / totalMax) * 100) : 0;
+    return { skill: s, items, totalMax, earned, correct, partial, incorrect, pct };
+  }).filter((g) => g.items.length > 0);
+
+  if (groups.length === 0) return null;
+
+  return (
+    <div className="rounded-3xl bg-surface p-5 ring-1 ring-border sm:p-7">
+      <div className="mb-4 flex items-center justify-between">
+        <h3 className="font-display text-lg font-semibold text-foreground">
+          Kết quả theo kỹ năng
+        </h3>
+        <span className="text-xs text-muted-foreground">
+          {groups.length} kỹ năng
+        </span>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        {groups.map((g) => (
+          <div
+            key={g.skill}
+            className="rounded-2xl bg-background p-4 ring-1 ring-border"
+          >
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-sm font-semibold text-foreground">
+                {LABEL[g.skill]}
+              </div>
+              <div className="text-xs font-bold text-foreground">
+                {g.earned}/{g.totalMax} điểm
+              </div>
+            </div>
+            <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-foreground transition-all"
+                style={{ width: `${g.pct}%` }}
+              />
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+              <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 font-semibold text-success-foreground">
+                <Check className="h-3 w-3" /> {g.correct} đúng
+              </span>
+              {g.partial > 0 && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-warning/20 px-2 py-0.5 font-semibold text-warning-foreground">
+                  <Sparkles className="h-3 w-3" /> {g.partial} 1 phần
+                </span>
+              )}
+              <span className="inline-flex items-center gap-1 rounded-full bg-destructive/15 px-2 py-0.5 font-semibold text-destructive">
+                <X className="h-3 w-3" /> {g.incorrect} sai
+              </span>
+              <span className="ml-auto text-muted-foreground">{g.pct}%</span>
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );
