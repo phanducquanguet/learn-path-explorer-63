@@ -57,13 +57,13 @@ const activityIcon = (t: Activity["type"]) => {
 const labelType = (t: Activity["type"]) =>
   ({ video: "Video", reading: "Đọc", quiz: "Quiz", speaking: "Nói", writing: "Viết" })[t];
 
-type TabKey = "overview" | "members" | "scores" | "activities" | "competence";
+type TabKey = "overview" | "members" | "scores" | "activities" | "competence" | "qa";
 
 function CoursePage() {
   const { courseId } = Route.useParams();
   const { role } = useRole();
   const isStaff = role !== "student";
-  const isTeacher = role === "admin"; // gate edit features on admin only
+  const isAdmin = role === "admin"; // only admin can add/edit/delete
   const data = getCourse(courseId);
   if (!data) throw notFound();
   const { course: baseCourse, level } = data;
