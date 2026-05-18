@@ -72,7 +72,7 @@ type GroupBy = "category" | "level";
 
 function CoursesListPage() {
   const { role } = useRole();
-  const isTeacher = role === "teacher";
+  const isAdmin = role === "admin";
   const allCourses = useMemo(
     () =>
       levels.flatMap((lv) =>
