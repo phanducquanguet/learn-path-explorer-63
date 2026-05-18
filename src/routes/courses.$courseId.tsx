@@ -1430,11 +1430,47 @@ function CourseQAView({ courseId, role }: { courseId: string; role: "student" | 
   };
 
 
+  const filterKeys = isStudent
+    ? (["all", "mine", "open", "answered"] as const)
+    : (["all", "open", "answered"] as const);
+  const filterLabel = (k: string) =>
+    k === "all" ? "Tất cả" : k === "open" ? "Chưa trả lời" : k === "answered" ? "Đã trả lời" : "Của tôi";
+
   return (
     <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
       <div className="rounded-3xl border border-border bg-surface p-3 shadow-soft">
+        {isStudent && (
+          <div className="mb-3 rounded-2xl border border-border bg-background p-3">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Đặt câu hỏi mới
+            </div>
+            <input
+              value={newUnit}
+              onChange={(e) => setNewUnit(e.target.value)}
+              placeholder="Bài học liên quan (vd: Unit 3)"
+              className="mt-2 w-full rounded-xl border border-border bg-surface px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+            <textarea
+              value={newQuestion}
+              onChange={(e) => setNewQuestion(e.target.value)}
+              rows={3}
+              placeholder="Nội dung câu hỏi cho giáo viên..."
+              className="mt-2 w-full rounded-xl border border-border bg-surface p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+            <div className="mt-2 flex justify-end">
+              <button
+                onClick={askQuestion}
+                disabled={!newQuestion.trim()}
+                className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-soft disabled:opacity-50"
+                style={{ background: "var(--gradient-brand)" }}
+              >
+                <Send className="h-3.5 w-3.5" /> Gửi câu hỏi
+              </button>
+            </div>
+          </div>
+        )}
         <div className="mb-2 flex gap-1 rounded-xl bg-muted/60 p-1 text-xs font-semibold">
-          {(["all", "open", "answered"] as const).map((k) => (
+          {filterKeys.map((k) => (
             <button
               key={k}
               onClick={() => setFilter(k)}
@@ -1443,7 +1479,7 @@ function CourseQAView({ courseId, role }: { courseId: string; role: "student" | 
                 filter === k ? "bg-background text-foreground shadow-soft" : "text-muted-foreground",
               )}
             >
-              {k === "all" ? "Tất cả" : k === "open" ? "Chưa trả lời" : "Đã trả lời"}
+              {filterLabel(k)}
             </button>
           ))}
         </div>
