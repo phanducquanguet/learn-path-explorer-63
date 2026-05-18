@@ -62,7 +62,8 @@ type TabKey = "overview" | "members" | "scores" | "activities" | "competence";
 function CoursePage() {
   const { courseId } = Route.useParams();
   const { role } = useRole();
-  const isTeacher = role === "teacher";
+  const isStaff = role !== "student";
+  const isTeacher = role === "admin"; // gate edit features on admin only
   const data = getCourse(courseId);
   if (!data) throw notFound();
   const { course: baseCourse, level } = data;
@@ -158,7 +159,7 @@ function CoursePage() {
             >
               {sidebarOpen ? <PanelLeftClose className="h-4 w-4" /> : <PanelLeftOpen className="h-4 w-4" />}
             </button>
-            {isTeacher ? (
+            {isStaff ? (
               <Link
                 to="/courses"
                 className="inline-flex items-center gap-1.5 rounded-xl px-2.5 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -195,7 +196,7 @@ function CoursePage() {
                 {editMode ? "Đang chỉnh sửa" : "Chỉnh sửa khóa học"}
               </button>
             )}
-            {!isTeacher && (
+            {!isStaff && (
               <div className="hidden items-center gap-3 md:flex">
                 <div className="text-xs text-muted-foreground">Tiến độ</div>
                 <div className="h-2 w-44 overflow-hidden rounded-full bg-muted">

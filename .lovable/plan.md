@@ -1,80 +1,129 @@
-# Kế hoạch: Chế độ Giáo viên (Teacher Mode)
+# Kế hoạch: Tách vai trò Admin + Bổ sung Thi cử & Ngân hàng câu hỏi
 
-## 1. Chuyển đổi vai trò
-- Thêm `RoleContext` (role: "student" | "teacher") lưu ở `localStorage`.
-- Trong `TopNav`, phần avatar bên phải → biến thành dropdown (avatar + tên) với lựa chọn:
-  - Hồ sơ
-  - **Chuyển sang giao diện Giáo viên / Học viên** (toggle)
-  - Đăng xuất (mock)
-- Khi role = teacher: tabs trong TopNav đổi thành: Tổng quan · Lớp học · Khóa học · Luyện thi · Tải lên.
-- Khi role = student: giữ nguyên tabs hiện tại.
+## 1. Vai trò mới: `admin`
+- Mở rộng `RoleContext`: `role: "student" | "teacher" | "admin"`.
+- `RoleSwitcher` trong `TopNav` thêm lựa chọn **"Chuyển sang Quản trị viên"**.
+- `localStorage` key giữ nguyên (`unicom.role`).
 
-## 2. Dữ liệu mock cho Giáo viên (`src/lib/teacher-data.ts`)
-- `classes`: 4 lớp (vd: A1-Morning, A1-Evening, A2-Weekend, B1-Fastrack), mỗi lớp gắn 1 `levelCode`, danh sách học viên (8–15 người), tiến độ TB, điểm TB, attendance.
-- `students`: tên, email, lớp, lần truy cập gần nhất (ISO), vai trò ("Học viên"/"Lớp trưởng"), điểm theo unit.
-- Re-use `levels` từ `lms-data.ts` cho khóa học.
+### Phân quyền
+| Tính năng | Student | Teacher | Admin |
+|---|---|---|---|
+| Xem khóa học | ✅ | ✅ | ✅ |
+| Thêm/sửa/xóa khóa học, unit, activity | ❌ | ❌ | ✅ |
+| Xem Q&A học viên trong khóa học | ❌ | ✅ trả lời | ✅ trả lời |
+| Tạo / sửa / xóa bài luyện thi | ❌ | ❌ | ✅ |
+| Xem bài làm luyện thi của HS + giải đáp | ❌ | ✅ | ✅ |
+| Quản lý Thi cử (đề thi, lịch thi, chấm bài) | ❌ | ✅ chấm | ✅ tạo + chấm |
+| Ngân hàng câu hỏi | ❌ | ❌ | ✅ |
+| Lớp học, Báo cáo & Phân tích | ❌ | ✅ | ✅ |
 
-## 3. Các route mới (chỉ hiện khi role=teacher)
+→ Giáo viên: bỏ nút **"Thêm khóa học"**, **"Tạo bài luyện thi mới"**, các nút edit nội dung khóa học. Chỉ thấy view + Q&A + chấm bài.
+→ Admin: clone toàn bộ giao diện giáo viên, bật lại tất cả nút thêm/sửa/xóa và thêm các route riêng.
+
+## 2. Khóa học — phần Hỏi đáp (Q&A)
+- Trong `courses.$courseId.tsx` bổ sung tab **"Hỏi đáp"** (chỉ hiện với teacher/admin; student giữ giao diện cũ).
+- Mock data `src/lib/qa-data.ts`:
+  - `courseQuestions[]`: { id, courseId, unitId?, studentName, avatar, askedAt, content, answers[] }
+  - `answers[]`: { id, authorName, role: "teacher"|"admin"|"student", content, answeredAt }
+- UI: list câu hỏi (filter theo unit, trạng thái: chưa trả lời/đã trả lời), click để mở dialog trả lời, textarea + nút "Gửi trả lời" (lưu memory state).
+
+## 3. Luyện thi — xem bài làm học viên
+- Đổi `teacher.exams.index.tsx`:
+  - Teacher: chỉ list bài luyện thi (read-only), mỗi card có nút **"Xem bài làm học viên"**.
+  - Admin: thêm nút **"Tạo bài luyện thi mới"** + edit/delete.
+- Route mới `teacher.exams.$examId.submissions.tsx`:
+  - Bảng học viên đã nộp: tên, lớp, thời gian nộp, điểm, trạng thái (đã chấm/chờ chấm).
+  - Click 1 dòng → drawer xem chi tiết: từng câu hỏi, đáp án HS, đáp án đúng, ô **"Giải đáp của giáo viên"** (textarea), nút **"Chấm điểm"** cho câu tự luận.
+- Mock `src/lib/exam-submissions.ts`.
+
+## 4. Module mới: Thi cử (Exams chính thức)
+Khác với Luyện thi: đây là kỳ thi có lịch, có giám sát thời gian mở, có chấm bài.
+
+### Routes
 ```
 src/routes/
-  teacher.index.tsx          // /teacher  – Tổng quan
-  teacher.classes.tsx        // /teacher/classes – DS lớp + drill-down
-  teacher.classes.$classId.tsx
-  teacher.upload.tsx         // /teacher/upload – Upload khóa học
-  teacher.exams.tsx          // /teacher/exams – Tạo bài luyện thi
+  teacher.tests.index.tsx          /teacher/tests   – list đề thi
+  teacher.tests.$testId.tsx        – chi tiết đề thi + tab "Kết quả thi"
+  teacher.tests.$testId.grade.$submissionId.tsx  – chấm bài 1 HS
+  admin.tests.new.tsx              /admin/tests/new – tạo đề mới (chỉ admin)
+  admin.question-bank.tsx          /admin/question-bank – ngân hàng câu hỏi (chỉ admin)
 ```
 
-### 3a. Tổng quan (`/teacher`)
-- Hero stats: tổng số lớp, tổng học viên, giờ giảng tuần, điểm TB.
-- Grid card "Lớp của tôi" — mỗi card: tên lớp, cấp độ badge, sĩ số, progress bar TB, điểm TB, mini sparkline 7 ngày, CTA "Xem chi tiết".
-- Bảng "Hoạt động học viên gần đây".
+### Menu TopNav (teacher + admin)
+Tổng quan · Lớp học · Khóa học · Luyện thi · **Thi cử** · Báo cáo & Phân tích
+Admin thêm: **Ngân hàng câu hỏi**
 
-### 3b. Khóa học (re-use `/courses` + `/courses/$courseId`)
-- Khi role=teacher, `CoursePage` hiển thị thêm tab **"Thành viên lớp học"** (giữa "Nội dung" và "Điểm").
-  - Bảng: Avatar · Tên · **Lớp** (filter dropdown theo lớp cùng cấp độ) · Lần truy cập gần nhất · Vai trò.
-  - Bộ lọc: theo lớp, theo vai trò, search tên.
-- Tab **"Điểm & Năng lực"** mở rộng:
-  - Toggle "Cả lớp / Từng học viên".
-  - Cả lớp: bar chart điểm TB từng unit, radar 4 kỹ năng (Nghe/Nói/Đọc/Viết - mock vì đã bỏ speaking activity nhưng vẫn track skill), bảng phân phối điểm.
-  - Từng học viên: chọn HS → line chart tiến trình điểm + radar cá nhân.
-- Học viên (role=student): ẩn tab Thành viên (đã đúng hành vi cũ).
+### Đề thi (`Test`) — fields
+- id, name, classIds[] (1 lớp có nhiều đề), level, duration (phút)
+- openAt, closeAt (datetime — HS chỉ làm trong khoảng này)
+- structure: [{ skill, type, level, count }] — vd: 2 MCQ A2 Reading + 2 Essay A2 Writing
+- mode: "fixed" | "random" — random sẽ bốc từ ngân hàng theo structure
+- questionIds[] (nếu fixed) hoặc generatedSeed (nếu random, mỗi HS 1 đề khác nhau cùng cấu trúc)
+- stats (mock): registeredCount, submittedCount, gradingCount, avgScore
 
-### 3c. Upload khóa học (`/teacher/upload`)
-- Form 3 bước (Tabs/Steps):
-  1. **Khóa học**: tiêu đề, mô tả, cấp độ (select A1–C2), thumbnail upload, số giờ.
-  2. **Units**: list builder — thêm unit (title, mô tả, mục tiêu).
-  3. **Activities** trong từng unit: chọn loại (`video`, `reading-pdf`, `quiz`) + 11 dạng bài tập:
-     - Multiple choice, Fill in the blank, Matching, Drag & drop, True/False, Short answer, Reorder, Listening (audio), Cloze, Picture choice, Vocabulary card.
-     - Tùy loại hiện form upload (video file/URL, PDF file, hoặc question editor).
-- Lưu vào `localStorage` (mock) — preview trực tiếp trong `/courses` của giáo viên.
+### Trang list `/teacher/tests`
+Card mỗi đề: tên, lớp, level, badge trạng thái (Chưa mở / Đang mở / Đã đóng), số HS thi / tổng, ngày giờ mở, điểm TB. CTA "Xem kết quả".
 
-### 3d. Tạo bài luyện thi (`/teacher/exams`)
-- Form: tên bài thi, cấp độ, thời lượng, mô tả.
-- Chọn **kỹ năng tích hợp** (multi-select: Listening, Reading, Writing, Speaking, Use of English).
-- Editor câu hỏi:
-  - Nếu chọn nhiều kỹ năng → UI có **sidebar trái** liệt kê group theo từng kỹ năng, click vào group để soạn câu hỏi cho group đó. Mỗi group có thể thêm passage/audio chung + N câu hỏi.
-  - Nếu chỉ 1 kỹ năng → 1 cột câu hỏi tuyến tính.
-- Preview popup mô phỏng đúng layout học viên sẽ thấy.
-- Lưu mock vào `localStorage`.
+### Trang chi tiết `/teacher/tests/$testId` (3 tab)
+1. **Tổng quan**: thông tin đề + cấu trúc + danh sách lớp được giao + countdown nếu chưa mở.
+2. **Câu hỏi**: preview các câu (admin có nút edit, teacher read-only).
+3. **Kết quả thi**: bảng HS — tên, lớp, thời gian bắt đầu/nộp, điểm tự động (auto-grade phần trắc nghiệm), trạng thái chấm tự luận, nút "Chấm".
 
-## 4. Components mới
-- `src/components/RoleSwitcher.tsx` (dropdown trong TopNav).
-- `src/contexts/RoleContext.tsx`.
-- `src/components/teacher/ClassCard.tsx`, `ClassMembersTable.tsx`, `GradeAnalytics.tsx`.
-- `src/components/teacher/CourseUploader.tsx` (3 steps).
-- `src/components/teacher/ExamBuilder.tsx` (sidebar skill-groups).
+### Trang chấm `/teacher/tests/$testId/grade/$submissionId`
+- Sidebar trái: list câu hỏi với badge auto/needs-grading.
+- Vùng chính: đề, đáp án HS, đáp án mẫu, ô nhập điểm + nhận xét.
+- Nút "Lưu & câu tiếp", "Hoàn tất chấm bài".
 
-## 5. Styling
-Theo workspace knowledge: nền trắng, neutral grayscale, accent xanh đậm (đã có trong `styles.css` qua `--gradient-brand`), Inter font, soft shadow, rounded, 8px grid. Mobile-friendly.
+### Tạo đề (Admin) `/admin/tests/new` — wizard 4 bước
+1. Thông tin chung: tên, lớp (multi-select), level, thời lượng, openAt/closeAt.
+2. Cấu trúc đề: bảng builder — thêm dòng (skill, type, level, count). Hiển thị tổng câu, tổng điểm.
+3. Mode: Fixed (chọn câu thủ công từ ngân hàng) hoặc Random (xác nhận cấu trúc — mỗi HS bốc 1 đề ngẫu nhiên cùng cấu trúc).
+4. Preview + Lưu (mock localStorage).
 
-## 6. Phạm vi out-of-scope (mock)
-- Không cần backend/Cloud — toàn bộ upload chỉ giữ trong `localStorage` + memory state để preview.
-- Không thực sự xử lý file video/PDF — chỉ giữ tên file & metadata.
+## 5. Ngân hàng câu hỏi (Admin) `/admin/question-bank`
+- Filter sidebar: kỹ năng (Listening/Reading/Writing/Speaking/Use of English), level (A1–C2), loại (MCQ, MCQ-multi, Fill, Matching, Drag, T/F, Short, Reorder, Listening, Cloze, Vocab, Essay), tag.
+- Bảng câu hỏi: ID, nội dung rút gọn, kỹ năng, loại, level, điểm, ngày tạo, hành động (sửa/xóa/nhân bản).
+- Nút **"Thêm câu hỏi"** → dialog form tùy theo loại (re-use editor tương tự `teacher.exams.new.tsx`).
+- Mock data 60+ câu trải đều skill × level × type trong `src/lib/question-bank.ts`.
+
+## 6. Cấu trúc dữ liệu mock mới
+```
+src/lib/
+  qa-data.ts            # course Q&A
+  exam-submissions.ts   # bài làm luyện thi của HS
+  tests-data.ts         # đề thi chính thức + submissions có chấm
+  question-bank.ts      # ngân hàng câu hỏi
+```
+
+## 7. Components mới
+```
+src/components/teacher/
+  QnAList.tsx
+  ExamSubmissionsTable.tsx
+src/components/admin/
+  TestBuilder.tsx       # wizard tạo đề
+  QuestionBankTable.tsx
+  QuestionEditorDialog.tsx
+src/components/shared/
+  GradingPanel.tsx      # dùng chung cho luyện thi & thi cử
+  TestStatusBadge.tsx
+```
+
+## 8. Files thay đổi
+- `src/contexts/RoleContext.tsx` — thêm "admin"
+- `src/components/TopNav.tsx` — menu theo role, switcher 3 mục
+- `src/components/RoleSwitcher.tsx` (nếu có)
+- `src/routes/courses.$courseId.tsx` — tab Q&A, ẩn nút edit nếu không phải admin
+- `src/routes/teacher.exams.index.tsx` — ẩn nút tạo nếu teacher, thêm "Xem bài làm"
+- `src/routes/teacher.upload.tsx` — chuyển thành admin-only (redirect nếu teacher)
+- `src/routes/teacher.exams.new.tsx` — admin-only
+
+## 9. Phạm vi & ràng buộc
+- Toàn bộ là **mock UI** trên localStorage / memory — không cần backend.
+- Tuân theo design system hiện tại: white background, neutral, blue accent, soft shadow, Inter, 8px grid, mobile-friendly.
+- Tiếng Việt mặc định.
 
 ---
-**Khối lượng**: ~10 file mới + chỉnh sửa `TopNav`, `courses.$courseId.tsx`, `__root.tsx`. Ước tính 1 lượt build lớn.
+**Khối lượng**: ~12 file mới + sửa 5 file. 1 lượt build lớn.
 
-Bạn duyệt kế hoạch này chứ? Có muốn:
-- (a) Backend thật bằng Lovable Cloud (lưu khóa học/bài thi vào DB) thay vì mock localStorage?
-- (b) Bỏ bớt phần nào (vd: tạm chưa làm Exam Builder)?
-- (c) Đi thẳng theo plan trên?
+Bạn duyệt kế hoạch này chứ? Cần điều chỉnh gì trước khi tôi triển khai (vd: gộp Luyện thi & Thi cử, hay tách hẳn route `/admin/*` riêng biệt với `/teacher/*`)?
