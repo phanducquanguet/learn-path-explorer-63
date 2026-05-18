@@ -1373,14 +1373,26 @@ function SummaryStat({
 import { courseQuestions as _courseQuestions, type CourseQuestion, type QAAnswer } from "@/lib/qa-data";
 
 function CourseQAView({ courseId, role }: { courseId: string; role: "student" | "teacher" | "admin" }) {
+  const isStudent = role === "student";
   const initial = _courseQuestions.filter((q) => q.courseId === courseId);
   const [list, setList] = useState<CourseQuestion[]>(initial);
-  const [filter, setFilter] = useState<"all" | "open" | "answered">("all");
+  const [filter, setFilter] = useState<"all" | "open" | "answered" | "mine">("all");
   const [activeId, setActiveId] = useState<string | null>(initial[0]?.id ?? null);
   const [draft, setDraft] = useState("");
+  const [newQuestion, setNewQuestion] = useState("");
+  const [newUnit, setNewUnit] = useState("");
+
+  const myName = "Bảo Châu";
+  const myClass = "B1 — Fastrack";
 
   const filtered = list.filter((q) =>
-    filter === "all" ? true : filter === "answered" ? q.answers.length > 0 : q.answers.length === 0,
+    filter === "all"
+      ? true
+      : filter === "answered"
+        ? q.answers.length > 0
+        : filter === "open"
+          ? q.answers.length === 0
+          : q.studentName === myName,
   );
   const active = list.find((q) => q.id === activeId) ?? null;
 
@@ -1399,16 +1411,24 @@ function CourseQAView({ courseId, role }: { courseId: string; role: "student" | 
     setDraft("");
   };
 
-  if (list.length === 0) {
-    return (
-      <div className="rounded-3xl border border-dashed border-border bg-surface p-10 text-center">
-        <MessageSquare className="mx-auto h-8 w-8 text-muted-foreground" />
-        <p className="mt-3 text-sm text-muted-foreground">
-          Chưa có câu hỏi nào của học viên trong khoá học này.
-        </p>
-      </div>
-    );
-  }
+  const askQuestion = () => {
+    if (!newQuestion.trim()) return;
+    const q: CourseQuestion = {
+      id: `q-${Date.now()}`,
+      courseId,
+      unitTitle: newUnit.trim() || "Câu hỏi chung",
+      studentName: myName,
+      studentClass: myClass,
+      askedAt: new Date().toISOString(),
+      content: newQuestion.trim(),
+      answers: [],
+    };
+    setList((prev) => [q, ...prev]);
+    setActiveId(q.id);
+    setNewQuestion("");
+    setNewUnit("");
+  };
+
 
   return (
     <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
