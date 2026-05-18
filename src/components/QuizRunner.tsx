@@ -404,6 +404,9 @@ export function QuizRunner({
             </button>
           </div>
         </div>
+
+        {/* Per-skill breakdown */}
+        <SkillBreakdown questions={questions} results={results} />
       </div>
     );
   }
