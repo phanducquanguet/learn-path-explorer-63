@@ -150,7 +150,7 @@ function CoursesListPage() {
               {filtered.length} đang hiển thị
             </p>
           </div>
-          {isTeacher && (
+          {isAdmin && (
             <Link
               to="/teacher/upload"
               className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft transition hover:opacity-90"
