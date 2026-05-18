@@ -469,11 +469,9 @@ function CoursePage() {
                   <Tab active={tab === "competence"} onClick={() => setTab("competence")} icon={<Sparkles className="h-4 w-4" />}>
                     Năng lực
                   </Tab>
-                  {isStaff && (
-                    <Tab active={tab === "qa"} onClick={() => setTab("qa")} icon={<MessageSquare className="h-4 w-4" />}>
-                      Hỏi đáp
-                    </Tab>
-                  )}
+                  <Tab active={tab === "qa"} onClick={() => setTab("qa")} icon={<MessageSquare className="h-4 w-4" />}>
+                    Hỏi đáp
+                  </Tab>
                 </div>
               </div>
 
@@ -497,7 +495,7 @@ function CoursePage() {
                 />
               )}
               {tab === "competence" && <CompetenceView />}
-              {tab === "qa" && isStaff && <CourseQAView courseId={course.id} role={role} />}
+              {tab === "qa" && <CourseQAView courseId={course.id} role={role} />}
             </>
           )}
         </main>
@@ -1375,14 +1373,26 @@ function SummaryStat({
 import { courseQuestions as _courseQuestions, type CourseQuestion, type QAAnswer } from "@/lib/qa-data";
 
 function CourseQAView({ courseId, role }: { courseId: string; role: "student" | "teacher" | "admin" }) {
+  const isStudent = role === "student";
   const initial = _courseQuestions.filter((q) => q.courseId === courseId);
   const [list, setList] = useState<CourseQuestion[]>(initial);
-  const [filter, setFilter] = useState<"all" | "open" | "answered">("all");
+  const [filter, setFilter] = useState<"all" | "open" | "answered" | "mine">("all");
   const [activeId, setActiveId] = useState<string | null>(initial[0]?.id ?? null);
   const [draft, setDraft] = useState("");
+  const [newQuestion, setNewQuestion] = useState("");
+  const [newUnit, setNewUnit] = useState("");
+
+  const myName = "Bảo Châu";
+  const myClass = "B1 — Fastrack";
 
   const filtered = list.filter((q) =>
-    filter === "all" ? true : filter === "answered" ? q.answers.length > 0 : q.answers.length === 0,
+    filter === "all"
+      ? true
+      : filter === "answered"
+        ? q.answers.length > 0
+        : filter === "open"
+          ? q.answers.length === 0
+          : q.studentName === myName,
   );
   const active = list.find((q) => q.id === activeId) ?? null;
 
@@ -1401,22 +1411,66 @@ function CourseQAView({ courseId, role }: { courseId: string; role: "student" | 
     setDraft("");
   };
 
-  if (list.length === 0) {
-    return (
-      <div className="rounded-3xl border border-dashed border-border bg-surface p-10 text-center">
-        <MessageSquare className="mx-auto h-8 w-8 text-muted-foreground" />
-        <p className="mt-3 text-sm text-muted-foreground">
-          Chưa có câu hỏi nào của học viên trong khoá học này.
-        </p>
-      </div>
-    );
-  }
+  const askQuestion = () => {
+    if (!newQuestion.trim()) return;
+    const q: CourseQuestion = {
+      id: `q-${Date.now()}`,
+      courseId,
+      unitTitle: newUnit.trim() || "Câu hỏi chung",
+      studentName: myName,
+      studentClass: myClass,
+      askedAt: new Date().toISOString(),
+      content: newQuestion.trim(),
+      answers: [],
+    };
+    setList((prev) => [q, ...prev]);
+    setActiveId(q.id);
+    setNewQuestion("");
+    setNewUnit("");
+  };
+
+
+  const filterKeys = isStudent
+    ? (["all", "mine", "open", "answered"] as const)
+    : (["all", "open", "answered"] as const);
+  const filterLabel = (k: string) =>
+    k === "all" ? "Tất cả" : k === "open" ? "Chưa trả lời" : k === "answered" ? "Đã trả lời" : "Của tôi";
 
   return (
     <div className="grid gap-4 lg:grid-cols-[360px_1fr]">
       <div className="rounded-3xl border border-border bg-surface p-3 shadow-soft">
+        {isStudent && (
+          <div className="mb-3 rounded-2xl border border-border bg-background p-3">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Đặt câu hỏi mới
+            </div>
+            <input
+              value={newUnit}
+              onChange={(e) => setNewUnit(e.target.value)}
+              placeholder="Bài học liên quan (vd: Unit 3)"
+              className="mt-2 w-full rounded-xl border border-border bg-surface px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+            <textarea
+              value={newQuestion}
+              onChange={(e) => setNewQuestion(e.target.value)}
+              rows={3}
+              placeholder="Nội dung câu hỏi cho giáo viên..."
+              className="mt-2 w-full rounded-xl border border-border bg-surface p-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+            />
+            <div className="mt-2 flex justify-end">
+              <button
+                onClick={askQuestion}
+                disabled={!newQuestion.trim()}
+                className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-soft disabled:opacity-50"
+                style={{ background: "var(--gradient-brand)" }}
+              >
+                <Send className="h-3.5 w-3.5" /> Gửi câu hỏi
+              </button>
+            </div>
+          </div>
+        )}
         <div className="mb-2 flex gap-1 rounded-xl bg-muted/60 p-1 text-xs font-semibold">
-          {(["all", "open", "answered"] as const).map((k) => (
+          {filterKeys.map((k) => (
             <button
               key={k}
               onClick={() => setFilter(k)}
@@ -1425,7 +1479,7 @@ function CourseQAView({ courseId, role }: { courseId: string; role: "student" | 
                 filter === k ? "bg-background text-foreground shadow-soft" : "text-muted-foreground",
               )}
             >
-              {k === "all" ? "Tất cả" : k === "open" ? "Chưa trả lời" : "Đã trả lời"}
+              {filterLabel(k)}
             </button>
           ))}
         </div>
@@ -1507,28 +1561,35 @@ function CourseQAView({ courseId, role }: { courseId: string; role: "student" | 
               ))}
             </div>
 
-            <div className="mt-5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Trả lời của bạn
-              </label>
-              <textarea
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                rows={4}
-                placeholder="Nhập nội dung trả lời..."
-                className="mt-1.5 w-full rounded-2xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-              />
-              <div className="mt-2 flex justify-end">
-                <button
-                  onClick={submit}
-                  disabled={!draft.trim()}
-                  className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft disabled:opacity-50"
-                  style={{ background: "var(--gradient-brand)" }}
-                >
-                  <Send className="h-4 w-4" /> Gửi trả lời
-                </button>
+            {!isStudent && (
+              <div className="mt-5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Trả lời của bạn
+                </label>
+                <textarea
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  rows={4}
+                  placeholder="Nhập nội dung trả lời..."
+                  className="mt-1.5 w-full rounded-2xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+                <div className="mt-2 flex justify-end">
+                  <button
+                    onClick={submit}
+                    disabled={!draft.trim()}
+                    className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft disabled:opacity-50"
+                    style={{ background: "var(--gradient-brand)" }}
+                  >
+                    <Send className="h-4 w-4" /> Gửi trả lời
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
+            {isStudent && active.answers.length === 0 && (
+              <div className="mt-5 rounded-2xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+                Câu hỏi đang chờ giáo viên trả lời.
+              </div>
+            )}
           </>
         )}
       </div>
