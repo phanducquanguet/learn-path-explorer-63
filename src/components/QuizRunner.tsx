@@ -612,7 +612,6 @@ export function QuizRunner({
           )}
         </div>
       </div>
-      </div>
 
       {/* Sidebar: Question board grouped by skill */}
       <aside className="lg:sticky lg:top-24 self-start rounded-3xl bg-surface p-4 ring-1 ring-border">
