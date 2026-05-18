@@ -304,25 +304,47 @@ export function QuizRunner({
   const [results, setResults] = useState<Record<string, Result>>({});
   const [phase, setPhase] = useState<"running" | "summary" | "review">("running");
   const [reviewIdx, setReviewIdx] = useState(0);
+  const [notes, setNotes] = useState<Record<string, string[]>>({});
+  const [noteDraft, setNoteDraft] = useState("");
 
   const q = questions[idx];
   const result = results[q?.id];
   const totalMax = questions.reduce((s, x) => s + x.maxScore, 0);
   const totalEarned = Object.values(results).reduce((s, r) => s + r.earned, 0);
-  const submittedCount = Object.keys(results).length;
+  const answeredCount = questions.filter((qq) => hasAnswer(qq, answers[qq.id])).length;
 
   const setAnswer = (val: AnswerState) =>
     setAnswers((a) => ({ ...a, [q.id]: val }));
-  const submit = () =>
-    setResults((p) => ({ ...p, [q.id]: grade(q, answers[q.id]) }));
-  const next = () =>
-    idx < questions.length - 1 ? setIdx(idx + 1) : setPhase("summary");
-  
+  const next = () => {
+    if (idx < questions.length - 1) setIdx(idx + 1);
+  };
+  const prev = () => {
+    if (idx > 0) setIdx(idx - 1);
+  };
+  const finishQuiz = () => {
+    const graded: Record<string, Result> = {};
+    for (const qq of questions) {
+      graded[qq.id] = hasAnswer(qq, answers[qq.id])
+        ? grade(qq, answers[qq.id])
+        : { status: "incorrect", earned: 0 };
+    }
+    setResults(graded);
+    setPhase("summary");
+  };
+
   const reset = () => {
     setAnswers({});
     setResults({});
+    setNotes({});
     setIdx(0);
     setPhase("running");
+  };
+
+  const addNote = (qid: string, text: string) => {
+    const t = text.trim();
+    if (!t) return;
+    setNotes((n) => ({ ...n, [qid]: [...(n[qid] ?? []), t] }));
+    setNoteDraft("");
   };
 
   const accent = `oklch(0.55 0.2 ${hue})`;
@@ -468,9 +490,55 @@ export function QuizRunner({
           />
 
           <div className="mt-5 rounded-2xl bg-muted/40 p-4 text-xs text-muted-foreground ring-1 ring-border">
-            <div className="font-semibold text-foreground">Correct answer</div>
+            <div className="font-semibold text-foreground">Đáp án đúng</div>
             <div className="mt-1">
               <CorrectAnswerHint q={rq} />
+            </div>
+          </div>
+
+          {/* Notes / questions to teacher */}
+          <div className="mt-5 rounded-2xl bg-background p-4 ring-1 ring-border">
+            <div className="flex items-center justify-between gap-2">
+              <div className="text-sm font-semibold text-foreground">
+                Ghi chú / câu hỏi cho giáo viên
+              </div>
+              <span className="text-[11px] text-muted-foreground">
+                {(notes[rq.id]?.length ?? 0)} ghi chú
+              </span>
+            </div>
+
+            {(notes[rq.id]?.length ?? 0) > 0 && (
+              <ul className="mt-3 space-y-2">
+                {notes[rq.id]!.map((n, i) => (
+                  <li
+                    key={i}
+                    className="rounded-xl bg-surface p-3 text-xs text-foreground ring-1 ring-border"
+                  >
+                    <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      Đã gửi giáo viên
+                    </div>
+                    {n}
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+              <textarea
+                value={noteDraft}
+                onChange={(e) => setNoteDraft(e.target.value)}
+                placeholder="Nhập câu hỏi hoặc thắc mắc về câu này để gửi giáo viên..."
+                rows={2}
+                className="min-h-[60px] flex-1 resize-y rounded-xl bg-surface px-3 py-2 text-sm text-foreground ring-1 ring-border placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <button
+                onClick={() => addNote(rq.id, noteDraft)}
+                disabled={!noteDraft.trim()}
+                className="inline-flex h-10 shrink-0 items-center justify-center gap-1.5 self-end rounded-xl px-4 text-xs font-semibold text-white shadow-soft hover:opacity-95 disabled:opacity-40"
+                style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
+              >
+                Gửi giáo viên
+              </button>
             </div>
           </div>
         </div>
@@ -527,17 +595,17 @@ export function QuizRunner({
         {/* Total score bar */}
         <div className="flex items-center justify-between gap-3 rounded-2xl bg-surface p-3 ring-1 ring-border">
           <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Tổng điểm
+            Tiến độ
           </div>
           <div className="flex items-center gap-3">
             <div className="text-[11px] text-muted-foreground">
-              {submittedCount}/{questions.length} đã làm
+              {answeredCount}/{questions.length} câu đã trả lời
             </div>
             <div
               className="rounded-full px-4 py-1.5 text-sm font-bold text-white shadow-soft"
               style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
             >
-              {totalEarned}/{totalMax} điểm
+              Câu {idx + 1}/{questions.length}
             </div>
           </div>
         </div>
@@ -557,38 +625,35 @@ export function QuizRunner({
             q={q}
             value={answers[q.id]}
             onChange={setAnswer}
-            locked={Boolean(result)}
+            locked={false}
             accent={accent}
           />
-
-          {result && <FeedbackBlock status={result.status} />}
         </div>
 
         {/* footer */}
         <div className="flex items-center justify-between gap-3">
           <button
-            onClick={onExit}
-            className="inline-flex items-center gap-2 rounded-xl bg-surface px-4 py-2.5 text-sm font-medium text-muted-foreground ring-1 ring-border hover:bg-muted hover:text-foreground"
+            onClick={prev}
+            disabled={idx === 0}
+            className="inline-flex items-center gap-2 rounded-xl bg-surface px-4 py-2.5 text-sm font-medium text-foreground ring-1 ring-border hover:bg-muted disabled:opacity-40"
           >
-            <ArrowLeft className="h-4 w-4" /> Thoát
+            <ArrowLeft className="h-4 w-4" /> Câu trước
           </button>
-          {!result ? (
-            <button
-              onClick={submit}
-              disabled={!hasAnswer(q, answers[q.id])}
-              className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-soft transition hover:opacity-95 disabled:opacity-40"
-              style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
-            >
-              <Check className="h-4 w-4" /> Nộp câu trả lời
-            </button>
-          ) : (
+          {idx < questions.length - 1 ? (
             <button
               onClick={next}
               className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-soft hover:opacity-95"
               style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
             >
-              {idx === questions.length - 1 ? "Xem kết quả" : "Câu tiếp"}
-              <ArrowRight className="h-4 w-4" />
+              Câu tiếp <ArrowRight className="h-4 w-4" />
+            </button>
+          ) : (
+            <button
+              onClick={finishQuiz}
+              className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-soft hover:opacity-95"
+              style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
+            >
+              <Check className="h-4 w-4" /> Nộp bài
             </button>
           )}
         </div>
@@ -599,7 +664,7 @@ export function QuizRunner({
         <div className="mb-3 text-sm font-semibold text-foreground">Bảng câu hỏi</div>
         <div className="space-y-4">
           {grouped.map((g) => {
-            const doneCount = g.items.filter(({ qq }) => results[qq.id]).length;
+            const doneCount = g.items.filter(({ qq }) => hasAnswer(qq, answers[qq.id])).length;
             return (
               <div key={g.skill}>
                 <div className="mb-2 flex items-center justify-between">
@@ -612,9 +677,8 @@ export function QuizRunner({
                 </div>
                 <div className="grid grid-cols-5 gap-1.5">
                   {g.items.map(({ qq, i }) => {
-                    const r = results[qq.id];
+                    const answered = hasAnswer(qq, answers[qq.id]);
                     const active = i === idx;
-                    const done = Boolean(r);
                     return (
                       <button
                         key={qq.id}
@@ -622,13 +686,12 @@ export function QuizRunner({
                         title={`Câu ${qq.index}`}
                         className={cn(
                           "inline-flex h-9 items-center justify-center rounded-lg text-xs font-bold transition",
-                          !done && !active &&
+                          !answered && !active &&
                             "bg-background text-muted-foreground ring-1 ring-border hover:bg-muted hover:text-foreground",
-                          active && !done && "bg-foreground text-background shadow-elevated",
-                          active && done && "ring-2 ring-foreground shadow-elevated",
-                          done && r?.status === "correct" && "bg-success/20 text-success-foreground",
-                          done && r?.status === "partial" && "bg-warning/25 text-warning-foreground",
-                          done && r?.status === "incorrect" && "bg-destructive/15 text-destructive",
+                          active && !answered && "bg-foreground text-background shadow-elevated",
+                          active && answered && "bg-foreground text-background shadow-elevated ring-2 ring-primary",
+                          answered && !active &&
+                            "bg-primary/15 text-primary ring-1 ring-primary/30",
                         )}
                       >
                         {qq.index}
@@ -640,6 +703,20 @@ export function QuizRunner({
             );
           })}
         </div>
+
+        <button
+          onClick={finishQuiz}
+          className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold text-white shadow-soft hover:opacity-95"
+          style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
+        >
+          <Check className="h-3.5 w-3.5" /> Nộp bài & xem kết quả
+        </button>
+        <button
+          onClick={onExit}
+          className="mt-2 inline-flex w-full items-center justify-center gap-1.5 rounded-xl px-4 py-2 text-[11px] font-medium text-muted-foreground hover:text-foreground"
+        >
+          Thoát bài luyện
+        </button>
       </aside>
     </div>
   );
