@@ -1,4 +1,4 @@
-export type QSkill = "listening" | "reading" | "writing" | "speaking" | "use";
+export type QSkill = "listening" | "reading" | "writing" | "speaking";
 export type QType =
   | "mcq"
   | "mcq-multi"
