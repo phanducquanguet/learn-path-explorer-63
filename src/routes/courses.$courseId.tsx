@@ -1561,28 +1561,35 @@ function CourseQAView({ courseId, role }: { courseId: string; role: "student" | 
               ))}
             </div>
 
-            <div className="mt-5">
-              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Trả lời của bạn
-              </label>
-              <textarea
-                value={draft}
-                onChange={(e) => setDraft(e.target.value)}
-                rows={4}
-                placeholder="Nhập nội dung trả lời..."
-                className="mt-1.5 w-full rounded-2xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
-              />
-              <div className="mt-2 flex justify-end">
-                <button
-                  onClick={submit}
-                  disabled={!draft.trim()}
-                  className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft disabled:opacity-50"
-                  style={{ background: "var(--gradient-brand)" }}
-                >
-                  <Send className="h-4 w-4" /> Gửi trả lời
-                </button>
+            {!isStudent && (
+              <div className="mt-5">
+                <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Trả lời của bạn
+                </label>
+                <textarea
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  rows={4}
+                  placeholder="Nhập nội dung trả lời..."
+                  className="mt-1.5 w-full rounded-2xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+                />
+                <div className="mt-2 flex justify-end">
+                  <button
+                    onClick={submit}
+                    disabled={!draft.trim()}
+                    className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft disabled:opacity-50"
+                    style={{ background: "var(--gradient-brand)" }}
+                  >
+                    <Send className="h-4 w-4" /> Gửi trả lời
+                  </button>
+                </div>
               </div>
-            </div>
+            )}
+            {isStudent && active.answers.length === 0 && (
+              <div className="mt-5 rounded-2xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+                Câu hỏi đang chờ giáo viên trả lời.
+              </div>
+            )}
           </>
         )}
       </div>
