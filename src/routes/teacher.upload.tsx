@@ -396,6 +396,18 @@ function UploadPage() {
         textarea.input { height: auto; padding: .625rem .875rem; }
         .input:focus { border-color: oklch(0.55 0.18 260); box-shadow: 0 0 0 3px oklch(0.55 0.18 260 / 0.18); }
       `}</style>
+
+      <Dialog open={managerOpen} onOpenChange={setManagerOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Quản lý chương trình</DialogTitle>
+            <DialogDescription>
+              Thêm, sửa, xóa hoặc sắp xếp danh sách chương trình.
+            </DialogDescription>
+          </DialogHeader>
+          <CategoriesManager onClose={() => setManagerOpen(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
