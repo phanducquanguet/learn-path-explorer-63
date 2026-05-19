@@ -45,6 +45,8 @@ const EDITOR_SKILLS: QSkill[] = ["listening", "reading", "writing", "speaking"];
  */
 type QuestionBlock = {
   id: string;
+  /** "single" = 1 câu hỏi (media tuỳ chọn). "group" = 1 audio/passage dùng cho nhiều câu. */
+  kind: "single" | "group";
   media: string;
   questions: CustomQuestion[];
 };
@@ -136,11 +138,13 @@ function ExamBuilder() {
   const hasMedia = activeSkill === "listening" || activeSkill === "reading";
 
   /* ---------- Block ops ---------- */
-  const addBlock = () => {
+  const addBlock = (kind: "single" | "group" = "single") => {
     const blk: QuestionBlock = {
       id: newBlockId(),
+      kind,
       media: "",
-      questions: hasMedia ? [] : [emptyQuestion(activeSkill, meta.levelCode)],
+      questions:
+        kind === "group" ? [] : [emptyQuestion(activeSkill, meta.levelCode)],
     };
     updateGroup(activeSkill, { blocks: [...current.blocks, blk] });
   };
@@ -321,26 +325,31 @@ function ExamBuilder() {
                     );
                   })()}
                 </div>
-                <button
-                  onClick={addBlock}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-3 py-2 text-xs font-semibold text-background hover:opacity-90"
-                >
-                  <Plus className="h-3.5 w-3.5" />
-                  {hasMedia
-                    ? activeSkill === "listening"
-                      ? "Thêm khối Audio"
-                      : "Thêm khối Đoạn văn"
-                    : "Thêm câu hỏi"}
-                </button>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    onClick={() => addBlock("single")}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-3 py-2 text-xs font-semibold text-background hover:opacity-90"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Thêm câu hỏi
+                  </button>
+                  {hasMedia && (
+                    <button
+                      onClick={() => addBlock("group")}
+                      className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                      {activeSkill === "listening"
+                        ? "Thêm khối Audio (nhiều câu)"
+                        : "Thêm khối Đoạn văn (nhiều câu)"}
+                    </button>
+                  )}
+                </div>
               </div>
 
               {current.blocks.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-border p-12 text-center text-sm text-muted-foreground">
-                  {hasMedia
-                    ? `Chưa có khối nào. Nhấn "${
-                        activeSkill === "listening" ? "Thêm khối Audio" : "Thêm khối Đoạn văn"
-                      }" để bắt đầu.`
-                    : 'Chưa có câu hỏi. Nhấn "Thêm câu hỏi" để bắt đầu.'}
+                  Chưa có câu hỏi. Nhấn "Thêm câu hỏi"
+                  {hasMedia ? ' hoặc "Thêm khối" để bắt đầu.' : " để bắt đầu."}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -402,6 +411,8 @@ function BlockCard({
 }) {
   const isListening = skill === "listening";
   const isReading = skill === "reading";
+  const isGroup = block.kind === "group";
+  const mediaSupported = hasMedia; // listening or reading
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-background">
       <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/40 px-4 py-2.5">
@@ -409,35 +420,47 @@ function BlockCard({
           <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-foreground text-[11px] font-bold text-background">
             {index + 1}
           </span>
-          {isListening ? (
+          {isGroup && isListening ? (
             <>
               <FileAudio className="h-4 w-4 text-primary" /> Khối Audio
             </>
-          ) : isReading ? (
+          ) : isGroup && isReading ? (
             <>
               <FileText className="h-4 w-4 text-primary" /> Khối Đoạn văn
             </>
           ) : (
             <>Câu hỏi</>
           )}
-          <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
-            {block.questions.length} câu
-          </span>
+          {isGroup && (
+            <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
+              {block.questions.length} câu
+            </span>
+          )}
         </div>
         <button
           onClick={onRemove}
           className="rounded-md p-1.5 text-rose-500 hover:bg-rose-500/10"
-          title="Xoá khối"
+          title={isGroup ? "Xoá khối" : "Xoá câu hỏi"}
         >
           <Trash2 className="h-4 w-4" />
         </button>
       </div>
 
       <div className="space-y-4 p-4">
-        {hasMedia && (
-          <Field label={isListening ? "Audio (URL hoặc script)" : "Đoạn văn (passage)"}>
+        {mediaSupported && (
+          <Field
+            label={
+              isGroup
+                ? isListening
+                  ? "Audio (URL hoặc script) — dùng chung cho các câu trong khối"
+                  : "Đoạn văn (passage) — dùng chung cho các câu trong khối"
+                : isListening
+                ? "Audio (URL hoặc script) — tuỳ chọn"
+                : "Đoạn văn (passage) — tuỳ chọn"
+            }
+          >
             <textarea
-              rows={isListening ? 2 : 5}
+              rows={isListening ? 2 : isGroup ? 5 : 3}
               value={block.media}
               onChange={(e) => onUpdate({ media: e.target.value })}
               placeholder={
@@ -457,7 +480,7 @@ function BlockCard({
           onChange={(qs) => onUpdate({ questions: qs })}
           hideBank
           hideHeader
-          maxCount={hasMedia ? undefined : 1}
+          maxCount={isGroup ? undefined : 1}
         />
       </div>
     </div>
