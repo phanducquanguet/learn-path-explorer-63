@@ -115,6 +115,7 @@ function BankPage() {
         (skill === "all" || it.skill === skill) &&
         (level === "all" || it.level === level) &&
         (type === "all" || it.type === type) &&
+        (difficulty === "all" || it.difficulty === difficulty) &&
         (!q.trim() ||
           it.content.toLowerCase().includes(q.toLowerCase()) ||
           it.id.toLowerCase().includes(q.toLowerCase()) ||
@@ -135,7 +136,7 @@ function BankPage() {
       }
     });
     return sorted;
-  }, [items, skill, level, type, q, sort]);
+  }, [items, skill, level, type, difficulty, q, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
