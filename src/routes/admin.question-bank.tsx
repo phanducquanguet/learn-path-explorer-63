@@ -784,6 +784,14 @@ function EditDialog({
     if (t === "sequence") return { options: ["Bước 1", "Bước 2", "Bước 3"] };
     if (t === "select-lists") return { options: ["List 1: A | B | C", "List 2: X | Y | Z"] };
     if (t === "drag-drop") return { options: ["Drag item 1", "Drag item 2", "Drag item 3"] };
+    if (t === "essay")
+      return {
+        solution: "",
+        feedback: [
+          { keyword: "", comment: "" },
+          { keyword: "", comment: "" },
+        ],
+      };
     return { options: undefined };
   };
   const [form, setForm] = useState<BankQuestion>(
@@ -793,6 +801,7 @@ function EditDialog({
       skill: "reading",
       type: initialType ?? "mcq",
       level: "A1",
+      difficulty: "medium",
       points: (initialType === "essay" ? 5 : initialType === "short" ? 2 : 1),
       tags: [],
       createdAt: new Date().toISOString(),
@@ -803,6 +812,7 @@ function EditDialog({
   const [tagInput, setTagInput] = useState("");
 
   const isMcq = form.type === "mcq" || form.type === "mcq-multi";
+  const isEssay = form.type === "essay";
   const hasOptions = isMcq || form.type === "matching" || form.type === "sequence" || form.type === "select-lists" || form.type === "drag-drop";
 
   const addTag = () => {
