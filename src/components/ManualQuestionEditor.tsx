@@ -134,6 +134,7 @@ export function ManualQuestionEditor({
 
   return (
     <div className="space-y-3">
+      {!hideHeader && (
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-muted/30 px-4 py-2.5 text-xs">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-foreground">{title ?? SKILL_LABEL[skill]}</span>
@@ -150,6 +151,7 @@ export function ManualQuestionEditor({
           </span>
         </div>
         <div className="flex items-center gap-2">
+          {!hideBank && (
           <button
             onClick={() => setBankOpen((v) => !v)}
             disabled={isFull}
@@ -163,6 +165,7 @@ export function ManualQuestionEditor({
             <ListChecks className="h-3 w-3" />
             {bankOpen ? "Đóng ngân hàng" : "Thêm từ ngân hàng"}
           </button>
+          )}
           <button
             onClick={addNew}
             disabled={isFull}
@@ -172,8 +175,9 @@ export function ManualQuestionEditor({
           </button>
         </div>
       </div>
+      )}
 
-      {bankOpen && (
+      {!hideBank && bankOpen && (
         <div className="overflow-hidden rounded-2xl border border-border bg-background">
           <div className="flex flex-wrap items-center gap-2 border-b border-border bg-muted/30 px-3 py-2.5 text-xs">
             <span className="font-semibold text-foreground">Ngân hàng câu hỏi</span>
