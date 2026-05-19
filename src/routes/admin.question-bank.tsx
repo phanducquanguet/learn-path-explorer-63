@@ -713,6 +713,14 @@ function PreviewDialog({
               <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">
                 {question.level}
               </span>
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                  DIFFICULTY_COLOR[question.difficulty],
+                )}
+              >
+                {DIFFICULTY_LABEL[question.difficulty]}
+              </span>
               <span className="text-[10px] text-muted-foreground">• {question.points} điểm</span>
             </div>
             <h2 className="mt-2 font-display text-lg font-semibold leading-snug">
