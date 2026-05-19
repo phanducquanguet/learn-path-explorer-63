@@ -123,7 +123,14 @@ function UploadPage() {
   const save = () => {
     if (typeof window !== "undefined") {
       const drafts = JSON.parse(window.localStorage.getItem("unicom.uploaded.courses") || "[]");
-      drafts.push({ ...course, units, savedAt: new Date().toISOString() });
+      const payload = { ...course, units, savedAt: new Date().toISOString() };
+      if (isEdit) {
+        const idx = drafts.findIndex((x: { id?: string }) => x.id === edit);
+        if (idx >= 0) drafts[idx] = { ...drafts[idx], ...payload };
+        else drafts.push({ id: edit, ...payload });
+      } else {
+        drafts.push({ id: `course-${Date.now()}`, ...payload });
+      }
       window.localStorage.setItem("unicom.uploaded.courses", JSON.stringify(drafts));
     }
     setSaved(true);
@@ -134,14 +141,15 @@ function UploadPage() {
       <TopNav />
       <div className="mx-auto max-w-5xl px-6 pb-20 pt-10 sm:px-8">
         <span className="inline-flex w-fit items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-          <Sparkles className="h-3.5 w-3.5" /> Tạo nội dung mới
+          <Sparkles className="h-3.5 w-3.5" /> {isEdit ? "Chỉnh sửa nội dung" : "Tạo nội dung mới"}
         </span>
         <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-          Tải lên khóa học
+          {isEdit ? "Chỉnh sửa khóa học" : "Tải lên khóa học"}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Cấu trúc: Khóa học → Units → Activities (video, PDF, hoặc 11 dạng bài tập).
         </p>
+
 
         {/* Stepper */}
         <div className="mt-8 flex items-center gap-2">
