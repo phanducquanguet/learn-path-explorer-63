@@ -1040,6 +1040,13 @@ function ManualEditor({
   const list = cur.customQuestions ?? [];
   const allowedTypes = Q_TYPES_BY_SKILL[cur.skill];
 
+  const [bankOpen, setBankOpen] = useState(false);
+  const [bankLevel, setBankLevel] = useState<QLevel | "all">(cur.level);
+  const [bankDiff, setBankDiff] = useState<QDifficulty | "all">(
+    cur.difficulty && cur.difficulty !== "mixed" ? cur.difficulty : "all",
+  );
+  const [bankSearch, setBankSearch] = useState("");
+
   const updateGroup = (fn: (g: StructureItem) => StructureItem) => {
     setStructure((p) => p.map((x, i) => (i === openGroup ? fn(x) : x)));
   };
@@ -1060,6 +1067,34 @@ function ManualEditor({
     };
     updateGroup((g) => ({ ...g, customQuestions: [...(g.customQuestions ?? []), nq] }));
   };
+
+  const addFromBank = (q: BankQuestion) => {
+    if (list.length >= cur.count) return;
+    if (list.some((c) => c.id === `BK-${q.id}`)) return;
+    const allowed = allowedTypes.includes(q.type) ? q.type : allowedTypes[0];
+    const nq: CustomQuestion = {
+      id: `BK-${q.id}`,
+      content: q.content,
+      type: allowed,
+      level: q.level,
+      difficulty: q.difficulty,
+      points: q.points,
+      options: q.options ? [...q.options] : allowed === "mcq" ? ["", "", "", ""] : undefined,
+      correctAnswer: q.correctAnswer,
+    };
+    updateGroup((g) => ({ ...g, customQuestions: [...(g.customQuestions ?? []), nq] }));
+  };
+
+  const bankCandidates = useMemo(() => {
+    const q = bankSearch.trim().toLowerCase();
+    return questionBank.filter(
+      (x) =>
+        x.skill === cur.skill &&
+        (bankLevel === "all" || x.level === bankLevel) &&
+        (bankDiff === "all" || x.difficulty === bankDiff) &&
+        (!q || x.content.toLowerCase().includes(q) || x.id.toLowerCase().includes(q)),
+    );
+  }, [cur.skill, bankLevel, bankDiff, bankSearch]);
 
   const updateAt = (idx: number, patch: Partial<CustomQuestion>) => {
     updateGroup((g) => ({
@@ -1087,10 +1122,12 @@ function ManualEditor({
 
   const inputClass =
     "w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-sm outline-none focus:border-primary";
+  const bankSelectClass =
+    "h-8 rounded-lg border border-border bg-background px-2 text-xs font-medium outline-none focus:border-primary";
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center justify-between rounded-2xl border border-border bg-muted/30 px-4 py-2.5 text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-muted/30 px-4 py-2.5 text-xs">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-foreground">{SKILL_LABEL[cur.skill]}</span>
           <span
@@ -1104,14 +1141,133 @@ function ManualEditor({
             {list.length}/{cur.count}
           </span>
         </div>
-        <button
-          onClick={addNew}
-          disabled={list.length >= cur.count}
-          className="inline-flex items-center gap-1 rounded-lg bg-foreground px-2.5 py-1 text-[11px] font-semibold text-background disabled:opacity-40"
-        >
-          <Plus className="h-3 w-3" /> Thêm câu hỏi
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setBankOpen((v) => !v)}
+            disabled={list.length >= cur.count}
+            className={cn(
+              "inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition disabled:opacity-40",
+              bankOpen
+                ? "border-primary bg-primary/10 text-primary"
+                : "border-border bg-background hover:bg-muted",
+            )}
+          >
+            <ListChecks className="h-3 w-3" />
+            {bankOpen ? "Đóng ngân hàng" : "Thêm từ ngân hàng"}
+          </button>
+          <button
+            onClick={addNew}
+            disabled={list.length >= cur.count}
+            className="inline-flex items-center gap-1 rounded-lg bg-foreground px-2.5 py-1 text-[11px] font-semibold text-background disabled:opacity-40"
+          >
+            <Plus className="h-3 w-3" /> Thêm câu hỏi
+          </button>
+        </div>
       </div>
+
+      {bankOpen && (
+        <div className="overflow-hidden rounded-2xl border border-border bg-background">
+          <div className="flex flex-wrap items-center gap-2 border-b border-border bg-muted/30 px-3 py-2.5 text-xs">
+            <span className="font-semibold text-foreground">Ngân hàng câu hỏi</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-muted-foreground">Cấp</span>
+              <select
+                value={bankLevel}
+                onChange={(e) => setBankLevel(e.target.value as QLevel | "all")}
+                className={bankSelectClass}
+              >
+                <option value="all">Tất cả</option>
+                {LEVELS.map((l) => (
+                  <option key={l} value={l}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-muted-foreground">Độ khó</span>
+              <select
+                value={bankDiff}
+                onChange={(e) => setBankDiff(e.target.value as QDifficulty | "all")}
+                className={bankSelectClass}
+              >
+                <option value="all">Tất cả</option>
+                <option value="easy">{DIFFICULTY_LABEL.easy}</option>
+                <option value="medium">{DIFFICULTY_LABEL.medium}</option>
+                <option value="hard">{DIFFICULTY_LABEL.hard}</option>
+              </select>
+            </div>
+            <input
+              value={bankSearch}
+              onChange={(e) => setBankSearch(e.target.value)}
+              placeholder="Tìm câu..."
+              className="h-8 min-w-[140px] flex-1 rounded-lg border border-border bg-background px-2.5 text-xs outline-none focus:border-primary"
+            />
+          </div>
+          <ul className="max-h-[360px] divide-y divide-border overflow-y-auto text-sm">
+            {bankCandidates.map((q) => {
+              const on = list.some((c) => c.id === `BK-${q.id}`);
+              const full = list.length >= cur.count && !on;
+              return (
+                <li
+                  key={q.id}
+                  className={cn(
+                    "flex items-start gap-2 px-3 py-2.5",
+                    on && "bg-primary/5",
+                    full && "opacity-40",
+                  )}
+                >
+                  <div className="flex-1">
+                    <div className="text-foreground">{q.content}</div>
+                    <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
+                      <span className="font-mono">{q.id}</span>
+                      <span className="rounded-md bg-muted px-1.5 py-0.5 font-semibold">
+                        {q.level}
+                      </span>
+                      <span
+                        className={cn(
+                          "rounded-md px-1.5 py-0.5 font-semibold",
+                          DIFFICULTY_COLOR[q.difficulty],
+                        )}
+                      >
+                        {DIFFICULTY_LABEL[q.difficulty]}
+                      </span>
+                      <span className="rounded-md bg-muted px-1.5 py-0.5 font-semibold">
+                        {TYPE_LABEL[q.type]}
+                      </span>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => addFromBank(q)}
+                    disabled={on || full}
+                    className={cn(
+                      "inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-2 text-[11px] font-semibold",
+                      on
+                        ? "bg-emerald-500/10 text-emerald-600"
+                        : "bg-foreground text-background hover:opacity-90 disabled:opacity-40",
+                    )}
+                  >
+                    {on ? (
+                      <>
+                        <Check className="h-3 w-3" /> Đã thêm
+                      </>
+                    ) : (
+                      <>
+                        <Plus className="h-3 w-3" /> Thêm
+                      </>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+            {bankCandidates.length === 0 && (
+              <li className="px-4 py-8 text-center text-xs text-muted-foreground">
+                Không có câu hỏi nào khớp bộ lọc hiện tại.
+              </li>
+            )}
+          </ul>
+        </div>
+      )}
 
       {list.length === 0 && (
         <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
