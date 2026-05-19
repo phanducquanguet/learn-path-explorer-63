@@ -100,6 +100,7 @@ function NewTestPage() {
     setStructure((prev) => {
       let changed = false;
       const next = prev.map((it) => {
+        if (it.count <= 0) return it;
         if (it.pickedIds && it.pickedIds.length > 0) return it;
         const picks = rollRandom(it).map((q) => q.id);
         if (picks.length === 0) return it;
