@@ -160,9 +160,11 @@ function NewTestPage() {
 
   const canNext = (() => {
     if (step === 1) return name.trim().length > 0;
-    if (step === 2) return structure.length > 0 && structure.every((s) => s.count > 0);
+    if (step === 2) return structure.some((s) => s.count > 0);
     if (step === 4) {
-      return structure.every((s) => (s.pickedIds?.length ?? 0) === s.count);
+      return structure
+        .filter((s) => s.count > 0)
+        .every((s) => (s.pickedIds?.length ?? 0) === s.count);
     }
     return true;
   })();
