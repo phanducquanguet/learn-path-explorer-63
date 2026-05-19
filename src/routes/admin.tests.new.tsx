@@ -113,16 +113,32 @@ function NewTestPage() {
     });
   }, [step, mode]);
 
-  // Resolve final question list per group from pickedIds (both modes are editable now).
+  // Resolve final question list per group. Manual mode uses customQuestions; otherwise pickedIds.
   const resolved: { item: StructureItem; questions: BankQuestion[] }[] = useMemo(() => {
     return structure.map((it) => {
+      if (mode === "manual") {
+        const qs = (it.customQuestions ?? []).map<BankQuestion>((c) => ({
+          id: c.id,
+          content: c.content,
+          skill: it.skill,
+          type: c.type,
+          level: c.level,
+          difficulty: c.difficulty,
+          points: c.points,
+          tags: [it.skill, c.level.toLowerCase()],
+          createdAt: new Date().toISOString(),
+          options: c.options,
+          correctAnswer: c.correctAnswer,
+        }));
+        return { item: it, questions: qs };
+      }
       const ids = it.pickedIds ?? [];
       const qs = ids
         .map((id) => questionBank.find((q) => q.id === id))
         .filter((q): q is BankQuestion => !!q);
       return { item: it, questions: qs };
     });
-  }, [structure]);
+  }, [structure, mode]);
 
   if (role !== "admin") {
     return (
