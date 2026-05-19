@@ -435,9 +435,6 @@ function BlockCard({
   }
 
 
-      </div>
-    );
-  }
 
   return (
     <div className="overflow-hidden rounded-2xl border border-border bg-background">
