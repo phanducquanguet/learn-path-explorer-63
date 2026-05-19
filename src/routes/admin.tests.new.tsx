@@ -620,7 +620,7 @@ function Step4Build({
     mode === "random"
       ? 'Hệ thống đã bốc ngẫu nhiên một đề mẫu. Bạn có thể thêm/bớt câu hỏi, sắp xếp lại, hoặc bấm "Làm mới" để bốc lại từ đầu.'
       : mode === "manual"
-        ? "Tự soạn từng câu hỏi cho mỗi kỹ năng. Nhấn “Thêm câu hỏi” để mở form soạn câu mới."
+        ? "Tự soạn từng câu hỏi cho mỗi kỹ năng. Nhấn “Thêm câu hỏi” để soạn mới, hoặc “Thêm từ ngân hàng” nếu muốn tái sử dụng câu có sẵn."
         : "Chọn từng câu thủ công cho mỗi nhóm. Dùng bộ lọc bên dưới để thu hẹp theo cấp độ và độ khó. Bấm “Tương tự” trên một câu đã chọn để thêm nhanh câu cùng dạng từ ngân hàng.";
 
   return (
