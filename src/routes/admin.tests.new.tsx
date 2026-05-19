@@ -53,10 +53,11 @@ const STEPS = [
 type StructureItem = TestStructureItem;
 
 function matchBank(s: StructureItem): BankQuestion[] {
+  // Cấu trúc đề chỉ giới hạn theo Kỹ năng + Cấp độ + Độ khó.
+  // Loại câu hỏi (mcq, fill, essay...) được trộn ngẫu nhiên trong ngân hàng.
   return questionBank.filter(
     (q) =>
       q.skill === s.skill &&
-      q.type === s.type &&
       q.level === s.level &&
       (!s.difficulty || s.difficulty === "mixed" || q.difficulty === s.difficulty),
   );
