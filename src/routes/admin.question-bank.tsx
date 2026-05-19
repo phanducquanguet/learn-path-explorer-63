@@ -97,6 +97,7 @@ function BankPage() {
   const [skill, setSkill] = useState<QSkill | "all">("all");
   const [level, setLevel] = useState<QLevel | "all">("all");
   const [type, setType] = useState<QType | "all">("all");
+  const [difficulty, setDifficulty] = useState<QDifficulty | "all">("all");
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<SortKey>("newest");
   const [editing, setEditing] = useState<BankQuestion | null>(null);
