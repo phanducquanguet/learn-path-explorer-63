@@ -15,7 +15,7 @@ import {
   type QType,
   type QDifficulty,
 } from "@/lib/question-bank";
-import type { TestStructureItem } from "@/lib/tests-data";
+import type { TestStructureItem, CustomQuestion } from "@/lib/tests-data";
 import {
   ArrowLeft,
   Plus,
