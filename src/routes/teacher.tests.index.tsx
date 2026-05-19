@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { useRole } from "@/contexts/RoleContext";
-import { tests, testStatus } from "@/lib/tests-data";
+import { tests as seedTests, testStatus, type Test } from "@/lib/tests-data";
 import { classes } from "@/lib/teacher-data";
+import { questionBank } from "@/lib/question-bank";
 import {
   ScrollText,
   Plus,
@@ -16,6 +17,8 @@ import {
   LayoutGrid,
   Table as TableIcon,
   GraduationCap,
+  Copy,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +26,64 @@ export const Route = createFileRoute("/teacher/tests/")({
   head: () => ({ meta: [{ title: "Thi cử — UNICOM LMS" }] }),
   component: TestsList,
 });
+
+function pickSimilar(skill: string, type: string, level: string, difficulty: string | undefined, exclude: Set<string>, count: number) {
+  const pool = questionBank.filter(
+    (q) =>
+      q.skill === (skill as never) &&
+      q.type === (type as never) &&
+      q.level === (level as never) &&
+      (!difficulty || difficulty === "mixed" || q.difficulty === difficulty) &&
+      !exclude.has(q.id),
+  );
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count).map((q) => q.id);
+}
+
+function cloneTestSimilar(t: Test, index: number): Test {
+  const now = Date.now();
+  const days = (d: number) => new Date(now + d * 86400000).toISOString();
+  const used = new Set<string>();
+  const structure = t.structure.map((s) => {
+    const next = { ...s };
+    if (s.pickedIds && s.pickedIds.length) {
+      const ids = pickSimilar(s.skill, s.type, s.level, s.difficulty, used, s.count);
+      ids.forEach((id) => used.add(id));
+      next.pickedIds = ids.length ? ids : s.pickedIds;
+    }
+    if (s.customQuestions && s.customQuestions.length) {
+      const ids = pickSimilar(s.skill, s.type, s.level, s.difficulty, used, s.customQuestions.length);
+      ids.forEach((id) => used.add(id));
+      const picks = ids.map((id) => questionBank.find((q) => q.id === id)!).filter(Boolean);
+      next.customQuestions = picks.length
+        ? picks.map((q) => ({
+            id: `BK-${q.id}-${Math.random().toString(36).slice(2, 6)}`,
+            content: q.content,
+            type: q.type,
+            level: q.level,
+            difficulty: q.difficulty,
+            points: q.points,
+            options: q.options,
+            correctAnswer: q.correctAnswer,
+          }))
+        : s.customQuestions;
+    }
+    return next;
+  });
+  return {
+    ...t,
+    id: `${t.id}-sim-${now}`,
+    name: `${t.name} — Bản tương tự ${index}`,
+    structure,
+    openAt: days(7),
+    closeAt: days(8),
+    registered: 0,
+    submitted: 0,
+    graded: 0,
+    avgScore: undefined,
+    createdAt: new Date().toISOString(),
+  };
+}
 
 const classNameById = (id: string) => classes.find((c) => c.id === id)?.name ?? id;
 
@@ -38,6 +99,21 @@ function TestsList() {
   const { role } = useRole();
   const isAdmin = role === "admin";
   const [view, setView] = useState<"grid" | "table">("grid");
+  const [tests, setTests] = useState<Test[]>(seedTests);
+  const simCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const t of tests) {
+      const base = t.id.split("-sim-")[0];
+      m[base] = (m[base] ?? 0) + (t.id.includes("-sim-") ? 1 : 0);
+    }
+    return m;
+  }, [tests]);
+
+  const duplicate = (t: Test) => {
+    const base = t.id.split("-sim-")[0];
+    const idx = (simCounts[base] ?? 0) + 1;
+    setTests((arr) => [cloneTestSimilar(t, idx), ...arr]);
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -109,13 +185,17 @@ function TestsList() {
               const m = statusMeta(st);
               const Icon = m.icon;
               return (
-                <Link
+                <div
                   key={t.id}
-                  to="/teacher/tests/$testId"
-                  params={{ testId: t.id }}
                   className="group relative flex flex-col rounded-3xl border border-border bg-surface p-5 shadow-soft transition hover:shadow-lg"
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <Link
+                    to="/teacher/tests/$testId"
+                    params={{ testId: t.id }}
+                    className="absolute inset-0 rounded-3xl"
+                    aria-label={t.name}
+                  />
+                  <div className="relative flex items-start justify-between gap-3">
                     <span
                       className={cn(
                         "inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold",
@@ -129,14 +209,14 @@ function TestsList() {
                     </span>
                   </div>
 
-                  <h3 className="mt-3 font-display text-lg font-semibold text-foreground line-clamp-1">
+                  <h3 className="relative mt-3 font-display text-lg font-semibold text-foreground line-clamp-1">
                     {t.name}
                   </h3>
-                  <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
+                  <p className="relative mt-1 text-xs text-muted-foreground line-clamp-2">
                     {t.description}
                   </p>
 
-                  <div className="mt-3 flex items-start gap-1.5">
+                  <div className="relative mt-3 flex items-start gap-1.5">
                     <GraduationCap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <div className="flex flex-wrap gap-1">
                       {t.classIds.map((cid) => (
@@ -150,7 +230,7 @@ function TestsList() {
                     </div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-2 gap-y-2 border-t border-border pt-3 text-xs text-muted-foreground">
+                  <div className="relative mt-4 grid grid-cols-2 gap-y-2 border-t border-border pt-3 text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
                       <Calendar className="h-3.5 w-3.5" />{" "}
                       {new Date(t.openAt).toLocaleDateString("vi-VN")}
@@ -165,10 +245,25 @@ function TestsList() {
                       {t.avgScore ? `TB ${t.avgScore}` : "—"}
                     </span>
                   </div>
-                </Link>
+
+                  {isAdmin && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        duplicate(t);
+                      }}
+                      title="Tạo đề tương tự cho cùng lớp (giữ nguyên dạng và độ khó, đổi nội dung câu hỏi)"
+                      className="relative mt-3 inline-flex w-fit items-center gap-1.5 self-end rounded-lg border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" /> Tạo đề tương tự
+                    </button>
+                  )}
+                </div>
               );
             })}
           </div>
+
         ) : (
           <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
             <div className="overflow-x-auto">
@@ -183,6 +278,7 @@ function TestsList() {
                     <th className="px-4 py-3 text-left font-semibold">Thời lượng</th>
                     <th className="px-4 py-3 text-left font-semibold">HS</th>
                     <th className="px-4 py-3 text-right font-semibold">TB</th>
+                    <th className="px-4 py-3 text-right font-semibold">Hành động</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -245,6 +341,17 @@ function TestsList() {
                         </td>
                         <td className="px-4 py-3 text-right font-semibold">
                           {t.avgScore ? t.avgScore : "—"}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          {isAdmin && (
+                            <button
+                              onClick={() => duplicate(t)}
+                              title="Tạo đề tương tự"
+                              className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2 py-1 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
+                            >
+                              <Copy className="h-3 w-3" /> Tương tự
+                            </button>
+                          )}
                         </td>
                       </tr>
                     );
