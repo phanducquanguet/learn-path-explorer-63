@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { levels, getCourse } from "@/lib/lms-data";
 import { ACTIVITY_TYPES, QUIZ_KINDS } from "@/lib/teacher-data";
-import { CATEGORIES, categoryOf, type Category } from "@/lib/course-categories";
+import { useCategories, categoryOf, type Category } from "@/lib/course-categories";
 import {
   Upload,
   BookOpen,
