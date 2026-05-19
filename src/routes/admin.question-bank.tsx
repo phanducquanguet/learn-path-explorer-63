@@ -7,10 +7,14 @@ import {
   SKILL_LABEL,
   TYPE_LABEL,
   TYPE_DESCRIPTION,
+  DIFFICULTY_LABEL,
+  DIFFICULTY_COLOR,
   type BankQuestion,
   type QSkill,
   type QLevel,
   type QType,
+  type QDifficulty,
+  type FeedbackCriterion,
 } from "@/lib/question-bank";
 import {
   Library,
@@ -93,6 +97,7 @@ function BankPage() {
   const [skill, setSkill] = useState<QSkill | "all">("all");
   const [level, setLevel] = useState<QLevel | "all">("all");
   const [type, setType] = useState<QType | "all">("all");
+  const [difficulty, setDifficulty] = useState<QDifficulty | "all">("all");
   const [q, setQ] = useState("");
   const [sort, setSort] = useState<SortKey>("newest");
   const [editing, setEditing] = useState<BankQuestion | null>(null);
@@ -110,6 +115,7 @@ function BankPage() {
         (skill === "all" || it.skill === skill) &&
         (level === "all" || it.level === level) &&
         (type === "all" || it.type === type) &&
+        (difficulty === "all" || it.difficulty === difficulty) &&
         (!q.trim() ||
           it.content.toLowerCase().includes(q.toLowerCase()) ||
           it.id.toLowerCase().includes(q.toLowerCase()) ||
@@ -130,7 +136,7 @@ function BankPage() {
       }
     });
     return sorted;
-  }, [items, skill, level, type, q, sort]);
+  }, [items, skill, level, type, difficulty, q, sort]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -181,6 +187,7 @@ function BankPage() {
     setSkill("all");
     setLevel("all");
     setType("all");
+    setDifficulty("all");
     setQ("");
     setPage(1);
   };
@@ -314,6 +321,12 @@ function BankPage() {
                 <Chip key={l} on={level === l} onClick={() => { setLevel(l); setPage(1); }}>{l}</Chip>
               ))}
             </FilterSection>
+            <FilterSection label="Độ khó">
+              <Chip on={difficulty === "all"} onClick={() => { setDifficulty("all"); setPage(1); }}>Tất cả</Chip>
+              {(Object.keys(DIFFICULTY_LABEL) as QDifficulty[]).map((d) => (
+                <Chip key={d} on={difficulty === d} onClick={() => { setDifficulty(d); setPage(1); }}>{DIFFICULTY_LABEL[d]}</Chip>
+              ))}
+            </FilterSection>
             <FilterSection label="Loại">
               <Chip on={type === "all"} onClick={() => { setType("all"); setPage(1); }}>Tất cả</Chip>
               {(Object.keys(TYPE_LABEL) as QType[]).map((t) => (
@@ -408,6 +421,7 @@ function BankPage() {
                       <th className="px-3 py-3">Kỹ năng</th>
                       <th className="px-3 py-3">Loại</th>
                       <th className="px-3 py-3">Lv</th>
+                      <th className="px-3 py-3">Độ khó</th>
                       <th className="px-3 py-3">Điểm</th>
                       <th className="px-3 py-3"></th>
                     </tr>
@@ -462,6 +476,16 @@ function BankPage() {
                           <td className="px-3 py-2 text-center">
                             <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">
                               {it.level}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 text-center">
+                            <span
+                              className={cn(
+                                "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                                DIFFICULTY_COLOR[it.difficulty],
+                              )}
+                            >
+                              {DIFFICULTY_LABEL[it.difficulty]}
                             </span>
                           </td>
                           <td className="px-3 py-2 text-center font-semibold">{it.points}</td>
@@ -689,6 +713,14 @@ function PreviewDialog({
               <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary">
                 {question.level}
               </span>
+              <span
+                className={cn(
+                  "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                  DIFFICULTY_COLOR[question.difficulty],
+                )}
+              >
+                {DIFFICULTY_LABEL[question.difficulty]}
+              </span>
               <span className="text-[10px] text-muted-foreground">• {question.points} điểm</span>
             </div>
             <h2 className="mt-2 font-display text-lg font-semibold leading-snug">
@@ -721,12 +753,44 @@ function PreviewDialog({
           </div>
         )}
 
-        {question.correctAnswer && !question.options?.length && (
+        {question.correctAnswer && !question.options?.length && question.type !== "essay" && (
           <div className="mt-4 rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-3 text-sm">
             <div className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
               Đáp án mẫu
             </div>
             <div className="mt-1">{question.correctAnswer}</div>
+          </div>
+        )}
+
+        {question.type === "essay" && (
+          <div className="mt-4 space-y-3">
+            {question.solution && (
+              <div className="rounded-xl border border-violet-500/30 bg-violet-500/5 p-3">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">
+                  Solution (bài mẫu)
+                </div>
+                <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground">
+                  {question.solution}
+                </pre>
+              </div>
+            )}
+            {question.feedback && question.feedback.length > 0 && (
+              <div className="rounded-xl border border-border bg-surface">
+                <div className="border-b border-border px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Feedback / Rubric ({question.feedback.length} tiêu chí)
+                </div>
+                <div className="divide-y divide-border">
+                  {question.feedback.map((c, i) => (
+                    <div key={i} className="grid grid-cols-[140px_1fr] gap-3 px-3 py-2 text-sm">
+                      <span className="font-mono text-xs font-semibold text-violet-600 dark:text-violet-400">
+                        {c.keyword || "—"}
+                      </span>
+                      <span className="text-foreground">{c.comment}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -780,6 +844,14 @@ function EditDialog({
     if (t === "sequence") return { options: ["Bước 1", "Bước 2", "Bước 3"] };
     if (t === "select-lists") return { options: ["List 1: A | B | C", "List 2: X | Y | Z"] };
     if (t === "drag-drop") return { options: ["Drag item 1", "Drag item 2", "Drag item 3"] };
+    if (t === "essay")
+      return {
+        solution: "",
+        feedback: [
+          { keyword: "", comment: "" },
+          { keyword: "", comment: "" },
+        ],
+      };
     return { options: undefined };
   };
   const [form, setForm] = useState<BankQuestion>(
@@ -789,6 +861,7 @@ function EditDialog({
       skill: "reading",
       type: initialType ?? "mcq",
       level: "A1",
+      difficulty: "medium",
       points: (initialType === "essay" ? 5 : initialType === "short" ? 2 : 1),
       tags: [],
       createdAt: new Date().toISOString(),
@@ -799,6 +872,7 @@ function EditDialog({
   const [tagInput, setTagInput] = useState("");
 
   const isMcq = form.type === "mcq" || form.type === "mcq-multi";
+  const isEssay = form.type === "essay";
   const hasOptions = isMcq || form.type === "matching" || form.type === "sequence" || form.type === "select-lists" || form.type === "drag-drop";
 
   const addTag = () => {
@@ -847,7 +921,7 @@ function EditDialog({
               className="mt-1 w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             <Field label="Kỹ năng">
               <select
                 value={form.skill}
@@ -878,6 +952,17 @@ function EditDialog({
               >
                 {LEVELS.map((l) => (
                   <option key={l} value={l}>{l}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Độ khó">
+              <select
+                value={form.difficulty}
+                onChange={(e) => setForm({ ...form, difficulty: e.target.value as QDifficulty })}
+                className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
+              >
+                {(Object.keys(DIFFICULTY_LABEL) as QDifficulty[]).map((d) => (
+                  <option key={d} value={d}>{DIFFICULTY_LABEL[d]}</option>
                 ))}
               </select>
             </Field>
@@ -926,17 +1011,102 @@ function EditDialog({
             </div>
           )}
 
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground">
-              Đáp án đúng / mẫu
-            </label>
-            <input
-              value={form.correctAnswer ?? ""}
-              onChange={(e) => setForm({ ...form, correctAnswer: e.target.value })}
-              placeholder={isMcq ? "Ví dụ: A" : "Nhập đáp án mẫu (không bắt buộc)"}
-              className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-            />
-          </div>
+          {isEssay ? (
+            <div className="space-y-4 rounded-2xl border border-violet-500/30 bg-violet-500/5 p-4">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">
+                <FileText className="h-3.5 w-3.5" /> Câu hỏi tự luận — không có đáp án cố định
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Solution (bài mẫu tham khảo) *
+                </label>
+                <textarea
+                  value={form.solution ?? ""}
+                  onChange={(e) => setForm({ ...form, solution: e.target.value })}
+                  rows={6}
+                  placeholder="Viết một bài mẫu để học viên đối chiếu sau khi nộp..."
+                  className="mt-1 w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Học viên sẽ thấy bài mẫu này sau khi gửi bài hoặc bấm "Show solution".
+                </p>
+              </div>
+
+              <div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    Feedback / Rubric chấm điểm
+                  </label>
+                  <button
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        feedback: [...(form.feedback ?? []), { keyword: "", comment: "" }],
+                      })
+                    }
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                  >
+                    <Plus className="h-3 w-3" /> Thêm tiêu chí
+                  </button>
+                </div>
+                <p className="mb-2 text-[11px] text-muted-foreground">
+                  Mỗi dòng gồm một <b>từ khóa/sườn</b> cần xuất hiện trong bài và <b>nhận xét</b> tương ứng. Hệ thống dựa vào đây để chấm tự động.
+                </p>
+                <div className="space-y-1.5">
+                  {(form.feedback ?? []).map((c, i) => (
+                    <div key={i} className="grid grid-cols-[140px_1fr_auto] items-center gap-2">
+                      <input
+                        value={c.keyword}
+                        onChange={(e) => {
+                          const next = [...(form.feedback ?? [])];
+                          next[i] = { ...c, keyword: e.target.value };
+                          setForm({ ...form, feedback: next });
+                        }}
+                        placeholder="Từ khóa, vd: Dear"
+                        className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm font-mono"
+                      />
+                      <input
+                        value={c.comment}
+                        onChange={(e) => {
+                          const next = [...(form.feedback ?? [])];
+                          next[i] = { ...c, comment: e.target.value };
+                          setForm({ ...form, feedback: next });
+                        }}
+                        placeholder="Nhận xét hiển thị cho học viên..."
+                        className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
+                      />
+                      <button
+                        onClick={() => {
+                          const next = (form.feedback ?? []).filter((_, x) => x !== i);
+                          setForm({ ...form, feedback: next });
+                        }}
+                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                  {(form.feedback ?? []).length === 0 && (
+                    <div className="rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+                      Chưa có tiêu chí nào. Thêm các từ khóa làm sườn để chấm.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground">
+                Đáp án đúng / mẫu
+              </label>
+              <input
+                value={form.correctAnswer ?? ""}
+                onChange={(e) => setForm({ ...form, correctAnswer: e.target.value })}
+                placeholder={isMcq ? "Ví dụ: A" : "Nhập đáp án mẫu (không bắt buộc)"}
+                className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+              />
+            </div>
+          )}
 
           <div>
             <label className="text-xs font-semibold text-muted-foreground">Tags</label>

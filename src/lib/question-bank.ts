@@ -12,17 +12,41 @@ export type QType =
   | "essay";
 export type QLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 
+export type QDifficulty = "easy" | "medium" | "hard";
+
+export type FeedbackCriterion = {
+  keyword: string;
+  comment: string;
+};
+
 export type BankQuestion = {
   id: string;
   content: string;
   skill: QSkill;
   type: QType;
   level: QLevel;
+  difficulty: QDifficulty;
   points: number;
   tags: string[];
   createdAt: string;
   options?: string[];
   correctAnswer?: string;
+  /** Sample/model answer shown after submission (esp. essay). */
+  solution?: string;
+  /** Rubric used to give automatic feedback on open-ended answers (essay). */
+  feedback?: FeedbackCriterion[];
+};
+
+export const DIFFICULTY_LABEL: Record<QDifficulty, string> = {
+  easy: "Dễ",
+  medium: "Trung bình",
+  hard: "Khó",
+};
+
+export const DIFFICULTY_COLOR: Record<QDifficulty, string> = {
+  easy: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  medium: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  hard: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
 };
 
 export const SKILL_LABEL: Record<QSkill, string> = {
@@ -96,17 +120,31 @@ export const questionBank: BankQuestion[] = (() => {
     for (const level of LEVELS) {
       for (const type of TYPES.slice(0, skill === "writing" || skill === "speaking" ? 3 : 6)) {
         const contents = SAMPLE_CONTENTS[skill];
+        const actualType: QType = skill === "writing" ? "essay" : skill === "speaking" ? "short" : type;
+        const difficulty: QDifficulty = i % 3 === 0 ? "hard" : i % 3 === 1 ? "medium" : "easy";
         out.push({
           id: `Q${String(i).padStart(4, "0")}`,
           content: `[${level}] ${contents[i % contents.length]}`,
           skill,
-          type: skill === "writing" ? "essay" : skill === "speaking" ? "short" : type,
+          type: actualType,
           level,
+          difficulty,
           points: type === "essay" ? 5 : type === "short" ? 2 : 1,
           tags: [skill, level.toLowerCase()],
           createdAt: new Date(2025, 0, (i % 28) + 1).toISOString(),
           options: type.startsWith("mcq") ? ["A. Option A", "B. Option B", "C. Option C", "D. Option D"] : undefined,
           correctAnswer: type.startsWith("mcq") ? "A" : type === "tf" ? "True" : undefined,
+          solution: actualType === "essay"
+            ? "Dear Jordan,\n\nThank you for letting me know about your trip. Unfortunately I'll be away for work that week, so I won't be able to meet you in person. While you're here, you should definitely visit the old town — the riverside walk at sunset is beautiful. Hopefully we can catch up around December when things are calmer.\n\nBest wishes,"
+            : undefined,
+          feedback: actualType === "essay"
+            ? [
+                { keyword: "Dear", comment: "Cách mở đầu email rất tự nhiên." },
+                { keyword: "won't be", comment: "Nên giải thích lý do bạn không rảnh." },
+                { keyword: "visit", comment: "Hãy gợi ý một địa điểm cụ thể trong khu vực." },
+                { keyword: "later", comment: "Đề xuất một thời điểm khác để gặp nhau." },
+              ]
+            : undefined,
         });
         i++;
       }
