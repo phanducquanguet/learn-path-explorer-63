@@ -83,7 +83,10 @@ function NewTestPage() {
   const [openAt, setOpenAt] = useState("");
   const [closeAt, setCloseAt] = useState("");
   const [structure, setStructure] = useState<StructureItem[]>([
+    { skill: "listening", type: "mcq", level: "B1", difficulty: "mixed", count: 10, pickedIds: [] },
     { skill: "reading", type: "mcq", level: "B1", difficulty: "mixed", count: 10, pickedIds: [] },
+    { skill: "speaking", type: "short", level: "B1", difficulty: "mixed", count: 3, pickedIds: [] },
+    { skill: "writing", type: "essay", level: "B1", difficulty: "mixed", count: 2, pickedIds: [] },
   ]);
   const [mode, setMode] = useState<"fixed" | "random">("random");
   const [previewing, setPreviewing] = useState(false);
