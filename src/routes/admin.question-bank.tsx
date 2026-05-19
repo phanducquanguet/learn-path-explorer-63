@@ -257,25 +257,7 @@ function BankPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <input
-              ref={fileRef}
-              type="file"
-              accept="application/json"
-              className="hidden"
-              onChange={(e) => e.target.files?.[0] && importJson(e.target.files[0])}
-            />
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2 text-sm font-semibold hover:bg-muted"
-            >
-              <Upload className="h-4 w-4" /> Nhập
-            </button>
-            <button
-              onClick={exportJson}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2 text-sm font-semibold hover:bg-muted"
-            >
-              <Download className="h-4 w-4" /> Xuất
-            </button>
+
             <button
               onClick={() => setPicking(true)}
               className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
