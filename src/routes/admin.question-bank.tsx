@@ -270,7 +270,7 @@ function BankPage() {
               <Download className="h-4 w-4" /> Xuất
             </button>
             <button
-              onClick={() => setCreating(true)}
+              onClick={() => setPicking(true)}
               className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
               style={{ background: "var(--gradient-brand)" }}
             >
