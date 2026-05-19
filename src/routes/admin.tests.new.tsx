@@ -91,7 +91,7 @@ function NewTestPage() {
     { skill: "speaking", type: "short", level: "B1", difficulty: "mixed", count: 3, pickedIds: [] },
     { skill: "writing", type: "essay", level: "B1", difficulty: "mixed", count: 2, pickedIds: [] },
   ]);
-  const [mode, setMode] = useState<"fixed" | "random">("random");
+  const [mode, setMode] = useState<"fixed" | "random" | "manual">("random");
   const [previewing, setPreviewing] = useState(false);
 
   const totalQuestions = structure.reduce((s, x) => s + x.count, 0);
