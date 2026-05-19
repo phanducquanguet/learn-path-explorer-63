@@ -37,8 +37,6 @@ const teacherTabs = [
 ];
 
 const adminTabs = [
-  { to: "/teacher" as const, label: "Tổng quan", icon: LayoutDashboard },
-  { to: "/teacher/classes" as const, label: "Lớp học", icon: Users },
   { to: "/courses" as const, label: "Khóa học", icon: GraduationCap },
   { to: "/teacher/exams" as const, label: "Luyện thi", icon: ClipboardCheck },
   { to: "/teacher/tests" as const, label: "Thi cử", icon: ScrollText },
