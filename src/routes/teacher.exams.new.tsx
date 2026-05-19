@@ -61,7 +61,7 @@ const newBlockId = () => `B-${Date.now()}-${Math.random().toString(36).slice(2, 
 const emptyQuestion = (skill: QSkill, level: QLevel): CustomQuestion => {
   const isWriting = skill === "writing";
   const isSpeaking = skill === "speaking";
-  const type = isWriting ? "essay" : isSpeaking ? "short" : "mcq";
+  const type = isWriting || isSpeaking ? "essay" : "mcq";
   return {
     id: `CQ-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
     content: "",
