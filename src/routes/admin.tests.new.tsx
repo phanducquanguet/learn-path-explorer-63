@@ -785,6 +785,34 @@ function GroupEditor({
     updateGroup((g) => ({ ...g, pickedIds: [...(g.pickedIds ?? []), ...random] }));
   };
 
+  /** Tìm 1 câu trong ngân hàng tương tự câu đã chọn (cùng kỹ năng + loại + cấp độ + độ khó) và thêm vào. */
+  const addSimilar = (idx: number) => {
+    if (picked.length >= cur.count) return;
+    const ref = questionBank.find((q) => q.id === picked[idx]);
+    if (!ref) return;
+    const pool = questionBank.filter(
+      (x) =>
+        !picked.includes(x.id) &&
+        x.skill === ref.skill &&
+        x.type === ref.type &&
+        x.level === ref.level &&
+        x.difficulty === ref.difficulty,
+    );
+    // Nới rộng nếu không có khớp tuyệt đối
+    const relaxed = pool.length
+      ? pool
+      : questionBank.filter(
+          (x) => !picked.includes(x.id) && x.skill === ref.skill && x.type === ref.type && x.level === ref.level,
+        );
+    if (relaxed.length === 0) return;
+    const pick = relaxed[Math.floor(Math.random() * relaxed.length)];
+    updateGroup((g) => {
+      const ids = [...(g.pickedIds ?? [])];
+      ids.splice(idx + 1, 0, pick.id);
+      return { ...g, pickedIds: ids };
+    });
+  };
+
   const selectClass =
     "h-8 rounded-lg border border-border bg-background px-2 text-xs font-medium outline-none focus:border-primary";
 
