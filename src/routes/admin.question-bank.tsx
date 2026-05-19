@@ -861,7 +861,7 @@ function EditDialog({
               className="mt-1 w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             <Field label="Kỹ năng">
               <select
                 value={form.skill}
@@ -892,6 +892,17 @@ function EditDialog({
               >
                 {LEVELS.map((l) => (
                   <option key={l} value={l}>{l}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Độ khó">
+              <select
+                value={form.difficulty}
+                onChange={(e) => setForm({ ...form, difficulty: e.target.value as QDifficulty })}
+                className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
+              >
+                {(Object.keys(DIFFICULTY_LABEL) as QDifficulty[]).map((d) => (
+                  <option key={d} value={d}>{DIFFICULTY_LABEL[d]}</option>
                 ))}
               </select>
             </Field>
