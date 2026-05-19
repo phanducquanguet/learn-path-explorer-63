@@ -86,24 +86,36 @@ function NewTestPage() {
     { skill: "reading", type: "mcq", level: "B1", difficulty: "mixed", count: 10, pickedIds: [] },
   ]);
   const [mode, setMode] = useState<"fixed" | "random">("random");
-  const [randomSeed, setRandomSeed] = useState<Record<number, number>>({});
   const [previewing, setPreviewing] = useState(false);
 
   const totalQuestions = structure.reduce((s, x) => s + x.count, 0);
 
-  // Resolve final question list per group for preview / save.
-  const resolved: { item: StructureItem; questions: BankQuestion[] }[] = useMemo(() => {
-    return structure.map((it, i) => {
-      if (mode === "fixed") {
-        const ids = it.pickedIds ?? [];
-        const qs = ids
-          .map((id) => questionBank.find((q) => q.id === id))
-          .filter((q): q is BankQuestion => !!q);
-        return { item: it, questions: qs };
-      }
-      return { item: it, questions: rollRandom(it, randomSeed[i] ?? 0) };
+  // Auto-fill random picks when entering step 4 in random mode (only for groups still empty).
+  useEffect(() => {
+    if (step !== 4 || mode !== "random") return;
+    setStructure((prev) => {
+      let changed = false;
+      const next = prev.map((it) => {
+        if (it.pickedIds && it.pickedIds.length > 0) return it;
+        const picks = rollRandom(it).map((q) => q.id);
+        if (picks.length === 0) return it;
+        changed = true;
+        return { ...it, pickedIds: picks };
+      });
+      return changed ? next : prev;
     });
-  }, [structure, mode, randomSeed]);
+  }, [step, mode]);
+
+  // Resolve final question list per group from pickedIds (both modes are editable now).
+  const resolved: { item: StructureItem; questions: BankQuestion[] }[] = useMemo(() => {
+    return structure.map((it) => {
+      const ids = it.pickedIds ?? [];
+      const qs = ids
+        .map((id) => questionBank.find((q) => q.id === id))
+        .filter((q): q is BankQuestion => !!q);
+      return { item: it, questions: qs };
+    });
+  }, [structure]);
 
   if (role !== "admin") {
     return (
