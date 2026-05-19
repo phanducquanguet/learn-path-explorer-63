@@ -360,6 +360,19 @@ function CoursesListPage() {
           </section>
         ))}
       </div>
+
+      <Dialog open={managerOpen} onOpenChange={setManagerOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Quản lý chương trình</DialogTitle>
+            <DialogDescription>
+              Thêm, sửa, xóa hoặc sắp xếp danh sách chương trình. Thay đổi sẽ áp dụng ngay
+              khi tạo/sửa khóa học.
+            </DialogDescription>
+          </DialogHeader>
+          <CategoriesManager onClose={() => setManagerOpen(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
