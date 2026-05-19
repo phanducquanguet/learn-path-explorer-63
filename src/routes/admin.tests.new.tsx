@@ -15,7 +15,7 @@ import {
   type QType,
   type QDifficulty,
 } from "@/lib/question-bank";
-import type { TestStructureItem } from "@/lib/tests-data";
+import type { TestStructureItem, CustomQuestion } from "@/lib/tests-data";
 import {
   ArrowLeft,
   Plus,
@@ -30,6 +30,8 @@ import {
   X,
   ArrowUp,
   ArrowDown,
+  Sparkles,
+  PencilLine,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -89,7 +91,7 @@ function NewTestPage() {
     { skill: "speaking", type: "short", level: "B1", difficulty: "mixed", count: 3, pickedIds: [] },
     { skill: "writing", type: "essay", level: "B1", difficulty: "mixed", count: 2, pickedIds: [] },
   ]);
-  const [mode, setMode] = useState<"fixed" | "random">("random");
+  const [mode, setMode] = useState<"fixed" | "random" | "manual">("random");
   const [previewing, setPreviewing] = useState(false);
 
   const totalQuestions = structure.reduce((s, x) => s + x.count, 0);
@@ -111,16 +113,32 @@ function NewTestPage() {
     });
   }, [step, mode]);
 
-  // Resolve final question list per group from pickedIds (both modes are editable now).
+  // Resolve final question list per group. Manual mode uses customQuestions; otherwise pickedIds.
   const resolved: { item: StructureItem; questions: BankQuestion[] }[] = useMemo(() => {
     return structure.map((it) => {
+      if (mode === "manual") {
+        const qs = (it.customQuestions ?? []).map<BankQuestion>((c) => ({
+          id: c.id,
+          content: c.content,
+          skill: it.skill,
+          type: c.type,
+          level: c.level,
+          difficulty: c.difficulty,
+          points: c.points,
+          tags: [it.skill, c.level.toLowerCase()],
+          createdAt: new Date().toISOString(),
+          options: c.options,
+          correctAnswer: c.correctAnswer,
+        }));
+        return { item: it, questions: qs };
+      }
       const ids = it.pickedIds ?? [];
       const qs = ids
         .map((id) => questionBank.find((q) => q.id === id))
         .filter((q): q is BankQuestion => !!q);
       return { item: it, questions: qs };
     });
-  }, [structure]);
+  }, [structure, mode]);
 
   if (role !== "admin") {
     return (
@@ -163,6 +181,11 @@ function NewTestPage() {
     if (step === 1) return name.trim().length > 0;
     if (step === 2) return structure.some((s) => s.count > 0);
     if (step === 4) {
+      if (mode === "manual") {
+        return structure
+          .filter((s) => s.count > 0)
+          .every((s) => (s.customQuestions?.length ?? 0) === s.count);
+      }
       return structure
         .filter((s) => s.count > 0)
         .every((s) => (s.pickedIds?.length ?? 0) === s.count);
@@ -420,6 +443,12 @@ function NewTestPage() {
                     title: "Chọn thủ công từ ngân hàng",
                     desc: "Toàn bộ học viên cùng làm một đề. Bạn sẽ chọn từng câu ở bước kế tiếp.",
                   },
+                  {
+                    id: "manual" as const,
+                    icon: PencilLine,
+                    title: "Tạo mới toàn bộ câu hỏi bằng tay",
+                    desc: "Tự soạn từng câu cho mỗi kỹ năng — không lấy từ ngân hàng. Phù hợp khi đề thi cần nội dung riêng.",
+                  },
                 ] as const
               ).map((opt) => {
                 const Icon = opt.icon;
@@ -566,7 +595,7 @@ function Step4Build({
 }: {
   structure: StructureItem[];
   setStructure: React.Dispatch<React.SetStateAction<StructureItem[]>>;
-  mode: "fixed" | "random";
+  mode: "fixed" | "random" | "manual";
 }) {
   const [openGroup, setOpenGroup] = useState(0);
 
@@ -590,7 +619,9 @@ function Step4Build({
   const intro =
     mode === "random"
       ? 'Hệ thống đã bốc ngẫu nhiên một đề mẫu. Bạn có thể thêm/bớt câu hỏi, sắp xếp lại, hoặc bấm "Làm mới" để bốc lại từ đầu.'
-      : "Chọn từng câu thủ công cho mỗi nhóm. Dùng bộ lọc bên dưới để thu hẹp theo cấp độ và độ khó.";
+      : mode === "manual"
+        ? "Tự soạn từng câu hỏi cho mỗi kỹ năng. Nhấn “Thêm câu hỏi” để mở form soạn câu mới."
+        : "Chọn từng câu thủ công cho mỗi nhóm. Dùng bộ lọc bên dưới để thu hẹp theo cấp độ và độ khó. Bấm “Tương tự” trên một câu đã chọn để thêm nhanh câu cùng dạng từ ngân hàng.";
 
   return (
     <div className="space-y-3">
@@ -600,7 +631,7 @@ function Step4Build({
       <div className="flex flex-wrap gap-2">
         {structure.map((s, i) => {
           if (s.count <= 0) return null;
-          const cnt = s.pickedIds?.length ?? 0;
+          const cnt = mode === "manual" ? (s.customQuestions?.length ?? 0) : (s.pickedIds?.length ?? 0);
           const done = cnt === s.count;
           const active = openGroup === i;
           return (
@@ -653,13 +684,22 @@ function Step4Build({
         })}
       </div>
 
-      <GroupEditor
-        key={openGroup}
-        structure={structure}
-        openGroup={openGroup}
-        setStructure={setStructure}
-        mode={mode}
-      />
+      {mode === "manual" ? (
+        <ManualEditor
+          key={openGroup}
+          structure={structure}
+          openGroup={openGroup}
+          setStructure={setStructure}
+        />
+      ) : (
+        <GroupEditor
+          key={openGroup}
+          structure={structure}
+          openGroup={openGroup}
+          setStructure={setStructure}
+          mode={mode}
+        />
+      )}
     </div>
   );
 }
@@ -745,6 +785,34 @@ function GroupEditor({
     updateGroup((g) => ({ ...g, pickedIds: [...(g.pickedIds ?? []), ...random] }));
   };
 
+  /** Tìm 1 câu trong ngân hàng tương tự câu đã chọn (cùng kỹ năng + loại + cấp độ + độ khó) và thêm vào. */
+  const addSimilar = (idx: number) => {
+    if (picked.length >= cur.count) return;
+    const ref = questionBank.find((q) => q.id === picked[idx]);
+    if (!ref) return;
+    const pool = questionBank.filter(
+      (x) =>
+        !picked.includes(x.id) &&
+        x.skill === ref.skill &&
+        x.type === ref.type &&
+        x.level === ref.level &&
+        x.difficulty === ref.difficulty,
+    );
+    // Nới rộng nếu không có khớp tuyệt đối
+    const relaxed = pool.length
+      ? pool
+      : questionBank.filter(
+          (x) => !picked.includes(x.id) && x.skill === ref.skill && x.type === ref.type && x.level === ref.level,
+        );
+    if (relaxed.length === 0) return;
+    const pick = relaxed[Math.floor(Math.random() * relaxed.length)];
+    updateGroup((g) => {
+      const ids = [...(g.pickedIds ?? [])];
+      ids.splice(idx + 1, 0, pick.id);
+      return { ...g, pickedIds: ids };
+    });
+  };
+
   const selectClass =
     "h-8 rounded-lg border border-border bg-background px-2 text-xs font-medium outline-none focus:border-primary";
 
@@ -814,6 +882,14 @@ function GroupEditor({
                   <ArrowDown className="h-3 w-3" />
                 </button>
               </div>
+              <button
+                onClick={() => addSimilar(idx)}
+                disabled={picked.length >= cur.count}
+                className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold text-violet-600 hover:bg-violet-500/10 disabled:opacity-30"
+                title="Thêm câu tương tự từ ngân hàng (cùng kỹ năng, loại, cấp độ, độ khó)"
+              >
+                <Sparkles className="h-3 w-3" /> Tương tự
+              </button>
               <button
                 onClick={() => removeAt(idx)}
                 className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
@@ -942,8 +1018,281 @@ function GroupEditor({
   );
 }
 
+/* ---------- Step 4: Manual editor (soạn mới câu hỏi) ---------- */
+
+const Q_TYPES_BY_SKILL: Record<QSkill, QType[]> = {
+  listening: ["mcq", "tf", "short", "fill"],
+  reading: ["mcq", "tf", "short", "fill"],
+  speaking: ["short"],
+  writing: ["essay", "short"],
+};
+
+function ManualEditor({
+  structure,
+  openGroup,
+  setStructure,
+}: {
+  structure: StructureItem[];
+  openGroup: number;
+  setStructure: React.Dispatch<React.SetStateAction<StructureItem[]>>;
+}) {
+  const cur = structure[openGroup];
+  const list = cur.customQuestions ?? [];
+  const allowedTypes = Q_TYPES_BY_SKILL[cur.skill];
+
+  const updateGroup = (fn: (g: StructureItem) => StructureItem) => {
+    setStructure((p) => p.map((x, i) => (i === openGroup ? fn(x) : x)));
+  };
+
+  const addNew = () => {
+    if (list.length >= cur.count) return;
+    const defType = allowedTypes[0];
+    const isMcq = defType === "mcq";
+    const nq: CustomQuestion = {
+      id: `CQ-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      content: "",
+      type: defType,
+      level: cur.level,
+      difficulty: cur.difficulty && cur.difficulty !== "mixed" ? cur.difficulty : "medium",
+      points: defType === "essay" ? 5 : defType === "short" ? 2 : 1,
+      options: isMcq ? ["", "", "", ""] : undefined,
+      correctAnswer: isMcq ? "A" : defType === "tf" ? "True" : undefined,
+    };
+    updateGroup((g) => ({ ...g, customQuestions: [...(g.customQuestions ?? []), nq] }));
+  };
+
+  const updateAt = (idx: number, patch: Partial<CustomQuestion>) => {
+    updateGroup((g) => ({
+      ...g,
+      customQuestions: (g.customQuestions ?? []).map((c, i) => (i === idx ? { ...c, ...patch } : c)),
+    }));
+  };
+
+  const removeAt = (idx: number) => {
+    updateGroup((g) => ({
+      ...g,
+      customQuestions: (g.customQuestions ?? []).filter((_, i) => i !== idx),
+    }));
+  };
+
+  const moveItem = (idx: number, dir: -1 | 1) => {
+    const j = idx + dir;
+    updateGroup((g) => {
+      const arr = [...(g.customQuestions ?? [])];
+      if (j < 0 || j >= arr.length) return g;
+      [arr[idx], arr[j]] = [arr[j], arr[idx]];
+      return { ...g, customQuestions: arr };
+    });
+  };
+
+  const inputClass =
+    "w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-sm outline-none focus:border-primary";
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between rounded-2xl border border-border bg-muted/30 px-4 py-2.5 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-foreground">{SKILL_LABEL[cur.skill]}</span>
+          <span
+            className={cn(
+              "rounded-md px-1.5 py-0.5 text-[10px] font-bold",
+              list.length === cur.count
+                ? "bg-emerald-500/10 text-emerald-600"
+                : "bg-amber-500/10 text-amber-600",
+            )}
+          >
+            {list.length}/{cur.count}
+          </span>
+        </div>
+        <button
+          onClick={addNew}
+          disabled={list.length >= cur.count}
+          className="inline-flex items-center gap-1 rounded-lg bg-foreground px-2.5 py-1 text-[11px] font-semibold text-background disabled:opacity-40"
+        >
+          <Plus className="h-3 w-3" /> Thêm câu hỏi
+        </button>
+      </div>
+
+      {list.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+          Chưa có câu hỏi nào. Nhấn “Thêm câu hỏi” để bắt đầu soạn.
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {list.map((c, idx) => {
+          const isMcq = c.type === "mcq";
+          return (
+            <div key={c.id} className="overflow-hidden rounded-2xl border border-border bg-background">
+              <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-foreground text-[11px] font-bold text-background">
+                    {idx + 1}
+                  </span>
+                  <span className="font-mono text-[10px] text-muted-foreground">{c.id}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => moveItem(idx, -1)}
+                    disabled={idx === 0}
+                    className="rounded-md p-1 text-muted-foreground hover:bg-muted disabled:opacity-30"
+                    title="Lên"
+                  >
+                    <ArrowUp className="h-3 w-3" />
+                  </button>
+                  <button
+                    onClick={() => moveItem(idx, 1)}
+                    disabled={idx === list.length - 1}
+                    className="rounded-md p-1 text-muted-foreground hover:bg-muted disabled:opacity-30"
+                    title="Xuống"
+                  >
+                    <ArrowDown className="h-3 w-3" />
+                  </button>
+                  <button
+                    onClick={() => removeAt(idx)}
+                    className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
+                    title="Xóa"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2.5 p-3">
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <label className="text-[11px] font-semibold text-muted-foreground">
+                    Loại câu hỏi
+                    <select
+                      value={c.type}
+                      onChange={(e) => {
+                        const t = e.target.value as QType;
+                        updateAt(idx, {
+                          type: t,
+                          options: t === "mcq" ? c.options ?? ["", "", "", ""] : undefined,
+                          correctAnswer: t === "mcq" ? "A" : t === "tf" ? "True" : undefined,
+                          points: t === "essay" ? 5 : t === "short" ? 2 : 1,
+                        });
+                      }}
+                      className={cn(inputClass, "mt-1")}
+                    >
+                      {allowedTypes.map((t) => (
+                        <option key={t} value={t}>
+                          {TYPE_LABEL[t]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="text-[11px] font-semibold text-muted-foreground">
+                    Cấp độ
+                    <select
+                      value={c.level}
+                      onChange={(e) => updateAt(idx, { level: e.target.value as QLevel })}
+                      className={cn(inputClass, "mt-1")}
+                    >
+                      {LEVELS.map((l) => (
+                        <option key={l} value={l}>
+                          {l}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="text-[11px] font-semibold text-muted-foreground">
+                    Độ khó
+                    <select
+                      value={c.difficulty}
+                      onChange={(e) => updateAt(idx, { difficulty: e.target.value as QDifficulty })}
+                      className={cn(inputClass, "mt-1")}
+                    >
+                      <option value="easy">{DIFFICULTY_LABEL.easy}</option>
+                      <option value="medium">{DIFFICULTY_LABEL.medium}</option>
+                      <option value="hard">{DIFFICULTY_LABEL.hard}</option>
+                    </select>
+                  </label>
+                </div>
+                <label className="block text-[11px] font-semibold text-muted-foreground">
+                  Nội dung câu hỏi
+                  <textarea
+                    value={c.content}
+                    onChange={(e) => updateAt(idx, { content: e.target.value })}
+                    rows={2}
+                    placeholder="Nhập đề bài..."
+                    className={cn(inputClass, "mt-1 font-normal text-foreground")}
+                  />
+                </label>
+
+                {isMcq && (
+                  <div className="space-y-1.5">
+                    <div className="text-[11px] font-semibold text-muted-foreground">Đáp án</div>
+                    {(c.options ?? ["", "", "", ""]).map((opt, oi) => {
+                      const letter = String.fromCharCode(65 + oi);
+                      const correct = c.correctAnswer === letter;
+                      return (
+                        <div key={oi} className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => updateAt(idx, { correctAnswer: letter })}
+                            className={cn(
+                              "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[11px] font-bold",
+                              correct
+                                ? "bg-emerald-500 text-white"
+                                : "bg-muted text-muted-foreground hover:bg-muted/70",
+                            )}
+                            title={correct ? "Đáp án đúng" : "Đặt làm đáp án đúng"}
+                          >
+                            {letter}
+                          </button>
+                          <input
+                            value={opt}
+                            onChange={(e) => {
+                              const next = [...(c.options ?? ["", "", "", ""])];
+                              next[oi] = e.target.value;
+                              updateAt(idx, { options: next });
+                            }}
+                            placeholder={`Phương án ${letter}`}
+                            className={inputClass}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {c.type === "tf" && (
+                  <label className="block text-[11px] font-semibold text-muted-foreground">
+                    Đáp án đúng
+                    <select
+                      value={c.correctAnswer ?? "True"}
+                      onChange={(e) => updateAt(idx, { correctAnswer: e.target.value })}
+                      className={cn(inputClass, "mt-1")}
+                    >
+                      <option value="True">True</option>
+                      <option value="False">False</option>
+                    </select>
+                  </label>
+                )}
+
+                {(c.type === "short" || c.type === "fill") && (
+                  <label className="block text-[11px] font-semibold text-muted-foreground">
+                    Đáp án tham khảo (tùy chọn)
+                    <input
+                      value={c.correctAnswer ?? ""}
+                      onChange={(e) => updateAt(idx, { correctAnswer: e.target.value })}
+                      className={cn(inputClass, "mt-1")}
+                      placeholder="VD: Hà Nội"
+                    />
+                  </label>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 
 /* ---------- Student-like preview ---------- */
+
 
 function StudentPreview({
   name,
