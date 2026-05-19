@@ -191,16 +191,19 @@ function CoursesListPage() {
                   ...levels.map((l) => ({ value: l.code, label: `Cấp độ ${l.code}` })),
                 ]}
               />
-              <FilterSelect
-                value={status}
-                onChange={(v) => setStatus(v as Status)}
-                options={[
-                  { value: "all", label: "Mọi trạng thái" },
-                  { value: "in-progress", label: "Đang học" },
-                  { value: "completed", label: "Đã hoàn thành" },
-                  { value: "not-started", label: "Chưa bắt đầu" },
-                ]}
-              />
+              {!isAdmin && (
+                <FilterSelect
+                  value={status}
+                  onChange={(v) => setStatus(v as Status)}
+                  options={[
+                    { value: "all", label: "Mọi trạng thái" },
+                    { value: "in-progress", label: "Đang học" },
+                    { value: "completed", label: "Đã hoàn thành" },
+                    { value: "not-started", label: "Chưa bắt đầu" },
+                  ]}
+                />
+              )}
+
 
               {/* Group by */}
               <div className="flex items-center gap-1 rounded-xl border border-border bg-background p-1 text-xs">
