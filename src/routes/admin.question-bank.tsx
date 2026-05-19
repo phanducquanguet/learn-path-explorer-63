@@ -763,25 +763,37 @@ function PreviewDialog({
 
 function EditDialog({
   question,
+  initialType,
   onClose,
   onSave,
 }: {
   question: BankQuestion | null;
+  initialType?: QType;
   onClose: () => void;
   onSave: (q: BankQuestion) => void;
 }) {
+  const defaultsForType = (t: QType): Partial<BankQuestion> => {
+    if (t === "mcq" || t === "mcq-multi")
+      return { options: ["A. ", "B. ", "C. ", "D. "], correctAnswer: t === "mcq" ? "A" : "A,B" };
+    if (t === "tf") return { options: ["True", "False"], correctAnswer: "True" };
+    if (t === "matching") return { options: ["Item 1 → ", "Item 2 → ", "Item 3 → "] };
+    if (t === "sequence") return { options: ["Bước 1", "Bước 2", "Bước 3"] };
+    if (t === "select-lists") return { options: ["List 1: A | B | C", "List 2: X | Y | Z"] };
+    if (t === "drag-drop") return { options: ["Drag item 1", "Drag item 2", "Drag item 3"] };
+    return { options: undefined };
+  };
   const [form, setForm] = useState<BankQuestion>(
     question ?? {
       id: "",
       content: "",
       skill: "reading",
-      type: "mcq",
+      type: initialType ?? "mcq",
       level: "A1",
-      points: 1,
+      points: (initialType === "essay" ? 5 : initialType === "short" ? 2 : 1),
       tags: [],
       createdAt: new Date().toISOString(),
-      options: ["A. ", "B. ", "C. ", "D. "],
-      correctAnswer: "A",
+      correctAnswer: "",
+      ...defaultsForType(initialType ?? "mcq"),
     },
   );
   const [tagInput, setTagInput] = useState("");
