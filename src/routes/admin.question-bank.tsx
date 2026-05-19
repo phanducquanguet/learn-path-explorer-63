@@ -98,6 +98,8 @@ function BankPage() {
   const [editing, setEditing] = useState<BankQuestion | null>(null);
   const [previewing, setPreviewing] = useState<BankQuestion | null>(null);
   const [creating, setCreating] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const [pickedType, setPickedType] = useState<QType>("mcq");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const fileRef = useRef<HTMLInputElement>(null);
