@@ -278,6 +278,7 @@ function TestsList() {
                     <th className="px-4 py-3 text-left font-semibold">Thời lượng</th>
                     <th className="px-4 py-3 text-left font-semibold">HS</th>
                     <th className="px-4 py-3 text-right font-semibold">TB</th>
+                    <th className="px-4 py-3 text-right font-semibold">Hành động</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
