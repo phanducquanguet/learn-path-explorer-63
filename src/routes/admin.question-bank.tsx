@@ -321,6 +321,12 @@ function BankPage() {
                 <Chip key={l} on={level === l} onClick={() => { setLevel(l); setPage(1); }}>{l}</Chip>
               ))}
             </FilterSection>
+            <FilterSection label="Độ khó">
+              <Chip on={difficulty === "all"} onClick={() => { setDifficulty("all"); setPage(1); }}>Tất cả</Chip>
+              {(Object.keys(DIFFICULTY_LABEL) as QDifficulty[]).map((d) => (
+                <Chip key={d} on={difficulty === d} onClick={() => { setDifficulty(d); setPage(1); }}>{DIFFICULTY_LABEL[d]}</Chip>
+              ))}
+            </FilterSection>
             <FilterSection label="Loại">
               <Chip on={type === "all"} onClick={() => { setType("all"); setPage(1); }}>Tất cả</Chip>
               {(Object.keys(TYPE_LABEL) as QType[]).map((t) => (
