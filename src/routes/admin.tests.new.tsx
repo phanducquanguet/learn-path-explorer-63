@@ -700,6 +700,9 @@ function Step4Build({
           mode={mode}
         />
       )}
+    </div>
+  );
+}
 
 function GroupEditor({
   structure,
