@@ -661,3 +661,122 @@ function StatusBadge({ done, started }: { done: boolean; started: boolean }) {
     </span>
   );
 }
+
+// ===== Admin views (no learner progress / status) =====
+function AdminCourseCard({
+  course,
+  level,
+  category,
+}: {
+  course: Course;
+  level: Level;
+  category: Category;
+}) {
+  return (
+    <div className="group relative flex flex-col overflow-hidden rounded-3xl bg-surface ring-1 ring-border shadow-soft transition hover:-translate-y-1 hover:shadow-elevated">
+      <div className="relative aspect-[16/10] w-full overflow-hidden">
+        <CourseCover course={course} level={level} category={category} />
+        <div className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-background/90 px-2.5 py-1 text-[11px] font-semibold text-foreground ring-1 ring-border backdrop-blur">
+          {level.code}
+        </div>
+      </div>
+      <div className="flex flex-1 flex-col p-5">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {category}
+        </div>
+        <h3 className="mt-1 text-base font-semibold text-foreground">{course.title}</h3>
+        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{course.subtitle}</p>
+
+        <div className="mt-4 flex items-center gap-3 text-[11px] font-medium text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <Clock className="h-3 w-3" /> {course.hours}h
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Layers className="h-3 w-3" /> {course.units.length} units
+          </span>
+        </div>
+
+        <div className="mt-4 flex items-center gap-2">
+          <Link
+            to="/teacher/upload"
+            search={{ edit: course.id }}
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground hover:border-primary hover:text-primary"
+          >
+            <Pencil className="h-3.5 w-3.5" /> Sửa
+          </Link>
+          <button
+            type="button"
+            onClick={() => alert(`Xóa khóa "${course.title}" (demo)`)}
+            className="inline-flex items-center justify-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:border-destructive hover:bg-destructive/10 hover:text-destructive"
+            aria-label="Xóa khóa học"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminCourseRow({
+  course,
+  level,
+  category,
+  isLast,
+}: {
+  course: Course;
+  level: Level;
+  category: Category;
+  isLast: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-4 px-4 py-3 transition hover:bg-muted/40",
+        !isLast && "border-b border-border",
+      )}
+    >
+      <div className="h-12 w-16 shrink-0 overflow-hidden rounded-lg ring-1 ring-border">
+        <CourseCover course={course} level={level} category={category} size="sm" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            {level.code}
+          </span>
+          <span className="text-[10px] text-muted-foreground">•</span>
+          <span className="text-[10px] text-muted-foreground">{category}</span>
+        </div>
+        <div className="mt-0.5 truncate text-sm font-semibold text-foreground">
+          {course.title}
+        </div>
+        <div className="truncate text-xs text-muted-foreground">{course.subtitle}</div>
+      </div>
+      <div className="hidden shrink-0 items-center gap-3 text-xs text-muted-foreground sm:flex">
+        <span className="inline-flex items-center gap-1">
+          <Clock className="h-3.5 w-3.5" /> {course.hours}h
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <Layers className="h-3.5 w-3.5" /> {course.units.length}
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        <Link
+          to="/teacher/upload"
+          search={{ edit: course.id }}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground hover:border-primary hover:text-primary"
+        >
+          <Pencil className="h-3.5 w-3.5" /> Sửa
+        </Link>
+        <button
+          type="button"
+          onClick={() => alert(`Xóa khóa "${course.title}" (demo)`)}
+          className="inline-flex items-center justify-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:border-destructive hover:bg-destructive/10 hover:text-destructive"
+          aria-label="Xóa khóa học"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
+  );
+}
