@@ -68,7 +68,7 @@ const emptyQuestion = (skill: QSkill, level: QLevel): CustomQuestion => {
     type,
     level,
     difficulty: "medium",
-    points: type === "essay" ? 5 : type === "short" ? 2 : 1,
+    points: type === "essay" ? 5 : 1,
     options: type === "mcq" ? ["", "", "", ""] : undefined,
     correctAnswer: type === "mcq" ? "A" : undefined,
   };
