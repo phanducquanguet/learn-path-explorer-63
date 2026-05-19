@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { useRole } from "@/contexts/RoleContext";
 import { classes } from "@/lib/teacher-data";
@@ -28,6 +28,8 @@ import {
   ListChecks,
   RefreshCw,
   X,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -84,24 +86,36 @@ function NewTestPage() {
     { skill: "reading", type: "mcq", level: "B1", difficulty: "mixed", count: 10, pickedIds: [] },
   ]);
   const [mode, setMode] = useState<"fixed" | "random">("random");
-  const [randomSeed, setRandomSeed] = useState<Record<number, number>>({});
   const [previewing, setPreviewing] = useState(false);
 
   const totalQuestions = structure.reduce((s, x) => s + x.count, 0);
 
-  // Resolve final question list per group for preview / save.
-  const resolved: { item: StructureItem; questions: BankQuestion[] }[] = useMemo(() => {
-    return structure.map((it, i) => {
-      if (mode === "fixed") {
-        const ids = it.pickedIds ?? [];
-        const qs = ids
-          .map((id) => questionBank.find((q) => q.id === id))
-          .filter((q): q is BankQuestion => !!q);
-        return { item: it, questions: qs };
-      }
-      return { item: it, questions: rollRandom(it, randomSeed[i] ?? 0) };
+  // Auto-fill random picks when entering step 4 in random mode (only for groups still empty).
+  useEffect(() => {
+    if (step !== 4 || mode !== "random") return;
+    setStructure((prev) => {
+      let changed = false;
+      const next = prev.map((it) => {
+        if (it.pickedIds && it.pickedIds.length > 0) return it;
+        const picks = rollRandom(it).map((q) => q.id);
+        if (picks.length === 0) return it;
+        changed = true;
+        return { ...it, pickedIds: picks };
+      });
+      return changed ? next : prev;
     });
-  }, [structure, mode, randomSeed]);
+  }, [step, mode]);
+
+  // Resolve final question list per group from pickedIds (both modes are editable now).
+  const resolved: { item: StructureItem; questions: BankQuestion[] }[] = useMemo(() => {
+    return structure.map((it) => {
+      const ids = it.pickedIds ?? [];
+      const qs = ids
+        .map((id) => questionBank.find((q) => q.id === id))
+        .filter((q): q is BankQuestion => !!q);
+      return { item: it, questions: qs };
+    });
+  }, [structure]);
 
   if (role !== "admin") {
     return (
@@ -143,7 +157,7 @@ function NewTestPage() {
   const canNext = (() => {
     if (step === 1) return name.trim().length > 0;
     if (step === 2) return structure.length > 0 && structure.every((s) => s.count > 0);
-    if (step === 4 && mode === "fixed") {
+    if (step === 4) {
       return structure.every((s) => (s.pickedIds?.length ?? 0) === s.count);
     }
     return true;
@@ -496,10 +510,6 @@ function NewTestPage() {
               structure={structure}
               setStructure={setStructure}
               mode={mode}
-              resolved={resolved}
-              reroll={(i) =>
-                setRandomSeed((s) => ({ ...s, [i]: (s[i] ?? 0) + 1 }))
-              }
             />
           )}
 
@@ -608,114 +618,116 @@ function Step4Build({
   structure,
   setStructure,
   mode,
-  resolved,
-  reroll,
 }: {
   structure: StructureItem[];
   setStructure: React.Dispatch<React.SetStateAction<StructureItem[]>>;
   mode: "fixed" | "random";
-  resolved: { item: StructureItem; questions: BankQuestion[] }[];
-  reroll: (i: number) => void;
 }) {
   const [openGroup, setOpenGroup] = useState(0);
 
-  if (mode === "random") {
-    return (
-      <div className="space-y-3">
-        <p className="text-sm text-muted-foreground">
-          Hệ thống đã bốc thử một đề mẫu từ ngân hàng. Bạn có thể "Bốc lại" để xem một mẫu khác.
-        </p>
-        {resolved.map((r, i) => {
-          const short = r.questions.length < r.item.count;
+  // Keep openGroup valid if structure shrinks.
+  useEffect(() => {
+    if (openGroup > structure.length - 1) setOpenGroup(Math.max(0, structure.length - 1));
+  }, [structure.length, openGroup]);
+
+  const moveGroup = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= structure.length) return;
+    setStructure((p) => {
+      const next = [...p];
+      [next[i], next[j]] = [next[j], next[i]];
+      return next;
+    });
+    if (openGroup === i) setOpenGroup(j);
+    else if (openGroup === j) setOpenGroup(i);
+  };
+
+  const intro =
+    mode === "random"
+      ? 'Hệ thống đã bốc ngẫu nhiên một đề mẫu. Bạn có thể thêm/bớt câu hỏi, sắp xếp lại, hoặc bấm "Làm mới" để bốc lại từ đầu.'
+      : "Chọn từng câu thủ công cho mỗi nhóm. Dùng bộ lọc bên dưới để thu hẹp theo cấp độ và độ khó.";
+
+  return (
+    <div className="space-y-3">
+      <p className="text-sm text-muted-foreground">{intro}</p>
+
+      {/* Group tabs with reorder controls */}
+      <div className="flex flex-wrap gap-2">
+        {structure.map((s, i) => {
+          const cnt = s.pickedIds?.length ?? 0;
+          const done = cnt === s.count;
+          const active = openGroup === i;
           return (
-            <div key={i} className="overflow-hidden rounded-2xl border border-border bg-background">
-              <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 px-4 py-2.5">
-                <div className="flex flex-wrap items-center gap-2 text-xs">
-                  <span className="font-semibold text-foreground">
-                    {SKILL_LABEL[r.item.skill]}
-                  </span>
-                  <span className="text-muted-foreground">•</span>
-                  <span>{TYPE_LABEL[r.item.type]}</span>
-                  <span className="text-muted-foreground">•</span>
-                  <span>{r.item.level}</span>
-                  {r.item.difficulty && r.item.difficulty !== "mixed" && (
-                    <span
-                      className={cn(
-                        "rounded-md px-1.5 py-0.5 text-[10px] font-semibold",
-                        DIFFICULTY_COLOR[r.item.difficulty],
-                      )}
-                    >
-                      {DIFFICULTY_LABEL[r.item.difficulty]}
-                    </span>
-                  )}
-                  <span
-                    className={cn(
-                      "rounded-md px-1.5 py-0.5 text-[10px] font-semibold",
-                      short ? "bg-rose-500/10 text-rose-600" : "bg-emerald-500/10 text-emerald-600",
-                    )}
-                  >
-                    {r.questions.length}/{r.item.count} câu
-                  </span>
-                </div>
-                <button
-                  onClick={() => reroll(i)}
-                  className="inline-flex items-center gap-1 rounded-lg bg-foreground px-2.5 py-1 text-[11px] font-semibold text-background"
-                >
-                  <RefreshCw className="h-3 w-3" /> Bốc lại
-                </button>
-              </div>
-              <ul className="divide-y divide-border text-sm">
-                {r.questions.map((q, idx) => (
-                  <li key={q.id} className="flex items-start gap-3 px-4 py-2.5">
-                    <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted text-[11px] font-bold">
-                      {idx + 1}
-                    </span>
-                    <span className="flex-1 text-foreground">{q.content}</span>
-                    <span
-                      className={cn(
-                        "rounded-md px-1.5 py-0.5 text-[10px] font-semibold",
-                        DIFFICULTY_COLOR[q.difficulty],
-                      )}
-                    >
-                      {DIFFICULTY_LABEL[q.difficulty]}
-                    </span>
-                  </li>
-                ))}
-                {r.questions.length === 0 && (
-                  <li className="px-4 py-6 text-center text-xs text-muted-foreground">
-                    Ngân hàng chưa có câu hỏi phù hợp với cấu hình này.
-                  </li>
+            <div
+              key={i}
+              className={cn(
+                "inline-flex items-center gap-1 rounded-xl border px-1.5 py-1 transition",
+                active
+                  ? "border-primary bg-primary/10"
+                  : "border-border bg-background hover:bg-muted",
+              )}
+            >
+              <button
+                onClick={() => moveGroup(i, -1)}
+                disabled={i === 0}
+                title="Lên"
+                className="rounded-md p-1 text-muted-foreground hover:bg-muted disabled:opacity-30"
+              >
+                <ArrowUp className="h-3 w-3" />
+              </button>
+              <button
+                onClick={() => moveGroup(i, 1)}
+                disabled={i === structure.length - 1}
+                title="Xuống"
+                className="rounded-md p-1 text-muted-foreground hover:bg-muted disabled:opacity-30"
+              >
+                <ArrowDown className="h-3 w-3" />
+              </button>
+              <button
+                onClick={() => setOpenGroup(i)}
+                className={cn(
+                  "inline-flex items-center gap-2 px-2 py-0.5 text-xs font-semibold",
+                  active ? "text-primary" : "text-foreground",
                 )}
-              </ul>
+              >
+                {i + 1}. {SKILL_LABEL[s.skill]} • {TYPE_LABEL[s.type]}
+                <span
+                  className={cn(
+                    "rounded-md px-1.5 py-0.5 text-[10px] font-bold",
+                    done
+                      ? "bg-emerald-500/10 text-emerald-600"
+                      : "bg-muted text-muted-foreground",
+                  )}
+                >
+                  {cnt}/{s.count}
+                </span>
+              </button>
             </div>
           );
         })}
       </div>
-    );
-  }
 
-  // fixed mode → picker
-  return (
-    <ManualPicker
-      key={openGroup}
-      structure={structure}
-      openGroup={openGroup}
-      setOpenGroup={setOpenGroup}
-      setStructure={setStructure}
-    />
+      <GroupEditor
+        key={openGroup}
+        structure={structure}
+        openGroup={openGroup}
+        setStructure={setStructure}
+        mode={mode}
+      />
+    </div>
   );
 }
 
-function ManualPicker({
+function GroupEditor({
   structure,
   openGroup,
-  setOpenGroup,
   setStructure,
+  mode,
 }: {
   structure: StructureItem[];
   openGroup: number;
-  setOpenGroup: (i: number) => void;
   setStructure: React.Dispatch<React.SetStateAction<StructureItem[]>>;
+  mode: "fixed" | "random";
 }) {
   const cur = structure[openGroup];
   const picked = cur.pickedIds ?? [];
@@ -724,6 +736,14 @@ function ManualPicker({
     cur.difficulty && cur.difficulty !== "mixed" ? cur.difficulty : "all",
   );
   const [search, setSearch] = useState("");
+
+  const pickedQs = useMemo(
+    () =>
+      picked
+        .map((id) => questionBank.find((q) => q.id === id))
+        .filter((q): q is BankQuestion => !!q),
+    [picked],
+  );
 
   const candidates = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -737,59 +757,141 @@ function ManualPicker({
     );
   }, [cur.skill, cur.type, filterLevel, filterDiff, search]);
 
-  const toggle = (id: string) => {
-    setStructure((p) =>
-      p.map((x, idx) => {
-        if (idx !== openGroup) return x;
-        const ids = x.pickedIds ?? [];
-        if (ids.includes(id)) return { ...x, pickedIds: ids.filter((y) => y !== id) };
-        if (ids.length >= x.count) return x;
-        return { ...x, pickedIds: [...ids, id] };
-      }),
-    );
+  const updateGroup = (fn: (g: StructureItem) => StructureItem) => {
+    setStructure((p) => p.map((x, idx) => (idx === openGroup ? fn(x) : x)));
+  };
+
+  const addOne = (id: string) => {
+    const ids = picked;
+    if (ids.includes(id) || ids.length >= cur.count) return;
+    updateGroup((g) => ({ ...g, pickedIds: [...(g.pickedIds ?? []), id] }));
+  };
+
+  const removeAt = (idx: number) => {
+    updateGroup((g) => ({
+      ...g,
+      pickedIds: (g.pickedIds ?? []).filter((_, i) => i !== idx),
+    }));
+  };
+
+  const moveItem = (idx: number, dir: -1 | 1) => {
+    const j = idx + dir;
+    updateGroup((g) => {
+      const ids = [...(g.pickedIds ?? [])];
+      if (j < 0 || j >= ids.length) return g;
+      [ids[idx], ids[j]] = [ids[j], ids[idx]];
+      return { ...g, pickedIds: ids };
+    });
+  };
+
+  const rerollAll = () => {
+    const ids = rollRandom(cur).map((q) => q.id);
+    updateGroup((g) => ({ ...g, pickedIds: ids }));
+  };
+
+  const fillRandom = () => {
+    const remaining = cur.count - picked.length;
+    if (remaining <= 0) return;
+    const pool = candidates.filter((q) => !picked.includes(q.id));
+    const random = [...pool]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, remaining)
+      .map((q) => q.id);
+    updateGroup((g) => ({ ...g, pickedIds: [...(g.pickedIds ?? []), ...random] }));
   };
 
   const selectClass =
     "h-8 rounded-lg border border-border bg-background px-2 text-xs font-medium outline-none focus:border-primary";
 
   return (
-    <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">
-        Chọn từng câu cho mỗi nhóm. Dùng bộ lọc bên dưới để thu hẹp theo cấp độ và độ khó.
-      </p>
-      <div className="flex flex-wrap gap-2">
-        {structure.map((s, i) => {
-          const cnt = s.pickedIds?.length ?? 0;
-          const done = cnt === s.count;
-          return (
-            <button
-              key={i}
-              onClick={() => setOpenGroup(i)}
+    <div className="grid gap-3 lg:grid-cols-2">
+      {/* LEFT: picked list (editable) */}
+      <div className="overflow-hidden rounded-2xl border border-border bg-background">
+        <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 px-4 py-2.5 text-xs">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-semibold text-foreground">Câu hỏi trong đề</span>
+            <span
               className={cn(
-                "inline-flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs font-semibold transition",
-                openGroup === i
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-background hover:bg-muted",
+                "rounded-md px-1.5 py-0.5 text-[10px] font-bold",
+                picked.length === cur.count
+                  ? "bg-emerald-500/10 text-emerald-600"
+                  : "bg-amber-500/10 text-amber-600",
               )}
             >
-              {SKILL_LABEL[s.skill]} • {TYPE_LABEL[s.type]}
-              <span
-                className={cn(
-                  "rounded-md px-1.5 py-0.5 text-[10px] font-bold",
-                  done ? "bg-emerald-500/10 text-emerald-600" : "bg-muted text-muted-foreground",
-                )}
-              >
-                {cnt}/{s.count}
-              </span>
+              {picked.length}/{cur.count}
+            </span>
+          </div>
+          {mode === "random" && (
+            <button
+              onClick={rerollAll}
+              className="inline-flex items-center gap-1 rounded-lg bg-foreground px-2.5 py-1 text-[11px] font-semibold text-background"
+            >
+              <RefreshCw className="h-3 w-3" /> Làm mới
             </button>
-          );
-        })}
+          )}
+        </div>
+        <ul className="max-h-[460px] divide-y divide-border overflow-y-auto text-sm">
+          {pickedQs.map((q, idx) => (
+            <li key={`${q.id}-${idx}`} className="flex items-start gap-2 px-3 py-2.5">
+              <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted text-[11px] font-bold">
+                {idx + 1}
+              </span>
+              <div className="flex-1">
+                <div className="text-foreground">{q.content}</div>
+                <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
+                  <span className="font-mono">{q.id}</span>
+                  <span className="rounded-md bg-muted px-1.5 py-0.5 font-semibold">{q.level}</span>
+                  <span
+                    className={cn(
+                      "rounded-md px-1.5 py-0.5 font-semibold",
+                      DIFFICULTY_COLOR[q.difficulty],
+                    )}
+                  >
+                    {DIFFICULTY_LABEL[q.difficulty]}
+                  </span>
+                </div>
+              </div>
+              <div className="flex shrink-0 flex-col gap-0.5">
+                <button
+                  onClick={() => moveItem(idx, -1)}
+                  disabled={idx === 0}
+                  className="rounded-md p-1 text-muted-foreground hover:bg-muted disabled:opacity-30"
+                  title="Lên"
+                >
+                  <ArrowUp className="h-3 w-3" />
+                </button>
+                <button
+                  onClick={() => moveItem(idx, 1)}
+                  disabled={idx === pickedQs.length - 1}
+                  className="rounded-md p-1 text-muted-foreground hover:bg-muted disabled:opacity-30"
+                  title="Xuống"
+                >
+                  <ArrowDown className="h-3 w-3" />
+                </button>
+              </div>
+              <button
+                onClick={() => removeAt(idx)}
+                className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
+                title="Xóa"
+              >
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </li>
+          ))}
+          {pickedQs.length === 0 && (
+            <li className="px-4 py-8 text-center text-xs text-muted-foreground">
+              Chưa có câu hỏi nào. Thêm từ ngân hàng bên cạnh.
+            </li>
+          )}
+        </ul>
       </div>
 
-      <div className="rounded-2xl border border-border bg-background">
-        <div className="flex flex-wrap items-center gap-2 border-b border-border bg-muted/30 px-4 py-2.5 text-xs">
+      {/* RIGHT: candidates (add from bank) */}
+      <div className="overflow-hidden rounded-2xl border border-border bg-background">
+        <div className="flex flex-wrap items-center gap-2 border-b border-border bg-muted/30 px-3 py-2.5 text-xs">
+          <span className="font-semibold text-foreground">Ngân hàng</span>
           <div className="flex items-center gap-1.5">
-            <span className="text-muted-foreground">Cấp độ</span>
+            <span className="text-muted-foreground">Cấp</span>
             <select
               value={filterLevel}
               onChange={(e) => setFilterLevel(e.target.value as QLevel | "all")}
@@ -819,41 +921,19 @@ function ManualPicker({
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm theo nội dung hoặc mã câu..."
-            className="h-8 min-w-[200px] flex-1 rounded-lg border border-border bg-background px-2.5 text-xs outline-none focus:border-primary"
+            placeholder="Tìm câu..."
+            className="h-8 min-w-[140px] flex-1 rounded-lg border border-border bg-background px-2.5 text-xs outline-none focus:border-primary"
           />
-          <div className="ml-auto flex items-center gap-3">
-            <span>
-              <strong>{candidates.length}</strong> phù hợp
-            </span>
-            <span>
-              <strong>
-                {picked.length}/{cur.count}
-              </strong>{" "}
-              đã chọn
-            </span>
-            <button
-              onClick={() => {
-                const remaining = cur.count - picked.length;
-                if (remaining <= 0) return;
-                const pool = candidates.filter((q) => !picked.includes(q.id));
-                const random = [...pool]
-                  .sort(() => Math.random() - 0.5)
-                  .slice(0, remaining)
-                  .map((q) => q.id);
-                setStructure((p) =>
-                  p.map((x, idx) =>
-                    idx === openGroup ? { ...x, pickedIds: [...picked, ...random] } : x,
-                  ),
-                );
-              }}
-              className="inline-flex items-center gap-1 rounded-lg bg-foreground px-2.5 py-1 text-[11px] font-semibold text-background"
-            >
-              <Shuffle className="h-3 w-3" /> Bốc đủ ngẫu nhiên
-            </button>
-          </div>
+          <button
+            onClick={fillRandom}
+            disabled={picked.length >= cur.count}
+            className="inline-flex items-center gap-1 rounded-lg bg-foreground px-2.5 py-1 text-[11px] font-semibold text-background disabled:opacity-40"
+            title="Thêm ngẫu nhiên cho đủ số lượng từ bộ lọc hiện tại"
+          >
+            <Shuffle className="h-3 w-3" /> Thêm ngẫu nhiên
+          </button>
         </div>
-        <ul className="max-h-[420px] divide-y divide-border overflow-y-auto text-sm">
+        <ul className="max-h-[460px] divide-y divide-border overflow-y-auto text-sm">
           {candidates.map((q) => {
             const on = picked.includes(q.id);
             const full = picked.length >= cur.count && !on;
@@ -861,21 +941,11 @@ function ManualPicker({
               <li
                 key={q.id}
                 className={cn(
-                  "flex items-start gap-3 px-4 py-2.5",
+                  "flex items-start gap-2 px-3 py-2.5",
                   on && "bg-primary/5",
                   full && "opacity-40",
                 )}
               >
-                <button
-                  onClick={() => toggle(q.id)}
-                  disabled={full}
-                  className={cn(
-                    "mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-md border",
-                    on ? "border-primary bg-primary text-primary-foreground" : "border-border",
-                  )}
-                >
-                  {on && <Check className="h-3 w-3" />}
-                </button>
                 <div className="flex-1">
                   <div className="text-foreground">{q.content}</div>
                   <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
@@ -891,9 +961,28 @@ function ManualPicker({
                     >
                       {DIFFICULTY_LABEL[q.difficulty]}
                     </span>
-                    <span>{q.points} điểm</span>
                   </div>
                 </div>
+                <button
+                  onClick={() => addOne(q.id)}
+                  disabled={on || full}
+                  className={cn(
+                    "inline-flex h-7 shrink-0 items-center gap-1 rounded-md px-2 text-[11px] font-semibold",
+                    on
+                      ? "bg-emerald-500/10 text-emerald-600"
+                      : "bg-foreground text-background hover:opacity-90 disabled:opacity-40",
+                  )}
+                >
+                  {on ? (
+                    <>
+                      <Check className="h-3 w-3" /> Đã thêm
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="h-3 w-3" /> Thêm
+                    </>
+                  )}
+                </button>
               </li>
             );
           })}
@@ -907,6 +996,7 @@ function ManualPicker({
     </div>
   );
 }
+
 
 /* ---------- Student-like preview ---------- */
 
