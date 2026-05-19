@@ -599,6 +599,7 @@ function Step4Build({
       {/* Group tabs with reorder controls */}
       <div className="flex flex-wrap gap-2">
         {structure.map((s, i) => {
+          if (s.count <= 0) return null;
           const cnt = s.pickedIds?.length ?? 0;
           const done = cnt === s.count;
           const active = openGroup === i;
