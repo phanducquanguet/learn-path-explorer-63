@@ -3,10 +3,12 @@ import {
   ArrowDown,
   ArrowUp,
   Check,
+  FileText,
   ListChecks,
   Plus,
   Trash2,
 } from "lucide-react";
+
 import {
   DIFFICULTY_COLOR,
   DIFFICULTY_LABEL,
@@ -460,6 +462,85 @@ export function ManualQuestionEditor({
                     />
                   </label>
                 )}
+
+                {c.type === "essay" && (
+                  <div className="space-y-3 rounded-xl border border-violet-500/30 bg-violet-500/5 p-3">
+                    <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">
+                      <FileText className="h-3 w-3" /> Câu hỏi tự luận
+                    </div>
+                    <label className="block text-[11px] font-semibold text-muted-foreground">
+                      Solution (bài mẫu tham khảo)
+                      <textarea
+                        value={c.solution ?? ""}
+                        onChange={(e) => updateAt(idx, { solution: e.target.value })}
+                        rows={4}
+                        placeholder="Viết bài mẫu để học viên đối chiếu..."
+                        className={cn(inputClass, "mt-1 font-normal text-foreground")}
+                      />
+                    </label>
+                    <div>
+                      <div className="mb-1.5 flex items-center justify-between">
+                        <span className="text-[11px] font-semibold text-muted-foreground">
+                          Feedback / Rubric chấm điểm
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            updateAt(idx, {
+                              feedback: [...(c.feedback ?? []), { keyword: "", comment: "" }],
+                            })
+                          }
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                        >
+                          <Plus className="h-3 w-3" /> Thêm tiêu chí
+                        </button>
+                      </div>
+                      <div className="space-y-1.5">
+                        {(c.feedback ?? []).map((cr, ci) => (
+                          <div key={ci} className="grid grid-cols-[120px_1fr_auto] items-center gap-1.5">
+                            <input
+                              value={cr.keyword}
+                              onChange={(e) => {
+                                const next = [...(c.feedback ?? [])];
+                                next[ci] = { ...cr, keyword: e.target.value };
+                                updateAt(idx, { feedback: next });
+                              }}
+                              placeholder="Từ khóa"
+                              className={cn(inputClass, "font-mono")}
+                            />
+                            <input
+                              value={cr.comment}
+                              onChange={(e) => {
+                                const next = [...(c.feedback ?? [])];
+                                next[ci] = { ...cr, comment: e.target.value };
+                                updateAt(idx, { feedback: next });
+                              }}
+                              placeholder="Nhận xét..."
+                              className={inputClass}
+                            />
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateAt(idx, {
+                                  feedback: (c.feedback ?? []).filter((_, x) => x !== ci),
+                                })
+                              }
+                              className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                        {(c.feedback ?? []).length === 0 && (
+                          <div className="rounded-lg border border-dashed border-border p-2 text-center text-[11px] text-muted-foreground">
+                            Chưa có tiêu chí. Thêm từ khóa làm sườn để chấm tự động.
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
               </div>
             </div>
           );
