@@ -107,7 +107,7 @@ function BankPage() {
   const [pickedType, setPickedType] = useState<QType>("mcq");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
-  const fileRef = useRef<HTMLInputElement>(null);
+  
 
   const filtered = useMemo(() => {
     const list = items.filter(
