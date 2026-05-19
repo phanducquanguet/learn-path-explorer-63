@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { useRole } from "@/contexts/RoleContext";
-import { tests, testStatus } from "@/lib/tests-data";
+import { tests as seedTests, testStatus, type Test } from "@/lib/tests-data";
 import { classes } from "@/lib/teacher-data";
+import { questionBank } from "@/lib/question-bank";
 import {
   ScrollText,
   Plus,
@@ -16,6 +17,8 @@ import {
   LayoutGrid,
   Table as TableIcon,
   GraduationCap,
+  Copy,
+  Sparkles,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +26,64 @@ export const Route = createFileRoute("/teacher/tests/")({
   head: () => ({ meta: [{ title: "Thi cử — UNICOM LMS" }] }),
   component: TestsList,
 });
+
+function pickSimilar(skill: string, type: string, level: string, difficulty: string | undefined, exclude: Set<string>, count: number) {
+  const pool = questionBank.filter(
+    (q) =>
+      q.skill === (skill as never) &&
+      q.type === (type as never) &&
+      q.level === (level as never) &&
+      (!difficulty || difficulty === "mixed" || q.difficulty === difficulty) &&
+      !exclude.has(q.id),
+  );
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count).map((q) => q.id);
+}
+
+function cloneTestSimilar(t: Test, index: number): Test {
+  const now = Date.now();
+  const days = (d: number) => new Date(now + d * 86400000).toISOString();
+  const used = new Set<string>();
+  const structure = t.structure.map((s) => {
+    const next = { ...s };
+    if (s.pickedIds && s.pickedIds.length) {
+      const ids = pickSimilar(s.skill, s.type, s.level, s.difficulty, used, s.count);
+      ids.forEach((id) => used.add(id));
+      next.pickedIds = ids.length ? ids : s.pickedIds;
+    }
+    if (s.customQuestions && s.customQuestions.length) {
+      const ids = pickSimilar(s.skill, s.type, s.level, s.difficulty, used, s.customQuestions.length);
+      ids.forEach((id) => used.add(id));
+      const picks = ids.map((id) => questionBank.find((q) => q.id === id)!).filter(Boolean);
+      next.customQuestions = picks.length
+        ? picks.map((q) => ({
+            id: `BK-${q.id}-${Math.random().toString(36).slice(2, 6)}`,
+            content: q.content,
+            type: q.type,
+            level: q.level,
+            difficulty: q.difficulty,
+            points: q.points,
+            options: q.options,
+            correctAnswer: q.correctAnswer,
+          }))
+        : s.customQuestions;
+    }
+    return next;
+  });
+  return {
+    ...t,
+    id: `${t.id}-sim-${now}`,
+    name: `${t.name} — Bản tương tự ${index}`,
+    structure,
+    openAt: days(7),
+    closeAt: days(8),
+    registered: 0,
+    submitted: 0,
+    graded: 0,
+    avgScore: undefined,
+    createdAt: new Date().toISOString(),
+  };
+}
 
 const classNameById = (id: string) => classes.find((c) => c.id === id)?.name ?? id;
 
