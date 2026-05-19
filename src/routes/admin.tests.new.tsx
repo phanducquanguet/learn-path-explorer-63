@@ -181,6 +181,11 @@ function NewTestPage() {
     if (step === 1) return name.trim().length > 0;
     if (step === 2) return structure.some((s) => s.count > 0);
     if (step === 4) {
+      if (mode === "manual") {
+        return structure
+          .filter((s) => s.count > 0)
+          .every((s) => (s.customQuestions?.length ?? 0) === s.count);
+      }
       return structure
         .filter((s) => s.count > 0)
         .every((s) => (s.pickedIds?.length ?? 0) === s.count);
