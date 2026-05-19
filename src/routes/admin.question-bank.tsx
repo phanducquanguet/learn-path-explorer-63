@@ -421,6 +421,7 @@ function BankPage() {
                       <th className="px-3 py-3">Kỹ năng</th>
                       <th className="px-3 py-3">Loại</th>
                       <th className="px-3 py-3">Lv</th>
+                      <th className="px-3 py-3">Độ khó</th>
                       <th className="px-3 py-3">Điểm</th>
                       <th className="px-3 py-3"></th>
                     </tr>
