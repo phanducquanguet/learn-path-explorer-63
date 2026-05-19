@@ -417,34 +417,23 @@ function BlockCard({
   // tách biệt bằng đường kẻ. Không có thanh header dày của "khối".
   if (!isGroup) {
     return (
-      <div className="rounded-2xl border border-border bg-background">
-        <div className="flex items-center justify-between gap-2 px-4 pt-3">
-          <div className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-            <span className="inline-flex h-5 w-5 items-center justify-center rounded-md bg-foreground text-[10px] font-bold text-background">
-              {index + 1}
-            </span>
-            Câu hỏi
-          </div>
-          <button
-            onClick={onRemove}
-            className="rounded-md p-1.5 text-rose-500 hover:bg-rose-500/10"
-            title="Xoá câu hỏi"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        </div>
+      <div className="rounded-2xl border border-border bg-background p-4">
+        <ManualQuestionEditor
+          skill={skill}
+          level={level}
+          questions={block.questions}
+          onChange={(qs) => {
+            if (qs.length === 0) onRemove();
+            else onUpdate({ questions: qs });
+          }}
+          hideBank
+          hideHeader
+          maxCount={1}
+        />
+      </div>
+    );
+  }
 
-        <div className="p-4 pt-2">
-          <ManualQuestionEditor
-            skill={skill}
-            level={level}
-            questions={block.questions}
-            onChange={(qs) => onUpdate({ questions: qs })}
-            hideBank
-            hideHeader
-            maxCount={1}
-          />
-        </div>
 
       </div>
     );
