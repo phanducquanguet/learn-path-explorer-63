@@ -417,22 +417,21 @@ function BlockCard({
   // tách biệt bằng đường kẻ. Không có thanh header dày của "khối".
   if (!isGroup) {
     return (
-      <div className="rounded-2xl border border-border bg-background p-4">
-        <ManualQuestionEditor
-          skill={skill}
-          level={level}
-          questions={block.questions}
-          onChange={(qs) => {
-            if (qs.length === 0) onRemove();
-            else onUpdate({ questions: qs });
-          }}
-          hideBank
-          hideHeader
-          maxCount={1}
-        />
-      </div>
+      <ManualQuestionEditor
+        skill={skill}
+        level={level}
+        questions={block.questions}
+        onChange={(qs) => {
+          if (qs.length === 0) onRemove();
+          else onUpdate({ questions: qs });
+        }}
+        hideBank
+        hideHeader
+        maxCount={1}
+      />
     );
   }
+
 
 
 
