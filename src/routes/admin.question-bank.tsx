@@ -26,8 +26,6 @@ import {
   ArrowLeft,
   X,
   Eye,
-  Download,
-  Upload,
   ChevronLeft,
   ChevronRight,
   ArrowUpDown,
