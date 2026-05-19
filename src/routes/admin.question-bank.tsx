@@ -951,17 +951,102 @@ function EditDialog({
             </div>
           )}
 
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground">
-              Đáp án đúng / mẫu
-            </label>
-            <input
-              value={form.correctAnswer ?? ""}
-              onChange={(e) => setForm({ ...form, correctAnswer: e.target.value })}
-              placeholder={isMcq ? "Ví dụ: A" : "Nhập đáp án mẫu (không bắt buộc)"}
-              className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-            />
-          </div>
+          {isEssay ? (
+            <div className="space-y-4 rounded-2xl border border-violet-500/30 bg-violet-500/5 p-4">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">
+                <FileText className="h-3.5 w-3.5" /> Câu hỏi tự luận — không có đáp án cố định
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Solution (bài mẫu tham khảo) *
+                </label>
+                <textarea
+                  value={form.solution ?? ""}
+                  onChange={(e) => setForm({ ...form, solution: e.target.value })}
+                  rows={6}
+                  placeholder="Viết một bài mẫu để học viên đối chiếu sau khi nộp..."
+                  className="mt-1 w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Học viên sẽ thấy bài mẫu này sau khi gửi bài hoặc bấm "Show solution".
+                </p>
+              </div>
+
+              <div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    Feedback / Rubric chấm điểm
+                  </label>
+                  <button
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        feedback: [...(form.feedback ?? []), { keyword: "", comment: "" }],
+                      })
+                    }
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                  >
+                    <Plus className="h-3 w-3" /> Thêm tiêu chí
+                  </button>
+                </div>
+                <p className="mb-2 text-[11px] text-muted-foreground">
+                  Mỗi dòng gồm một <b>từ khóa/sườn</b> cần xuất hiện trong bài và <b>nhận xét</b> tương ứng. Hệ thống dựa vào đây để chấm tự động.
+                </p>
+                <div className="space-y-1.5">
+                  {(form.feedback ?? []).map((c, i) => (
+                    <div key={i} className="grid grid-cols-[140px_1fr_auto] items-center gap-2">
+                      <input
+                        value={c.keyword}
+                        onChange={(e) => {
+                          const next = [...(form.feedback ?? [])];
+                          next[i] = { ...c, keyword: e.target.value };
+                          setForm({ ...form, feedback: next });
+                        }}
+                        placeholder="Từ khóa, vd: Dear"
+                        className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm font-mono"
+                      />
+                      <input
+                        value={c.comment}
+                        onChange={(e) => {
+                          const next = [...(form.feedback ?? [])];
+                          next[i] = { ...c, comment: e.target.value };
+                          setForm({ ...form, feedback: next });
+                        }}
+                        placeholder="Nhận xét hiển thị cho học viên..."
+                        className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
+                      />
+                      <button
+                        onClick={() => {
+                          const next = (form.feedback ?? []).filter((_, x) => x !== i);
+                          setForm({ ...form, feedback: next });
+                        }}
+                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                  {(form.feedback ?? []).length === 0 && (
+                    <div className="rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+                      Chưa có tiêu chí nào. Thêm các từ khóa làm sườn để chấm.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground">
+                Đáp án đúng / mẫu
+              </label>
+              <input
+                value={form.correctAnswer ?? ""}
+                onChange={(e) => setForm({ ...form, correctAnswer: e.target.value })}
+                placeholder={isMcq ? "Ví dụ: A" : "Nhập đáp án mẫu (không bắt buộc)"}
+                className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+              />
+            </div>
+          )}
 
           <div>
             <label className="text-xs font-semibold text-muted-foreground">Tags</label>
