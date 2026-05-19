@@ -31,8 +31,43 @@ import {
   Square,
   FileQuestion,
   Tag as TagIcon,
+  CircleDot,
+  ToggleLeft,
+  Type as TypeIcon,
+  ListOrdered,
+  GitCompareArrows,
+  TextCursorInput,
+  MousePointerSquareDashed,
+  Move,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const TYPE_ICON: Record<QType, typeof Plus> = {
+  mcq: CircleDot,
+  "mcq-multi": CheckSquare,
+  tf: ToggleLeft,
+  short: TypeIcon,
+  sequence: ListOrdered,
+  matching: GitCompareArrows,
+  fill: TextCursorInput,
+  "select-lists": MousePointerSquareDashed,
+  "drag-drop": Move,
+  essay: FileText,
+};
+
+const TYPE_ORDER: QType[] = [
+  "mcq",
+  "mcq-multi",
+  "tf",
+  "short",
+  "sequence",
+  "matching",
+  "fill",
+  "select-lists",
+  "drag-drop",
+  "essay",
+];
 
 export const Route = createFileRoute("/admin/question-bank")({
   head: () => ({ meta: [{ title: "Ngân hàng câu hỏi — UNICOM LMS" }] }),
