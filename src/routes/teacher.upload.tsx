@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TopNav } from "@/components/TopNav";
-import { levels } from "@/lib/lms-data";
+import { levels, getCourse } from "@/lib/lms-data";
 import { ACTIVITY_TYPES, QUIZ_KINDS } from "@/lib/teacher-data";
+import { CATEGORIES, categoryOf, type Category } from "@/lib/course-categories";
 import {
   Upload,
   BookOpen,
