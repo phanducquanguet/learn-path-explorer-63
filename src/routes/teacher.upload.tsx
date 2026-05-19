@@ -18,8 +18,17 @@ import {
   FileText,
   ClipboardList,
   Sparkles,
+  Settings2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { CategoriesManager } from "@/components/CategoriesManager";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export const Route = createFileRoute("/teacher/upload")({
   head: () => ({ meta: [{ title: "Quản lý khóa học — UNICOM LMS" }] }),
