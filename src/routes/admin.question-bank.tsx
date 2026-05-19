@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { useRole } from "@/contexts/RoleContext";
 import {
@@ -26,8 +26,6 @@ import {
   ArrowLeft,
   X,
   Eye,
-  Download,
-  Upload,
   ChevronLeft,
   ChevronRight,
   ArrowUpDown,
@@ -107,7 +105,7 @@ function BankPage() {
   const [pickedType, setPickedType] = useState<QType>("mcq");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
-  const fileRef = useRef<HTMLInputElement>(null);
+  
 
   const filtered = useMemo(() => {
     const list = items.filter(
@@ -214,24 +212,8 @@ function BankPage() {
     setSelected(new Set());
   };
 
-  const exportJson = () => {
-    const blob = new Blob([JSON.stringify(items, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `question-bank-${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-  const importJson = async (f: File) => {
-    try {
-      const txt = await f.text();
-      const data = JSON.parse(txt) as BankQuestion[];
-      if (Array.isArray(data)) setItems((p) => [...data, ...p]);
-    } catch {
-      alert("File JSON không hợp lệ");
-    }
-  };
+
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -257,25 +239,7 @@ function BankPage() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <input
-              ref={fileRef}
-              type="file"
-              accept="application/json"
-              className="hidden"
-              onChange={(e) => e.target.files?.[0] && importJson(e.target.files[0])}
-            />
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2 text-sm font-semibold hover:bg-muted"
-            >
-              <Upload className="h-4 w-4" /> Nhập
-            </button>
-            <button
-              onClick={exportJson}
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3 py-2 text-sm font-semibold hover:bg-muted"
-            >
-              <Download className="h-4 w-4" /> Xuất
-            </button>
+
             <button
               onClick={() => setPicking(true)}
               className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
