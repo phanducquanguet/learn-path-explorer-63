@@ -1018,8 +1018,281 @@ function GroupEditor({
   );
 }
 
+/* ---------- Step 4: Manual editor (soạn mới câu hỏi) ---------- */
+
+const Q_TYPES_BY_SKILL: Record<QSkill, QType[]> = {
+  listening: ["mcq", "tf", "short", "fill"],
+  reading: ["mcq", "tf", "short", "fill"],
+  speaking: ["short"],
+  writing: ["essay", "short"],
+};
+
+function ManualEditor({
+  structure,
+  openGroup,
+  setStructure,
+}: {
+  structure: StructureItem[];
+  openGroup: number;
+  setStructure: React.Dispatch<React.SetStateAction<StructureItem[]>>;
+}) {
+  const cur = structure[openGroup];
+  const list = cur.customQuestions ?? [];
+  const allowedTypes = Q_TYPES_BY_SKILL[cur.skill];
+
+  const updateGroup = (fn: (g: StructureItem) => StructureItem) => {
+    setStructure((p) => p.map((x, i) => (i === openGroup ? fn(x) : x)));
+  };
+
+  const addNew = () => {
+    if (list.length >= cur.count) return;
+    const defType = allowedTypes[0];
+    const isMcq = defType === "mcq";
+    const nq: CustomQuestion = {
+      id: `CQ-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      content: "",
+      type: defType,
+      level: cur.level,
+      difficulty: cur.difficulty && cur.difficulty !== "mixed" ? cur.difficulty : "medium",
+      points: defType === "essay" ? 5 : defType === "short" ? 2 : 1,
+      options: isMcq ? ["", "", "", ""] : undefined,
+      correctAnswer: isMcq ? "A" : defType === "tf" ? "True" : undefined,
+    };
+    updateGroup((g) => ({ ...g, customQuestions: [...(g.customQuestions ?? []), nq] }));
+  };
+
+  const updateAt = (idx: number, patch: Partial<CustomQuestion>) => {
+    updateGroup((g) => ({
+      ...g,
+      customQuestions: (g.customQuestions ?? []).map((c, i) => (i === idx ? { ...c, ...patch } : c)),
+    }));
+  };
+
+  const removeAt = (idx: number) => {
+    updateGroup((g) => ({
+      ...g,
+      customQuestions: (g.customQuestions ?? []).filter((_, i) => i !== idx),
+    }));
+  };
+
+  const moveItem = (idx: number, dir: -1 | 1) => {
+    const j = idx + dir;
+    updateGroup((g) => {
+      const arr = [...(g.customQuestions ?? [])];
+      if (j < 0 || j >= arr.length) return g;
+      [arr[idx], arr[j]] = [arr[j], arr[idx]];
+      return { ...g, customQuestions: arr };
+    });
+  };
+
+  const inputClass =
+    "w-full rounded-lg border border-border bg-background px-2.5 py-1.5 text-sm outline-none focus:border-primary";
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between rounded-2xl border border-border bg-muted/30 px-4 py-2.5 text-xs">
+        <div className="flex items-center gap-2">
+          <span className="font-semibold text-foreground">{SKILL_LABEL[cur.skill]}</span>
+          <span
+            className={cn(
+              "rounded-md px-1.5 py-0.5 text-[10px] font-bold",
+              list.length === cur.count
+                ? "bg-emerald-500/10 text-emerald-600"
+                : "bg-amber-500/10 text-amber-600",
+            )}
+          >
+            {list.length}/{cur.count}
+          </span>
+        </div>
+        <button
+          onClick={addNew}
+          disabled={list.length >= cur.count}
+          className="inline-flex items-center gap-1 rounded-lg bg-foreground px-2.5 py-1 text-[11px] font-semibold text-background disabled:opacity-40"
+        >
+          <Plus className="h-3 w-3" /> Thêm câu hỏi
+        </button>
+      </div>
+
+      {list.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+          Chưa có câu hỏi nào. Nhấn “Thêm câu hỏi” để bắt đầu soạn.
+        </div>
+      )}
+
+      <div className="space-y-3">
+        {list.map((c, idx) => {
+          const isMcq = c.type === "mcq";
+          return (
+            <div key={c.id} className="overflow-hidden rounded-2xl border border-border bg-background">
+              <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 px-3 py-2 text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-foreground text-[11px] font-bold text-background">
+                    {idx + 1}
+                  </span>
+                  <span className="font-mono text-[10px] text-muted-foreground">{c.id}</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => moveItem(idx, -1)}
+                    disabled={idx === 0}
+                    className="rounded-md p-1 text-muted-foreground hover:bg-muted disabled:opacity-30"
+                    title="Lên"
+                  >
+                    <ArrowUp className="h-3 w-3" />
+                  </button>
+                  <button
+                    onClick={() => moveItem(idx, 1)}
+                    disabled={idx === list.length - 1}
+                    className="rounded-md p-1 text-muted-foreground hover:bg-muted disabled:opacity-30"
+                    title="Xuống"
+                  >
+                    <ArrowDown className="h-3 w-3" />
+                  </button>
+                  <button
+                    onClick={() => removeAt(idx)}
+                    className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
+                    title="Xóa"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </div>
+              <div className="space-y-2.5 p-3">
+                <div className="grid gap-2 sm:grid-cols-3">
+                  <label className="text-[11px] font-semibold text-muted-foreground">
+                    Loại câu hỏi
+                    <select
+                      value={c.type}
+                      onChange={(e) => {
+                        const t = e.target.value as QType;
+                        updateAt(idx, {
+                          type: t,
+                          options: t === "mcq" ? c.options ?? ["", "", "", ""] : undefined,
+                          correctAnswer: t === "mcq" ? "A" : t === "tf" ? "True" : undefined,
+                          points: t === "essay" ? 5 : t === "short" ? 2 : 1,
+                        });
+                      }}
+                      className={cn(inputClass, "mt-1")}
+                    >
+                      {allowedTypes.map((t) => (
+                        <option key={t} value={t}>
+                          {TYPE_LABEL[t]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="text-[11px] font-semibold text-muted-foreground">
+                    Cấp độ
+                    <select
+                      value={c.level}
+                      onChange={(e) => updateAt(idx, { level: e.target.value as QLevel })}
+                      className={cn(inputClass, "mt-1")}
+                    >
+                      {LEVELS.map((l) => (
+                        <option key={l} value={l}>
+                          {l}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+                  <label className="text-[11px] font-semibold text-muted-foreground">
+                    Độ khó
+                    <select
+                      value={c.difficulty}
+                      onChange={(e) => updateAt(idx, { difficulty: e.target.value as QDifficulty })}
+                      className={cn(inputClass, "mt-1")}
+                    >
+                      <option value="easy">{DIFFICULTY_LABEL.easy}</option>
+                      <option value="medium">{DIFFICULTY_LABEL.medium}</option>
+                      <option value="hard">{DIFFICULTY_LABEL.hard}</option>
+                    </select>
+                  </label>
+                </div>
+                <label className="block text-[11px] font-semibold text-muted-foreground">
+                  Nội dung câu hỏi
+                  <textarea
+                    value={c.content}
+                    onChange={(e) => updateAt(idx, { content: e.target.value })}
+                    rows={2}
+                    placeholder="Nhập đề bài..."
+                    className={cn(inputClass, "mt-1 font-normal text-foreground")}
+                  />
+                </label>
+
+                {isMcq && (
+                  <div className="space-y-1.5">
+                    <div className="text-[11px] font-semibold text-muted-foreground">Đáp án</div>
+                    {(c.options ?? ["", "", "", ""]).map((opt, oi) => {
+                      const letter = String.fromCharCode(65 + oi);
+                      const correct = c.correctAnswer === letter;
+                      return (
+                        <div key={oi} className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => updateAt(idx, { correctAnswer: letter })}
+                            className={cn(
+                              "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[11px] font-bold",
+                              correct
+                                ? "bg-emerald-500 text-white"
+                                : "bg-muted text-muted-foreground hover:bg-muted/70",
+                            )}
+                            title={correct ? "Đáp án đúng" : "Đặt làm đáp án đúng"}
+                          >
+                            {letter}
+                          </button>
+                          <input
+                            value={opt}
+                            onChange={(e) => {
+                              const next = [...(c.options ?? ["", "", "", ""])];
+                              next[oi] = e.target.value;
+                              updateAt(idx, { options: next });
+                            }}
+                            placeholder={`Phương án ${letter}`}
+                            className={inputClass}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {c.type === "tf" && (
+                  <label className="block text-[11px] font-semibold text-muted-foreground">
+                    Đáp án đúng
+                    <select
+                      value={c.correctAnswer ?? "True"}
+                      onChange={(e) => updateAt(idx, { correctAnswer: e.target.value })}
+                      className={cn(inputClass, "mt-1")}
+                    >
+                      <option value="True">True</option>
+                      <option value="False">False</option>
+                    </select>
+                  </label>
+                )}
+
+                {(c.type === "short" || c.type === "fill") && (
+                  <label className="block text-[11px] font-semibold text-muted-foreground">
+                    Đáp án tham khảo (tùy chọn)
+                    <input
+                      value={c.correctAnswer ?? ""}
+                      onChange={(e) => updateAt(idx, { correctAnswer: e.target.value })}
+                      className={cn(inputClass, "mt-1")}
+                      placeholder="VD: Hà Nội"
+                    />
+                  </label>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 
 /* ---------- Student-like preview ---------- */
+
 
 function StudentPreview({
   name,
