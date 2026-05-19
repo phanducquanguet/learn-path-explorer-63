@@ -200,19 +200,35 @@ function UploadPage() {
                 />
               </Field>
               <Field label="Chương trình (category)" required>
-                <select
-                  value={course.category}
-                  onChange={(e) =>
-                    setCourse({ ...course, category: e.target.value as Category })
-                  }
-                  className="input"
-                >
-                  {categories.map((c) => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={course.category}
+                    onChange={(e) => {
+                      if (e.target.value === "__manage__") {
+                        setManagerOpen(true);
+                        return;
+                      }
+                      setCourse({ ...course, category: e.target.value as Category });
+                    }}
+                    className="input flex-1"
+                  >
+                    {categories.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                    <option disabled>──────────</option>
+                    <option value="__manage__">⚙ Quản lý chương trình…</option>
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setManagerOpen(true)}
+                    title="Quản lý chương trình"
+                    className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-border bg-background text-muted-foreground hover:border-primary hover:text-primary"
+                  >
+                    <Settings2 className="h-4 w-4" />
+                  </button>
+                </div>
               </Field>
               <Field label="Cấp độ" required>
                 <select
