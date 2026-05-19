@@ -519,9 +519,21 @@ function BankPage() {
         </div>
       </div>
 
+      {picking && (
+        <TypePickerDialog
+          onClose={() => setPicking(false)}
+          onPick={(t) => {
+            setPickedType(t);
+            setPicking(false);
+            setCreating(true);
+          }}
+        />
+      )}
+
       {(editing || creating) && (
         <EditDialog
           question={editing}
+          initialType={pickedType}
           onClose={() => {
             setEditing(null);
             setCreating(false);
