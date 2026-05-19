@@ -45,6 +45,9 @@ type Props = {
   hideBank?: boolean;
   /** Ẩn thanh header tổng (số câu/nút thêm). Khi true component chỉ render danh sách. */
   hideHeader?: boolean;
+  /** Ẩn ô Cấp độ + Độ khó để soạn nhanh */
+  hideMeta?: boolean;
+
 };
 
 export function ManualQuestionEditor({
@@ -57,6 +60,8 @@ export function ManualQuestionEditor({
   title,
   hideBank,
   hideHeader,
+  hideMeta,
+
 }: Props) {
   const list = questions;
   const allowedTypes = Q_TYPES_BY_SKILL[skill];
@@ -326,8 +331,9 @@ export function ManualQuestionEditor({
                 </div>
               </div>
               <div className="space-y-2.5 p-3">
-                <div className="grid gap-2 sm:grid-cols-3">
+                <div className={cn("grid gap-2", hideMeta ? "" : "sm:grid-cols-3")}>
                   <label className="text-[11px] font-semibold text-muted-foreground">
+
                     Loại câu hỏi
                     <select
                       value={c.type}
@@ -349,33 +355,38 @@ export function ManualQuestionEditor({
                       ))}
                     </select>
                   </label>
-                  <label className="text-[11px] font-semibold text-muted-foreground">
-                    Cấp độ
-                    <select
-                      value={c.level}
-                      onChange={(e) => updateAt(idx, { level: e.target.value as QLevel })}
-                      className={cn(inputClass, "mt-1")}
-                    >
-                      {LEVELS.map((l) => (
-                        <option key={l} value={l}>
-                          {l}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label className="text-[11px] font-semibold text-muted-foreground">
-                    Độ khó
-                    <select
-                      value={c.difficulty}
-                      onChange={(e) => updateAt(idx, { difficulty: e.target.value as QDifficulty })}
-                      className={cn(inputClass, "mt-1")}
-                    >
-                      <option value="easy">{DIFFICULTY_LABEL.easy}</option>
-                      <option value="medium">{DIFFICULTY_LABEL.medium}</option>
-                      <option value="hard">{DIFFICULTY_LABEL.hard}</option>
-                    </select>
-                  </label>
+                  {!hideMeta && (
+                    <>
+                      <label className="text-[11px] font-semibold text-muted-foreground">
+                        Cấp độ
+                        <select
+                          value={c.level}
+                          onChange={(e) => updateAt(idx, { level: e.target.value as QLevel })}
+                          className={cn(inputClass, "mt-1")}
+                        >
+                          {LEVELS.map((l) => (
+                            <option key={l} value={l}>
+                              {l}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="text-[11px] font-semibold text-muted-foreground">
+                        Độ khó
+                        <select
+                          value={c.difficulty}
+                          onChange={(e) => updateAt(idx, { difficulty: e.target.value as QDifficulty })}
+                          className={cn(inputClass, "mt-1")}
+                        >
+                          <option value="easy">{DIFFICULTY_LABEL.easy}</option>
+                          <option value="medium">{DIFFICULTY_LABEL.medium}</option>
+                          <option value="hard">{DIFFICULTY_LABEL.hard}</option>
+                        </select>
+                      </label>
+                    </>
+                  )}
                 </div>
+
                 <label className="block text-[11px] font-semibold text-muted-foreground">
                   Nội dung câu hỏi
                   <textarea

@@ -427,6 +427,8 @@ function BlockCard({
         }}
         hideBank
         hideHeader
+        hideMeta
+
         maxCount={1}
       />
     );
@@ -492,6 +494,8 @@ function BlockCard({
           onChange={(qs) => onUpdate({ questions: qs })}
           hideBank
           hideHeader
+          hideMeta
+
         />
       </div>
     </div>
