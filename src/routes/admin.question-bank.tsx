@@ -187,6 +187,7 @@ function BankPage() {
     setSkill("all");
     setLevel("all");
     setType("all");
+    setDifficulty("all");
     setQ("");
     setPage(1);
   };
