@@ -119,6 +119,7 @@ export const questionBank: BankQuestion[] = (() => {
   for (const skill of SKILLS) {
     for (const level of LEVELS) {
       for (const type of TYPES.slice(0, skill === "writing" || skill === "speaking" ? 3 : 6)) {
+        for (let v = 0; v < 6; v++) {
         const contents = SAMPLE_CONTENTS[skill];
         const actualType: QType = skill === "writing" ? "essay" : skill === "speaking" ? "short" : type;
         const difficulty: QDifficulty = i % 3 === 0 ? "hard" : i % 3 === 1 ? "medium" : "easy";
