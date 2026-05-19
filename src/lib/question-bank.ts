@@ -12,17 +12,41 @@ export type QType =
   | "essay";
 export type QLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 
+export type QDifficulty = "easy" | "medium" | "hard";
+
+export type FeedbackCriterion = {
+  keyword: string;
+  comment: string;
+};
+
 export type BankQuestion = {
   id: string;
   content: string;
   skill: QSkill;
   type: QType;
   level: QLevel;
+  difficulty: QDifficulty;
   points: number;
   tags: string[];
   createdAt: string;
   options?: string[];
   correctAnswer?: string;
+  /** Sample/model answer shown after submission (esp. essay). */
+  solution?: string;
+  /** Rubric used to give automatic feedback on open-ended answers (essay). */
+  feedback?: FeedbackCriterion[];
+};
+
+export const DIFFICULTY_LABEL: Record<QDifficulty, string> = {
+  easy: "Dễ",
+  medium: "Trung bình",
+  hard: "Khó",
+};
+
+export const DIFFICULTY_COLOR: Record<QDifficulty, string> = {
+  easy: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  medium: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  hard: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
 };
 
 export const SKILL_LABEL: Record<QSkill, string> = {
