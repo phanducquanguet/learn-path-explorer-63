@@ -15,10 +15,19 @@ import {
   Pencil,
   Trash2,
   Layers,
+  Settings2,
 } from "lucide-react";
 import { levels, type Course, type Level } from "@/lib/lms-data";
 import { useCategories, categoryOf, type Category } from "@/lib/course-categories";
 import { TopNav } from "@/components/TopNav";
+import { CategoriesManager } from "@/components/CategoriesManager";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { useRole } from "@/contexts/RoleContext";
 import { cn } from "@/lib/utils";
 import coverA1 from "@/assets/cover-empower-a1.png";
