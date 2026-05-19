@@ -149,13 +149,22 @@ function CoursesListPage() {
             </p>
           </div>
           {isAdmin && (
-            <Link
-              to="/teacher/upload"
-              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft transition hover:opacity-90"
-              style={{ background: "var(--gradient-brand)" }}
-            >
-              <Plus className="h-4 w-4" /> Tạo khóa học mới
-            </Link>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setManagerOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted"
+              >
+                <Settings2 className="h-4 w-4" /> Quản lý chương trình
+              </button>
+              <Link
+                to="/teacher/upload"
+                className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft transition hover:opacity-90"
+                style={{ background: "var(--gradient-brand)" }}
+              >
+                <Plus className="h-4 w-4" /> Tạo khóa học mới
+              </Link>
+            </div>
           )}
         </div>
 
