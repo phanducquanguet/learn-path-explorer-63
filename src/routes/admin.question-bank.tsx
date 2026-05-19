@@ -6,6 +6,7 @@ import {
   questionBank,
   SKILL_LABEL,
   TYPE_LABEL,
+  TYPE_DESCRIPTION,
   type BankQuestion,
   type QSkill,
   type QLevel,
