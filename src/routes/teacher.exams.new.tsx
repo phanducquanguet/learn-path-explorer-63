@@ -16,6 +16,10 @@ import {
   Languages,
   CheckCircle2,
   Save,
+  Plus,
+  Trash2,
+  FileAudio,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -34,10 +38,38 @@ const SKILL_ICON: Record<string, React.ComponentType<{ className?: string }>> = 
 
 const EDITOR_SKILLS: QSkill[] = ["listening", "reading", "writing", "speaking"];
 
+/** Khối câu hỏi:
+ * - listening: có audio (URL/script) dùng chung cho 1 hoặc nhiều câu hỏi
+ * - reading: có passage dùng chung cho 1 hoặc nhiều câu hỏi
+ * - speaking/writing: media = "", luôn chứa đúng 1 câu hỏi
+ */
+type QuestionBlock = {
+  id: string;
+  media: string;
+  questions: CustomQuestion[];
+};
+
 type SkillGroup = {
   id: QSkill;
-  passage: string;
-  questions: CustomQuestion[];
+  blocks: QuestionBlock[];
+};
+
+const newBlockId = () => `B-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+
+const emptyQuestion = (skill: QSkill, level: QLevel): CustomQuestion => {
+  const isWriting = skill === "writing";
+  const isSpeaking = skill === "speaking";
+  const type = isWriting ? "essay" : isSpeaking ? "short" : "mcq";
+  return {
+    id: `CQ-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    content: "",
+    type,
+    level,
+    difficulty: "medium",
+    points: type === "essay" ? 5 : type === "short" ? 2 : 1,
+    options: type === "mcq" ? ["", "", "", ""] : undefined,
+    correctAnswer: type === "mcq" ? "A" : undefined,
+  };
 };
 
 function ExamBuilder() {
@@ -49,8 +81,8 @@ function ExamBuilder() {
   });
   const [selectedSkills, setSelectedSkills] = useState<QSkill[]>(["listening", "reading"]);
   const [groups, setGroups] = useState<Record<string, SkillGroup>>({
-    listening: { id: "listening", passage: "", questions: [] },
-    reading: { id: "reading", passage: "", questions: [] },
+    listening: { id: "listening", blocks: [] },
+    reading: { id: "reading", blocks: [] },
   });
   const [activeSkill, setActiveSkill] = useState<QSkill>("listening");
   const [saved, setSaved] = useState(false);
@@ -60,7 +92,7 @@ function ExamBuilder() {
       const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
       setGroups((g) => {
         const copy = { ...g };
-        if (!prev.includes(id)) copy[id] = { id, passage: "", questions: [] };
+        if (!prev.includes(id)) copy[id] = { id, blocks: [] };
         else delete copy[id];
         return copy;
       });
@@ -73,7 +105,11 @@ function ExamBuilder() {
     setGroups((g) => ({ ...g, [skill]: { ...g[skill], ...patch } }));
 
   const totalQuestions = useMemo(
-    () => Object.values(groups).reduce((s, g) => s + g.questions.length, 0),
+    () =>
+      Object.values(groups).reduce(
+        (s, g) => s + g.blocks.reduce((a, b) => a + b.questions.length, 0),
+        0,
+      ),
     [groups],
   );
 
@@ -97,6 +133,25 @@ function ExamBuilder() {
 
   const isMulti = selectedSkills.length > 1;
   const current = groups[activeSkill];
+  const hasMedia = activeSkill === "listening" || activeSkill === "reading";
+
+  /* ---------- Block ops ---------- */
+  const addBlock = () => {
+    const blk: QuestionBlock = {
+      id: newBlockId(),
+      media: "",
+      questions: hasMedia ? [] : [emptyQuestion(activeSkill, meta.levelCode)],
+    };
+    updateGroup(activeSkill, { blocks: [...current.blocks, blk] });
+  };
+
+  const updateBlock = (id: string, patch: Partial<QuestionBlock>) =>
+    updateGroup(activeSkill, {
+      blocks: current.blocks.map((b) => (b.id === id ? { ...b, ...patch } : b)),
+    });
+
+  const removeBlock = (id: string) =>
+    updateGroup(activeSkill, { blocks: current.blocks.filter((b) => b.id !== id) });
 
   return (
     <div className="min-h-screen bg-background">
@@ -111,7 +166,7 @@ function ExamBuilder() {
               Tạo bài luyện thi
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Kết hợp 1 hoặc nhiều kỹ năng. Mỗi kỹ năng có nhóm câu hỏi và passage/audio riêng.
+              Kết hợp 1 hoặc nhiều kỹ năng. Nghe/Đọc có thể gom nhiều câu hỏi vào chung 1 audio hoặc 1 đoạn văn.
             </p>
           </div>
           <button
@@ -205,14 +260,17 @@ function ExamBuilder() {
         ) : (
           <div className={cn("mt-6 grid gap-4", isMulti ? "lg:grid-cols-[260px_1fr]" : "")}>
             {isMulti && (
-              <aside className="rounded-2xl border border-border bg-surface p-3 shadow-soft">
+              <aside className="rounded-2xl border border-border bg-surface p-3 shadow-soft self-start">
                 <div className="px-2 pb-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
                   Nhóm kỹ năng
                 </div>
                 {selectedSkills.map((id) => {
                   const skill = EXAM_SKILLS.find((s) => s.id === id)!;
                   const Icon = SKILL_ICON[id] ?? ClipboardCheck;
-                  const count = groups[id]?.questions.length ?? 0;
+                  const count = (groups[id]?.blocks ?? []).reduce(
+                    (a, b) => a + b.questions.length,
+                    0,
+                  );
                   const active = activeSkill === id;
                   return (
                     <button
@@ -235,49 +293,71 @@ function ExamBuilder() {
             )}
 
             <div className="rounded-3xl border border-border bg-surface p-6 shadow-soft">
-              <div className="mb-4 flex items-center gap-2">
-                {(() => {
-                  const Icon = SKILL_ICON[activeSkill] ?? ClipboardCheck;
-                  const skill = EXAM_SKILLS.find((s) => s.id === activeSkill)!;
-                  return (
-                    <>
-                      <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                        <Icon className="h-4 w-4" />
-                      </div>
-                      <div className="font-display text-lg font-semibold text-foreground">
-                        {skill.label}
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-
-              {(activeSkill === "reading" || activeSkill === "listening") && (
-                <Field
-                  label={activeSkill === "reading" ? "Đoạn văn (passage)" : "Audio script / link"}
+              <div className="mb-4 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  {(() => {
+                    const Icon = SKILL_ICON[activeSkill] ?? ClipboardCheck;
+                    const skill = EXAM_SKILLS.find((s) => s.id === activeSkill)!;
+                    return (
+                      <>
+                        <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                          <Icon className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <div className="font-display text-lg font-semibold text-foreground">
+                            {skill.label}
+                          </div>
+                          <div className="text-[11px] text-muted-foreground">
+                            {hasMedia
+                              ? activeSkill === "listening"
+                                ? "Mỗi khối gồm 1 audio + 1 hoặc nhiều câu hỏi."
+                                : "Mỗi khối gồm 1 đoạn văn + 1 hoặc nhiều câu hỏi."
+                              : activeSkill === "speaking"
+                              ? "Mỗi câu hỏi → 1 lượt thu âm trả lời."
+                              : "Mỗi câu hỏi → 1 bài viết trả lời."}
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+                <button
+                  onClick={addBlock}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-3 py-2 text-xs font-semibold text-background hover:opacity-90"
                 >
-                  <textarea
-                    rows={4}
-                    value={current.passage}
-                    onChange={(e) => updateGroup(activeSkill, { passage: e.target.value })}
-                    placeholder={
-                      activeSkill === "reading"
-                        ? "Dán nội dung đoạn đọc..."
-                        : "Dán link audio hoặc script..."
-                    }
-                    className="input"
-                  />
-                </Field>
-              )}
-
-              <div className="mt-5">
-                <ManualQuestionEditor
-                  skill={activeSkill}
-                  level={meta.levelCode}
-                  questions={current.questions}
-                  onChange={(next) => updateGroup(activeSkill, { questions: next })}
-                />
+                  <Plus className="h-3.5 w-3.5" />
+                  {hasMedia
+                    ? activeSkill === "listening"
+                      ? "Thêm khối Audio"
+                      : "Thêm khối Đoạn văn"
+                    : "Thêm câu hỏi"}
+                </button>
               </div>
+
+              {current.blocks.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-border p-12 text-center text-sm text-muted-foreground">
+                  {hasMedia
+                    ? `Chưa có khối nào. Nhấn "${
+                        activeSkill === "listening" ? "Thêm khối Audio" : "Thêm khối Đoạn văn"
+                      }" để bắt đầu.`
+                    : 'Chưa có câu hỏi. Nhấn "Thêm câu hỏi" để bắt đầu.'}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {current.blocks.map((blk, bi) => (
+                    <BlockCard
+                      key={blk.id}
+                      index={bi}
+                      block={blk}
+                      skill={activeSkill}
+                      level={meta.levelCode}
+                      hasMedia={hasMedia}
+                      onUpdate={(p) => updateBlock(blk.id, p)}
+                      onRemove={() => removeBlock(blk.id)}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -299,6 +379,87 @@ function ExamBuilder() {
         textarea.input { height: auto; padding: .625rem .875rem; }
         .input:focus { border-color: oklch(0.55 0.18 260); box-shadow: 0 0 0 3px oklch(0.55 0.18 260 / 0.18); }
       `}</style>
+    </div>
+  );
+}
+
+function BlockCard({
+  index,
+  block,
+  skill,
+  level,
+  hasMedia,
+  onUpdate,
+  onRemove,
+}: {
+  index: number;
+  block: QuestionBlock;
+  skill: QSkill;
+  level: QLevel;
+  hasMedia: boolean;
+  onUpdate: (p: Partial<QuestionBlock>) => void;
+  onRemove: () => void;
+}) {
+  const isListening = skill === "listening";
+  const isReading = skill === "reading";
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-background">
+      <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/40 px-4 py-2.5">
+        <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+          <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-foreground text-[11px] font-bold text-background">
+            {index + 1}
+          </span>
+          {isListening ? (
+            <>
+              <FileAudio className="h-4 w-4 text-primary" /> Khối Audio
+            </>
+          ) : isReading ? (
+            <>
+              <FileText className="h-4 w-4 text-primary" /> Khối Đoạn văn
+            </>
+          ) : (
+            <>Câu hỏi</>
+          )}
+          <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-bold text-muted-foreground">
+            {block.questions.length} câu
+          </span>
+        </div>
+        <button
+          onClick={onRemove}
+          className="rounded-md p-1.5 text-rose-500 hover:bg-rose-500/10"
+          title="Xoá khối"
+        >
+          <Trash2 className="h-4 w-4" />
+        </button>
+      </div>
+
+      <div className="space-y-4 p-4">
+        {hasMedia && (
+          <Field label={isListening ? "Audio (URL hoặc script)" : "Đoạn văn (passage)"}>
+            <textarea
+              rows={isListening ? 2 : 5}
+              value={block.media}
+              onChange={(e) => onUpdate({ media: e.target.value })}
+              placeholder={
+                isListening
+                  ? "Dán link audio (.mp3 / streaming) hoặc nội dung script..."
+                  : "Dán nội dung đoạn đọc..."
+              }
+              className="input"
+            />
+          </Field>
+        )}
+
+        <ManualQuestionEditor
+          skill={skill}
+          level={level}
+          questions={block.questions}
+          onChange={(qs) => onUpdate({ questions: qs })}
+          hideBank
+          hideHeader
+          maxCount={hasMedia ? undefined : 1}
+        />
+      </div>
     </div>
   );
 }

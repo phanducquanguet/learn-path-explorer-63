@@ -41,6 +41,10 @@ type Props = {
   maxCount?: number;
   /** Hiển thị tiêu đề thanh header (mặc định: tên kỹ năng) */
   title?: string;
+  /** Ẩn nút "Thêm từ ngân hàng" */
+  hideBank?: boolean;
+  /** Ẩn thanh header tổng (số câu/nút thêm). Khi true component chỉ render danh sách. */
+  hideHeader?: boolean;
 };
 
 export function ManualQuestionEditor({
@@ -51,6 +55,8 @@ export function ManualQuestionEditor({
   onChange,
   maxCount,
   title,
+  hideBank,
+  hideHeader,
 }: Props) {
   const list = questions;
   const allowedTypes = Q_TYPES_BY_SKILL[skill];
@@ -128,6 +134,7 @@ export function ManualQuestionEditor({
 
   return (
     <div className="space-y-3">
+      {!hideHeader && (
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-border bg-muted/30 px-4 py-2.5 text-xs">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-foreground">{title ?? SKILL_LABEL[skill]}</span>
@@ -144,6 +151,7 @@ export function ManualQuestionEditor({
           </span>
         </div>
         <div className="flex items-center gap-2">
+          {!hideBank && (
           <button
             onClick={() => setBankOpen((v) => !v)}
             disabled={isFull}
@@ -157,6 +165,7 @@ export function ManualQuestionEditor({
             <ListChecks className="h-3 w-3" />
             {bankOpen ? "Đóng ngân hàng" : "Thêm từ ngân hàng"}
           </button>
+          )}
           <button
             onClick={addNew}
             disabled={isFull}
@@ -166,8 +175,9 @@ export function ManualQuestionEditor({
           </button>
         </div>
       </div>
+      )}
 
-      {bankOpen && (
+      {!hideBank && bankOpen && (
         <div className="overflow-hidden rounded-2xl border border-border bg-background">
           <div className="flex flex-wrap items-center gap-2 border-b border-border bg-muted/30 px-3 py-2.5 text-xs">
             <span className="font-semibold text-foreground">Ngân hàng câu hỏi</span>
@@ -444,6 +454,16 @@ export function ManualQuestionEditor({
           );
         })}
       </div>
+
+      {hideHeader && (
+        <button
+          onClick={addNew}
+          disabled={isFull}
+          className="inline-flex items-center gap-1 rounded-lg bg-foreground px-2.5 py-1.5 text-[11px] font-semibold text-background disabled:opacity-40"
+        >
+          <Plus className="h-3 w-3" /> Thêm câu hỏi
+        </button>
+      )}
     </div>
   );
 }
