@@ -60,6 +60,7 @@ function UploadPage() {
   const isEdit = !!edit;
   const [categories] = useCategories();
   const [step, setStep] = useState(0);
+  const [managerOpen, setManagerOpen] = useState(false);
   const [course, setCourse] = useState({
     title: "",
     subtitle: "",
