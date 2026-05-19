@@ -636,7 +636,7 @@ function Step4Build({
                   active ? "text-primary" : "text-foreground",
                 )}
               >
-                {i + 1}. {SKILL_LABEL[s.skill]} • {TYPE_LABEL[s.type]}
+                {i + 1}. {SKILL_LABEL[s.skill]}
                 <span
                   className={cn(
                     "rounded-md px-1.5 py-0.5 text-[10px] font-bold",
