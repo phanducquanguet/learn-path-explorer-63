@@ -1,5 +1,16 @@
 import type { QSkill, QType, QLevel, QDifficulty } from "./question-bank";
 
+export type CustomQuestion = {
+  id: string;
+  content: string;
+  type: QType;
+  level: QLevel;
+  difficulty: QDifficulty;
+  points: number;
+  options?: string[];
+  correctAnswer?: string;
+};
+
 export type TestStructureItem = {
   skill: QSkill;
   type: QType;
@@ -9,6 +20,8 @@ export type TestStructureItem = {
   difficulty?: QDifficulty | "mixed";
   /** Câu hỏi đã chọn thủ công (mode fixed). */
   pickedIds?: string[];
+  /** Câu hỏi do người dùng tự soạn (mode manual). */
+  customQuestions?: CustomQuestion[];
 };
 
 export type Test = {
