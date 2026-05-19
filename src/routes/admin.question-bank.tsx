@@ -737,7 +737,7 @@ function EditDialog({
   const [tagInput, setTagInput] = useState("");
 
   const isMcq = form.type === "mcq" || form.type === "mcq-multi";
-  const hasOptions = isMcq || form.type === "matching" || form.type === "reorder";
+  const hasOptions = isMcq || form.type === "matching" || form.type === "sequence" || form.type === "select-lists" || form.type === "drag-drop";
 
   const addTag = () => {
     const v = tagInput.trim();
