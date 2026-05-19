@@ -753,12 +753,44 @@ function PreviewDialog({
           </div>
         )}
 
-        {question.correctAnswer && !question.options?.length && (
+        {question.correctAnswer && !question.options?.length && question.type !== "essay" && (
           <div className="mt-4 rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-3 text-sm">
             <div className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
               Đáp án mẫu
             </div>
             <div className="mt-1">{question.correctAnswer}</div>
+          </div>
+        )}
+
+        {question.type === "essay" && (
+          <div className="mt-4 space-y-3">
+            {question.solution && (
+              <div className="rounded-xl border border-violet-500/30 bg-violet-500/5 p-3">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">
+                  Solution (bài mẫu)
+                </div>
+                <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground">
+                  {question.solution}
+                </pre>
+              </div>
+            )}
+            {question.feedback && question.feedback.length > 0 && (
+              <div className="rounded-xl border border-border bg-surface">
+                <div className="border-b border-border px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Feedback / Rubric ({question.feedback.length} tiêu chí)
+                </div>
+                <div className="divide-y divide-border">
+                  {question.feedback.map((c, i) => (
+                    <div key={i} className="grid grid-cols-[140px_1fr] gap-3 px-3 py-2 text-sm">
+                      <span className="font-mono text-xs font-semibold text-violet-600 dark:text-violet-400">
+                        {c.keyword || "—"}
+                      </span>
+                      <span className="text-foreground">{c.comment}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
