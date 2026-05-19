@@ -47,11 +47,14 @@ type UnitDraft = {
 };
 
 function UploadPage() {
+  const { edit } = Route.useSearch();
+  const isEdit = !!edit;
   const [step, setStep] = useState(0);
   const [course, setCourse] = useState({
     title: "",
     subtitle: "",
     levelCode: "A1",
+    category: "Empower" as Category,
     hours: 36,
     description: "",
     thumbnail: "",
@@ -60,6 +63,50 @@ function UploadPage() {
     { id: "u1", title: "Unit 1: Greetings & Introductions", desc: "", activities: [] },
   ]);
   const [saved, setSaved] = useState(false);
+
+  // Prefill khi sửa
+  useEffect(() => {
+    if (!edit) return;
+    const found = getCourse(edit);
+    if (found) {
+      setCourse({
+        title: found.course.title,
+        subtitle: found.course.subtitle,
+        levelCode: found.level.code,
+        category: categoryOf(found.course),
+        hours: found.course.hours,
+        description: "",
+        thumbnail: "",
+      });
+      setUnits(
+        found.course.units.map((u) => ({
+          id: u.id,
+          title: u.title,
+          desc: u.description,
+          activities: [],
+        })),
+      );
+      return;
+    }
+    if (typeof window !== "undefined") {
+      const drafts = JSON.parse(
+        window.localStorage.getItem("unicom.uploaded.courses") || "[]",
+      );
+      const d = drafts.find((x: { id?: string }) => x.id === edit);
+      if (d) {
+        setCourse({
+          title: d.title || "",
+          subtitle: d.subtitle || "",
+          levelCode: d.levelCode || "A1",
+          category: d.category || "Empower",
+          hours: d.hours || 36,
+          description: d.description || "",
+          thumbnail: d.thumbnail || "",
+        });
+        if (Array.isArray(d.units)) setUnits(d.units);
+      }
+    }
+  }, [edit]);
 
   const steps = [
     { label: "Khóa học", icon: BookOpen },
