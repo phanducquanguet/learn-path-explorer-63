@@ -45,6 +45,9 @@ type Props = {
   hideBank?: boolean;
   /** Ẩn thanh header tổng (số câu/nút thêm). Khi true component chỉ render danh sách. */
   hideHeader?: boolean;
+  /** Ẩn ô Cấp độ + Độ khó để soạn nhanh */
+  hideMeta?: boolean;
+
 };
 
 export function ManualQuestionEditor({
