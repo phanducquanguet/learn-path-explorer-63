@@ -16,6 +16,7 @@ import {
   ScrollText,
   Library,
   Shield,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRole, type Role } from "@/contexts/RoleContext";
