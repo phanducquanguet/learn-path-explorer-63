@@ -696,12 +696,11 @@ function GroupEditor({
     return questionBank.filter(
       (x) =>
         x.skill === cur.skill &&
-        x.type === cur.type &&
         (filterLevel === "all" || x.level === filterLevel) &&
         (filterDiff === "all" || x.difficulty === filterDiff) &&
         (!q || x.content.toLowerCase().includes(q) || x.id.toLowerCase().includes(q)),
     );
-  }, [cur.skill, cur.type, filterLevel, filterDiff, search]);
+  }, [cur.skill, filterLevel, filterDiff, search]);
 
   const updateGroup = (fn: (g: StructureItem) => StructureItem) => {
     setStructure((p) => p.map((x, idx) => (idx === openGroup ? fn(x) : x)));
