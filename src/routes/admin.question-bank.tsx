@@ -7,10 +7,14 @@ import {
   SKILL_LABEL,
   TYPE_LABEL,
   TYPE_DESCRIPTION,
+  DIFFICULTY_LABEL,
+  DIFFICULTY_COLOR,
   type BankQuestion,
   type QSkill,
   type QLevel,
   type QType,
+  type QDifficulty,
+  type FeedbackCriterion,
 } from "@/lib/question-bank";
 import {
   Library,
