@@ -29,7 +29,7 @@ const LEVELS: QLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
 export const Q_TYPES_BY_SKILL: Record<QSkill, QType[]> = {
   listening: ["mcq", "tf", "short", "fill"],
   reading: ["mcq", "tf", "short", "fill"],
-  speaking: ["short"],
+  speaking: ["essay"],
   writing: ["essay", "short"],
 };
 
