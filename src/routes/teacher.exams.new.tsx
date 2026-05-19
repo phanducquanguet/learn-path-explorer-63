@@ -410,9 +410,8 @@ function BlockCard({
   onRemove: () => void;
 }) {
   const isListening = skill === "listening";
-  const isReading = skill === "reading";
   const isGroup = block.kind === "group";
-  const mediaSupported = hasMedia; // listening or reading
+
 
   // Single = bố cục gọn: chỉ có nội dung (passage/audio tuỳ chọn) + câu hỏi,
   // tách biệt bằng đường kẻ. Không có thanh header dày của "khối".
