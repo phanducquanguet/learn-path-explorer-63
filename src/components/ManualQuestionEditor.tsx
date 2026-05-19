@@ -3,10 +3,12 @@ import {
   ArrowDown,
   ArrowUp,
   Check,
+  FileText,
   ListChecks,
   Plus,
   Trash2,
 } from "lucide-react";
+
 import {
   DIFFICULTY_COLOR,
   DIFFICULTY_LABEL,
