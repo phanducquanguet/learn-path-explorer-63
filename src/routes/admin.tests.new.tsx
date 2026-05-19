@@ -684,16 +684,22 @@ function Step4Build({
         })}
       </div>
 
-      <GroupEditor
-        key={openGroup}
-        structure={structure}
-        openGroup={openGroup}
-        setStructure={setStructure}
-        mode={mode}
-      />
-    </div>
-  );
-}
+      {mode === "manual" ? (
+        <ManualEditor
+          key={openGroup}
+          structure={structure}
+          openGroup={openGroup}
+          setStructure={setStructure}
+        />
+      ) : (
+        <GroupEditor
+          key={openGroup}
+          structure={structure}
+          openGroup={openGroup}
+          setStructure={setStructure}
+          mode={mode}
+        />
+      )}
 
 function GroupEditor({
   structure,
