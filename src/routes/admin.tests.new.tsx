@@ -443,6 +443,12 @@ function NewTestPage() {
                     title: "Chọn thủ công từ ngân hàng",
                     desc: "Toàn bộ học viên cùng làm một đề. Bạn sẽ chọn từng câu ở bước kế tiếp.",
                   },
+                  {
+                    id: "manual" as const,
+                    icon: PencilLine,
+                    title: "Tạo mới toàn bộ câu hỏi bằng tay",
+                    desc: "Tự soạn từng câu cho mỗi kỹ năng — không lấy từ ngân hàng. Phù hợp khi đề thi cần nội dung riêng.",
+                  },
                 ] as const
               ).map((opt) => {
                 const Icon = opt.icon;
