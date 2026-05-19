@@ -198,6 +198,21 @@ function UploadPage() {
                   className="input"
                 />
               </Field>
+              <Field label="Chương trình (category)" required>
+                <select
+                  value={course.category}
+                  onChange={(e) =>
+                    setCourse({ ...course, category: e.target.value as Category })
+                  }
+                  className="input"
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
+              </Field>
               <Field label="Cấp độ" required>
                 <select
                   value={course.levelCode}
