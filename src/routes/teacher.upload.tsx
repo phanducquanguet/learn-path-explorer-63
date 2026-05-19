@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TopNav } from "@/components/TopNav";
-import { levels } from "@/lib/lms-data";
+import { levels, getCourse } from "@/lib/lms-data";
 import { ACTIVITY_TYPES, QUIZ_KINDS } from "@/lib/teacher-data";
+import { CATEGORIES, categoryOf, type Category } from "@/lib/course-categories";
 import {
   Upload,
   BookOpen,
@@ -21,7 +22,10 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/teacher/upload")({
-  head: () => ({ meta: [{ title: "Tải lên khóa học — UNICOM LMS" }] }),
+  head: () => ({ meta: [{ title: "Quản lý khóa học — UNICOM LMS" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    edit: typeof s.edit === "string" ? s.edit : undefined,
+  }),
   component: UploadPage,
 });
 
@@ -43,11 +47,14 @@ type UnitDraft = {
 };
 
 function UploadPage() {
+  const { edit } = Route.useSearch();
+  const isEdit = !!edit;
   const [step, setStep] = useState(0);
   const [course, setCourse] = useState({
     title: "",
     subtitle: "",
     levelCode: "A1",
+    category: "Empower" as Category,
     hours: 36,
     description: "",
     thumbnail: "",
@@ -56,6 +63,50 @@ function UploadPage() {
     { id: "u1", title: "Unit 1: Greetings & Introductions", desc: "", activities: [] },
   ]);
   const [saved, setSaved] = useState(false);
+
+  // Prefill khi sửa
+  useEffect(() => {
+    if (!edit) return;
+    const found = getCourse(edit);
+    if (found) {
+      setCourse({
+        title: found.course.title,
+        subtitle: found.course.subtitle,
+        levelCode: found.level.code,
+        category: categoryOf(found.course),
+        hours: found.course.hours,
+        description: "",
+        thumbnail: "",
+      });
+      setUnits(
+        found.course.units.map((u) => ({
+          id: u.id,
+          title: u.title,
+          desc: u.description,
+          activities: [],
+        })),
+      );
+      return;
+    }
+    if (typeof window !== "undefined") {
+      const drafts = JSON.parse(
+        window.localStorage.getItem("unicom.uploaded.courses") || "[]",
+      );
+      const d = drafts.find((x: { id?: string }) => x.id === edit);
+      if (d) {
+        setCourse({
+          title: d.title || "",
+          subtitle: d.subtitle || "",
+          levelCode: d.levelCode || "A1",
+          category: d.category || "Empower",
+          hours: d.hours || 36,
+          description: d.description || "",
+          thumbnail: d.thumbnail || "",
+        });
+        if (Array.isArray(d.units)) setUnits(d.units);
+      }
+    }
+  }, [edit]);
 
   const steps = [
     { label: "Khóa học", icon: BookOpen },
@@ -72,7 +123,14 @@ function UploadPage() {
   const save = () => {
     if (typeof window !== "undefined") {
       const drafts = JSON.parse(window.localStorage.getItem("unicom.uploaded.courses") || "[]");
-      drafts.push({ ...course, units, savedAt: new Date().toISOString() });
+      const payload = { ...course, units, savedAt: new Date().toISOString() };
+      if (isEdit) {
+        const idx = drafts.findIndex((x: { id?: string }) => x.id === edit);
+        if (idx >= 0) drafts[idx] = { ...drafts[idx], ...payload };
+        else drafts.push({ id: edit, ...payload });
+      } else {
+        drafts.push({ id: `course-${Date.now()}`, ...payload });
+      }
       window.localStorage.setItem("unicom.uploaded.courses", JSON.stringify(drafts));
     }
     setSaved(true);
@@ -83,14 +141,15 @@ function UploadPage() {
       <TopNav />
       <div className="mx-auto max-w-5xl px-6 pb-20 pt-10 sm:px-8">
         <span className="inline-flex w-fit items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-          <Sparkles className="h-3.5 w-3.5" /> Tạo nội dung mới
+          <Sparkles className="h-3.5 w-3.5" /> {isEdit ? "Chỉnh sửa nội dung" : "Tạo nội dung mới"}
         </span>
         <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-          Tải lên khóa học
+          {isEdit ? "Chỉnh sửa khóa học" : "Tải lên khóa học"}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Cấu trúc: Khóa học → Units → Activities (video, PDF, hoặc 11 dạng bài tập).
         </p>
+
 
         {/* Stepper */}
         <div className="mt-8 flex items-center gap-2">
@@ -138,6 +197,21 @@ function UploadPage() {
                   placeholder="Nền tảng tiếng Anh giao tiếp"
                   className="input"
                 />
+              </Field>
+              <Field label="Chương trình (category)" required>
+                <select
+                  value={course.category}
+                  onChange={(e) =>
+                    setCourse({ ...course, category: e.target.value as Category })
+                  }
+                  className="input"
+                >
+                  {CATEGORIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
               </Field>
               <Field label="Cấp độ" required>
                 <select

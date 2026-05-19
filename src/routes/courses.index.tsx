@@ -5,7 +5,6 @@ import {
   Play,
   Clock,
   Sparkles,
-  GraduationCap,
   Search,
   LayoutGrid,
   List,
@@ -13,8 +12,12 @@ import {
   X,
   BookOpen,
   Plus,
+  Pencil,
+  Trash2,
+  Layers,
 } from "lucide-react";
 import { levels, type Course, type Level } from "@/lib/lms-data";
+import { CATEGORIES, categoryOf, type Category } from "@/lib/course-categories";
 import { TopNav } from "@/components/TopNav";
 import { useRole } from "@/contexts/RoleContext";
 import { cn } from "@/lib/utils";
@@ -40,31 +43,6 @@ export const Route = createFileRoute("/courses/")({
   component: CoursesListPage,
 });
 
-// ----- Category derivation -----
-const CATEGORIES = [
-  "Empower",
-  "Speaking & Listening Lab",
-  "Luyện thi KET/PET",
-  "Luyện thi IELTS",
-  "Luyện thi Linguaskill",
-  "Luyện thi EST",
-  "Học liệu bồi dưỡng",
-  "Khác",
-] as const;
-type Category = (typeof CATEGORIES)[number];
-
-function categoryOf(c: Course): Category {
-  const t = `${c.title} ${c.subtitle}`.toLowerCase();
-  if (t.includes("ielts")) return "Luyện thi IELTS";
-  if (t.includes("linguaskill")) return "Luyện thi Linguaskill";
-  if (t.includes("ket") || t.includes("pet")) return "Luyện thi KET/PET";
-  if (t.includes("est")) return "Luyện thi EST";
-  if (t.includes("listening") || t.includes("speaking") || t.includes("lab"))
-    return "Speaking & Listening Lab";
-  if (t.includes("bồi dưỡng") || t.includes("học liệu")) return "Học liệu bồi dưỡng";
-  if (t.includes("empower") || t.includes("foundation")) return "Empower";
-  return "Khác";
-}
 
 type Status = "all" | "in-progress" | "completed" | "not-started";
 type View = "grid" | "list";
@@ -140,14 +118,24 @@ function CoursesListPage() {
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div className="flex flex-col gap-2">
             <span className="inline-flex w-fit items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <Sparkles className="h-3.5 w-3.5" /> Tất cả khóa học
+              <Sparkles className="h-3.5 w-3.5" />{" "}
+              {isAdmin ? "Quản lý khóa học" : "Tất cả khóa học"}
             </span>
             <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Danh sách khóa học
+              {isAdmin ? "Quản lý khóa học" : "Danh sách khóa học"}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {allCourses.length} khóa học • {totalCompleted} đã hoàn thành •{" "}
-              {filtered.length} đang hiển thị
+              {isAdmin ? (
+                <>
+                  {allCourses.length} khóa học • {CATEGORIES.length} chương trình •{" "}
+                  {levels.length} cấp độ • {filtered.length} đang hiển thị
+                </>
+              ) : (
+                <>
+                  {allCourses.length} khóa học • {totalCompleted} đã hoàn thành •{" "}
+                  {filtered.length} đang hiển thị
+                </>
+              )}
             </p>
           </div>
           {isAdmin && (
@@ -160,6 +148,7 @@ function CoursesListPage() {
             </Link>
           )}
         </div>
+
 
         {/* Toolbar */}
         <div className="mt-8 rounded-2xl border border-border bg-surface p-3 shadow-soft">
@@ -202,16 +191,19 @@ function CoursesListPage() {
                   ...levels.map((l) => ({ value: l.code, label: `Cấp độ ${l.code}` })),
                 ]}
               />
-              <FilterSelect
-                value={status}
-                onChange={(v) => setStatus(v as Status)}
-                options={[
-                  { value: "all", label: "Mọi trạng thái" },
-                  { value: "in-progress", label: "Đang học" },
-                  { value: "completed", label: "Đã hoàn thành" },
-                  { value: "not-started", label: "Chưa bắt đầu" },
-                ]}
-              />
+              {!isAdmin && (
+                <FilterSelect
+                  value={status}
+                  onChange={(v) => setStatus(v as Status)}
+                  options={[
+                    { value: "all", label: "Mọi trạng thái" },
+                    { value: "in-progress", label: "Đang học" },
+                    { value: "completed", label: "Đã hoàn thành" },
+                    { value: "not-started", label: "Chưa bắt đầu" },
+                  ]}
+                />
+              )}
+
 
               {/* Group by */}
               <div className="flex items-center gap-1 rounded-xl border border-border bg-background p-1 text-xs">
@@ -303,28 +295,48 @@ function CoursesListPage() {
 
             {view === "grid" ? (
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {group.items.map(({ course, level, category }) => (
-                  <CourseCard
-                    key={course.id}
-                    course={course}
-                    level={level}
-                    category={category}
-                  />
-                ))}
+                {group.items.map(({ course, level, category }) =>
+                  isAdmin ? (
+                    <AdminCourseCard
+                      key={course.id}
+                      course={course}
+                      level={level}
+                      category={category}
+                    />
+                  ) : (
+                    <CourseCard
+                      key={course.id}
+                      course={course}
+                      level={level}
+                      category={category}
+                    />
+                  ),
+                )}
               </div>
             ) : (
               <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
-                {group.items.map(({ course, level, category }, i) => (
-                  <CourseRow
-                    key={course.id}
-                    course={course}
-                    level={level}
-                    category={category}
-                    isLast={i === group.items.length - 1}
-                  />
-                ))}
+                {group.items.map(({ course, level, category }, i) =>
+                  isAdmin ? (
+                    <AdminCourseRow
+                      key={course.id}
+                      course={course}
+                      level={level}
+                      category={category}
+                      isLast={i === group.items.length - 1}
+                    />
+                  ) : (
+                    <CourseRow
+                      key={course.id}
+                      course={course}
+                      level={level}
+                      category={category}
+                      isLast={i === group.items.length - 1}
+                    />
+                  ),
+                )}
               </div>
             )}
+
           </section>
         ))}
       </div>
@@ -647,5 +659,124 @@ function StatusBadge({ done, started }: { done: boolean; started: boolean }) {
     <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold text-muted-foreground ring-1 ring-border">
       Chưa bắt đầu
     </span>
+  );
+}
+
+// ===== Admin views (no learner progress / status) =====
+function AdminCourseCard({
+  course,
+  level,
+  category,
+}: {
+  course: Course;
+  level: Level;
+  category: Category;
+}) {
+  return (
+    <div className="group relative flex flex-col overflow-hidden rounded-3xl bg-surface ring-1 ring-border shadow-soft transition hover:-translate-y-1 hover:shadow-elevated">
+      <div className="relative aspect-[16/10] w-full overflow-hidden">
+        <CourseCover course={course} level={level} category={category} />
+        <div className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-background/90 px-2.5 py-1 text-[11px] font-semibold text-foreground ring-1 ring-border backdrop-blur">
+          {level.code}
+        </div>
+      </div>
+      <div className="flex flex-1 flex-col p-5">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          {category}
+        </div>
+        <h3 className="mt-1 text-base font-semibold text-foreground">{course.title}</h3>
+        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{course.subtitle}</p>
+
+        <div className="mt-4 flex items-center gap-3 text-[11px] font-medium text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <Clock className="h-3 w-3" /> {course.hours}h
+          </span>
+          <span className="inline-flex items-center gap-1">
+            <Layers className="h-3 w-3" /> {course.units.length} units
+          </span>
+        </div>
+
+        <div className="mt-4 flex items-center gap-2">
+          <Link
+            to="/teacher/upload"
+            search={{ edit: course.id }}
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground hover:border-primary hover:text-primary"
+          >
+            <Pencil className="h-3.5 w-3.5" /> Sửa
+          </Link>
+          <button
+            type="button"
+            onClick={() => alert(`Xóa khóa "${course.title}" (demo)`)}
+            className="inline-flex items-center justify-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:border-destructive hover:bg-destructive/10 hover:text-destructive"
+            aria-label="Xóa khóa học"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AdminCourseRow({
+  course,
+  level,
+  category,
+  isLast,
+}: {
+  course: Course;
+  level: Level;
+  category: Category;
+  isLast: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "flex items-center gap-4 px-4 py-3 transition hover:bg-muted/40",
+        !isLast && "border-b border-border",
+      )}
+    >
+      <div className="h-12 w-16 shrink-0 overflow-hidden rounded-lg ring-1 ring-border">
+        <CourseCover course={course} level={level} category={category} size="sm" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+            {level.code}
+          </span>
+          <span className="text-[10px] text-muted-foreground">•</span>
+          <span className="text-[10px] text-muted-foreground">{category}</span>
+        </div>
+        <div className="mt-0.5 truncate text-sm font-semibold text-foreground">
+          {course.title}
+        </div>
+        <div className="truncate text-xs text-muted-foreground">{course.subtitle}</div>
+      </div>
+      <div className="hidden shrink-0 items-center gap-3 text-xs text-muted-foreground sm:flex">
+        <span className="inline-flex items-center gap-1">
+          <Clock className="h-3.5 w-3.5" /> {course.hours}h
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <Layers className="h-3.5 w-3.5" /> {course.units.length}
+        </span>
+      </div>
+      <div className="flex items-center gap-2">
+        <Link
+          to="/teacher/upload"
+          search={{ edit: course.id }}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground hover:border-primary hover:text-primary"
+        >
+          <Pencil className="h-3.5 w-3.5" /> Sửa
+        </Link>
+        <button
+          type="button"
+          onClick={() => alert(`Xóa khóa "${course.title}" (demo)`)}
+          className="inline-flex items-center justify-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:border-destructive hover:bg-destructive/10 hover:text-destructive"
+          aria-label="Xóa khóa học"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    </div>
   );
 }
