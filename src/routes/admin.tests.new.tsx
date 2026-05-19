@@ -53,10 +53,11 @@ const STEPS = [
 type StructureItem = TestStructureItem;
 
 function matchBank(s: StructureItem): BankQuestion[] {
+  // Cấu trúc đề chỉ giới hạn theo Kỹ năng + Cấp độ + Độ khó.
+  // Loại câu hỏi (mcq, fill, essay...) được trộn ngẫu nhiên trong ngân hàng.
   return questionBank.filter(
     (q) =>
       q.skill === s.skill &&
-      q.type === s.type &&
       q.level === s.level &&
       (!s.difficulty || s.difficulty === "mixed" || q.difficulty === s.difficulty),
   );
@@ -99,6 +100,7 @@ function NewTestPage() {
     setStructure((prev) => {
       let changed = false;
       const next = prev.map((it) => {
+        if (it.count <= 0) return it;
         if (it.pickedIds && it.pickedIds.length > 0) return it;
         const picks = rollRandom(it).map((q) => q.id);
         if (picks.length === 0) return it;
@@ -159,9 +161,11 @@ function NewTestPage() {
 
   const canNext = (() => {
     if (step === 1) return name.trim().length > 0;
-    if (step === 2) return structure.length > 0 && structure.every((s) => s.count > 0);
+    if (step === 2) return structure.some((s) => s.count > 0);
     if (step === 4) {
-      return structure.every((s) => (s.pickedIds?.length ?? 0) === s.count);
+      return structure
+        .filter((s) => s.count > 0)
+        .every((s) => (s.pickedIds?.length ?? 0) === s.count);
     }
     return true;
   })();
@@ -302,85 +306,44 @@ function NewTestPage() {
 
           {step === 2 && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-muted-foreground">
-                  Mỗi dòng = một nhóm câu hỏi. Có thể chọn độ khó riêng cho từng nhóm.
-                </p>
-                <button
-                  onClick={() =>
-                    setStructure((p) => [
-                      ...p,
-                      { skill: "reading", type: "mcq", level, difficulty: "mixed", count: 5, pickedIds: [] },
-                    ])
-                  }
-                  className="inline-flex items-center gap-1 rounded-lg bg-foreground px-3 py-1.5 text-xs font-semibold text-background"
-                >
-                  <Plus className="h-3.5 w-3.5" /> Thêm dòng
-                </button>
-              </div>
+              <p className="text-sm text-muted-foreground">
+                Đặt số lượng cho từng kỹ năng. Các loại câu hỏi (trắc nghiệm, điền từ, tự luận...) sẽ được trộn ngẫu nhiên từ ngân hàng theo cấp độ và độ khó đã chọn.
+              </p>
               <div className="overflow-hidden rounded-xl border border-border">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
                     <tr>
                       <th className="px-3 py-2 text-left">Kỹ năng</th>
-                      <th className="px-3 py-2 text-left">Loại</th>
                       <th className="px-3 py-2 text-center">Cấp độ</th>
                       <th className="px-3 py-2 text-center">Độ khó</th>
                       <th className="px-3 py-2 text-center">Số câu</th>
                       <th className="px-3 py-2 text-center">Có sẵn</th>
-                      <th className="px-3 py-2"></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {structure.map((s, i) => {
-                      const available = matchBank(s).length;
-                      const short = available < s.count;
+                    {SKILLS.map((sk) => {
+                      const idx = structure.findIndex((x) => x.skill === sk);
+                      const row: StructureItem = idx >= 0
+                        ? structure[idx]
+                        : { skill: sk, type: "mcq", level, difficulty: "mixed", count: 0, pickedIds: [] };
+                      const available = matchBank(row).length;
+                      const short = available < row.count;
+                      const upsert = (patch: Partial<StructureItem>) => {
+                        setStructure((p) => {
+                          const i = p.findIndex((x) => x.skill === sk);
+                          if (i === -1) return [...p, { ...row, ...patch, pickedIds: [] }];
+                          return p.map((x, k) => (k === i ? { ...x, ...patch, pickedIds: [] } : x));
+                        });
+                      };
                       return (
-                        <tr key={i} className="border-t border-border">
-                          <td className="px-3 py-2">
-                            <select
-                              value={s.skill}
-                              onChange={(e) =>
-                                setStructure((p) =>
-                                  p.map((x, idx) =>
-                                    idx === i ? { ...x, skill: e.target.value as QSkill, pickedIds: [] } : x,
-                                  ),
-                                )
-                              }
-                              className="rounded-lg border border-border bg-background px-2 py-1 text-xs"
-                            >
-                              {SKILLS.map((k) => (
-                                <option key={k} value={k}>{SKILL_LABEL[k]}</option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="px-3 py-2">
-                            <select
-                              value={s.type}
-                              onChange={(e) =>
-                                setStructure((p) =>
-                                  p.map((x, idx) =>
-                                    idx === i ? { ...x, type: e.target.value as QType, pickedIds: [] } : x,
-                                  ),
-                                )
-                              }
-                              className="rounded-lg border border-border bg-background px-2 py-1 text-xs"
-                            >
-                              {(Object.keys(TYPE_LABEL) as QType[]).map((t) => (
-                                <option key={t} value={t}>{TYPE_LABEL[t]}</option>
-                              ))}
-                            </select>
+                        <tr key={sk} className="border-t border-border">
+                          <td className="px-3 py-2 font-semibold text-foreground">
+                            {SKILL_LABEL[sk]}
                           </td>
                           <td className="px-3 py-2 text-center">
                             <select
-                              value={s.level}
-                              onChange={(e) =>
-                                setStructure((p) =>
-                                  p.map((x, idx) =>
-                                    idx === i ? { ...x, level: e.target.value as QLevel, pickedIds: [] } : x,
-                                  ),
-                                )
-                              }
+                              value={row.level}
+                              onChange={(e) => upsert({ level: e.target.value as QLevel })}
                               className="rounded-lg border border-border bg-background px-2 py-1 text-xs"
                             >
                               {LEVELS.map((l) => (
@@ -390,15 +353,9 @@ function NewTestPage() {
                           </td>
                           <td className="px-3 py-2 text-center">
                             <select
-                              value={s.difficulty ?? "mixed"}
+                              value={row.difficulty ?? "mixed"}
                               onChange={(e) =>
-                                setStructure((p) =>
-                                  p.map((x, idx) =>
-                                    idx === i
-                                      ? { ...x, difficulty: e.target.value as QDifficulty | "mixed", pickedIds: [] }
-                                      : x,
-                                  ),
-                                )
+                                upsert({ difficulty: e.target.value as QDifficulty | "mixed" })
                               }
                               className="rounded-lg border border-border bg-background px-2 py-1 text-xs"
                             >
@@ -412,16 +369,10 @@ function NewTestPage() {
                           <td className="px-3 py-2 text-center">
                             <input
                               type="number"
-                              min={1}
-                              value={s.count}
-                              onChange={(e) =>
-                                setStructure((p) =>
-                                  p.map((x, idx) =>
-                                    idx === i ? { ...x, count: Number(e.target.value) } : x,
-                                  ),
-                                )
-                              }
-                              className="w-16 rounded-lg border border-border bg-background px-2 py-1 text-center text-xs"
+                              min={0}
+                              value={row.count}
+                              onChange={(e) => upsert({ count: Math.max(0, Number(e.target.value)) })}
+                              className="w-20 rounded-lg border border-border bg-background px-2 py-1 text-center text-xs"
                             />
                           </td>
                           <td className="px-3 py-2 text-center">
@@ -436,14 +387,6 @@ function NewTestPage() {
                               {available}
                             </span>
                           </td>
-                          <td className="px-3 py-2 text-right">
-                            <button
-                              onClick={() => setStructure((p) => p.filter((_, idx) => idx !== i))}
-                              className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </td>
                         </tr>
                       );
                     })}
@@ -451,11 +394,12 @@ function NewTestPage() {
                 </table>
               </div>
               <div className="rounded-xl bg-muted/40 p-3 text-sm">
-                Tổng cộng: <strong>{totalQuestions} câu</strong> trong{" "}
-                <strong>{structure.length}</strong> nhóm
+                Tổng cộng: <strong>{totalQuestions} câu</strong> qua{" "}
+                <strong>{structure.filter((s) => s.count > 0).length}</strong> kỹ năng
               </div>
             </div>
           )}
+
 
           {step === 3 && (
             <div className="space-y-3">
@@ -534,7 +478,7 @@ function NewTestPage() {
                   Cấu trúc đề
                 </div>
                 <div className="space-y-2">
-                  {resolved.map((r, i) => (
+                  {resolved.filter((r) => r.item.count > 0).map((r, i) => (
                     <div
                       key={i}
                       className="flex flex-wrap items-center gap-2 rounded-xl bg-muted/40 px-3 py-2 text-xs"
@@ -542,8 +486,6 @@ function NewTestPage() {
                       <span className="font-semibold text-foreground">
                         {SKILL_LABEL[r.item.skill]}
                       </span>
-                      <span className="text-muted-foreground">•</span>
-                      <span>{TYPE_LABEL[r.item.type]}</span>
                       <span className="text-muted-foreground">•</span>
                       <span>{r.item.level}</span>
                       {r.item.difficulty && r.item.difficulty !== "mixed" && (
@@ -657,6 +599,7 @@ function Step4Build({
       {/* Group tabs with reorder controls */}
       <div className="flex flex-wrap gap-2">
         {structure.map((s, i) => {
+          if (s.count <= 0) return null;
           const cnt = s.pickedIds?.length ?? 0;
           const done = cnt === s.count;
           const active = openGroup === i;
@@ -693,7 +636,7 @@ function Step4Build({
                   active ? "text-primary" : "text-foreground",
                 )}
               >
-                {i + 1}. {SKILL_LABEL[s.skill]} • {TYPE_LABEL[s.type]}
+                {i + 1}. {SKILL_LABEL[s.skill]}
                 <span
                   className={cn(
                     "rounded-md px-1.5 py-0.5 text-[10px] font-bold",
@@ -753,12 +696,11 @@ function GroupEditor({
     return questionBank.filter(
       (x) =>
         x.skill === cur.skill &&
-        x.type === cur.type &&
         (filterLevel === "all" || x.level === filterLevel) &&
         (filterDiff === "all" || x.difficulty === filterDiff) &&
         (!q || x.content.toLowerCase().includes(q) || x.id.toLowerCase().includes(q)),
     );
-  }, [cur.skill, cur.type, filterLevel, filterDiff, search]);
+  }, [cur.skill, filterLevel, filterDiff, search]);
 
   const updateGroup = (fn: (g: StructureItem) => StructureItem) => {
     setStructure((p) => p.map((x, idx) => (idx === openGroup ? fn(x) : x)));
