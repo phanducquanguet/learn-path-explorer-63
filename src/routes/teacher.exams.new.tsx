@@ -45,6 +45,8 @@ const EDITOR_SKILLS: QSkill[] = ["listening", "reading", "writing", "speaking"];
  */
 type QuestionBlock = {
   id: string;
+  /** "single" = 1 câu hỏi (media tuỳ chọn). "group" = 1 audio/passage dùng cho nhiều câu. */
+  kind: "single" | "group";
   media: string;
   questions: CustomQuestion[];
 };
