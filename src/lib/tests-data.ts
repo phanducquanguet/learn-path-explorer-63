@@ -9,7 +9,12 @@ export type CustomQuestion = {
   points: number;
   options?: string[];
   correctAnswer?: string;
+  /** Bài mẫu tham khảo cho câu hỏi tự luận. */
+  solution?: string;
+  /** Rubric chấm tự động cho essay. */
+  feedback?: { keyword: string; comment: string }[];
 };
+
 
 export type TestStructureItem = {
   skill: QSkill;
