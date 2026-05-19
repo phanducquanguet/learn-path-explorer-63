@@ -29,7 +29,7 @@ const LEVELS: QLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
 export const Q_TYPES_BY_SKILL: Record<QSkill, QType[]> = {
   listening: ["mcq", "tf", "short", "fill"],
   reading: ["mcq", "tf", "short", "fill"],
-  speaking: ["short"],
+  speaking: ["essay"],
   writing: ["essay", "short"],
 };
 
@@ -333,7 +333,12 @@ export function ManualQuestionEditor({
                 </div>
               </div>
               <div className="space-y-2.5 p-3">
+                {(() => {
+                  const showType = allowedTypes.length > 1;
+                  if (!showType && hideMeta) return null;
+                  return (
                 <div className={cn("grid gap-2", hideMeta ? "" : "sm:grid-cols-3")}>
+                  {showType && (
                   <label className="text-[11px] font-semibold text-muted-foreground">
 
                     Loại câu hỏi
@@ -357,6 +362,7 @@ export function ManualQuestionEditor({
                       ))}
                     </select>
                   </label>
+                  )}
                   {!hideMeta && (
                     <>
                       <label className="text-[11px] font-semibold text-muted-foreground">
@@ -388,6 +394,9 @@ export function ManualQuestionEditor({
                     </>
                   )}
                 </div>
+                  );
+                })()}
+
 
                 <label className="block text-[11px] font-semibold text-muted-foreground">
                   Nội dung câu hỏi
