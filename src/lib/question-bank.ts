@@ -86,7 +86,7 @@ const SAMPLE_CONTENTS: Record<QSkill, string[]> = {
 };
 
 const SKILLS: QSkill[] = ["listening", "reading", "writing", "speaking"];
-const TYPES: QType[] = ["mcq", "mcq-multi", "fill", "tf", "short", "essay", "matching", "cloze"];
+const TYPES: QType[] = ["mcq", "mcq-multi", "fill", "tf", "short", "essay", "matching", "sequence"];
 const LEVELS: QLevel[] = ["A1", "A2", "B1", "B2", "C1"];
 
 export const questionBank: BankQuestion[] = (() => {
