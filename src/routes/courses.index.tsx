@@ -295,28 +295,48 @@ function CoursesListPage() {
 
             {view === "grid" ? (
               <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {group.items.map(({ course, level, category }) => (
-                  <CourseCard
-                    key={course.id}
-                    course={course}
-                    level={level}
-                    category={category}
-                  />
-                ))}
+                {group.items.map(({ course, level, category }) =>
+                  isAdmin ? (
+                    <AdminCourseCard
+                      key={course.id}
+                      course={course}
+                      level={level}
+                      category={category}
+                    />
+                  ) : (
+                    <CourseCard
+                      key={course.id}
+                      course={course}
+                      level={level}
+                      category={category}
+                    />
+                  ),
+                )}
               </div>
             ) : (
               <div className="mt-3 overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
-                {group.items.map(({ course, level, category }, i) => (
-                  <CourseRow
-                    key={course.id}
-                    course={course}
-                    level={level}
-                    category={category}
-                    isLast={i === group.items.length - 1}
-                  />
-                ))}
+                {group.items.map(({ course, level, category }, i) =>
+                  isAdmin ? (
+                    <AdminCourseRow
+                      key={course.id}
+                      course={course}
+                      level={level}
+                      category={category}
+                      isLast={i === group.items.length - 1}
+                    />
+                  ) : (
+                    <CourseRow
+                      key={course.id}
+                      course={course}
+                      level={level}
+                      category={category}
+                      isLast={i === group.items.length - 1}
+                    />
+                  ),
+                )}
               </div>
             )}
+
           </section>
         ))}
       </div>
