@@ -55,6 +55,8 @@ export function ManualQuestionEditor({
   onChange,
   maxCount,
   title,
+  hideBank,
+  hideHeader,
 }: Props) {
   const list = questions;
   const allowedTypes = Q_TYPES_BY_SKILL[skill];
