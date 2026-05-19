@@ -15,10 +15,19 @@ import {
   Pencil,
   Trash2,
   Layers,
+  Settings2,
 } from "lucide-react";
 import { levels, type Course, type Level } from "@/lib/lms-data";
 import { useCategories, categoryOf, type Category } from "@/lib/course-categories";
 import { TopNav } from "@/components/TopNav";
+import { CategoriesManager } from "@/components/CategoriesManager";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { useRole } from "@/contexts/RoleContext";
 import { cn } from "@/lib/utils";
 import coverA1 from "@/assets/cover-empower-a1.png";
@@ -66,6 +75,7 @@ function CoursesListPage() {
   const [status, setStatus] = useState<Status>("all");
   const [view, setView] = useState<View>("grid");
   const [groupBy, setGroupBy] = useState<GroupBy>("category");
+  const [managerOpen, setManagerOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -140,13 +150,22 @@ function CoursesListPage() {
             </p>
           </div>
           {isAdmin && (
-            <Link
-              to="/teacher/upload"
-              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft transition hover:opacity-90"
-              style={{ background: "var(--gradient-brand)" }}
-            >
-              <Plus className="h-4 w-4" /> Tạo khóa học mới
-            </Link>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setManagerOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-muted"
+              >
+                <Settings2 className="h-4 w-4" /> Quản lý chương trình
+              </button>
+              <Link
+                to="/teacher/upload"
+                className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft transition hover:opacity-90"
+                style={{ background: "var(--gradient-brand)" }}
+              >
+                <Plus className="h-4 w-4" /> Tạo khóa học mới
+              </Link>
+            </div>
           )}
         </div>
 
@@ -341,6 +360,19 @@ function CoursesListPage() {
           </section>
         ))}
       </div>
+
+      <Dialog open={managerOpen} onOpenChange={setManagerOpen}>
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>Quản lý chương trình</DialogTitle>
+            <DialogDescription>
+              Thêm, sửa, xóa hoặc sắp xếp danh sách chương trình. Thay đổi sẽ áp dụng ngay
+              khi tạo/sửa khóa học.
+            </DialogDescription>
+          </DialogHeader>
+          <CategoriesManager onClose={() => setManagerOpen(false)} />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
