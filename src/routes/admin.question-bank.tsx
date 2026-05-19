@@ -999,3 +999,56 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     </div>
   );
 }
+
+function TypePickerDialog({
+  onClose,
+  onPick,
+}: {
+  onClose: () => void;
+  onPick: (t: QType) => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <button onClick={onClose} className="absolute inset-0" aria-label="Close" />
+      <div className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-background p-6 shadow-elevated">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+              <FileQuestion className="h-3.5 w-3.5" /> Chọn loại câu hỏi
+            </span>
+            <h2 className="mt-1 font-display text-xl font-semibold">
+              Bạn muốn tạo loại câu hỏi nào?
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Chọn một loại để bắt đầu soạn thảo nội dung và đáp án.
+            </p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-2 hover:bg-muted">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {TYPE_ORDER.map((t) => {
+            const Icon = TYPE_ICON[t];
+            return (
+              <button
+                key={t}
+                onClick={() => onPick(t)}
+                className="group flex flex-col items-center gap-2 rounded-2xl border border-border bg-surface p-4 text-center transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 hover:shadow-soft"
+              >
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary transition group-hover:scale-110">
+                  <Icon className="h-7 w-7" />
+                </div>
+                <div className="text-sm font-semibold leading-tight">{TYPE_LABEL[t]}</div>
+                <div className="text-[11px] leading-snug text-muted-foreground">
+                  {TYPE_DESCRIPTION[t]}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
