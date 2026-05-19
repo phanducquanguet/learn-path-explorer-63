@@ -66,27 +66,6 @@ function BankPage() {
   const [page, setPage] = useState(1);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  if (role !== "admin") {
-    return (
-      <div className="min-h-screen bg-background">
-        <TopNav />
-        <div className="mx-auto max-w-3xl px-6 py-20 text-center">
-          <Library className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h1 className="mt-4 font-display text-2xl font-semibold">Chỉ Quản trị viên</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Trang Ngân hàng câu hỏi chỉ dành cho Quản trị viên.
-          </p>
-          <Link
-            to="/teacher"
-            className="mt-6 inline-flex rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background"
-          >
-            Về Tổng quan
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   const filtered = useMemo(() => {
     const list = items.filter(
       (it) =>
@@ -124,6 +103,27 @@ function BankPage() {
     items.forEach((it) => (m[it.skill] = (m[it.skill] || 0) + 1));
     return m;
   }, [items]);
+
+  if (role !== "admin") {
+    return (
+      <div className="min-h-screen bg-background">
+        <TopNav />
+        <div className="mx-auto max-w-3xl px-6 py-20 text-center">
+          <Library className="mx-auto h-12 w-12 text-muted-foreground" />
+          <h1 className="mt-4 font-display text-2xl font-semibold">Chỉ Quản trị viên</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Trang Ngân hàng câu hỏi chỉ dành cho Quản trị viên.
+          </p>
+          <Link
+            to="/teacher"
+            className="mt-6 inline-flex rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background"
+          >
+            Về Tổng quan
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const remove = (id: string) => {
     setItems((p) => p.filter((x) => x.id !== id));
