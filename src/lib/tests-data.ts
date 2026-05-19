@@ -1,10 +1,14 @@
-import type { QSkill, QType, QLevel } from "./question-bank";
+import type { QSkill, QType, QLevel, QDifficulty } from "./question-bank";
 
 export type TestStructureItem = {
   skill: QSkill;
   type: QType;
   level: QLevel;
   count: number;
+  /** "mixed" = không giới hạn độ khó (bốc trộn). */
+  difficulty?: QDifficulty | "mixed";
+  /** Câu hỏi đã chọn thủ công (mode fixed). */
+  pickedIds?: string[];
 };
 
 export type Test = {
