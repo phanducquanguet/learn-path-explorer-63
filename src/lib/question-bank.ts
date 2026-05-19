@@ -148,6 +148,7 @@ export const questionBank: BankQuestion[] = (() => {
             : undefined,
         });
         i++;
+        }
       }
     }
   }
