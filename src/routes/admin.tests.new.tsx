@@ -87,21 +87,6 @@ function NewTestPage() {
   const [randomSeed, setRandomSeed] = useState<Record<number, number>>({});
   const [previewing, setPreviewing] = useState(false);
 
-  if (role !== "admin") {
-    return (
-      <div className="min-h-screen bg-background">
-        <TopNav />
-        <div className="mx-auto max-w-3xl px-6 py-20 text-center">
-          <ScrollText className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h1 className="mt-4 font-display text-2xl font-semibold">Chỉ Quản trị viên</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Chỉ Quản trị viên mới có thể tạo đề thi.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   const totalQuestions = structure.reduce((s, x) => s + x.count, 0);
 
   // Resolve final question list per group for preview / save.
@@ -117,6 +102,21 @@ function NewTestPage() {
       return { item: it, questions: rollRandom(it, randomSeed[i] ?? 0) };
     });
   }, [structure, mode, randomSeed]);
+
+  if (role !== "admin") {
+    return (
+      <div className="min-h-screen bg-background">
+        <TopNav />
+        <div className="mx-auto max-w-3xl px-6 py-20 text-center">
+          <ScrollText className="mx-auto h-12 w-12 text-muted-foreground" />
+          <h1 className="mt-4 font-display text-2xl font-semibold">Chỉ Quản trị viên</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Chỉ Quản trị viên mới có thể tạo đề thi.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const submit = () => {
     if (typeof window !== "undefined") {
@@ -148,6 +148,7 @@ function NewTestPage() {
     }
     return true;
   })();
+
 
   return (
     <div className="min-h-screen bg-background">
