@@ -883,6 +883,14 @@ function GroupEditor({
                 </button>
               </div>
               <button
+                onClick={() => addSimilar(idx)}
+                disabled={picked.length >= cur.count}
+                className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-[10px] font-semibold text-violet-600 hover:bg-violet-500/10 disabled:opacity-30"
+                title="Thêm câu tương tự từ ngân hàng (cùng kỹ năng, loại, cấp độ, độ khó)"
+              >
+                <Sparkles className="h-3 w-3" /> Tương tự
+              </button>
+              <button
                 onClick={() => removeAt(idx)}
                 className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
                 title="Xóa"
