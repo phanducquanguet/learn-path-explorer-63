@@ -695,9 +695,47 @@ function Step4Build({
   }
 
   // fixed mode → picker
+  return (
+    <ManualPicker
+      key={openGroup}
+      structure={structure}
+      openGroup={openGroup}
+      setOpenGroup={setOpenGroup}
+      setStructure={setStructure}
+    />
+  );
+}
+
+function ManualPicker({
+  structure,
+  openGroup,
+  setOpenGroup,
+  setStructure,
+}: {
+  structure: StructureItem[];
+  openGroup: number;
+  setOpenGroup: (i: number) => void;
+  setStructure: React.Dispatch<React.SetStateAction<StructureItem[]>>;
+}) {
   const cur = structure[openGroup];
-  const candidates = matchBank(cur);
   const picked = cur.pickedIds ?? [];
+  const [filterLevel, setFilterLevel] = useState<QLevel | "all">(cur.level);
+  const [filterDiff, setFilterDiff] = useState<QDifficulty | "all">(
+    cur.difficulty && cur.difficulty !== "mixed" ? cur.difficulty : "all",
+  );
+  const [search, setSearch] = useState("");
+
+  const candidates = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return questionBank.filter(
+      (x) =>
+        x.skill === cur.skill &&
+        x.type === cur.type &&
+        (filterLevel === "all" || x.level === filterLevel) &&
+        (filterDiff === "all" || x.difficulty === filterDiff) &&
+        (!q || x.content.toLowerCase().includes(q) || x.id.toLowerCase().includes(q)),
+    );
+  }, [cur.skill, cur.type, filterLevel, filterDiff, search]);
 
   const toggle = (id: string) => {
     setStructure((p) =>
@@ -711,10 +749,13 @@ function Step4Build({
     );
   };
 
+  const selectClass =
+    "h-8 rounded-lg border border-border bg-background px-2 text-xs font-medium outline-none focus:border-primary";
+
   return (
     <div className="space-y-3">
       <p className="text-sm text-muted-foreground">
-        Chọn từng câu cho mỗi nhóm. Số câu chọn phải khớp với cấu trúc.
+        Chọn từng câu cho mỗi nhóm. Dùng bộ lọc bên dưới để thu hẹp theo cấp độ và độ khó.
       </p>
       <div className="flex flex-wrap gap-2">
         {structure.map((s, i) => {
@@ -746,25 +787,71 @@ function Step4Build({
       </div>
 
       <div className="rounded-2xl border border-border bg-background">
-        <div className="flex items-center justify-between gap-2 border-b border-border bg-muted/30 px-4 py-2.5 text-xs">
-          <div>
-            Có <strong>{candidates.length}</strong> câu phù hợp •{" "}
-            <strong>{picked.length}/{cur.count}</strong> đã chọn
+        <div className="flex flex-wrap items-center gap-2 border-b border-border bg-muted/30 px-4 py-2.5 text-xs">
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Cấp độ</span>
+            <select
+              value={filterLevel}
+              onChange={(e) => setFilterLevel(e.target.value as QLevel | "all")}
+              className={selectClass}
+            >
+              <option value="all">Tất cả</option>
+              {LEVELS.map((l) => (
+                <option key={l} value={l}>
+                  {l}
+                </option>
+              ))}
+            </select>
           </div>
-          <button
-            onClick={() => {
-              const random = [...candidates]
-                .sort(() => Math.random() - 0.5)
-                .slice(0, cur.count)
-                .map((q) => q.id);
-              setStructure((p) =>
-                p.map((x, idx) => (idx === openGroup ? { ...x, pickedIds: random } : x)),
-              );
-            }}
-            className="inline-flex items-center gap-1 rounded-lg bg-foreground px-2.5 py-1 text-[11px] font-semibold text-background"
-          >
-            <Shuffle className="h-3 w-3" /> Lấy ngẫu nhiên đủ {cur.count} câu
-          </button>
+          <div className="flex items-center gap-1.5">
+            <span className="text-muted-foreground">Độ khó</span>
+            <select
+              value={filterDiff}
+              onChange={(e) => setFilterDiff(e.target.value as QDifficulty | "all")}
+              className={selectClass}
+            >
+              <option value="all">Tất cả</option>
+              <option value="easy">{DIFFICULTY_LABEL.easy}</option>
+              <option value="medium">{DIFFICULTY_LABEL.medium}</option>
+              <option value="hard">{DIFFICULTY_LABEL.hard}</option>
+            </select>
+          </div>
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm theo nội dung hoặc mã câu..."
+            className="h-8 min-w-[200px] flex-1 rounded-lg border border-border bg-background px-2.5 text-xs outline-none focus:border-primary"
+          />
+          <div className="ml-auto flex items-center gap-3">
+            <span>
+              <strong>{candidates.length}</strong> phù hợp
+            </span>
+            <span>
+              <strong>
+                {picked.length}/{cur.count}
+              </strong>{" "}
+              đã chọn
+            </span>
+            <button
+              onClick={() => {
+                const remaining = cur.count - picked.length;
+                if (remaining <= 0) return;
+                const pool = candidates.filter((q) => !picked.includes(q.id));
+                const random = [...pool]
+                  .sort(() => Math.random() - 0.5)
+                  .slice(0, remaining)
+                  .map((q) => q.id);
+                setStructure((p) =>
+                  p.map((x, idx) =>
+                    idx === openGroup ? { ...x, pickedIds: [...picked, ...random] } : x,
+                  ),
+                );
+              }}
+              className="inline-flex items-center gap-1 rounded-lg bg-foreground px-2.5 py-1 text-[11px] font-semibold text-background"
+            >
+              <Shuffle className="h-3 w-3" /> Bốc đủ ngẫu nhiên
+            </button>
+          </div>
         </div>
         <ul className="max-h-[420px] divide-y divide-border overflow-y-auto text-sm">
           {candidates.map((q) => {
@@ -793,6 +880,9 @@ function Step4Build({
                   <div className="text-foreground">{q.content}</div>
                   <div className="mt-1 flex items-center gap-2 text-[10px] text-muted-foreground">
                     <span className="font-mono">{q.id}</span>
+                    <span className="rounded-md bg-muted px-1.5 py-0.5 font-semibold">
+                      {q.level}
+                    </span>
                     <span
                       className={cn(
                         "rounded-md px-1.5 py-0.5 font-semibold",
@@ -809,7 +899,7 @@ function Step4Build({
           })}
           {candidates.length === 0 && (
             <li className="px-4 py-8 text-center text-xs text-muted-foreground">
-              Ngân hàng chưa có câu hỏi phù hợp.
+              Không có câu hỏi nào khớp bộ lọc hiện tại.
             </li>
           )}
         </ul>
