@@ -49,6 +49,7 @@ type UnitDraft = {
 function UploadPage() {
   const { edit } = Route.useSearch();
   const isEdit = !!edit;
+  const [categories] = useCategories();
   const [step, setStep] = useState(0);
   const [course, setCourse] = useState({
     title: "",
