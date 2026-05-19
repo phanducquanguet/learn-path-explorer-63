@@ -41,6 +41,10 @@ type Props = {
   maxCount?: number;
   /** Hiển thị tiêu đề thanh header (mặc định: tên kỹ năng) */
   title?: string;
+  /** Ẩn nút "Thêm từ ngân hàng" */
+  hideBank?: boolean;
+  /** Ẩn thanh header tổng (số câu/nút thêm). Khi true component chỉ render danh sách. */
+  hideHeader?: boolean;
 };
 
 export function ManualQuestionEditor({
