@@ -185,13 +185,17 @@ function TestsList() {
               const m = statusMeta(st);
               const Icon = m.icon;
               return (
-                <Link
+                <div
                   key={t.id}
-                  to="/teacher/tests/$testId"
-                  params={{ testId: t.id }}
                   className="group relative flex flex-col rounded-3xl border border-border bg-surface p-5 shadow-soft transition hover:shadow-lg"
                 >
-                  <div className="flex items-start justify-between gap-3">
+                  <Link
+                    to="/teacher/tests/$testId"
+                    params={{ testId: t.id }}
+                    className="absolute inset-0 rounded-3xl"
+                    aria-label={t.name}
+                  />
+                  <div className="relative flex items-start justify-between gap-3">
                     <span
                       className={cn(
                         "inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold",
@@ -205,14 +209,14 @@ function TestsList() {
                     </span>
                   </div>
 
-                  <h3 className="mt-3 font-display text-lg font-semibold text-foreground line-clamp-1">
+                  <h3 className="relative mt-3 font-display text-lg font-semibold text-foreground line-clamp-1">
                     {t.name}
                   </h3>
-                  <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
+                  <p className="relative mt-1 text-xs text-muted-foreground line-clamp-2">
                     {t.description}
                   </p>
 
-                  <div className="mt-3 flex items-start gap-1.5">
+                  <div className="relative mt-3 flex items-start gap-1.5">
                     <GraduationCap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                     <div className="flex flex-wrap gap-1">
                       {t.classIds.map((cid) => (
@@ -226,7 +230,7 @@ function TestsList() {
                     </div>
                   </div>
 
-                  <div className="mt-4 grid grid-cols-2 gap-y-2 border-t border-border pt-3 text-xs text-muted-foreground">
+                  <div className="relative mt-4 grid grid-cols-2 gap-y-2 border-t border-border pt-3 text-xs text-muted-foreground">
                     <span className="inline-flex items-center gap-1">
                       <Calendar className="h-3.5 w-3.5" />{" "}
                       {new Date(t.openAt).toLocaleDateString("vi-VN")}
@@ -241,10 +245,25 @@ function TestsList() {
                       {t.avgScore ? `TB ${t.avgScore}` : "—"}
                     </span>
                   </div>
-                </Link>
+
+                  {isAdmin && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        duplicate(t);
+                      }}
+                      title="Tạo đề tương tự cho cùng lớp (giữ nguyên dạng và độ khó, đổi nội dung câu hỏi)"
+                      className="relative mt-3 inline-flex w-fit items-center gap-1.5 self-end rounded-lg border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" /> Tạo đề tương tự
+                    </button>
+                  )}
+                </div>
               );
             })}
           </div>
+
         ) : (
           <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
             <div className="overflow-x-auto">
