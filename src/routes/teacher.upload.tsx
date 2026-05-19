@@ -207,7 +207,7 @@ function UploadPage() {
                   }
                   className="input"
                 >
-                  {CATEGORIES.map((c) => (
+                  {categories.map((c) => (
                     <option key={c} value={c}>
                       {c}
                     </option>
