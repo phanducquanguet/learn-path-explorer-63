@@ -478,6 +478,16 @@ function BankPage() {
                               {it.level}
                             </span>
                           </td>
+                          <td className="px-3 py-2 text-center">
+                            <span
+                              className={cn(
+                                "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                                DIFFICULTY_COLOR[it.difficulty],
+                              )}
+                            >
+                              {DIFFICULTY_LABEL[it.difficulty]}
+                            </span>
+                          </td>
                           <td className="px-3 py-2 text-center font-semibold">{it.points}</td>
                           <td className="px-3 py-2 text-right">
                             <div className="inline-flex gap-1">
