@@ -478,7 +478,7 @@ function NewTestPage() {
                   Cấu trúc đề
                 </div>
                 <div className="space-y-2">
-                  {resolved.map((r, i) => (
+                  {resolved.filter((r) => r.item.count > 0).map((r, i) => (
                     <div
                       key={i}
                       className="flex flex-wrap items-center gap-2 rounded-xl bg-muted/40 px-3 py-2 text-xs"
@@ -486,8 +486,6 @@ function NewTestPage() {
                       <span className="font-semibold text-foreground">
                         {SKILL_LABEL[r.item.skill]}
                       </span>
-                      <span className="text-muted-foreground">•</span>
-                      <span>{TYPE_LABEL[r.item.type]}</span>
                       <span className="text-muted-foreground">•</span>
                       <span>{r.item.level}</span>
                       {r.item.difficulty && r.item.difficulty !== "mixed" && (
