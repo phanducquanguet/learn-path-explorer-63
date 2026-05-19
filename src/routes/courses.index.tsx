@@ -75,6 +75,7 @@ function CoursesListPage() {
   const [status, setStatus] = useState<Status>("all");
   const [view, setView] = useState<View>("grid");
   const [groupBy, setGroupBy] = useState<GroupBy>("category");
+  const [managerOpen, setManagerOpen] = useState(false);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
