@@ -1,13 +1,14 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
+import { ManualQuestionEditor } from "@/components/ManualQuestionEditor";
 import { levels } from "@/lib/lms-data";
-import { EXAM_SKILLS, QUIZ_KINDS } from "@/lib/teacher-data";
+import { EXAM_SKILLS } from "@/lib/teacher-data";
+import type { CustomQuestion } from "@/lib/tests-data";
+import type { QLevel, QSkill } from "@/lib/question-bank";
 import {
   ClipboardCheck,
   Sparkles,
-  Plus,
-  Trash2,
   Headphones,
   BookOpen,
   PenLine,
@@ -31,25 +32,30 @@ const SKILL_ICON: Record<string, React.ComponentType<{ className?: string }>> = 
   use: Languages,
 };
 
-type Question = { id: string; type: string; prompt: string };
-type SkillGroup = { id: string; passage: string; questions: Question[] };
+const EDITOR_SKILLS: QSkill[] = ["listening", "reading", "writing", "speaking"];
+
+type SkillGroup = {
+  id: QSkill;
+  passage: string;
+  questions: CustomQuestion[];
+};
 
 function ExamBuilder() {
   const [meta, setMeta] = useState({
     name: "",
-    levelCode: "B1",
+    levelCode: "B1" as QLevel,
     duration: 90,
     description: "",
   });
-  const [selectedSkills, setSelectedSkills] = useState<string[]>(["listening", "reading"]);
+  const [selectedSkills, setSelectedSkills] = useState<QSkill[]>(["listening", "reading"]);
   const [groups, setGroups] = useState<Record<string, SkillGroup>>({
     listening: { id: "listening", passage: "", questions: [] },
     reading: { id: "reading", passage: "", questions: [] },
   });
-  const [activeSkill, setActiveSkill] = useState<string>("listening");
+  const [activeSkill, setActiveSkill] = useState<QSkill>("listening");
   const [saved, setSaved] = useState(false);
 
-  const toggleSkill = (id: string) => {
+  const toggleSkill = (id: QSkill) => {
     setSelectedSkills((prev) => {
       const next = prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id];
       setGroups((g) => {
@@ -65,14 +71,6 @@ function ExamBuilder() {
 
   const updateGroup = (skill: string, patch: Partial<SkillGroup>) =>
     setGroups((g) => ({ ...g, [skill]: { ...g[skill], ...patch } }));
-
-  const addQuestion = (skill: string, type = "mcq") =>
-    updateGroup(skill, {
-      questions: [
-        ...groups[skill].questions,
-        { id: `q-${Date.now()}`, type, prompt: "" },
-      ],
-    });
 
   const totalQuestions = useMemo(
     () => Object.values(groups).reduce((s, g) => s + g.questions.length, 0),
@@ -142,7 +140,11 @@ function ExamBuilder() {
             />
           </Field>
           <Field label="Cấp độ">
-            <select value={meta.levelCode} onChange={(e) => setMeta({ ...meta, levelCode: e.target.value })} className="input">
+            <select
+              value={meta.levelCode}
+              onChange={(e) => setMeta({ ...meta, levelCode: e.target.value as QLevel })}
+              className="input"
+            >
               {levels.map((l) => (
                 <option key={l.code} value={l.code}>
                   {l.code}
@@ -171,13 +173,14 @@ function ExamBuilder() {
           <div className="sm:col-span-4">
             <div className="mb-1.5 text-xs font-semibold text-foreground">Kỹ năng tích hợp</div>
             <div className="flex flex-wrap gap-2">
-              {EXAM_SKILLS.map((s) => {
-                const Icon = SKILL_ICON[s.id] ?? ClipboardCheck;
-                const active = selectedSkills.includes(s.id);
+              {EXAM_SKILLS.filter((s) => EDITOR_SKILLS.includes(s.id as QSkill)).map((s) => {
+                const id = s.id as QSkill;
+                const Icon = SKILL_ICON[id] ?? ClipboardCheck;
+                const active = selectedSkills.includes(id);
                 return (
                   <button
-                    key={s.id}
-                    onClick={() => toggleSkill(s.id)}
+                    key={id}
+                    onClick={() => toggleSkill(id)}
                     className={cn(
                       "inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition",
                       active
@@ -250,7 +253,9 @@ function ExamBuilder() {
               </div>
 
               {(activeSkill === "reading" || activeSkill === "listening") && (
-                <Field label={activeSkill === "reading" ? "Đoạn văn (passage)" : "Audio script / link"}>
+                <Field
+                  label={activeSkill === "reading" ? "Đoạn văn (passage)" : "Audio script / link"}
+                >
                   <textarea
                     rows={4}
                     value={current.passage}
@@ -265,64 +270,13 @@ function ExamBuilder() {
                 </Field>
               )}
 
-              <div className="mt-5 flex items-center justify-between">
-                <div className="text-sm font-semibold text-foreground">
-                  Câu hỏi ({current.questions.length})
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {QUIZ_KINDS.slice(0, 4).map((q) => (
-                    <button
-                      key={q.id}
-                      onClick={() => addQuestion(activeSkill, q.id)}
-                      className="inline-flex items-center gap-1 rounded-lg bg-muted px-2.5 py-1.5 text-[11px] font-medium text-foreground hover:bg-foreground hover:text-background"
-                    >
-                      <Plus className="h-3 w-3" /> {q.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="mt-3 space-y-2">
-                {current.questions.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-                    Chưa có câu hỏi. Chọn loại bên trên để thêm.
-                  </div>
-                )}
-                {current.questions.map((q, i) => (
-                  <div key={q.id} className="flex items-start gap-3 rounded-xl border border-border bg-background p-3">
-                    <div className="mt-1 flex h-7 w-7 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary">
-                      {i + 1}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                        {QUIZ_KINDS.find((k) => k.id === q.type)?.label ?? q.type}
-                      </div>
-                      <textarea
-                        rows={2}
-                        value={q.prompt}
-                        onChange={(e) =>
-                          updateGroup(activeSkill, {
-                            questions: current.questions.map((x) =>
-                              x.id === q.id ? { ...x, prompt: e.target.value } : x,
-                            ),
-                          })
-                        }
-                        placeholder="Nội dung câu hỏi..."
-                        className="input mt-1"
-                      />
-                    </div>
-                    <button
-                      onClick={() =>
-                        updateGroup(activeSkill, {
-                          questions: current.questions.filter((x) => x.id !== q.id),
-                        })
-                      }
-                      className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
+              <div className="mt-5">
+                <ManualQuestionEditor
+                  skill={activeSkill}
+                  level={meta.levelCode}
+                  questions={current.questions}
+                  onChange={(next) => updateGroup(activeSkill, { questions: next })}
+                />
               </div>
             </div>
           </div>
