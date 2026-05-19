@@ -455,15 +455,15 @@ export function ManualQuestionEditor({
         })}
       </div>
 
-      {hideHeader && (
+      {hideHeader && !isFull && (
         <button
           onClick={addNew}
-          disabled={isFull}
-          className="inline-flex items-center gap-1 rounded-lg bg-foreground px-2.5 py-1.5 text-[11px] font-semibold text-background disabled:opacity-40"
+          className="inline-flex items-center gap-1 rounded-lg bg-foreground px-2.5 py-1.5 text-[11px] font-semibold text-background"
         >
           <Plus className="h-3 w-3" /> Thêm câu hỏi
         </button>
       )}
+
     </div>
   );
 }
