@@ -331,10 +331,9 @@ export function ManualQuestionEditor({
                 </div>
               </div>
               <div className="space-y-2.5 p-3">
-                <div className="grid gap-2 sm:grid-cols-3">
-                  <label className="text-[11px] font-semibold text-muted-foreground">
                 <div className={cn("grid gap-2", hideMeta ? "" : "sm:grid-cols-3")}>
                   <label className="text-[11px] font-semibold text-muted-foreground">
+
                     Loại câu hỏi
                     <select
                       value={c.type}
