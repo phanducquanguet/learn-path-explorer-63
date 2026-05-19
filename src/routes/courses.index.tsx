@@ -17,7 +17,7 @@ import {
   Layers,
 } from "lucide-react";
 import { levels, type Course, type Level } from "@/lib/lms-data";
-import { CATEGORIES, categoryOf, type Category } from "@/lib/course-categories";
+import { useCategories, categoryOf, type Category } from "@/lib/course-categories";
 import { TopNav } from "@/components/TopNav";
 import { useRole } from "@/contexts/RoleContext";
 import { cn } from "@/lib/utils";
