@@ -99,6 +99,21 @@ function TestsList() {
   const { role } = useRole();
   const isAdmin = role === "admin";
   const [view, setView] = useState<"grid" | "table">("grid");
+  const [tests, setTests] = useState<Test[]>(seedTests);
+  const simCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const t of tests) {
+      const base = t.id.split("-sim-")[0];
+      m[base] = (m[base] ?? 0) + (t.id.includes("-sim-") ? 1 : 0);
+    }
+    return m;
+  }, [tests]);
+
+  const duplicate = (t: Test) => {
+    const base = t.id.split("-sim-")[0];
+    const idx = (simCounts[base] ?? 0) + 1;
+    setTests((arr) => [cloneTestSimilar(t, idx), ...arr]);
+  };
 
   return (
     <div className="min-h-screen bg-background">
