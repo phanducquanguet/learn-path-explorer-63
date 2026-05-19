@@ -60,6 +60,8 @@ export function ManualQuestionEditor({
   title,
   hideBank,
   hideHeader,
+  hideMeta,
+
 }: Props) {
   const list = questions;
   const allowedTypes = Q_TYPES_BY_SKILL[skill];
