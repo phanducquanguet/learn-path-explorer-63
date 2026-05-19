@@ -5,7 +5,6 @@ import {
   Play,
   Clock,
   Sparkles,
-  GraduationCap,
   Search,
   LayoutGrid,
   List,
@@ -13,8 +12,12 @@ import {
   X,
   BookOpen,
   Plus,
+  Pencil,
+  Trash2,
+  Layers,
 } from "lucide-react";
 import { levels, type Course, type Level } from "@/lib/lms-data";
+import { CATEGORIES, categoryOf, type Category } from "@/lib/course-categories";
 import { TopNav } from "@/components/TopNav";
 import { useRole } from "@/contexts/RoleContext";
 import { cn } from "@/lib/utils";
@@ -40,31 +43,6 @@ export const Route = createFileRoute("/courses/")({
   component: CoursesListPage,
 });
 
-// ----- Category derivation -----
-const CATEGORIES = [
-  "Empower",
-  "Speaking & Listening Lab",
-  "Luyện thi KET/PET",
-  "Luyện thi IELTS",
-  "Luyện thi Linguaskill",
-  "Luyện thi EST",
-  "Học liệu bồi dưỡng",
-  "Khác",
-] as const;
-type Category = (typeof CATEGORIES)[number];
-
-function categoryOf(c: Course): Category {
-  const t = `${c.title} ${c.subtitle}`.toLowerCase();
-  if (t.includes("ielts")) return "Luyện thi IELTS";
-  if (t.includes("linguaskill")) return "Luyện thi Linguaskill";
-  if (t.includes("ket") || t.includes("pet")) return "Luyện thi KET/PET";
-  if (t.includes("est")) return "Luyện thi EST";
-  if (t.includes("listening") || t.includes("speaking") || t.includes("lab"))
-    return "Speaking & Listening Lab";
-  if (t.includes("bồi dưỡng") || t.includes("học liệu")) return "Học liệu bồi dưỡng";
-  if (t.includes("empower") || t.includes("foundation")) return "Empower";
-  return "Khác";
-}
 
 type Status = "all" | "in-progress" | "completed" | "not-started";
 type View = "grid" | "list";
