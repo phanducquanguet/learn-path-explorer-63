@@ -17,7 +17,7 @@ import {
   Layers,
 } from "lucide-react";
 import { levels, type Course, type Level } from "@/lib/lms-data";
-import { CATEGORIES, categoryOf, type Category } from "@/lib/course-categories";
+import { useCategories, categoryOf, type Category } from "@/lib/course-categories";
 import { TopNav } from "@/components/TopNav";
 import { useRole } from "@/contexts/RoleContext";
 import { cn } from "@/lib/utils";
@@ -51,12 +51,13 @@ type GroupBy = "category" | "level";
 function CoursesListPage() {
   const { role } = useRole();
   const isAdmin = role === "admin";
+  const [categories] = useCategories();
   const allCourses = useMemo(
     () =>
       levels.flatMap((lv) =>
         lv.courses.map((c) => ({ course: c, level: lv, category: categoryOf(c) })),
       ),
-    [],
+    [categories],
   );
 
   const [query, setQuery] = useState("");
@@ -95,7 +96,7 @@ function CoursesListPage() {
     }
     // stable order
     if (groupBy === "category") {
-      return CATEGORIES.filter((c) => map.has(c)).map((c) => ({
+      return categories.filter((c) => map.has(c)).map((c) => ({
         key: c,
         items: map.get(c)!,
       }));
@@ -127,7 +128,7 @@ function CoursesListPage() {
             <p className="text-sm text-muted-foreground">
               {isAdmin ? (
                 <>
-                  {allCourses.length} khóa học • {CATEGORIES.length} chương trình •{" "}
+                  {allCourses.length} khóa học • {categories.length} chương trình •{" "}
                   {levels.length} cấp độ • {filtered.length} đang hiển thị
                 </>
               ) : (
@@ -180,7 +181,7 @@ function CoursesListPage() {
                 onChange={(v) => setCategoryFilter(v as Category | "all")}
                 options={[
                   { value: "all", label: "Tất cả chương trình" },
-                  ...CATEGORIES.map((c) => ({ value: c, label: c })),
+                  ...categories.map((c) => ({ value: c, label: c })),
                 ]}
               />
               <FilterSelect

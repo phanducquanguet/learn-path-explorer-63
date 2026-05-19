@@ -16,6 +16,7 @@ import {
   ScrollText,
   Library,
   Shield,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRole, type Role } from "@/contexts/RoleContext";
@@ -38,6 +39,7 @@ const teacherTabs = [
 
 const adminTabs = [
   { to: "/courses" as const, label: "Khóa học", icon: GraduationCap },
+  { to: "/admin/categories" as const, label: "Chương trình", icon: Layers },
   { to: "/teacher/exams" as const, label: "Luyện thi", icon: ClipboardCheck },
   { to: "/teacher/tests" as const, label: "Thi cử", icon: ScrollText },
   { to: "/admin/question-bank" as const, label: "Ngân hàng câu hỏi", icon: Library },

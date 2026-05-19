@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { levels, getCourse } from "@/lib/lms-data";
 import { ACTIVITY_TYPES, QUIZ_KINDS } from "@/lib/teacher-data";
-import { CATEGORIES, categoryOf, type Category } from "@/lib/course-categories";
+import { useCategories, categoryOf, type Category } from "@/lib/course-categories";
 import {
   Upload,
   BookOpen,
@@ -49,6 +49,7 @@ type UnitDraft = {
 function UploadPage() {
   const { edit } = Route.useSearch();
   const isEdit = !!edit;
+  const [categories] = useCategories();
   const [step, setStep] = useState(0);
   const [course, setCourse] = useState({
     title: "",
@@ -206,7 +207,7 @@ function UploadPage() {
                   }
                   className="input"
                 >
-                  {CATEGORIES.map((c) => (
+                  {categories.map((c) => (
                     <option key={c} value={c}>
                       {c}
                     </option>
