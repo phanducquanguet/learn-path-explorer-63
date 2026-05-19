@@ -22,7 +22,10 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/teacher/upload")({
-  head: () => ({ meta: [{ title: "Tải lên khóa học — UNICOM LMS" }] }),
+  head: () => ({ meta: [{ title: "Quản lý khóa học — UNICOM LMS" }] }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    edit: typeof s.edit === "string" ? s.edit : undefined,
+  }),
   component: UploadPage,
 });
 
