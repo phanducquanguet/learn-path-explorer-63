@@ -510,10 +510,6 @@ function NewTestPage() {
               structure={structure}
               setStructure={setStructure}
               mode={mode}
-              resolved={resolved}
-              reroll={(i) =>
-                setRandomSeed((s) => ({ ...s, [i]: (s[i] ?? 0) + 1 }))
-              }
             />
           )}
 
