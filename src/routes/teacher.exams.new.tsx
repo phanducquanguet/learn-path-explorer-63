@@ -138,11 +138,13 @@ function ExamBuilder() {
   const hasMedia = activeSkill === "listening" || activeSkill === "reading";
 
   /* ---------- Block ops ---------- */
-  const addBlock = () => {
+  const addBlock = (kind: "single" | "group" = "single") => {
     const blk: QuestionBlock = {
       id: newBlockId(),
+      kind,
       media: "",
-      questions: hasMedia ? [] : [emptyQuestion(activeSkill, meta.levelCode)],
+      questions:
+        kind === "group" ? [] : [emptyQuestion(activeSkill, meta.levelCode)],
     };
     updateGroup(activeSkill, { blocks: [...current.blocks, blk] });
   };
