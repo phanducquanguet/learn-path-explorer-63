@@ -51,12 +51,13 @@ type GroupBy = "category" | "level";
 function CoursesListPage() {
   const { role } = useRole();
   const isAdmin = role === "admin";
+  const [categories] = useCategories();
   const allCourses = useMemo(
     () =>
       levels.flatMap((lv) =>
         lv.courses.map((c) => ({ course: c, level: lv, category: categoryOf(c) })),
       ),
-    [],
+    [categories],
   );
 
   const [query, setQuery] = useState("");
