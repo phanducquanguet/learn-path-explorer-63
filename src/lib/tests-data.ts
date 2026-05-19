@@ -128,7 +128,7 @@ export const tests: Test[] = [
     structure: [
       { skill: "reading", type: "mcq", level: "B1", count: 12 },
       { skill: "listening", type: "mcq", level: "B1", count: 10 },
-      { skill: "reading", type: "cloze", level: "B1", count: 5 },
+      { skill: "reading", type: "fill", level: "B1", count: 5 },
       { skill: "writing", type: "essay", level: "B1", count: 1 },
     ],
     registered: 13,

@@ -6,6 +6,7 @@ import {
   questionBank,
   SKILL_LABEL,
   TYPE_LABEL,
+  TYPE_DESCRIPTION,
   type BankQuestion,
   type QSkill,
   type QLevel,
@@ -30,8 +31,43 @@ import {
   Square,
   FileQuestion,
   Tag as TagIcon,
+  CircleDot,
+  ToggleLeft,
+  Type as TypeIcon,
+  ListOrdered,
+  GitCompareArrows,
+  TextCursorInput,
+  MousePointerSquareDashed,
+  Move,
+  FileText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const TYPE_ICON: Record<QType, typeof Plus> = {
+  mcq: CircleDot,
+  "mcq-multi": CheckSquare,
+  tf: ToggleLeft,
+  short: TypeIcon,
+  sequence: ListOrdered,
+  matching: GitCompareArrows,
+  fill: TextCursorInput,
+  "select-lists": MousePointerSquareDashed,
+  "drag-drop": Move,
+  essay: FileText,
+};
+
+const TYPE_ORDER: QType[] = [
+  "mcq",
+  "mcq-multi",
+  "tf",
+  "short",
+  "sequence",
+  "matching",
+  "fill",
+  "select-lists",
+  "drag-drop",
+  "essay",
+];
 
 export const Route = createFileRoute("/admin/question-bank")({
   head: () => ({ meta: [{ title: "Ngân hàng câu hỏi — UNICOM LMS" }] }),
@@ -62,6 +98,8 @@ function BankPage() {
   const [editing, setEditing] = useState<BankQuestion | null>(null);
   const [previewing, setPreviewing] = useState<BankQuestion | null>(null);
   const [creating, setCreating] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const [pickedType, setPickedType] = useState<QType>("mcq");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -232,7 +270,7 @@ function BankPage() {
               <Download className="h-4 w-4" /> Xuất
             </button>
             <button
-              onClick={() => setCreating(true)}
+              onClick={() => setPicking(true)}
               className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
               style={{ background: "var(--gradient-brand)" }}
             >
@@ -481,9 +519,21 @@ function BankPage() {
         </div>
       </div>
 
+      {picking && (
+        <TypePickerDialog
+          onClose={() => setPicking(false)}
+          onPick={(t) => {
+            setPickedType(t);
+            setPicking(false);
+            setCreating(true);
+          }}
+        />
+      )}
+
       {(editing || creating) && (
         <EditDialog
           question={editing}
+          initialType={pickedType}
           onClose={() => {
             setEditing(null);
             setCreating(false);
@@ -713,31 +763,43 @@ function PreviewDialog({
 
 function EditDialog({
   question,
+  initialType,
   onClose,
   onSave,
 }: {
   question: BankQuestion | null;
+  initialType?: QType;
   onClose: () => void;
   onSave: (q: BankQuestion) => void;
 }) {
+  const defaultsForType = (t: QType): Partial<BankQuestion> => {
+    if (t === "mcq" || t === "mcq-multi")
+      return { options: ["A. ", "B. ", "C. ", "D. "], correctAnswer: t === "mcq" ? "A" : "A,B" };
+    if (t === "tf") return { options: ["True", "False"], correctAnswer: "True" };
+    if (t === "matching") return { options: ["Item 1 → ", "Item 2 → ", "Item 3 → "] };
+    if (t === "sequence") return { options: ["Bước 1", "Bước 2", "Bước 3"] };
+    if (t === "select-lists") return { options: ["List 1: A | B | C", "List 2: X | Y | Z"] };
+    if (t === "drag-drop") return { options: ["Drag item 1", "Drag item 2", "Drag item 3"] };
+    return { options: undefined };
+  };
   const [form, setForm] = useState<BankQuestion>(
     question ?? {
       id: "",
       content: "",
       skill: "reading",
-      type: "mcq",
+      type: initialType ?? "mcq",
       level: "A1",
-      points: 1,
+      points: (initialType === "essay" ? 5 : initialType === "short" ? 2 : 1),
       tags: [],
       createdAt: new Date().toISOString(),
-      options: ["A. ", "B. ", "C. ", "D. "],
-      correctAnswer: "A",
+      correctAnswer: "",
+      ...defaultsForType(initialType ?? "mcq"),
     },
   );
   const [tagInput, setTagInput] = useState("");
 
   const isMcq = form.type === "mcq" || form.type === "mcq-multi";
-  const hasOptions = isMcq || form.type === "matching" || form.type === "reorder";
+  const hasOptions = isMcq || form.type === "matching" || form.type === "sequence" || form.type === "select-lists" || form.type === "drag-drop";
 
   const addTag = () => {
     const v = tagInput.trim();
@@ -934,6 +996,59 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <label className="text-xs font-semibold text-muted-foreground">{label}</label>
       <div className="mt-1">{children}</div>
+    </div>
+  );
+}
+
+function TypePickerDialog({
+  onClose,
+  onPick,
+}: {
+  onClose: () => void;
+  onPick: (t: QType) => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <button onClick={onClose} className="absolute inset-0" aria-label="Close" />
+      <div className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-background p-6 shadow-elevated">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+              <FileQuestion className="h-3.5 w-3.5" /> Chọn loại câu hỏi
+            </span>
+            <h2 className="mt-1 font-display text-xl font-semibold">
+              Bạn muốn tạo loại câu hỏi nào?
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Chọn một loại để bắt đầu soạn thảo nội dung và đáp án.
+            </p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-2 hover:bg-muted">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          {TYPE_ORDER.map((t) => {
+            const Icon = TYPE_ICON[t];
+            return (
+              <button
+                key={t}
+                onClick={() => onPick(t)}
+                className="group flex flex-col items-center gap-2 rounded-2xl border border-border bg-surface p-4 text-center transition hover:-translate-y-0.5 hover:border-primary/40 hover:bg-primary/5 hover:shadow-soft"
+              >
+                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary transition group-hover:scale-110">
+                  <Icon className="h-7 w-7" />
+                </div>
+                <div className="text-sm font-semibold leading-tight">{TYPE_LABEL[t]}</div>
+                <div className="text-[11px] leading-snug text-muted-foreground">
+                  {TYPE_DESCRIPTION[t]}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

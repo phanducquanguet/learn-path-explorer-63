@@ -2,14 +2,14 @@ export type QSkill = "listening" | "reading" | "writing" | "speaking";
 export type QType =
   | "mcq"
   | "mcq-multi"
-  | "fill"
-  | "matching"
   | "tf"
   | "short"
-  | "essay"
-  | "reorder"
-  | "cloze"
-  | "vocab";
+  | "sequence"
+  | "matching"
+  | "fill"
+  | "select-lists"
+  | "drag-drop"
+  | "essay";
 export type QLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 
 export type BankQuestion = {
@@ -33,16 +33,29 @@ export const SKILL_LABEL: Record<QSkill, string> = {
 };
 
 export const TYPE_LABEL: Record<QType, string> = {
-  mcq: "Trắc nghiệm 1 đáp án",
-  "mcq-multi": "Trắc nghiệm nhiều đáp án",
-  fill: "Điền chỗ trống",
-  matching: "Nối cặp",
-  tf: "Đúng/Sai",
-  short: "Trả lời ngắn",
-  essay: "Tự luận",
-  reorder: "Sắp xếp",
-  cloze: "Cloze test",
-  vocab: "Từ vựng",
+  mcq: "Multiple Choice",
+  "mcq-multi": "Multiple Response",
+  tf: "True / False",
+  short: "Short Answer",
+  sequence: "Sequence",
+  matching: "Matching",
+  fill: "Fill in the Blanks",
+  "select-lists": "Select from Lists",
+  "drag-drop": "Drag and Drop",
+  essay: "Essay",
+};
+
+export const TYPE_DESCRIPTION: Record<QType, string> = {
+  mcq: "Chọn 1 đáp án đúng trong nhiều lựa chọn",
+  "mcq-multi": "Chọn nhiều đáp án đúng",
+  tf: "Câu hỏi đúng hoặc sai",
+  short: "Trả lời ngắn bằng văn bản",
+  sequence: "Sắp xếp các mục theo thứ tự",
+  matching: "Nối cặp các mục tương ứng",
+  fill: "Điền vào chỗ trống trong câu",
+  "select-lists": "Chọn từ danh sách thả xuống",
+  "drag-drop": "Kéo thả các mục vào vị trí",
+  essay: "Bài viết tự luận dài",
 };
 
 const SAMPLE_CONTENTS: Record<QSkill, string[]> = {
@@ -73,7 +86,7 @@ const SAMPLE_CONTENTS: Record<QSkill, string[]> = {
 };
 
 const SKILLS: QSkill[] = ["listening", "reading", "writing", "speaking"];
-const TYPES: QType[] = ["mcq", "mcq-multi", "fill", "tf", "short", "essay", "matching", "cloze"];
+const TYPES: QType[] = ["mcq", "mcq-multi", "fill", "tf", "short", "essay", "matching", "sequence"];
 const LEVELS: QLevel[] = ["A1", "A2", "B1", "B2", "C1"];
 
 export const questionBank: BankQuestion[] = (() => {
