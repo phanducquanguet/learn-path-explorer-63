@@ -595,7 +595,7 @@ function Step4Build({
 }: {
   structure: StructureItem[];
   setStructure: React.Dispatch<React.SetStateAction<StructureItem[]>>;
-  mode: "fixed" | "random";
+  mode: "fixed" | "random" | "manual";
 }) {
   const [openGroup, setOpenGroup] = useState(0);
 
