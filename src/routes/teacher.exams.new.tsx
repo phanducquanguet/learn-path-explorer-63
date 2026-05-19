@@ -410,9 +410,8 @@ function BlockCard({
   onRemove: () => void;
 }) {
   const isListening = skill === "listening";
-  const isReading = skill === "reading";
   const isGroup = block.kind === "group";
-  const mediaSupported = hasMedia; // listening or reading
+
 
   // Single = bố cục gọn: chỉ có nội dung (passage/audio tuỳ chọn) + câu hỏi,
   // tách biệt bằng đường kẻ. Không có thanh header dày của "khối".
@@ -435,29 +434,7 @@ function BlockCard({
           </button>
         </div>
 
-        <div className="space-y-3 p-4 pt-2">
-          {mediaSupported && (
-            <Field
-              label={
-                isListening
-                  ? "Audio (URL hoặc script) — tuỳ chọn"
-                  : "Đoạn văn — tuỳ chọn"
-              }
-            >
-              <textarea
-                rows={isListening ? 2 : 3}
-                value={block.media}
-                onChange={(e) => onUpdate({ media: e.target.value })}
-                placeholder={
-                  isListening
-                    ? "Dán link audio (.mp3 / streaming) hoặc nội dung script..."
-                    : "Dán nội dung đoạn đọc..."
-                }
-                className="input"
-              />
-            </Field>
-          )}
-
+        <div className="p-4 pt-2">
           <ManualQuestionEditor
             skill={skill}
             level={level}
@@ -468,6 +445,7 @@ function BlockCard({
             maxCount={1}
           />
         </div>
+
       </div>
     );
   }
