@@ -118,14 +118,24 @@ function CoursesListPage() {
         <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
           <div className="flex flex-col gap-2">
             <span className="inline-flex w-fit items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <Sparkles className="h-3.5 w-3.5" /> Tất cả khóa học
+              <Sparkles className="h-3.5 w-3.5" />{" "}
+              {isAdmin ? "Quản lý khóa học" : "Tất cả khóa học"}
             </span>
             <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Danh sách khóa học
+              {isAdmin ? "Quản lý khóa học" : "Danh sách khóa học"}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {allCourses.length} khóa học • {totalCompleted} đã hoàn thành •{" "}
-              {filtered.length} đang hiển thị
+              {isAdmin ? (
+                <>
+                  {allCourses.length} khóa học • {CATEGORIES.length} chương trình •{" "}
+                  {levels.length} cấp độ • {filtered.length} đang hiển thị
+                </>
+              ) : (
+                <>
+                  {allCourses.length} khóa học • {totalCompleted} đã hoàn thành •{" "}
+                  {filtered.length} đang hiển thị
+                </>
+              )}
             </p>
           </div>
           {isAdmin && (
@@ -138,6 +148,7 @@ function CoursesListPage() {
             </Link>
           )}
         </div>
+
 
         {/* Toolbar */}
         <div className="mt-8 rounded-2xl border border-border bg-surface p-3 shadow-soft">
