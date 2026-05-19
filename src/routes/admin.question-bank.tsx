@@ -214,24 +214,8 @@ function BankPage() {
     setSelected(new Set());
   };
 
-  const exportJson = () => {
-    const blob = new Blob([JSON.stringify(items, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `question-bank-${Date.now()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-  const importJson = async (f: File) => {
-    try {
-      const txt = await f.text();
-      const data = JSON.parse(txt) as BankQuestion[];
-      if (Array.isArray(data)) setItems((p) => [...data, ...p]);
-    } catch {
-      alert("File JSON không hợp lệ");
-    }
-  };
+
+
 
   return (
     <div className="min-h-screen bg-background">
