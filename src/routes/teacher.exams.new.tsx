@@ -427,6 +427,8 @@ function BlockCard({
         }}
         hideBank
         hideHeader
+        hideMeta
+
         maxCount={1}
       />
     );
