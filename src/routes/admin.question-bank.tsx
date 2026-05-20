@@ -812,11 +812,15 @@ export function EditDialog({
   initialType,
   onClose,
   onSave,
+  embedded = false,
+  hideLevelDifficulty = false,
 }: {
   question: BankQuestion | null;
   initialType?: QType;
   onClose: () => void;
   onSave: (q: BankQuestion) => void;
+  embedded?: boolean;
+  hideLevelDifficulty?: boolean;
 }) {
   const defaultsForType = (t: QType): Partial<BankQuestion> => {
     if (t === "mcq" || t === "mcq-multi")
@@ -970,10 +974,8 @@ export function EditDialog({
   const inputCls =
     "w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm";
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <button onClick={onClose} className="absolute inset-0" aria-label="Close" />
-      <div className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-background p-6 shadow-elevated">
+  const body = (
+    <div className={embedded ? "" : "relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-background p-6 shadow-elevated"}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h2 className="font-display text-lg font-semibold">
@@ -1072,7 +1074,7 @@ export function EditDialog({
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className={cn("grid gap-3", hideLevelDifficulty ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4")}>
             <Field label="Kỹ năng">
               <select
                 value={form.skill}
@@ -1084,28 +1086,32 @@ export function EditDialog({
                 ))}
               </select>
             </Field>
-            <Field label="Cấp độ">
-              <select
-                value={form.level}
-                onChange={(e) => setForm({ ...form, level: e.target.value as QLevel })}
-                className={inputCls}
-              >
-                {LEVELS.map((l) => (
-                  <option key={l} value={l}>{l}</option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Độ khó">
-              <select
-                value={form.difficulty}
-                onChange={(e) => setForm({ ...form, difficulty: e.target.value as QDifficulty })}
-                className={inputCls}
-              >
-                {(Object.keys(DIFFICULTY_LABEL) as QDifficulty[]).map((d) => (
-                  <option key={d} value={d}>{DIFFICULTY_LABEL[d]}</option>
-                ))}
-              </select>
-            </Field>
+            {!hideLevelDifficulty && (
+              <Field label="Cấp độ">
+                <select
+                  value={form.level}
+                  onChange={(e) => setForm({ ...form, level: e.target.value as QLevel })}
+                  className={inputCls}
+                >
+                  {LEVELS.map((l) => (
+                    <option key={l} value={l}>{l}</option>
+                  ))}
+                </select>
+              </Field>
+            )}
+            {!hideLevelDifficulty && (
+              <Field label="Độ khó">
+                <select
+                  value={form.difficulty}
+                  onChange={(e) => setForm({ ...form, difficulty: e.target.value as QDifficulty })}
+                  className={inputCls}
+                >
+                  {(Object.keys(DIFFICULTY_LABEL) as QDifficulty[]).map((d) => (
+                    <option key={d} value={d}>{DIFFICULTY_LABEL[d]}</option>
+                  ))}
+                </select>
+              </Field>
+            )}
             <Field label="Điểm">
               <input
                 type="number"
@@ -1116,6 +1122,7 @@ export function EditDialog({
               />
             </Field>
           </div>
+
 
 
           {/* ===== Type-specific editors ===== */}
@@ -1646,10 +1653,18 @@ export function EditDialog({
             Lưu
           </button>
         </div>
-      </div>
+    </div>
+  );
+
+  if (embedded) return body;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <button onClick={onClose} className="absolute inset-0" aria-label="Close" />
+      {body}
     </div>
   );
 }
+
 
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -1664,14 +1679,14 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export function TypePickerDialog({
   onClose,
   onPick,
+  embedded = false,
 }: {
   onClose: () => void;
   onPick: (t: QType) => void;
+  embedded?: boolean;
 }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <button onClick={onClose} className="absolute inset-0" aria-label="Close" />
-      <div className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-background p-6 shadow-elevated">
+  const inner = (
+    <div className={embedded ? "" : "relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-background p-6 shadow-elevated"}>
         <div className="flex items-start justify-between gap-3">
           <div>
             <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
@@ -1709,10 +1724,18 @@ export function TypePickerDialog({
             );
           })}
         </div>
-      </div>
+    </div>
+  );
+
+  if (embedded) return inner;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <button onClick={onClose} className="absolute inset-0" aria-label="Close" />
+      {inner}
     </div>
   );
 }
+
 
 // ============================================================
 // Group editor: 1 parent prompt + list of sub-questions
