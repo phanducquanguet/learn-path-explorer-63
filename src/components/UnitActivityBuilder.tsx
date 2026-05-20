@@ -29,8 +29,6 @@ import {
 import { cn } from "@/lib/utils";
 import {
   TYPE_LABEL,
-  DIFFICULTY_LABEL,
-  DIFFICULTY_COLOR,
   type BankQuestion,
   type QType,
 } from "@/lib/question-bank";
