@@ -79,9 +79,11 @@ export const TYPE_ORDER: QType[] = [
   "drag-drop",
   "essay",
   "speaking",
-  "error-correction",
   "group",
 ];
+
+/** Type list cho khóa học (UnitActivityBuilder) — bao gồm error-correction. */
+export const TYPE_ORDER_COURSE: QType[] = [...TYPE_ORDER, "error-correction"];
 
 export function defaultsForType(t: QType): Partial<BankQuestion> {
   if (t === "mcq" || t === "mcq-multi")
