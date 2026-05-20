@@ -665,7 +665,7 @@ function Step4Build({
       <div className="flex flex-wrap gap-2">
         {structure.map((s, i) => {
           if (s.count <= 0) return null;
-          const cnt = mode === "manual" ? (s.customQuestions?.length ?? 0) : (s.pickedIds?.length ?? 0);
+          const cnt = mode === "manual" ? (s.customBank?.length ?? 0) : (s.pickedIds?.length ?? 0);
           const done = cnt === s.count;
           const active = openGroup === i;
           return (
