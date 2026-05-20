@@ -812,11 +812,15 @@ export function EditDialog({
   initialType,
   onClose,
   onSave,
+  embedded = false,
+  hideLevelDifficulty = false,
 }: {
   question: BankQuestion | null;
   initialType?: QType;
   onClose: () => void;
   onSave: (q: BankQuestion) => void;
+  embedded?: boolean;
+  hideLevelDifficulty?: boolean;
 }) {
   const defaultsForType = (t: QType): Partial<BankQuestion> => {
     if (t === "mcq" || t === "mcq-multi")
