@@ -982,18 +982,84 @@ function EditDialog({
         </div>
 
         <div className="mt-4 space-y-4">
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground">
-              Nội dung câu hỏi *
-            </label>
-            <textarea
-              value={form.content}
-              onChange={(e) => setForm({ ...form, content: e.target.value })}
-              rows={2}
-              placeholder="Nhập nội dung câu hỏi / yêu cầu cho học viên..."
-              className="mt-1 w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-            />
-          </div>
+          {!isFill && !isSelectLists && !isDragDrop && (
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Nội dung câu hỏi *
+                </label>
+                <div className="flex items-center gap-1">
+                  <label
+                    className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
+                    title="Tải ảnh cho câu hỏi"
+                  >
+                    <ImageIcon className="h-3 w-3" /> Ảnh
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        setForm({
+                          ...form,
+                          imageUrl: f ? await fileToDataURL(f) : form.imageUrl,
+                        });
+                      }}
+                    />
+                  </label>
+                  <label
+                    className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
+                    title="Tải audio cho câu hỏi"
+                  >
+                    <Music className="h-3 w-3" /> Audio
+                    <input
+                      type="file"
+                      accept="audio/*"
+                      className="hidden"
+                      onChange={(e) => setQuestionAudio(e.target.files?.[0] ?? null)}
+                    />
+                  </label>
+                </div>
+              </div>
+              <textarea
+                value={form.content}
+                onChange={(e) => setForm({ ...form, content: e.target.value })}
+                rows={2}
+                placeholder="Nhập nội dung câu hỏi / yêu cầu cho học viên..."
+                className="w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              {(form.imageUrl || form.audioUrl) && (
+                <div className="mt-2 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/20 p-2">
+                  {form.imageUrl && (
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={form.imageUrl}
+                        alt=""
+                        className="h-14 w-14 rounded-md border border-border object-cover"
+                      />
+                      <button
+                        onClick={() => setForm({ ...form, imageUrl: undefined })}
+                        className="text-[11px] font-semibold text-rose-500 hover:underline"
+                      >
+                        Bỏ ảnh
+                      </button>
+                    </div>
+                  )}
+                  {form.audioUrl && (
+                    <div className="flex items-center gap-2">
+                      <audio controls src={form.audioUrl} className="h-8" />
+                      <button
+                        onClick={() => setQuestionAudio(null)}
+                        className="text-[11px] font-semibold text-rose-500 hover:underline"
+                      >
+                        Bỏ audio
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Field label="Kỹ năng">
@@ -1040,50 +1106,6 @@ function EditDialog({
             </Field>
           </div>
 
-          {/* ===== Optional attachments ===== */}
-          <div className="rounded-2xl border border-dashed border-border">
-            <button
-              type="button"
-              onClick={() => setExtrasOpen((v) => !v)}
-              className="flex w-full items-center justify-between gap-2 px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted/40"
-            >
-              <span className="inline-flex items-center gap-2">
-                <Upload className="h-3.5 w-3.5" /> Tệp đính kèm (tùy chọn): audio cho câu hỏi, ảnh cho từng lựa chọn
-              </span>
-              <span>{extrasOpen ? "Ẩn" : "Hiện"}</span>
-            </button>
-            {extrasOpen && (
-              <div className="space-y-3 border-t border-border bg-muted/20 px-4 py-3">
-                <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground">
-                    <Music className="mr-1 inline h-3 w-3" /> Audio câu hỏi
-                  </label>
-                  <div className="mt-1 flex items-center gap-2">
-                    <input
-                      type="file"
-                      accept="audio/*"
-                      onChange={(e) => setQuestionAudio(e.target.files?.[0] ?? null)}
-                      className="text-xs"
-                    />
-                    {form.audioUrl && (
-                      <button
-                        onClick={() => setQuestionAudio(null)}
-                        className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    )}
-                  </div>
-                  {form.audioUrl && (
-                    <audio controls src={form.audioUrl} className="mt-2 h-8 w-full" />
-                  )}
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Ảnh cho từng lựa chọn có thể tải ngay trên từng dòng đáp án (nếu loại câu hỏi có lựa chọn).
-                </p>
-              </div>
-            )}
-          </div>
 
           {/* ===== Type-specific editors ===== */}
 
