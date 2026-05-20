@@ -21,7 +21,8 @@ export type SubQuestionType =
   | "short"
   | "fill"
   | "matching"
-  | "drag-drop";
+  | "drag-drop"
+  | "select-lists";
 
 
 export type SubQuestion = {
