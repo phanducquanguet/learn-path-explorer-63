@@ -48,7 +48,7 @@ import {
   Image as ImageIcon,
   Music,
   GripVertical,
-  Upload,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -63,6 +63,7 @@ const TYPE_ICON: Record<QType, typeof Plus> = {
   "select-lists": MousePointerSquareDashed,
   "drag-drop": Move,
   essay: FileText,
+  group: Layers,
 };
 
 const TYPE_ORDER: QType[] = [
@@ -75,6 +76,7 @@ const TYPE_ORDER: QType[] = [
   "select-lists",
   "drag-drop",
   "essay",
+  "group",
 ];
 
 export const Route = createFileRoute("/admin/question-bank")({
