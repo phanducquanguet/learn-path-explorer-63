@@ -824,13 +824,6 @@ function PracticeEditor({
 
   return (
     <div className="space-y-4">
-      <Row label="Hướng dẫn / Đề bài">
-        <textarea rows={3} value={node.instructions ?? ""} onChange={(e) => onChange({ instructions: e.target.value })} placeholder="VD: Đọc đoạn văn và trả lời các câu hỏi bên dưới..." className="ui-input" />
-      </Row>
-      <Row label="Audio (nếu có)">
-        <FileBox icon={Music2} label="Audio đi kèm" fileName={node.audioFileName} onChange={(audioFileName) => onChange({ audioFileName })} accept="audio/*" />
-      </Row>
-
       <div>
         <div className="mb-2 flex items-center justify-between">
           <div className="text-xs font-semibold text-foreground">
@@ -843,53 +836,40 @@ function PracticeEditor({
           />
         </div>
 
-
         {node.questions.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-            Chưa có câu hỏi nào. Bấm <span className="font-semibold text-foreground">Thêm câu hỏi</span> để chọn dạng và soạn bằng form của ngân hàng.
+            Chưa có câu hỏi nào. Bấm <span className="font-semibold text-foreground">+</span> để chọn dạng và soạn bằng form của ngân hàng.
           </div>
         ) : (
-          <ul className="space-y-2">
+          <ul className="space-y-1">
             {node.questions.map((q, idx) => {
               const Icon = Q_TYPE_ICON[q.bank.type];
               return (
                 <li
                   key={q.id}
-                  className="flex items-start gap-2 rounded-2xl border border-border bg-background px-3 py-2.5 text-sm"
+                  className="group flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-1.5 text-sm hover:bg-muted/40"
                 >
-                  <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted text-[11px] font-bold">
+                  <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded bg-muted text-[10px] font-bold text-muted-foreground">
                     {idx + 1}
                   </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="truncate text-foreground">
-                      {questionLabel(q) || <span className="italic text-muted-foreground">(Chưa có nội dung)</span>}
-                    </div>
-                    <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
-                      <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 font-semibold">
-                        <Icon className="h-3 w-3" /> {TYPE_LABEL[q.bank.type]}
-                      </span>
-                      <span className="rounded-md bg-muted px-1.5 py-0.5 font-semibold">{q.bank.level}</span>
-                      <span className={cn("rounded-md px-1.5 py-0.5 font-semibold", DIFFICULTY_COLOR[q.bank.difficulty])}>
-                        {DIFFICULTY_LABEL[q.bank.difficulty]}
-                      </span>
-                      <span className="rounded-md bg-muted px-1.5 py-0.5 font-semibold">{q.bank.points} điểm</span>
-                    </div>
-                  </div>
-                  <div className="flex shrink-0 items-center gap-1">
-                    <button
-                      onClick={() => onEditQuestion(q.id)}
-                      className="rounded-md px-2 py-1 text-[11px] font-semibold text-primary hover:bg-primary/10"
-                    >
-                      Sửa
-                    </button>
-                    <button
-                      onClick={() => removeQuestion(q.id)}
-                      className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
-                      title="Xóa"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
+                  <Icon className="h-3.5 w-3.5 shrink-0 text-primary" />
+                  <button
+                    onClick={() => onEditQuestion(q.id)}
+                    className="flex-1 truncate text-left text-foreground hover:text-primary"
+                    title={questionLabel(q)}
+                  >
+                    {questionLabel(q) || <span className="italic text-muted-foreground">(Chưa có nội dung)</span>}
+                  </button>
+                  <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                    {TYPE_LABEL[q.bank.type]}
+                  </span>
+                  <button
+                    onClick={() => removeQuestion(q.id)}
+                    className="rounded p-1 text-muted-foreground opacity-0 hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                    title="Xóa"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
                 </li>
               );
             })}
