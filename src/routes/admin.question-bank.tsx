@@ -982,9 +982,21 @@ export function EditDialog({
     setForm({ ...form, correctAnswer: Array.from(set).sort().join(",") });
   };
 
-  // ---------- Audio question ----------
+  // ---------- Media (image / audio / video) ----------
   const setQuestionAudio = async (file: File | null) => {
     setForm({ ...form, audioUrl: file ? await fileToDataURL(file) : undefined });
+  };
+  const setQuestionImage = async (file: File | null) => {
+    setForm({ ...form, imageUrl: file ? await fileToDataURL(file) : undefined });
+  };
+  const setQuestionVideo = async (file: File | null) => {
+    setForm({ ...form, videoUrl: file ? await fileToDataURL(file) : undefined });
+  };
+  const onPickMedia = async (file: File | null) => {
+    if (!file) return;
+    if (file.type.startsWith("image/")) await setQuestionImage(file);
+    else if (file.type.startsWith("audio/")) await setQuestionAudio(file);
+    else if (file.type.startsWith("video/")) await setQuestionVideo(file);
   };
 
   // ---------- Sequence ----------
