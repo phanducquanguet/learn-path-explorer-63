@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { levels, getCourse } from "@/lib/lms-data";
-import { ACTIVITY_TYPES, QUIZ_KINDS } from "@/lib/teacher-data";
 import { useCategories, categoryOf, type Category } from "@/lib/course-categories";
 import {
   Upload,
@@ -14,14 +13,12 @@ import {
   ChevronRight,
   ChevronLeft,
   CheckCircle2,
-  FileVideo,
-  FileText,
-  ClipboardList,
   Sparkles,
   Settings2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CategoriesManager } from "@/components/CategoriesManager";
+import { UnitActivityBuilder, type AnyNode } from "@/components/UnitActivityBuilder";
 import {
   Dialog,
   DialogContent,
