@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Clock,
   ExternalLink,
+  Eye,
   FileText,
   Headphones,
   Mic,
@@ -64,8 +65,8 @@ type TabKey = "overview" | "members" | "scores" | "activities" | "competence" | 
 function CoursePage() {
   const { courseId } = Route.useParams();
   const { role } = useRole();
-  const isStaff = role !== "student";
-  const isAdmin = role === "admin"; // only admin can add/edit/delete
+  const realIsStaff = role !== "student";
+  const realIsAdmin = role === "admin";
   const data = getCourse(courseId);
   if (!data) throw notFound();
   const { course: baseCourse, level } = data;
@@ -73,6 +74,10 @@ function CoursePage() {
   // Local mutable copy so teacher can add/edit/delete (mock, not persisted)
   const [course, setCourse] = useState(baseCourse);
   const [editMode, setEditMode] = useState(false);
+  const [previewAsStudent, setPreviewAsStudent] = useState(false);
+  // When previewing as student, override staff/admin flags so the UI mirrors the learner experience
+  const isStaff = realIsStaff && !previewAsStudent;
+  const isAdmin = realIsAdmin && !previewAsStudent;
 
   const [activeUnitId, setActiveUnitId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("overview");
@@ -184,6 +189,27 @@ function CoursePage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {realIsStaff && (
+              <button
+                onClick={() => {
+                  setPreviewAsStudent((v) => {
+                    const next = !v;
+                    if (next) setEditMode(false);
+                    return next;
+                  });
+                }}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition",
+                  previewAsStudent
+                    ? "bg-primary text-primary-foreground hover:opacity-90"
+                    : "border border-border bg-surface text-foreground hover:bg-muted",
+                )}
+                title="Xem khoá học dưới góc nhìn học viên"
+              >
+                <Eye className="h-3.5 w-3.5" />
+                {previewAsStudent ? "Đang xem như học viên" : "Xem như học viên"}
+              </button>
+            )}
             {isAdmin && (
               <button
                 onClick={() => setEditMode((v) => !v)}
