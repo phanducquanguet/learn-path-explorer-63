@@ -15,6 +15,7 @@ import {
   Image as ImageIcon,
   GripVertical,
   Pencil,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { TYPE_LABEL, TYPE_DESCRIPTION, type QType } from "@/lib/question-bank";
@@ -23,13 +24,11 @@ import { TYPE_LABEL, TYPE_DESCRIPTION, type QType } from "@/lib/question-bank";
 
 export type QKind = QType;
 
-/** Các dạng câu hỏi dùng trong activity builder — đồng bộ với Ngân hàng câu hỏi
- *  nhưng KHÔNG cần cấp độ (level) hay độ khó (difficulty). */
 export const QUIZ_KINDS: { id: QType; label: string; description: string }[] = (
   ["mcq", "mcq-multi", "tf", "short", "fill", "matching", "sequence", "select-lists", "drag-drop", "essay", "speaking", "error-correction"] as QType[]
 ).map((id) => ({ id, label: TYPE_LABEL[id], description: TYPE_DESCRIPTION[id] }));
 
-type Common = { id: string; title: string };
+type Common = { id: string; title: string; description?: string };
 
 export type VideoNode = Common & {
   kind: "video";
@@ -41,7 +40,7 @@ export type VideoSpeakingNode = Common & {
   kind: "video-speaking";
   duration?: number;
   fileName?: string;
-  prompt?: string; // câu hỏi luyện nói
+  prompt?: string;
 };
 export type PdfNode = Common & {
   kind: "pdf";
@@ -62,14 +61,13 @@ export type QuestionNode = Common & {
   kind: "question";
   qType: QKind;
   prompt: string;
-  options: string[]; // for choice / matching / drag
-  correct: number[]; // indices marked correct
+  options: string[];
+  correct: number[];
   sampleAnswer?: string;
   points: number;
 };
 export type GroupNode = Common & {
   kind: "group";
-  description?: string;
   children: AnyNode[];
 };
 export type AnyNode =
@@ -109,6 +107,9 @@ const KIND_LABEL: Record<AnyNode["kind"], string> = {
   question: "Câu hỏi",
 };
 
+const CONTAINER_KINDS: AnyNode["kind"][] = ["group", "practice"];
+const isContainer = (k: AnyNode["kind"]) => CONTAINER_KINDS.includes(k);
+
 /* ============================== Helpers ============================== */
 
 const uid = () => `n-${Math.random().toString(36).slice(2, 9)}`;
@@ -119,15 +120,15 @@ function makeNode(kind: AnyNode["kind"], qType?: QKind): AnyNode {
     case "group":
       return { ...base, kind, title: "Nhóm mới", description: "", children: [] };
     case "video":
-      return { ...base, kind, title: "Video bài giảng", duration: 10 };
+      return { ...base, kind, title: "Video bài giảng", description: "", duration: 10 };
     case "video-speaking":
-      return { ...base, kind, title: "Video luyện nói", duration: 5, prompt: "" };
+      return { ...base, kind, title: "Video luyện nói", description: "", duration: 5, prompt: "" };
     case "pdf":
-      return { ...base, kind, title: "Tài liệu PDF" };
+      return { ...base, kind, title: "Tài liệu PDF", description: "" };
     case "pdf-audio":
-      return { ...base, kind, title: "PDF kèm audio" };
+      return { ...base, kind, title: "PDF kèm audio", description: "" };
     case "practice":
-      return { ...base, kind, title: "Bài thực hành", instructions: "", questions: [] };
+      return { ...base, kind, title: "Bài thực hành", description: "", instructions: "", questions: [] };
     case "question": {
       const q = qType ?? "mcq";
       const needsOptions = ["mcq", "mcq-multi", "matching", "drag-drop", "tf", "sequence", "select-lists", "error-correction"].includes(q);
@@ -158,6 +159,13 @@ function mapTree(nodes: AnyNode[], fn: (n: AnyNode) => AnyNode | null): AnyNode[
     if (!next) continue;
     if (next.kind === "group") {
       out.push({ ...next, children: mapTree(next.children, fn) });
+    } else if (next.kind === "practice") {
+      const qs: QuestionNode[] = [];
+      for (const q of next.questions) {
+        const r = fn(q);
+        if (r && r.kind === "question") qs.push(r);
+      }
+      out.push({ ...next, questions: qs });
     } else {
       out.push(next);
     }
@@ -172,6 +180,10 @@ function findNode(nodes: AnyNode[], id: string): AnyNode | null {
       const x = findNode(n.children, id);
       if (x) return x;
     }
+    if (n.kind === "practice") {
+      const q = n.questions.find((q) => q.id === id);
+      if (q) return q;
+    }
   }
   return null;
 }
@@ -179,10 +191,21 @@ function findNode(nodes: AnyNode[], id: string): AnyNode | null {
 function addInto(nodes: AnyNode[], parentId: string | null, child: AnyNode): AnyNode[] {
   if (parentId === null) return [...nodes, child];
   return nodes.map((n) => {
-    if (n.kind !== "group") return n;
-    if (n.id === parentId) return { ...n, children: [...n.children, child] };
-    return { ...n, children: addInto(n.children, parentId, child) };
+    if (n.kind === "group") {
+      if (n.id === parentId) return { ...n, children: [...n.children, child] };
+      return { ...n, children: addInto(n.children, parentId, child) };
+    }
+    if (n.kind === "practice" && n.id === parentId && child.kind === "question") {
+      return { ...n, questions: [...n.questions, child] };
+    }
+    return n;
   });
+}
+
+function containerCount(n: AnyNode): number {
+  if (n.kind === "group") return n.children.length;
+  if (n.kind === "practice") return n.questions.length;
+  return 0;
 }
 
 /* ============================== Component ============================== */
@@ -217,7 +240,7 @@ export function UnitActivityBuilder({
   };
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[320px_1fr]">
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-[340px_1fr]">
       {/* LEFT: tree */}
       <div className="rounded-2xl border border-border bg-background p-3">
         <div className="mb-2 flex items-center justify-between px-1">
@@ -225,6 +248,11 @@ export function UnitActivityBuilder({
             Cấu trúc nội dung
           </div>
           <AddMenuButton open={addMenuFor === "__root__"} onToggle={(v) => setAddMenuFor(v ? "__root__" : null)} onPick={(n) => addNode(null, n)} />
+        </div>
+
+        <div className="mb-2 flex items-center gap-3 px-1 text-[10px] text-muted-foreground">
+          <span className="inline-flex items-center gap-1"><Layers className="h-3 w-3 text-amber-500" /> Khối chứa</span>
+          <span className="inline-flex items-center gap-1"><span className="h-1.5 w-1.5 rounded-full bg-muted-foreground" /> Mục lẻ</span>
         </div>
 
         {nodes.length === 0 ? (
@@ -259,7 +287,7 @@ export function UnitActivityBuilder({
             Chọn một mục bên trái để chỉnh sửa nội dung.
           </div>
         ) : (
-          <NodeEditor node={selected} onChange={(p) => updateNode(selected.id, p)} onRemove={() => removeNode(selected.id)} />
+          <NodeEditor node={selected} onChange={(p) => updateNode(selected.id, p)} onRemove={() => removeNode(selected.id)} onSelectChild={setSelectedId} />
         )}
       </div>
     </div>
@@ -292,34 +320,63 @@ function TreeRow({
   onOpenAddMenu: (id: string | null) => void;
 }) {
   const Icon = KIND_ICON[node.kind];
-  const isGroup = node.kind === "group";
-  const isOpen = isGroup && (expanded[node.id] ?? true);
+  const container = isContainer(node.kind);
+  const isOpen = container && (expanded[node.id] ?? true);
   const isSelected = selectedId === node.id;
+  const count = container ? containerCount(node) : 0;
+
+  const children: AnyNode[] =
+    node.kind === "group" ? node.children : node.kind === "practice" ? node.questions : [];
+
+  // Container styling: amber accent + tinted bg; Leaf: subtle
+  const rowCls = container
+    ? cn(
+        "group flex items-center gap-1 rounded-lg border px-1.5 py-2 text-sm font-medium transition",
+        isSelected
+          ? "border-primary/40 bg-primary/10 text-primary"
+          : "border-amber-200/60 bg-amber-50/40 dark:border-amber-900/30 dark:bg-amber-950/20 text-foreground hover:bg-amber-50/70",
+      )
+    : cn(
+        "group flex items-center gap-1 rounded-lg px-1.5 py-1.5 text-sm",
+        isSelected ? "bg-primary/10 text-primary" : "hover:bg-muted/60 text-foreground",
+      );
 
   return (
     <li>
-      <div
-        className={cn(
-          "group flex items-center gap-1 rounded-lg px-1.5 py-1.5 text-sm",
-          isSelected ? "bg-primary/10 text-primary" : "hover:bg-muted/60 text-foreground",
-        )}
-        style={{ paddingLeft: 6 + depth * 14 }}
-      >
-        {isGroup ? (
+      <div className={rowCls} style={{ paddingLeft: 6 + depth * 14 }}>
+        {container ? (
           <button onClick={() => onToggle(node.id)} className="rounded p-0.5 text-muted-foreground hover:bg-muted">
             {isOpen ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5" />}
           </button>
         ) : (
-          <span className="w-4" />
+          <span className="flex w-4 items-center justify-center">
+            <span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/60" />
+          </span>
         )}
-        <Icon className={cn("h-3.5 w-3.5 shrink-0", isSelected ? "text-primary" : "text-muted-foreground")} />
+        <Icon
+          className={cn(
+            "h-3.5 w-3.5 shrink-0",
+            isSelected ? "text-primary" : container ? "text-amber-600" : "text-muted-foreground",
+          )}
+        />
         <button onClick={() => onSelect(node.id)} className="flex-1 truncate text-left">
           {node.title || <span className="italic text-muted-foreground">Chưa đặt tên</span>}
         </button>
+        {container && (
+          <span
+            className={cn(
+              "rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
+              isSelected ? "bg-primary/20 text-primary" : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300",
+            )}
+            title={`${count} mục con`}
+          >
+            {count}
+          </span>
+        )}
         <span className="hidden text-[10px] uppercase tracking-wider text-muted-foreground group-hover:inline">
           {KIND_LABEL[node.kind]}
         </span>
-        {isGroup && (
+        {node.kind === "group" && (
           <AddMenuButton
             small
             open={addMenuFor === node.id}
@@ -327,13 +384,20 @@ function TreeRow({
             onPick={(n) => onAdd(node.id, n)}
           />
         )}
+        {node.kind === "practice" && (
+          <AddQuestionButton small onPick={(qt) => onAdd(node.id, makeNode("question", qt))} />
+        )}
         <button onClick={() => onRemove(node.id)} className="rounded p-1 text-muted-foreground opacity-0 hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100">
           <Trash2 className="h-3.5 w-3.5" />
         </button>
       </div>
-      {isGroup && isOpen && node.children.length > 0 && (
-        <ul className="space-y-0.5">
-          {node.children.map((c) => (
+      {container && isOpen && children.length > 0 && (
+        <ul className="relative space-y-0.5">
+          <span
+            className="pointer-events-none absolute top-0 bottom-1 w-px bg-border"
+            style={{ left: 6 + depth * 14 + 8 }}
+          />
+          {children.map((c) => (
             <TreeRow
               key={c.id}
               node={c}
@@ -411,28 +475,90 @@ function AddMenuButton({
   );
 }
 
+function AddQuestionButton({
+  small,
+  onPick,
+}: {
+  small?: boolean;
+  onPick: (qt: QKind) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "inline-flex items-center gap-1 rounded-lg bg-primary/10 font-semibold text-primary hover:bg-primary/20",
+          small ? "px-1.5 py-0.5 text-[10px]" : "px-2.5 py-1.5 text-xs",
+        )}
+        title="Thêm câu hỏi"
+      >
+        <Plus className={small ? "h-3 w-3" : "h-3.5 w-3.5"} />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 z-40 mt-1 w-72 rounded-xl border border-border bg-popover p-2 shadow-lg">
+            <div className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Chọn dạng câu hỏi
+            </div>
+            <div className="grid grid-cols-2 gap-1">
+              {QUIZ_KINDS.map((q) => (
+                <button
+                  key={q.id}
+                  onClick={() => {
+                    onPick(q.id);
+                    setOpen(false);
+                  }}
+                  className="rounded-md px-2 py-1.5 text-left text-[11px] hover:bg-muted"
+                  title={q.description}
+                >
+                  {q.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 /* ============================== Node editors ============================== */
 
 function NodeEditor({
   node,
   onChange,
   onRemove,
+  onSelectChild,
 }: {
   node: AnyNode;
   onChange: (patch: Partial<AnyNode>) => void;
   onRemove: () => void;
+  onSelectChild: (id: string) => void;
 }) {
   const Icon = KIND_ICON[node.kind];
+  const container = isContainer(node.kind);
   return (
     <div>
       <div className="mb-4 flex items-start gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+        <div
+          className={cn(
+            "flex h-10 w-10 items-center justify-center rounded-xl",
+            container ? "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300" : "bg-primary/10 text-primary",
+          )}
+        >
           <Icon className="h-5 w-5" />
         </div>
         <div className="flex-1">
-          <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-            {KIND_LABEL[node.kind]}
-            {node.kind === "question" && ` • ${QUIZ_KINDS.find((k) => k.id === node.qType)?.label}`}
+          <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <span>{KIND_LABEL[node.kind]}</span>
+            {node.kind === "question" && <span>• {QUIZ_KINDS.find((k) => k.id === node.qType)?.label}</span>}
+            {container && (
+              <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
+                Khối chứa
+              </span>
+            )}
           </div>
           <input
             value={node.title}
@@ -449,7 +575,22 @@ function NodeEditor({
         </button>
       </div>
 
-      {node.kind === "group" && <GroupEditor node={node} onChange={onChange as (p: Partial<GroupNode>) => void} />}
+      {/* Intro / description — chung cho mọi loại */}
+      {node.kind !== "question" && (
+        <div className="mb-5">
+          <Row label="Giới thiệu nội dung">
+            <textarea
+              rows={2}
+              value={node.description ?? ""}
+              onChange={(e) => onChange({ description: e.target.value } as Partial<AnyNode>)}
+              placeholder="Mô tả ngắn về nội dung của phần này — học viên sẽ nhìn thấy trước khi bắt đầu."
+              className="ui-input"
+            />
+          </Row>
+        </div>
+      )}
+
+      {node.kind === "group" && <GroupEditor node={node} />}
       {node.kind === "video" && <VideoEditor node={node} onChange={onChange as (p: Partial<VideoNode>) => void} />}
       {node.kind === "video-speaking" && (
         <VideoSpeakingEditor node={node} onChange={onChange as (p: Partial<VideoSpeakingNode>) => void} />
@@ -459,11 +600,29 @@ function NodeEditor({
         <PdfAudioEditor node={node} onChange={onChange as (p: Partial<PdfAudioNode>) => void} />
       )}
       {node.kind === "practice" && (
-        <PracticeEditor node={node} onChange={onChange as (p: Partial<PracticeNode>) => void} />
+        <PracticeEditor
+          node={node}
+          onChange={onChange as (p: Partial<PracticeNode>) => void}
+          onSelectChild={onSelectChild}
+        />
       )}
       {node.kind === "question" && (
         <QuestionEditor node={node} onChange={onChange as (p: Partial<QuestionNode>) => void} />
       )}
+
+      <style>{`
+        .ui-input {
+          width: 100%;
+          border-radius: 0.625rem;
+          border: 1px solid hsl(var(--border) / 1);
+          background: var(--background, #fff);
+          padding: 0.5rem 0.75rem;
+          font-size: 0.875rem;
+          color: var(--foreground);
+          outline: none;
+        }
+        .ui-input:focus { border-color: oklch(0.55 0.18 260); box-shadow: 0 0 0 3px oklch(0.55 0.18 260 / 0.18); }
+      `}</style>
     </div>
   );
 }
@@ -500,22 +659,11 @@ function FileBox({
   );
 }
 
-function GroupEditor({ node, onChange }: { node: GroupNode; onChange: (p: Partial<GroupNode>) => void }) {
+function GroupEditor({ node }: { node: GroupNode }) {
   return (
-    <div className="space-y-4">
-      <Row label="Mô tả nhóm">
-        <textarea
-          rows={3}
-          value={node.description ?? ""}
-          onChange={(e) => onChange({ description: e.target.value })}
-          placeholder="VD: Nhóm video theo từng chapter, nhóm câu hỏi luyện tập..."
-          className="ui-input"
-        />
-      </Row>
-      <div className="rounded-xl bg-muted/40 p-3 text-xs text-muted-foreground">
-        Thêm các mục con vào nhóm bằng nút <span className="font-semibold text-foreground">+</span> ở dòng nhóm bên trái.
-        Nhóm đang chứa <span className="font-semibold text-foreground">{node.children.length}</span> mục.
-      </div>
+    <div className="rounded-xl bg-muted/40 p-3 text-xs text-muted-foreground">
+      Thêm các mục con vào nhóm bằng nút <span className="font-semibold text-foreground">+</span> ở dòng nhóm bên trái.
+      Nhóm đang chứa <span className="font-semibold text-foreground">{node.children.length}</span> mục.
     </div>
   );
 }
@@ -577,22 +725,25 @@ function PdfAudioEditor({ node, onChange }: { node: PdfAudioNode; onChange: (p: 
   );
 }
 
-function PracticeEditor({ node, onChange }: { node: PracticeNode; onChange: (p: Partial<PracticeNode>) => void }) {
+function PracticeEditor({
+  node,
+  onChange,
+  onSelectChild,
+}: {
+  node: PracticeNode;
+  onChange: (p: Partial<PracticeNode>) => void;
+  onSelectChild: (id: string) => void;
+}) {
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
 
   const addQuestion = (qType: QKind) => {
     const q = makeNode("question", qType) as QuestionNode;
     onChange({ questions: [...node.questions, q] });
-    setEditingId(q.id);
+    onSelectChild(q.id);
     setPickerOpen(false);
-  };
-  const updateQuestion = (id: string, patch: Partial<QuestionNode>) => {
-    onChange({ questions: node.questions.map((q) => (q.id === id ? { ...q, ...patch } : q)) });
   };
   const removeQuestion = (id: string) => {
     onChange({ questions: node.questions.filter((q) => q.id !== id) });
-    if (editingId === id) setEditingId(null);
   };
 
   return (
@@ -643,43 +794,33 @@ function PracticeEditor({ node, onChange }: { node: PracticeNode; onChange: (p: 
 
         {node.questions.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-            Chưa có câu hỏi nào. Bấm <span className="font-semibold text-foreground">Thêm câu hỏi</span> để chọn dạng từ ngân hàng câu hỏi.
+            Chưa có câu hỏi nào. Bấm <span className="font-semibold text-foreground">Thêm câu hỏi</span> hoặc dùng sidebar bên trái.
           </div>
         ) : (
-          <div className="space-y-2">
-            {node.questions.map((q, idx) => {
-              const open = editingId === q.id;
-              return (
-                <div key={q.id} className="rounded-xl border border-border bg-background">
-                  <div className="flex items-center gap-2 px-3 py-2">
-                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-[11px] font-bold text-primary">{idx + 1}</span>
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                      {QUIZ_KINDS.find((k) => k.id === q.qType)?.label}
-                    </span>
-                    <span className="flex-1 truncate text-sm text-foreground">
-                      {q.prompt || <span className="italic text-muted-foreground">Chưa có nội dung</span>}
-                    </span>
-                    <button
-                      onClick={() => setEditingId(open ? null : q.id)}
-                      className="rounded-md border border-border px-2 py-1 text-[11px] font-semibold text-foreground hover:bg-muted"
-                    >
-                      {open ? "Đóng" : "Sửa"}
-                    </button>
-                    <button
-                      onClick={() => removeQuestion(q.id)}
-                      className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-                  {open && (
-                    <div className="border-t border-border p-3">
-                      <QuestionEditor node={q} onChange={(p) => updateQuestion(q.id, p)} />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+          <div className="space-y-1.5">
+            {node.questions.map((q, idx) => (
+              <div key={q.id} className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2">
+                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-[11px] font-bold text-primary">{idx + 1}</span>
+                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {QUIZ_KINDS.find((k) => k.id === q.qType)?.label}
+                </span>
+                <span className="flex-1 truncate text-sm text-foreground">
+                  {q.prompt || <span className="italic text-muted-foreground">Chưa có nội dung</span>}
+                </span>
+                <button
+                  onClick={() => onSelectChild(q.id)}
+                  className="rounded-md border border-border px-2 py-1 text-[11px] font-semibold text-foreground hover:bg-muted"
+                >
+                  Sửa
+                </button>
+                <button
+                  onClick={() => removeQuestion(q.id)}
+                  className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
           </div>
         )}
       </div>
@@ -802,20 +943,6 @@ function QuestionEditor({ node, onChange }: { node: QuestionNode; onChange: (p: 
           />
         </Row>
       )}
-
-      <style>{`
-        .ui-input {
-          width: 100%;
-          border-radius: 0.625rem;
-          border: 1px solid hsl(var(--border) / 1);
-          background: var(--background, #fff);
-          padding: 0.5rem 0.75rem;
-          font-size: 0.875rem;
-          color: var(--foreground);
-          outline: none;
-        }
-        .ui-input:focus { border-color: oklch(0.55 0.18 260); box-shadow: 0 0 0 3px oklch(0.55 0.18 260 / 0.18); }
-      `}</style>
     </div>
   );
 }
