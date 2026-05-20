@@ -852,6 +852,7 @@ function kindLabel(k: Question["kind"]) {
     single: "One choice",
     multi: "Multi choice",
     fill: "Fill in the blank",
+    essay: "Essay (writing)",
     match: "Matching (drag & drop)",
     rewrite: "Sentence rewrite",
     highlight: "Highlight & correct",
@@ -865,6 +866,16 @@ function renderPromptHead(p: string) {
   return p.replace(/\{\d+\}/g, "___");
 }
 
+/** Đếm số từ trong essay. */
+function countWords(s: string): number {
+  return s.trim().split(/\s+/).filter(Boolean).length;
+}
+/** Số keyword khớp (case-insensitive, substring match). */
+function matchedKeywords(text: string, keywords: string[]): string[] {
+  const t = text.toLowerCase();
+  return keywords.filter((k) => t.includes(k.toLowerCase()));
+}
+
 function hasAnswer(q: Question, v: AnswerState): boolean {
   if (v === undefined || v === null) return false;
   switch (q.kind) {
@@ -874,6 +885,8 @@ function hasAnswer(q: Question, v: AnswerState): boolean {
       return Array.isArray(v) && (v as number[]).length > 0;
     case "fill":
       return Array.isArray(v) && (v as string[]).every((s) => s && s.trim());
+    case "essay":
+      return typeof v === "string" && countWords(v) >= q.minWords;
     case "match":
       return Array.isArray(v) && (v as (number | null)[]).every((x) => x !== null && x !== undefined);
     case "rewrite":
