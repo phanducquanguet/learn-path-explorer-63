@@ -1718,13 +1718,28 @@ const SUB_TYPE_LABEL: Record<SubQuestionType, string> = {
   mcq: "Single Choice",
   "mcq-multi": "Multiple Choice",
   tf: "True / False",
+  short: "Short Answer",
+  fill: "Fill in Blank",
+  matching: "Matching",
 };
 
 function defaultSub(type: SubQuestionType): SubQuestion {
   const id = `S${Math.random().toString(36).slice(2, 8)}`;
   if (type === "mcq" || type === "mcq-multi")
     return { id, type, content: "", options: ["", "", "", ""], correctAnswer: "A" };
-  return { id, type, content: "", correctAnswer: "True" };
+  if (type === "tf") return { id, type, content: "", correctAnswer: "True" };
+  if (type === "matching")
+    return {
+      id,
+      type,
+      content: "",
+      pairs: [
+        { left: "", right: "" },
+        { left: "", right: "" },
+      ],
+    };
+  // short, fill
+  return { id, type, content: "", correctAnswer: "" };
 }
 
 function GroupEditor({
@@ -1752,59 +1767,7 @@ function GroupEditor({
         <Layers className="h-3.5 w-3.5" /> Question Set
       </div>
 
-      <div>
-        <div className="mb-1 flex items-center justify-between">
-          <label className="text-xs font-semibold text-muted-foreground">
-            Đề / Bài đọc / Mô tả nguồn (hiển thị 1 lần phía trên các câu con)
-          </label>
-          <div className="flex items-center gap-1">
-            <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted">
-              <ImageIcon className="h-3 w-3" /> Ảnh
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={async (e) => {
-                  const f = e.target.files?.[0];
-                  setForm({ ...form, imageUrl: f ? await fileToDataURL(f) : form.imageUrl });
-                }}
-              />
-            </label>
-            <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted">
-              <Music className="h-3 w-3" /> Audio
-              <input
-                type="file"
-                accept="audio/*"
-                className="hidden"
-                onChange={(e) => setQuestionAudio(e.target.files?.[0] ?? null)}
-              />
-            </label>
-          </div>
-        </div>
-        <textarea
-          value={form.passage ?? ""}
-          onChange={(e) => setForm({ ...form, passage: e.target.value })}
-          rows={5}
-          placeholder="Dán đoạn văn bài đọc, mô tả audio, hoặc bối cảnh chung cho các câu hỏi con..."
-          className="w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-        />
-        {(form.imageUrl || form.audioUrl) && (
-          <div className="mt-2 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-background p-2">
-            {form.imageUrl && (
-              <div className="flex items-center gap-2">
-                <img src={form.imageUrl} alt="" className="h-14 w-14 rounded-md border border-border object-cover" />
-                <button onClick={() => setForm({ ...form, imageUrl: undefined })} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ ảnh</button>
-              </div>
-            )}
-            {form.audioUrl && (
-              <div className="flex items-center gap-2">
-                <audio controls src={form.audioUrl} className="h-8" />
-                <button onClick={() => setQuestionAudio(null)} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ audio</button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      {/* Nguồn (đề/audio/ảnh) đã quản lý ở phần đính kèm phía trên — không lặp lại tại đây. */}
 
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1862,6 +1825,12 @@ function SubQuestionCard({
   const isMcq = sub.type === "mcq" || sub.type === "mcq-multi";
   const isMcqMulti = sub.type === "mcq-multi";
   const isTF = sub.type === "tf";
+  const isShort = sub.type === "short";
+  const isFill = sub.type === "fill";
+  const isMatching = sub.type === "matching";
+  const pairs = sub.pairs ?? [];
+  const updatePair = (i: number, patch: Partial<{ left: string; right: string }>) =>
+    onChange({ pairs: pairs.map((p, x) => (x === i ? { ...p, ...patch } : p)) });
   const opts = sub.options ?? [];
 
   const updateOption = (i: number, v: string) => {
@@ -1962,6 +1931,55 @@ function SubQuestionCard({
               {v}
             </button>
           ))}
+        </div>
+      )}
+      {(isShort || isFill) && (
+        <input
+          value={sub.correctAnswer ?? ""}
+          onChange={(e) => onChange({ correctAnswer: e.target.value })}
+          placeholder={
+            isFill
+              ? "Đáp án chấp nhận (ngăn cách bằng dấu | nếu nhiều)"
+              : "Đáp án mẫu / từ khóa chấm điểm"
+          }
+          className={cn(inputCls)}
+        />
+      )}
+
+      {isMatching && (
+        <div className="space-y-1.5">
+          {pairs.map((p, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <span className="inline-flex h-7 w-6 shrink-0 items-center justify-center rounded-md bg-muted text-[11px] font-bold text-muted-foreground">
+                {i + 1}
+              </span>
+              <input
+                value={p.left}
+                onChange={(e) => updatePair(i, { left: e.target.value })}
+                placeholder="Mục bên trái"
+                className={cn(inputCls, "flex-1")}
+              />
+              <span className="text-xs text-muted-foreground">↔</span>
+              <input
+                value={p.right}
+                onChange={(e) => updatePair(i, { right: e.target.value })}
+                placeholder="Mục ghép bên phải"
+                className={cn(inputCls, "flex-1")}
+              />
+              <button
+                onClick={() => onChange({ pairs: pairs.filter((_, x) => x !== i) })}
+                className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={() => onChange({ pairs: [...pairs, { left: "", right: "" }] })}
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+          >
+            <Plus className="h-3 w-3" /> Thêm cặp ghép
+          </button>
         </div>
       )}
     </div>
