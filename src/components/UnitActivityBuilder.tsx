@@ -26,7 +26,7 @@ export type QKind = QType;
 /** Các dạng câu hỏi dùng trong activity builder — đồng bộ với Ngân hàng câu hỏi
  *  nhưng KHÔNG cần cấp độ (level) hay độ khó (difficulty). */
 export const QUIZ_KINDS: { id: QType; label: string; description: string }[] = (
-  ["mcq", "mcq-multi", "tf", "short", "fill", "matching", "sequence", "select-lists", "drag-drop", "essay"] as QType[]
+  ["mcq", "mcq-multi", "tf", "short", "fill", "matching", "sequence", "select-lists", "drag-drop", "essay", "speaking", "error-correction"] as QType[]
 ).map((id) => ({ id, label: TYPE_LABEL[id], description: TYPE_DESCRIPTION[id] }));
 
 type Common = { id: string; title: string };
