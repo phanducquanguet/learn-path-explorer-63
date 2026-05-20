@@ -68,6 +68,10 @@ export type BankQuestion = {
   blanks?: BlankSpec[];
   /** Chế độ kéo thả: "words" hoặc "passages". */
   dragMode?: "words" | "passages";
+  /** Ảnh đính kèm câu hỏi (optional). */
+  imageUrl?: string;
+  /** Câu hỏi con — chỉ dùng với type === "group". */
+  subQuestions?: SubQuestion[];
 };
 
 export const DIFFICULTY_LABEL: Record<QDifficulty, string> = {
