@@ -401,20 +401,8 @@ function AddMenuButton({
                 <I className="h-3.5 w-3.5 text-primary" /> {label}
               </button>
             ))}
-            <div className="my-1 border-t border-border" />
-            <div className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Câu hỏi (11 dạng)
-            </div>
-            <div className="grid grid-cols-2 gap-1">
-              {QUIZ_KINDS.map((q) => (
-                <button
-                  key={q.id}
-                  onClick={() => onPick(makeNode("question", q.id))}
-                  className="rounded-md px-2 py-1.5 text-left text-[11px] hover:bg-muted"
-                >
-                  {q.label}
-                </button>
-              ))}
+            <div className="mt-1 rounded-md bg-muted/40 px-2 py-1.5 text-[10px] text-muted-foreground">
+              Câu hỏi được thêm bên trong <span className="font-semibold text-foreground">Bài thực hành</span>.
             </div>
           </div>
         </>
