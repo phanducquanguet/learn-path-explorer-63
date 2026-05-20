@@ -2041,11 +2041,14 @@ function defaultSub(type: SubQuestionType): SubQuestion {
         { left: "", right: "" },
       ],
     };
+  if (type === "fill")
+    return { id, type, content: "", blanks: [] };
   if (type === "drag-drop")
-    return { id, type, content: "", correctAnswer: "" };
-  // short, fill
+    return { id, type, content: "", blanks: [], distractors: [] };
+  // short
   return { id, type, content: "", correctAnswer: "" };
 }
+
 
 
 function GroupEditor({
