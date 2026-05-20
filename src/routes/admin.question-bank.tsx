@@ -1592,7 +1592,7 @@ export function EditDialog({
           )}
 
           {(isFill || isSelectLists || isDragDrop) && (
-            <div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/[0.03] p-4">
+            <div className="space-y-3">
               {isDragDrop && (
                 <p className="text-[11px] text-muted-foreground">
                   Học viên sẽ thấy danh sách từ/cụm từ (gồm các đáp án ở dưới + đáp án nhiễu) và kéo thả vào đúng chỗ trống.
