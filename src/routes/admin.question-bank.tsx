@@ -43,6 +43,10 @@ import {
   MousePointerSquareDashed,
   Move,
   FileText,
+  Image as ImageIcon,
+  Music,
+  GripVertical,
+  Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
