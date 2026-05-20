@@ -31,10 +31,21 @@ type BaseQ = {
 type QSingle = BaseQ & { kind: "single"; options: string[]; answer: number };
 type QMulti = BaseQ & { kind: "multi"; options: string[]; answer: number[] };
 type QFill = BaseQ & { kind: "fill"; blanks: string[] };
-type QEssay = BaseQ & { kind: "essay"; brief: string; minWords: number };
+type QEssay = BaseQ & {
+  kind: "essay";
+  brief: string;
+  minWords: number;
+  maxWords?: number;
+  /** Từ khoá dùng để chấm tự động — dùng càng nhiều keyword càng cao điểm. */
+  keywords: string[];
+  /** Bài mẫu / đáp án gợi ý — hiện khi xem kết quả. */
+  solution: string;
+};
+type QMatchItem = { text: string; image?: string; audio?: string };
 type QMatch = BaseQ & {
   kind: "match";
-  left: string[];
+  /** Item bên trái — có thể kèm ảnh/audio (đồng bộ với cấu hình admin). */
+  leftItems: QMatchItem[];
   right: string[];
   answer: number[];
 };
@@ -63,6 +74,7 @@ export type Question =
   | QSingle
   | QMulti
   | QFill
+  | QEssay
   | QMatch
   | QRewrite
   | QHighlight
@@ -130,10 +142,19 @@ export function buildQuiz(quizId: string): Question[] {
       kind: "match",
       maxScore: 4,
       prompt:
-        "Drag each statement on the right into the matching slot on the left.",
-      left: [
-        "Have you ever heard of space junk? You might remember the scene in the movie Gravity, where a spacecraft is hit by a cloud of waste. ___",
-        "They are very real reminders of space exploration — what happens when we send satellites up and don't clean up afterwards. ___",
+        "Match each picture / audio clue on the left with the correct statement on the right.",
+      leftItems: [
+        {
+          text: "A floating piece of debris in low Earth orbit.",
+          image:
+            "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=600&q=70",
+        },
+        {
+          text: "The night sky we are slowly losing.",
+          image:
+            "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&w=600&q=70",
+          audio: "https://www.soundjay.com/buttons/sounds/beep-07a.mp3",
+        },
       ],
       right: [
         "Space junk can include anything from motors to nuts and bolts, varying in size from tiny paint flakes to huge metal pieces.",
@@ -256,6 +277,31 @@ export function buildQuiz(quizId: string): Question[] {
           answer: 0,
         },
       ],
+    },
+    {
+      id: "q12",
+      index: 12,
+      kind: "essay",
+      maxScore: 5,
+      prompt:
+        "Write a short email (80–120 words) to your friend Jordan replying to their visit plan next month.",
+      brief:
+        "Bạn không rảnh trong tuần Jordan ghé thăm. Hãy: (1) cảm ơn, (2) giải thích lý do bận, (3) gợi ý một địa điểm ở thành phố, (4) đề xuất gặp lại vào dịp khác.",
+      minWords: 80,
+      maxWords: 120,
+      keywords: [
+        "Dear Jordan",
+        "thank",
+        "unfortunately",
+        "work",
+        "visit",
+        "old town",
+        "riverside",
+        "December",
+        "best wishes",
+      ],
+      solution:
+        "Dear Jordan,\n\nThank you for letting me know about your trip next month. Unfortunately, I'll be away for work that week, so I won't be able to meet you in person — I'm really sorry about the timing.\n\nWhile you're here, you should definitely visit the old town and take a walk along the riverside at sunset; it's the most beautiful part of the city. The little café next to the bridge is a must-try.\n\nHopefully we can catch up around December when things calm down. Have a wonderful trip!\n\nBest wishes,\nAlex",
     },
   ];
 }
@@ -773,7 +819,7 @@ export function QuizRunner({
 function questionSkill(kind: Question["kind"]): "reading" | "listening" | "writing" | "speaking" {
   if (kind === "listening") return "listening";
   if (kind === "audio") return "speaking";
-  if (kind === "rewrite" || kind === "highlight") return "writing";
+  if (kind === "rewrite" || kind === "highlight" || kind === "essay") return "writing";
   return "reading";
 }
 
@@ -806,6 +852,7 @@ function kindLabel(k: Question["kind"]) {
     single: "One choice",
     multi: "Multi choice",
     fill: "Fill in the blank",
+    essay: "Essay (writing)",
     match: "Matching (drag & drop)",
     rewrite: "Sentence rewrite",
     highlight: "Highlight & correct",
@@ -819,6 +866,16 @@ function renderPromptHead(p: string) {
   return p.replace(/\{\d+\}/g, "___");
 }
 
+/** Đếm số từ trong essay. */
+function countWords(s: string): number {
+  return s.trim().split(/\s+/).filter(Boolean).length;
+}
+/** Số keyword khớp (case-insensitive, substring match). */
+function matchedKeywords(text: string, keywords: string[]): string[] {
+  const t = text.toLowerCase();
+  return keywords.filter((k) => t.includes(k.toLowerCase()));
+}
+
 function hasAnswer(q: Question, v: AnswerState): boolean {
   if (v === undefined || v === null) return false;
   switch (q.kind) {
@@ -828,6 +885,8 @@ function hasAnswer(q: Question, v: AnswerState): boolean {
       return Array.isArray(v) && (v as number[]).length > 0;
     case "fill":
       return Array.isArray(v) && (v as string[]).every((s) => s && s.trim());
+    case "essay":
+      return typeof v === "string" && countWords(v) >= q.minWords;
     case "match":
       return Array.isArray(v) && (v as (number | null)[]).every((x) => x !== null && x !== undefined);
     case "rewrite":
@@ -880,6 +939,20 @@ function grade(q: Question, v: AnswerState): Result {
       const ok = q.blanks.map((b, i) => (arr[i] || "").trim().toLowerCase() === b.toLowerCase());
       const s = ratio(ok.filter(Boolean).length, q.blanks.length);
       return { status: s, earned: earn(s, q.maxScore) };
+    }
+    case "essay": {
+      const text = (v as string) || "";
+      const words = countWords(text);
+      const matched = matchedKeywords(text, q.keywords).length;
+      const total = q.keywords.length;
+      // Cần đủ minWords để được chấm; điểm = tỉ lệ keyword × maxScore.
+      if (words < q.minWords) {
+        return { status: "incorrect", earned: 0 };
+      }
+      const pct = total > 0 ? matched / total : 0;
+      const earned = Math.round(pct * q.maxScore);
+      const s: Status = pct >= 0.8 ? "correct" : pct >= 0.4 ? "partial" : "incorrect";
+      return { status: s, earned };
     }
     case "match": {
       const arr = (v as (number | null)[]) || [];
@@ -977,6 +1050,8 @@ function QuestionBody({
       return <GapMultiBody q={q} value={value as (number | null)[] | undefined} onChange={onChange} locked={locked} />;
     case "listening":
       return <ListeningBody q={q} value={value as (number | null)[] | undefined} onChange={onChange} locked={locked} accent={accent} />;
+    case "essay":
+      return <EssayBody q={q} value={(value as string) || ""} onChange={onChange} locked={locked} accent={accent} />;
   }
 }
 
@@ -1207,14 +1282,14 @@ function MatchBody({
   onChange: (v: (number | null)[]) => void;
   locked: boolean;
 }) {
-  const slots = value ?? q.left.map(() => null);
+  const slots = value ?? q.leftItems.map(() => null);
   const labels = ["A", "B", "C", "D", "E", "F"];
-  const used = new Set(slots.filter((x) => x !== null) as number[]);
+  const used = new Set(slots.filter((x): x is number => x !== null) as number[]);
   const [dragging, setDragging] = useState<number | null>(null);
 
   const drop = (slotIdx: number) => {
     if (dragging === null || locked) return;
-    const next = slots.map((v) => (v === dragging ? null : v));
+    const next = slots.map((vv: number | null) => (vv === dragging ? null : vv));
     next[slotIdx] = dragging;
     onChange(next);
     setDragging(null);
@@ -1232,7 +1307,7 @@ function MatchBody({
         <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           Drop the matching item into each slot
         </div>
-        {q.left.map((l, i) => {
+        {q.leftItems.map((l: QMatchItem, i: number) => {
           const filled = slots[i];
           const ok = locked && slots[i] === q.answer[i];
           const wrong = locked && slots[i] !== q.answer[i];
@@ -1247,7 +1322,22 @@ function MatchBody({
                 !locked && !ok && !wrong && "border-border",
               )}
             >
-              <div className="text-foreground">{l}</div>
+              {l.image && (
+                <img
+                  src={l.image}
+                  alt=""
+                  className="mb-2 h-32 w-full rounded-xl object-cover ring-1 ring-border"
+                />
+              )}
+              {l.audio && (
+                <audio
+                  controls
+                  src={l.audio}
+                  className="mb-2 h-9 w-full"
+                  preload="none"
+                />
+              )}
+              <div className="text-foreground">{l.text}</div>
               <div
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={() => drop(i)}
@@ -1714,6 +1804,12 @@ function CorrectAnswerHint({ q }: { q: Question }) {
       return <span>Correct answers: {q.blanks.map((b) => b.options[b.answer]).join(" / ")}</span>;
     case "audio":
       return <span>Pronunciation will be reviewed by your teacher.</span>;
+    case "essay":
+      return (
+        <span>
+          Keywords gợi ý: <span className="font-semibold">{q.keywords.join(", ")}</span>
+        </span>
+      );
     case "listening":
       return (
         <span>
@@ -1835,6 +1931,142 @@ function ListeningBody({
           );
         })}
       </ol>
+    </div>
+  );
+}
+
+/* ---------------- Essay (writing with word count) ---------------- */
+function EssayBody({
+  q, value, onChange, locked, accent,
+}: {
+  q: QEssay;
+  value: string;
+  onChange: (v: string) => void;
+  locked: boolean;
+  accent: string;
+}) {
+  const words = countWords(value);
+  const minOk = words >= q.minWords;
+  const maxOk = !q.maxWords || words <= q.maxWords;
+  const matched = matchedKeywords(value, q.keywords);
+
+  return (
+    <div className="space-y-4">
+      {/* Brief */}
+      <div className="rounded-2xl bg-muted/40 p-4 ring-1 ring-border">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Yêu cầu đề bài
+        </div>
+        <p className="mt-1.5 whitespace-pre-line text-sm text-foreground">{q.brief}</p>
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+          <span className="rounded-full bg-background px-2.5 py-1 font-semibold text-muted-foreground ring-1 ring-border">
+            Tối thiểu {q.minWords} từ
+          </span>
+          {q.maxWords && (
+            <span className="rounded-full bg-background px-2.5 py-1 font-semibold text-muted-foreground ring-1 ring-border">
+              Tối đa {q.maxWords} từ
+            </span>
+          )}
+          <span className="rounded-full bg-background px-2.5 py-1 font-semibold text-muted-foreground ring-1 ring-border">
+            {q.keywords.length} keyword chấm điểm
+          </span>
+        </div>
+      </div>
+
+      {/* Editor */}
+      <div>
+        <textarea
+          disabled={locked}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          rows={12}
+          placeholder="Viết bài của bạn ở đây..."
+          className={cn(
+            "w-full resize-y rounded-2xl border-2 bg-surface px-4 py-3 text-sm leading-relaxed text-foreground outline-none transition focus:ring-2",
+            locked ? "border-border bg-muted/30" : "border-border",
+          )}
+          style={!locked ? { ["--tw-ring-color" as string]: accent } : undefined}
+        />
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                "rounded-full px-2.5 py-0.5 font-semibold",
+                minOk && maxOk
+                  ? "bg-success/15 text-success-foreground"
+                  : "bg-warning/15 text-warning-foreground",
+              )}
+            >
+              {words} từ
+            </span>
+            {!minOk && (
+              <span className="text-muted-foreground">
+                Cần thêm {q.minWords - words} từ để đủ yêu cầu.
+              </span>
+            )}
+            {!maxOk && (
+              <span className="text-warning-foreground">
+                Vượt quá {words - (q.maxWords ?? 0)} từ.
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Review-only: solution + keyword matched */}
+      {locked && (
+        <>
+          <div className="rounded-2xl border border-success/30 bg-success/5 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="text-sm font-semibold text-foreground">
+                Keyword khớp với đáp án
+              </div>
+              <span className="rounded-full bg-success/15 px-3 py-0.5 text-xs font-bold text-success-foreground">
+                {matched.length}/{q.keywords.length}
+              </span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {q.keywords.map((kw) => {
+                const hit = matched.includes(kw);
+                return (
+                  <span
+                    key={kw}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1",
+                      hit
+                        ? "bg-success/15 text-success-foreground ring-success/30"
+                        : "bg-muted text-muted-foreground ring-border line-through",
+                    )}
+                  >
+                    {hit ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                    {kw}
+                  </span>
+                );
+              })}
+            </div>
+            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-success transition-all"
+                style={{
+                  width: `${q.keywords.length > 0 ? Math.round((matched.length / q.keywords.length) * 100) : 0}%`,
+                }}
+              />
+            </div>
+            <div className="mt-2 text-[11px] text-muted-foreground">
+              Điểm tự động được tính dựa trên tỉ lệ keyword khớp với bài mẫu.
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-background p-4 ring-1 ring-border">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Bài mẫu / đáp án gợi ý
+            </div>
+            <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground">
+              {q.solution}
+            </pre>
+          </div>
+        </>
+      )}
     </div>
   );
 }
