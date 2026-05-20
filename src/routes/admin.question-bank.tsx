@@ -2024,6 +2024,7 @@ const SUB_TYPE_LABEL: Record<SubQuestionType, string> = {
   short: "Short Answer",
   fill: "Fill in Blank",
   matching: "Matching",
+  "drag-drop": "Drag the Words",
 };
 
 function defaultSub(type: SubQuestionType): SubQuestion {
@@ -2041,9 +2042,12 @@ function defaultSub(type: SubQuestionType): SubQuestion {
         { left: "", right: "" },
       ],
     };
+  if (type === "drag-drop")
+    return { id, type, content: "", correctAnswer: "" };
   // short, fill
   return { id, type, content: "", correctAnswer: "" };
 }
+
 
 function GroupEditor({
   form,
