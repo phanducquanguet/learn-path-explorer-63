@@ -1736,21 +1736,16 @@ function TypePickerDialog({
 // ============================================================
 
 const SUB_TYPE_LABEL: Record<SubQuestionType, string> = {
-  mcq: "Trắc nghiệm 1 đáp án",
-  "mcq-multi": "Trắc nghiệm nhiều đáp án",
-  tf: "Đúng / Sai",
-  short: "Trả lời ngắn",
-  fill: "Điền chỗ trống",
+  mcq: "Single Choice",
+  "mcq-multi": "Multiple Choice",
+  tf: "True / False",
 };
 
 function defaultSub(type: SubQuestionType): SubQuestion {
   const id = `S${Math.random().toString(36).slice(2, 8)}`;
   if (type === "mcq" || type === "mcq-multi")
     return { id, type, content: "", options: ["", "", "", ""], correctAnswer: "A" };
-  if (type === "tf") return { id, type, content: "", correctAnswer: "True" };
-  if (type === "fill")
-    return { id, type, content: "", passage: "Vd: She [1] coffee.", blanks: [{ index: 1, answers: [""] }] };
-  return { id, type, content: "", correctAnswer: "" };
+  return { id, type, content: "", correctAnswer: "True" };
 }
 
 function GroupEditor({
@@ -1775,7 +1770,7 @@ function GroupEditor({
   return (
     <div className="space-y-4 rounded-2xl border border-primary/20 bg-primary/[0.03] p-4">
       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-        <Layers className="h-3.5 w-3.5" /> Đề kèm câu hỏi con
+        <Layers className="h-3.5 w-3.5" /> Question Set
       </div>
 
       <div>
@@ -1888,8 +1883,6 @@ function SubQuestionCard({
   const isMcq = sub.type === "mcq" || sub.type === "mcq-multi";
   const isMcqMulti = sub.type === "mcq-multi";
   const isTF = sub.type === "tf";
-  const isShort = sub.type === "short";
-  const isFill = sub.type === "fill";
   const opts = sub.options ?? [];
 
   const updateOption = (i: number, v: string) => {
@@ -1904,22 +1897,6 @@ function SubQuestionCard({
     else set.add(letter);
     onChange({ correctAnswer: Array.from(set).sort().join(",") });
   };
-
-  const blanks = sub.blanks ?? [];
-  const addBlank = () => {
-    const idx = (blanks.reduce((m, b) => Math.max(m, b.index), 0) || 0) + 1;
-    onChange({
-      passage: (sub.passage ?? "") + ` [${idx}]`,
-      blanks: [...blanks, { index: idx, answers: [""] }],
-    });
-  };
-  const updateBlank = (idx: number, patch: Partial<BlankSpec>) =>
-    onChange({ blanks: blanks.map((b) => (b.index === idx ? { ...b, ...patch } : b)) });
-  const removeBlank = (idx: number) =>
-    onChange({
-      passage: (sub.passage ?? "").replace(new RegExp(`\\s*\\[${idx}\\]`, "g"), ""),
-      blanks: blanks.filter((b) => b.index !== idx),
-    });
 
   return (
     <div className="rounded-xl border border-border bg-background p-3">
@@ -1937,15 +1914,13 @@ function SubQuestionCard({
         </button>
       </div>
 
-      {!isFill && (
-        <textarea
-          value={sub.content}
-          onChange={(e) => onChange({ content: e.target.value })}
-          rows={2}
-          placeholder="Nội dung câu hỏi..."
-          className={cn(inputCls, "mb-2")}
-        />
-      )}
+      <textarea
+        value={sub.content}
+        onChange={(e) => onChange({ content: e.target.value })}
+        rows={2}
+        placeholder="Nội dung câu hỏi..."
+        className={cn(inputCls, "mb-2")}
+      />
 
       {isMcq && (
         <div className="space-y-1.5">
@@ -2007,83 +1982,6 @@ function SubQuestionCard({
             >
               {v}
             </button>
-          ))}
-        </div>
-      )}
-
-      {isShort && (
-        <input
-          value={sub.correctAnswer ?? ""}
-          onChange={(e) => onChange({ correctAnswer: e.target.value })}
-          placeholder="Đáp án mẫu"
-          className={inputCls}
-        />
-      )}
-
-      {isFill && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-muted-foreground">
-              Đề có chỗ trống <code className="rounded bg-muted px-1 font-mono">[n]</code>
-            </span>
-            <button
-              onClick={addBlank}
-              className="inline-flex h-6 items-center gap-1 rounded-md bg-foreground px-2 text-[10px] font-semibold text-background"
-            >
-              <Plus className="h-3 w-3" /> Thêm chỗ trống
-            </button>
-          </div>
-          <textarea
-            value={sub.passage ?? ""}
-            onChange={(e) => onChange({ passage: e.target.value })}
-            rows={2}
-            placeholder="Vd: She [1] coffee in the morning."
-            className={cn(inputCls, "font-mono")}
-          />
-          {blanks.map((b) => (
-            <div key={b.index} className="rounded-lg border border-border bg-muted/30 p-2">
-              <div className="mb-1 flex items-center justify-between">
-                <span className="inline-flex h-5 items-center rounded bg-primary/10 px-1.5 text-[10px] font-bold text-primary">
-                  [{b.index}]
-                </span>
-                <button
-                  onClick={() => removeBlank(b.index)}
-                  className="rounded p-0.5 text-rose-500 hover:bg-rose-500/10"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
-              </div>
-              {(b.answers ?? []).map((a, ai) => (
-                <div key={ai} className="mb-1 flex items-center gap-1">
-                  <input
-                    value={a}
-                    onChange={(e) => {
-                      const next = [...(b.answers ?? [])];
-                      next[ai] = e.target.value;
-                      updateBlank(b.index, { answers: next });
-                    }}
-                    placeholder="Đáp án chấp nhận"
-                    className={cn(inputCls, "flex-1")}
-                  />
-                  <button
-                    onClick={() =>
-                      updateBlank(b.index, {
-                        answers: (b.answers ?? []).filter((_, x) => x !== ai),
-                      })
-                    }
-                    className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-              <button
-                onClick={() => updateBlank(b.index, { answers: [...(b.answers ?? []), ""] })}
-                className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary hover:underline"
-              >
-                <Plus className="h-3 w-3" /> Thêm đáp án
-              </button>
-            </div>
           ))}
         </div>
       )}
