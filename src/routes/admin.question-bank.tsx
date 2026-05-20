@@ -1637,9 +1637,47 @@ export function EditDialog({
               </div>
 
               {isDragDrop && (
-                <p className="text-[11px] text-muted-foreground">
-                  Học viên sẽ thấy danh sách {form.dragMode === "passages" ? "đoạn văn" : "từ"} (gồm các đáp án ở trên + nhiễu) và kéo thả vào đúng chỗ trống.
-                </p>
+                <div className="space-y-1.5 rounded-xl border border-dashed border-border bg-background p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-semibold text-muted-foreground">
+                      Đáp án nhiễu (distractors)
+                    </div>
+                    <button
+                      onClick={() =>
+                        setForm({ ...form, distractors: [...(form.distractors ?? []), ""] })
+                      }
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                    >
+                      <Plus className="h-3 w-3" /> Thêm đáp án nhiễu
+                    </button>
+                  </div>
+                  {(form.distractors ?? []).map((d, di) => (
+                    <div key={di} className="flex items-center gap-2">
+                      <input
+                        value={d}
+                        onChange={(e) => {
+                          const next = [...(form.distractors ?? [])];
+                          next[di] = e.target.value;
+                          setForm({ ...form, distractors: next });
+                        }}
+                        placeholder="Từ/cụm sai để gây nhiễu"
+                        className={cn(inputCls, "flex-1")}
+                      />
+                      <button
+                        onClick={() => {
+                          const next = (form.distractors ?? []).filter((_, x) => x !== di);
+                          setForm({ ...form, distractors: next });
+                        }}
+                        className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                  <p className="text-[11px] text-muted-foreground">
+                    Học viên sẽ thấy đáp án đúng + các đáp án nhiễu trộn lẫn trong pool kéo thả.
+                  </p>
+                </div>
               )}
             </div>
           )}
