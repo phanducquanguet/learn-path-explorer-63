@@ -695,8 +695,10 @@ function NodeEditor({
         <PracticeEditor
           node={node}
           onChange={onChange as (p: Partial<PracticeNode>) => void}
-          onAddQuestion={() => onAddQuestion(node.id)}
           onEditQuestion={onEditQuestion}
+          qTypeMenuOpen={qTypeMenuFor === node.id}
+          onOpenQTypeMenu={(open) => onOpenQTypeMenu(open ? node.id : null)}
+          onPickQuestionType={(t) => onPickQuestionType(node.id, t)}
         />
       )}
 
