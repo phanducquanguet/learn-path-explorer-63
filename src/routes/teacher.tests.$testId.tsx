@@ -17,6 +17,7 @@ import {
   ListChecks,
   FileText,
   BarChart3,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
