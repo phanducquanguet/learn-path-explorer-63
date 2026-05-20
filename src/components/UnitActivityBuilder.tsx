@@ -691,9 +691,9 @@ function PracticeEditor({ node, onChange }: { node: PracticeNode; onChange: (p: 
 
 function QuestionEditor({ node, onChange }: { node: QuestionNode; onChange: (p: Partial<QuestionNode>) => void }) {
   const q = node.qType;
-  const hasOptions = ["mcq", "mcq-multi", "matching", "drag-drop", "tf", "sequence", "select-lists"].includes(q);
-  const multiCorrect = q === "mcq-multi" || q === "drag-drop" || q === "select-lists";
-  const showSample = ["short", "fill", "essay"].includes(q);
+  const hasOptions = ["mcq", "mcq-multi", "matching", "drag-drop", "tf", "sequence", "select-lists", "error-correction"].includes(q);
+  const multiCorrect = q === "mcq-multi" || q === "drag-drop" || q === "select-lists" || q === "error-correction";
+  const showSample = ["short", "fill", "essay", "speaking", "error-correction"].includes(q);
 
   const toggleCorrect = (i: number) => {
     let next: number[];
