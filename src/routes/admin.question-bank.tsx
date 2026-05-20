@@ -68,7 +68,7 @@ const TYPE_ICON: Record<QType, typeof Plus> = {
   group: Layers,
 };
 
-const TYPE_ORDER: QType[] = [
+export const TYPE_ORDER: QType[] = [
   "mcq",
   "mcq-multi",
   "tf",
@@ -82,6 +82,61 @@ const TYPE_ORDER: QType[] = [
   "error-correction",
   "group",
 ];
+
+export function defaultsForType(t: QType): Partial<BankQuestion> {
+  if (t === "mcq" || t === "mcq-multi")
+    return { options: ["", "", "", ""], correctAnswer: t === "mcq" ? "A" : "A,B", optionImages: [] };
+  if (t === "tf") return { options: ["True", "False"], correctAnswer: "True" };
+  if (t === "sequence") return { options: ["Bước 1", "Bước 2", "Bước 3"], correctAnswer: "1,2,3" };
+  if (t === "fill")
+    return {
+      passage: "Điền vào chỗ trống: I [1] to school every day.",
+      blanks: [{ index: 1, answers: ["go", "walk"] }],
+    };
+  if (t === "select-lists")
+    return {
+      passage: "She [1] coffee in the morning.",
+      blanks: [
+        { index: 1, options: ["drinks", "drink", "drank"], correctOption: 0, answers: [] },
+      ],
+    };
+  if (t === "drag-drop" || t === "matching")
+    return {
+      dragMode: "words",
+      passage: "He [1] to the [2] every Sunday.",
+      blanks: [
+        { index: 1, answers: ["goes"] },
+        { index: 2, answers: ["park"] },
+      ],
+    };
+  if (t === "essay")
+    return {
+      solution: "",
+      feedback: [
+        { keyword: "", comment: "" },
+        { keyword: "", comment: "" },
+      ],
+    };
+  if (t === "group") return { passage: "", subQuestions: [] };
+  return { options: undefined };
+}
+
+export function makeDefaultBankQuestion(type: QType, base: Partial<BankQuestion> = {}): BankQuestion {
+  return {
+    id: `Q-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+    content: "",
+    skill: "reading",
+    type,
+    level: "A1",
+    difficulty: "medium",
+    points: type === "essay" ? 5 : type === "short" ? 2 : 1,
+    tags: [],
+    createdAt: new Date().toISOString(),
+    correctAnswer: "",
+    ...defaultsForType(type),
+    ...base,
+  };
+}
 
 export const Route = createFileRoute("/admin/question-bank")({
   head: () => ({ meta: [{ title: "Ngân hàng câu hỏi — UNICOM LMS" }] }),
