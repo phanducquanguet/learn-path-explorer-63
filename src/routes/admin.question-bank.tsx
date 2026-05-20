@@ -64,7 +64,6 @@ const TYPE_ORDER: QType[] = [
   "tf",
   "short",
   "sequence",
-  "matching",
   "fill",
   "select-lists",
   "drag-drop",
