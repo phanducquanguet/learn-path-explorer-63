@@ -1119,7 +1119,7 @@ export function EditDialog({
         )}
 
         <div className="mt-4 space-y-4">
-          {!isFill && !isSelectLists && !isDragDrop && (
+          {!isFill && !isSelectLists && !isDragDrop && form.type !== "error-correction" && (
             <div>
               <div className="mb-1 flex items-center justify-between">
                 <label className="text-xs font-semibold text-muted-foreground">
