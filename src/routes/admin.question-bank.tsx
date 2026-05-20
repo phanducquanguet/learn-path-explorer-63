@@ -2142,6 +2142,23 @@ function SubQuestionCard({
   const updatePair = (i: number, patch: Partial<{ left: string; right: string }>) =>
     onChange({ pairs: pairs.map((p, x) => (x === i ? { ...p, ...patch } : p)) });
   const opts = sub.options ?? [];
+  const blanks = sub.blanks ?? [];
+  const distractors = sub.distractors ?? [];
+  const nextBlankIndex = (blanks.reduce((m, b) => Math.max(m, b.index), 0) || 0) + 1;
+  const addBlank = () => {
+    const idx = nextBlankIndex;
+    onChange({
+      content: (sub.content ?? "") + ` [${idx}]`,
+      blanks: [...blanks, { index: idx, answers: [""] }],
+    });
+  };
+  const updateBlank = (idx: number, patch: Partial<BlankSpec>) =>
+    onChange({ blanks: blanks.map((b) => (b.index === idx ? { ...b, ...patch } : b)) });
+  const removeBlank = (idx: number) =>
+    onChange({
+      content: (sub.content ?? "").replace(new RegExp(`\\s*\\[${idx}\\]`, "g"), ""),
+      blanks: blanks.filter((b) => b.index !== idx),
+    });
 
   const updateOption = (i: number, v: string) => {
     const next = [...opts];
@@ -2155,6 +2172,7 @@ function SubQuestionCard({
     else set.add(letter);
     onChange({ correctAnswer: Array.from(set).sort().join(",") });
   };
+
 
   return (
     <div className="rounded-xl border border-border bg-background p-3">
