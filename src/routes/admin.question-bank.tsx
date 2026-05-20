@@ -535,10 +535,15 @@ function BankPage() {
             setCreating(false);
           }}
           onSave={(qn) => {
+            // For cloze: derive a readable content from passage if empty
+            const final: BankQuestion =
+              (qn.type === "fill" || qn.type === "select-lists" || qn.type === "drag-drop") && !qn.content.trim()
+                ? { ...qn, content: (qn.passage ?? "").slice(0, 120) || "Câu hỏi điền chỗ trống" }
+                : qn;
             if (editing) {
-              setItems((p) => p.map((x) => (x.id === qn.id ? qn : x)));
+              setItems((p) => p.map((x) => (x.id === final.id ? final : x)));
             } else {
-              setItems((p) => [{ ...qn, id: nextId(items) }, ...p]);
+              setItems((p) => [{ ...final, id: nextId(items) }, ...p]);
             }
             setEditing(null);
             setCreating(false);
