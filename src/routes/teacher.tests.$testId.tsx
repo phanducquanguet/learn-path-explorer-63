@@ -427,8 +427,8 @@ function GradingDrawer({
 }
 
 function QuestionsTab({ test }: { test: ReturnType<typeof getTest> & object }) {
-  // Gom các câu hỏi theo từng kỹ năng, dựa trên structure của đề.
-  const groups = new Map<QSkill, { item: (typeof test.structure)[number]; questions: BankQuestion[] }[]>();
+  // Gom câu hỏi theo từng kỹ năng (gộp mọi loại trong cùng 1 kỹ năng).
+  const groups = new Map<QSkill, BankQuestion[]>();
 
   test.structure.forEach((item) => {
     let qs: BankQuestion[] = [];
@@ -439,13 +439,12 @@ function QuestionsTab({ test }: { test: ReturnType<typeof getTest> & object }) {
         .map((id) => questionBank.find((q) => q.id === id))
         .filter((q): q is BankQuestion => !!q);
     } else {
-      // random / fallback: lấy mẫu từ ngân hàng theo skill+type+level
       qs = questionBank
         .filter((q) => q.skill === item.skill && q.type === item.type && q.level === item.level)
         .slice(0, item.count);
     }
     const arr = groups.get(item.skill) ?? [];
-    arr.push({ item, questions: qs });
+    arr.push(...qs);
     groups.set(item.skill, arr);
   });
 
@@ -468,70 +467,63 @@ function QuestionsTab({ test }: { test: ReturnType<typeof getTest> & object }) {
       </div>
 
       {skillsInOrder.map((skill) => {
-        const blocks = groups.get(skill)!;
-        const skillCount = blocks.reduce((s, b) => s + b.item.count, 0);
+        const questions = groups.get(skill)!;
         return (
           <section key={skill} className="overflow-hidden rounded-3xl border border-border bg-surface shadow-soft">
-            <header className="flex items-center justify-between border-b border-border bg-muted/40 px-5 py-3">
+            <header className="flex items-center justify-between border-b border-border bg-muted/40 px-6 py-3">
               <div className="flex items-center gap-2">
                 <span className="rounded-lg bg-primary/10 px-2 py-1 text-[11px] font-bold uppercase text-primary">
                   Kỹ năng
                 </span>
                 <h3 className="font-display text-base font-semibold">{SKILL_LABEL[skill]}</h3>
               </div>
-              <span className="text-xs text-muted-foreground">{skillCount} câu</span>
+              <span className="text-xs text-muted-foreground">{questions.length} câu</span>
             </header>
 
-            <div className="divide-y divide-border">
-              {blocks.map((b, bi) => (
-                <div key={bi} className="px-5 py-4">
-                  <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
-                    <span className="rounded-md bg-foreground/5 px-2 py-0.5 font-medium text-foreground">
-                      {TYPE_LABEL[b.item.type]}
+            <ol className="divide-y divide-border">
+              {questions.length === 0 ? (
+                <li className="px-6 py-10 text-center text-xs text-muted-foreground">
+                  Chưa có câu hỏi phù hợp trong ngân hàng.
+                </li>
+              ) : (
+                questions.map((q, i) => (
+                  <li key={q.id + i} className="flex items-start gap-3 px-6 py-4 text-sm">
+                    <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted text-xs font-semibold text-muted-foreground">
+                      {i + 1}
                     </span>
-                    <span className="rounded bg-primary/10 px-2 py-0.5 font-bold text-primary">
-                      {b.item.level}
-                    </span>
-                    <span className="text-muted-foreground">{b.item.count} câu</span>
-                  </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium leading-relaxed text-foreground">{q.content}</p>
 
-                  <ol className="space-y-2">
-                    {b.questions.length === 0 ? (
-                      <li className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-xs text-muted-foreground">
-                        Chưa có câu hỏi phù hợp trong ngân hàng.
-                      </li>
-                    ) : (
-                      b.questions.map((q, i) => (
-                        <li
-                          key={q.id}
-                          className="flex items-start gap-3 rounded-xl border border-border bg-background px-4 py-3 text-sm"
-                        >
-                          <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted text-[11px] font-semibold text-muted-foreground">
-                            {i + 1}
+                      {(q.type === "mcq" || q.type === "mcq-multi") && q.options && (
+                        <ol className="mt-3 space-y-1.5 pl-1">
+                          {q.options.map((opt, oi) => (
+                            <li key={oi} className="flex items-start gap-2 text-sm text-foreground">
+                              <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-border text-[11px] font-semibold text-muted-foreground">
+                                {String.fromCharCode(65 + oi)}
+                              </span>
+                              <span>{opt}</span>
+                            </li>
+                          ))}
+                        </ol>
+                      )}
+
+                      {q.type === "tf" && (
+                        <div className="mt-3 flex gap-3 text-sm">
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="inline-block h-4 w-4 rounded-full border border-border" />
+                            True
                           </span>
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium text-foreground">{q.content}</p>
-                            <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
-                              <span className="font-mono">{q.id}</span>
-                              <span>•</span>
-                              <span>{q.points}đ</span>
-                              {q.tags?.slice(0, 3).map((t) => (
-                                <span
-                                  key={t}
-                                  className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground"
-                                >
-                                  #{t}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                        </li>
-                      ))
-                    )}
-                  </ol>
-                </div>
-              ))}
-            </div>
+                          <span className="inline-flex items-center gap-1.5">
+                            <span className="inline-block h-4 w-4 rounded-full border border-border" />
+                            False
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </li>
+                ))
+              )}
+            </ol>
           </section>
         );
       })}
