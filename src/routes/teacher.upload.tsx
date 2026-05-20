@@ -35,21 +35,11 @@ export const Route = createFileRoute("/teacher/upload")({
   component: UploadPage,
 });
 
-type ActivityKind = "video" | "reading-pdf" | "audio" | "quiz";
-type ActivityDraft = {
-  id: string;
-  kind: ActivityKind;
-  title: string;
-  duration: number;
-  fileName?: string;
-  quizType?: string;
-  questions?: number;
-};
 type UnitDraft = {
   id: string;
   title: string;
   desc: string;
-  activities: ActivityDraft[];
+  nodes: AnyNode[];
 };
 
 function UploadPage() {
