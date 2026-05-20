@@ -1027,12 +1027,14 @@ export function EditDialog({
 
   const canSave = isCloze
     ? (form.passage ?? "").trim().length > 0 && (form.blanks ?? []).length > 0
-    : form.type === "error-correction"
+    : isErrorCorrection
       ? (form.passage ?? "").trim().length > 0 && (form.errors ?? []).some((e) => e.wrong.trim() && e.correct.trim())
-      : isGroup
-        ? (form.content.trim().length > 0 || (form.passage ?? "").trim().length > 0) &&
-          (form.subQuestions ?? []).length > 0
-        : form.content.trim().length > 0;
+      : isMatching
+        ? (form.matchingPairs ?? []).some((p) => p.item.trim() && p.target.trim())
+        : isGroup
+          ? (form.content.trim().length > 0 || (form.passage ?? "").trim().length > 0) &&
+            (form.subQuestions ?? []).length > 0
+          : form.content.trim().length > 0;
 
   const inputCls =
     "w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm";
