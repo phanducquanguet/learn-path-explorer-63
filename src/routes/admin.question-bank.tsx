@@ -1770,7 +1770,7 @@ function GroupEditor({
   return (
     <div className="space-y-4 rounded-2xl border border-primary/20 bg-primary/[0.03] p-4">
       <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-        <Layers className="h-3.5 w-3.5" /> Đề kèm câu hỏi con
+        <Layers className="h-3.5 w-3.5" /> Question Set
       </div>
 
       <div>
