@@ -1724,10 +1724,18 @@ export function TypePickerDialog({
             );
           })}
         </div>
-      </div>
+    </div>
+  );
+
+  if (embedded) return inner;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <button onClick={onClose} className="absolute inset-0" aria-label="Close" />
+      {inner}
     </div>
   );
 }
+
 
 // ============================================================
 // Group editor: 1 parent prompt + list of sub-questions
