@@ -64,8 +64,8 @@ type TabKey = "overview" | "members" | "scores" | "activities" | "competence" | 
 function CoursePage() {
   const { courseId } = Route.useParams();
   const { role } = useRole();
-  const isStaff = role !== "student";
-  const isAdmin = role === "admin"; // only admin can add/edit/delete
+  const realIsStaff = role !== "student";
+  const realIsAdmin = role === "admin";
   const data = getCourse(courseId);
   if (!data) throw notFound();
   const { course: baseCourse, level } = data;
@@ -73,6 +73,10 @@ function CoursePage() {
   // Local mutable copy so teacher can add/edit/delete (mock, not persisted)
   const [course, setCourse] = useState(baseCourse);
   const [editMode, setEditMode] = useState(false);
+  const [previewAsStudent, setPreviewAsStudent] = useState(false);
+  // When previewing as student, override staff/admin flags so the UI mirrors the learner experience
+  const isStaff = realIsStaff && !previewAsStudent;
+  const isAdmin = realIsAdmin && !previewAsStudent;
 
   const [activeUnitId, setActiveUnitId] = useState<string | null>(null);
   const [tab, setTab] = useState<TabKey>("overview");
