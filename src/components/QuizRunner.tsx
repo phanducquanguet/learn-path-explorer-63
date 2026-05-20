@@ -1804,6 +1804,12 @@ function CorrectAnswerHint({ q }: { q: Question }) {
       return <span>Correct answers: {q.blanks.map((b) => b.options[b.answer]).join(" / ")}</span>;
     case "audio":
       return <span>Pronunciation will be reviewed by your teacher.</span>;
+    case "essay":
+      return (
+        <span>
+          Keywords gợi ý: <span className="font-semibold">{q.keywords.join(", ")}</span>
+        </span>
+      );
     case "listening":
       return (
         <span>
