@@ -1933,6 +1933,55 @@ function SubQuestionCard({
           ))}
         </div>
       )}
+      {(isShort || isFill) && (
+        <input
+          value={sub.correctAnswer ?? ""}
+          onChange={(e) => onChange({ correctAnswer: e.target.value })}
+          placeholder={
+            isFill
+              ? "Đáp án chấp nhận (ngăn cách bằng dấu | nếu nhiều)"
+              : "Đáp án mẫu / từ khóa chấm điểm"
+          }
+          className={cn(inputCls)}
+        />
+      )}
+
+      {isMatching && (
+        <div className="space-y-1.5">
+          {pairs.map((p, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <span className="inline-flex h-7 w-6 shrink-0 items-center justify-center rounded-md bg-muted text-[11px] font-bold text-muted-foreground">
+                {i + 1}
+              </span>
+              <input
+                value={p.left}
+                onChange={(e) => updatePair(i, { left: e.target.value })}
+                placeholder="Mục bên trái"
+                className={cn(inputCls, "flex-1")}
+              />
+              <span className="text-xs text-muted-foreground">↔</span>
+              <input
+                value={p.right}
+                onChange={(e) => updatePair(i, { right: e.target.value })}
+                placeholder="Mục ghép bên phải"
+                className={cn(inputCls, "flex-1")}
+              />
+              <button
+                onClick={() => onChange({ pairs: pairs.filter((_, x) => x !== i) })}
+                className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Trash2 className="h-3 w-3" />
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={() => onChange({ pairs: [...pairs, { left: "", right: "" }] })}
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+          >
+            <Plus className="h-3 w-3" /> Thêm cặp ghép
+          </button>
+        </div>
+      )}
     </div>
   );
 }
