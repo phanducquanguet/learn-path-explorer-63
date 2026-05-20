@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { getTest, getTestSubmissions, testStatus, type TestSubmission } from "@/lib/tests-data";
-import { SKILL_LABEL, TYPE_LABEL } from "@/lib/question-bank";
+import { SKILL_LABEL, TYPE_LABEL, questionBank, type BankQuestion, type QSkill } from "@/lib/question-bank";
 import { classes } from "@/lib/teacher-data";
 import {
   ArrowLeft,
@@ -17,6 +17,7 @@ import {
   ListChecks,
   FileText,
   BarChart3,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +30,7 @@ function TestDetail() {
   const { testId } = Route.useParams();
   const test = getTest(testId);
   if (!test) throw notFound();
-  const [tab, setTab] = useState<"overview" | "structure" | "results">("overview");
+  const [tab, setTab] = useState<"overview" | "structure" | "questions" | "results">("overview");
   const [subs, setSubs] = useState<TestSubmission[]>(getTestSubmissions(testId));
   const [grading, setGrading] = useState<TestSubmission | null>(null);
   const st = testStatus(test);
@@ -72,6 +73,7 @@ function TestDetail() {
             [
               { id: "overview", label: "Tổng quan", icon: BarChart3 },
               { id: "structure", label: "Cấu trúc đề", icon: ListChecks },
+              { id: "questions", label: "Câu hỏi", icon: HelpCircle },
               { id: "results", label: "Kết quả thi", icon: FileText },
             ] as const
           ).map((t) => {
@@ -162,6 +164,8 @@ function TestDetail() {
             </table>
           </div>
         )}
+
+        {tab === "questions" && <QuestionsTab test={test} />}
 
         {tab === "results" && (
           <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
@@ -418,6 +422,119 @@ function GradingDrawer({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function QuestionsTab({ test }: { test: ReturnType<typeof getTest> & object }) {
+  // Gom các câu hỏi theo từng kỹ năng, dựa trên structure của đề.
+  const groups = new Map<QSkill, { item: (typeof test.structure)[number]; questions: BankQuestion[] }[]>();
+
+  test.structure.forEach((item) => {
+    let qs: BankQuestion[] = [];
+    if (item.customBank && item.customBank.length) {
+      qs = item.customBank;
+    } else if (item.pickedIds && item.pickedIds.length) {
+      qs = item.pickedIds
+        .map((id) => questionBank.find((q) => q.id === id))
+        .filter((q): q is BankQuestion => !!q);
+    } else {
+      // random / fallback: lấy mẫu từ ngân hàng theo skill+type+level
+      qs = questionBank
+        .filter((q) => q.skill === item.skill && q.type === item.type && q.level === item.level)
+        .slice(0, item.count);
+    }
+    const arr = groups.get(item.skill) ?? [];
+    arr.push({ item, questions: qs });
+    groups.set(item.skill, arr);
+  });
+
+  const skillsInOrder = Array.from(groups.keys());
+  const totalQuestions = test.structure.reduce((s, x) => s + x.count, 0);
+  const multiSkill = skillsInOrder.length > 1;
+
+  return (
+    <div className="mt-6 space-y-6">
+      <div className="flex items-center justify-between rounded-2xl border border-border bg-surface px-4 py-3 text-sm">
+        <span className="text-muted-foreground">
+          Tổng <span className="font-semibold text-foreground">{totalQuestions}</span> câu hỏi
+          {multiSkill && ` • Phân loại theo ${skillsInOrder.length} kỹ năng`}
+        </span>
+        {test.mode === "random" && (
+          <span className="text-xs text-muted-foreground">
+            Đề bốc ngẫu nhiên — hiển thị mẫu từ ngân hàng câu hỏi
+          </span>
+        )}
+      </div>
+
+      {skillsInOrder.map((skill) => {
+        const blocks = groups.get(skill)!;
+        const skillCount = blocks.reduce((s, b) => s + b.item.count, 0);
+        return (
+          <section key={skill} className="overflow-hidden rounded-3xl border border-border bg-surface shadow-soft">
+            <header className="flex items-center justify-between border-b border-border bg-muted/40 px-5 py-3">
+              <div className="flex items-center gap-2">
+                <span className="rounded-lg bg-primary/10 px-2 py-1 text-[11px] font-bold uppercase text-primary">
+                  Kỹ năng
+                </span>
+                <h3 className="font-display text-base font-semibold">{SKILL_LABEL[skill]}</h3>
+              </div>
+              <span className="text-xs text-muted-foreground">{skillCount} câu</span>
+            </header>
+
+            <div className="divide-y divide-border">
+              {blocks.map((b, bi) => (
+                <div key={bi} className="px-5 py-4">
+                  <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
+                    <span className="rounded-md bg-foreground/5 px-2 py-0.5 font-medium text-foreground">
+                      {TYPE_LABEL[b.item.type]}
+                    </span>
+                    <span className="rounded bg-primary/10 px-2 py-0.5 font-bold text-primary">
+                      {b.item.level}
+                    </span>
+                    <span className="text-muted-foreground">{b.item.count} câu</span>
+                  </div>
+
+                  <ol className="space-y-2">
+                    {b.questions.length === 0 ? (
+                      <li className="rounded-xl border border-dashed border-border px-4 py-6 text-center text-xs text-muted-foreground">
+                        Chưa có câu hỏi phù hợp trong ngân hàng.
+                      </li>
+                    ) : (
+                      b.questions.map((q, i) => (
+                        <li
+                          key={q.id}
+                          className="flex items-start gap-3 rounded-xl border border-border bg-background px-4 py-3 text-sm"
+                        >
+                          <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted text-[11px] font-semibold text-muted-foreground">
+                            {i + 1}
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-foreground">{q.content}</p>
+                            <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+                              <span className="font-mono">{q.id}</span>
+                              <span>•</span>
+                              <span>{q.points}đ</span>
+                              {q.tags?.slice(0, 3).map((t) => (
+                                <span
+                                  key={t}
+                                  className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground"
+                                >
+                                  #{t}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </li>
+                      ))
+                    )}
+                  </ol>
+                </div>
+              ))}
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
 }
