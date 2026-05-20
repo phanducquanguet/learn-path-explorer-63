@@ -2295,6 +2295,20 @@ function SubQuestionCard({
           </button>
         </div>
       )}
+      {isDragDrop && (
+        <div className="space-y-1.5">
+          <input
+            value={sub.correctAnswer ?? ""}
+            onChange={(e) => onChange({ correctAnswer: e.target.value })}
+            placeholder="Đáp án cho từng chỗ trống — ngăn cách bằng dấu | (vd: drinks|early)"
+            className={cn(inputCls)}
+          />
+          <p className="text-[10px] text-muted-foreground">
+            Học viên sẽ kéo thả các từ trên vào đúng chỗ trống [n] trong đề bài.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
+
