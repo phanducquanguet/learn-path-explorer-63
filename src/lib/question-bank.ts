@@ -20,7 +20,9 @@ export type SubQuestionType =
   | "tf"
   | "short"
   | "fill"
-  | "matching";
+  | "matching"
+  | "drag-drop";
+
 
 export type SubQuestion = {
   id: string;
