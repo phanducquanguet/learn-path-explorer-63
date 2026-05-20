@@ -278,6 +278,31 @@ export function buildQuiz(quizId: string): Question[] {
         },
       ],
     },
+    {
+      id: "q12",
+      index: 12,
+      kind: "essay",
+      maxScore: 5,
+      prompt:
+        "Write a short email (80–120 words) to your friend Jordan replying to their visit plan next month.",
+      brief:
+        "Bạn không rảnh trong tuần Jordan ghé thăm. Hãy: (1) cảm ơn, (2) giải thích lý do bận, (3) gợi ý một địa điểm ở thành phố, (4) đề xuất gặp lại vào dịp khác.",
+      minWords: 80,
+      maxWords: 120,
+      keywords: [
+        "Dear Jordan",
+        "thank",
+        "unfortunately",
+        "work",
+        "visit",
+        "old town",
+        "riverside",
+        "December",
+        "best wishes",
+      ],
+      solution:
+        "Dear Jordan,\n\nThank you for letting me know about your trip next month. Unfortunately, I'll be away for work that week, so I won't be able to meet you in person — I'm really sorry about the timing.\n\nWhile you're here, you should definitely visit the old town and take a walk along the riverside at sunset; it's the most beautiful part of the city. The little café next to the bridge is a must-try.\n\nHopefully we can catch up around December when things calm down. Have a wonderful trip!\n\nBest wishes,\nAlex",
+    },
   ];
 }
 
