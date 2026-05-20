@@ -79,6 +79,8 @@ export type BankQuestion = {
   dragMode?: "words" | "passages";
   /** Ảnh đính kèm câu hỏi (optional). */
   imageUrl?: string;
+  /** Video đính kèm câu hỏi (optional). */
+  videoUrl?: string;
   /** Câu hỏi con — chỉ dùng với type === "group". */
   subQuestions?: SubQuestion[];
   /** Đáp án nhiễu bổ sung (drag-drop hiển thị trong pool, short answer để gợi ý sai). */
