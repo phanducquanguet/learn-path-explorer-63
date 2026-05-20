@@ -12,7 +12,7 @@ export type QType =
   | "essay"
   | "group";
 
-export type SubQuestionType = "mcq" | "mcq-multi" | "tf" | "short" | "fill";
+export type SubQuestionType = "mcq" | "mcq-multi" | "tf";
 
 export type SubQuestion = {
   id: string;
@@ -20,9 +20,6 @@ export type SubQuestion = {
   content: string;
   options?: string[];
   correctAnswer?: string;
-  /** for fill */
-  blanks?: BlankSpec[];
-  passage?: string;
 };
 export type QLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 
