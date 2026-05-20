@@ -1037,7 +1037,7 @@ export function EditDialog({
                 onChange={(e) => changeType(e.target.value as QType)}
                 className={inputCls}
               >
-                {TYPE_ORDER.map((t) => (
+                {TYPE_ORDER_COURSE.map((t) => (
                   <option key={t} value={t}>{TYPE_LABEL[t]}</option>
                 ))}
               </select>
