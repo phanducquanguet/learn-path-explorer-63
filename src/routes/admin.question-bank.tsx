@@ -1559,6 +1559,15 @@ function EditDialog({
             </div>
           )}
 
+          {isGroup && (
+            <GroupEditor
+              form={form}
+              setForm={setForm}
+              setQuestionAudio={setQuestionAudio}
+              inputCls={inputCls}
+            />
+          )}
+
           {isEssay && (
             <div className="space-y-4 rounded-2xl border border-violet-500/30 bg-violet-500/5 p-4">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">
