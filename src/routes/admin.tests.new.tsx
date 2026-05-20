@@ -330,43 +330,52 @@ function NewTestPage() {
           {step === 2 && (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                Đặt số lượng cho từng kỹ năng. Các loại câu hỏi (trắc nghiệm, điền từ, tự luận...) sẽ được trộn ngẫu nhiên từ ngân hàng theo cấp độ và độ khó đã chọn.
+                Thêm các dòng cấu trúc đề. Mỗi dòng có thể chỉ định kỹ năng, cấp độ và độ khó riêng — cho phép cùng một kỹ năng xuất hiện nhiều lần với các độ khó khác nhau.
               </p>
               <div className="overflow-hidden rounded-xl border border-border">
                 <table className="w-full text-sm">
                   <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
                     <tr>
+                      <th className="px-3 py-2 text-left">#</th>
                       <th className="px-3 py-2 text-left">Kỹ năng</th>
                       <th className="px-3 py-2 text-center">Cấp độ</th>
                       <th className="px-3 py-2 text-center">Độ khó</th>
                       <th className="px-3 py-2 text-center">Số câu</th>
                       <th className="px-3 py-2 text-center">Có sẵn</th>
+                      <th className="px-3 py-2"></th>
                     </tr>
                   </thead>
                   <tbody>
-                    {SKILLS.map((sk) => {
-                      const idx = structure.findIndex((x) => x.skill === sk);
-                      const row: StructureItem = idx >= 0
-                        ? structure[idx]
-                        : { skill: sk, type: "mcq", level, difficulty: "mixed", count: 0, pickedIds: [] };
+                    {structure.map((row, idx) => {
                       const available = matchBank(row).length;
                       const short = available < row.count;
-                      const upsert = (patch: Partial<StructureItem>) => {
-                        setStructure((p) => {
-                          const i = p.findIndex((x) => x.skill === sk);
-                          if (i === -1) return [...p, { ...row, ...patch, pickedIds: [] }];
-                          return p.map((x, k) => (k === i ? { ...x, ...patch, pickedIds: [] } : x));
-                        });
+                      const upsertAt = (patch: Partial<StructureItem>) => {
+                        setStructure((p) =>
+                          p.map((x, k) => (k === idx ? { ...x, ...patch, pickedIds: [] } : x)),
+                        );
                       };
                       return (
-                        <tr key={sk} className="border-t border-border">
-                          <td className="px-3 py-2 font-semibold text-foreground">
-                            {SKILL_LABEL[sk]}
+                        <tr key={idx} className="border-t border-border">
+                          <td className="px-3 py-2 text-xs font-semibold text-muted-foreground">
+                            {idx + 1}
+                          </td>
+                          <td className="px-3 py-2">
+                            <select
+                              value={row.skill}
+                              onChange={(e) => upsertAt({ skill: e.target.value as QSkill })}
+                              className="rounded-lg border border-border bg-background px-2 py-1 text-xs font-semibold"
+                            >
+                              {SKILLS.map((sk) => (
+                                <option key={sk} value={sk}>
+                                  {SKILL_LABEL[sk]}
+                                </option>
+                              ))}
+                            </select>
                           </td>
                           <td className="px-3 py-2 text-center">
                             <select
                               value={row.level}
-                              onChange={(e) => upsert({ level: e.target.value as QLevel })}
+                              onChange={(e) => upsertAt({ level: e.target.value as QLevel })}
                               className="rounded-lg border border-border bg-background px-2 py-1 text-xs"
                             >
                               {LEVELS.map((l) => (
@@ -378,7 +387,7 @@ function NewTestPage() {
                             <select
                               value={row.difficulty ?? "mixed"}
                               onChange={(e) =>
-                                upsert({ difficulty: e.target.value as QDifficulty | "mixed" })
+                                upsertAt({ difficulty: e.target.value as QDifficulty | "mixed" })
                               }
                               className="rounded-lg border border-border bg-background px-2 py-1 text-xs"
                             >
@@ -394,7 +403,9 @@ function NewTestPage() {
                               type="number"
                               min={0}
                               value={row.count}
-                              onChange={(e) => upsert({ count: Math.max(0, Number(e.target.value)) })}
+                              onChange={(e) =>
+                                upsertAt({ count: Math.max(0, Number(e.target.value)) })
+                              }
                               className="w-20 rounded-lg border border-border bg-background px-2 py-1 text-center text-xs"
                             />
                           </td>
@@ -410,15 +421,51 @@ function NewTestPage() {
                               {available}
                             </span>
                           </td>
+                          <td className="px-3 py-2 text-right">
+                            <button
+                              onClick={() =>
+                                setStructure((p) => p.filter((_, k) => k !== idx))
+                              }
+                              className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
+                              title="Xóa dòng"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </td>
                         </tr>
                       );
                     })}
+                    {structure.length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="px-3 py-8 text-center text-xs text-muted-foreground">
+                          Chưa có dòng nào. Nhấn “Thêm dòng” bên dưới để bắt đầu.
+                        </td>
+                      </tr>
+                    )}
                   </tbody>
                 </table>
               </div>
+              <button
+                onClick={() =>
+                  setStructure((p) => [
+                    ...p,
+                    {
+                      skill: "reading",
+                      type: "mcq",
+                      level,
+                      difficulty: "mixed",
+                      count: 5,
+                      pickedIds: [],
+                    },
+                  ])
+                }
+                className="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-border bg-background px-3 py-2 text-xs font-semibold hover:bg-muted"
+              >
+                <Plus className="h-3.5 w-3.5" /> Thêm dòng
+              </button>
               <div className="rounded-xl bg-muted/40 p-3 text-sm">
                 Tổng cộng: <strong>{totalQuestions} câu</strong> qua{" "}
-                <strong>{structure.filter((s) => s.count > 0).length}</strong> kỹ năng
+                <strong>{structure.filter((s) => s.count > 0).length}</strong> dòng cấu trúc
               </div>
             </div>
           )}
