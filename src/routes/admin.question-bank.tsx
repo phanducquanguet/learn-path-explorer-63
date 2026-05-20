@@ -1074,7 +1074,7 @@ export function EditDialog({
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className={cn("grid gap-3", hideLevelDifficulty ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4")}>
             <Field label="Kỹ năng">
               <select
                 value={form.skill}
@@ -1086,28 +1086,32 @@ export function EditDialog({
                 ))}
               </select>
             </Field>
-            <Field label="Cấp độ">
-              <select
-                value={form.level}
-                onChange={(e) => setForm({ ...form, level: e.target.value as QLevel })}
-                className={inputCls}
-              >
-                {LEVELS.map((l) => (
-                  <option key={l} value={l}>{l}</option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Độ khó">
-              <select
-                value={form.difficulty}
-                onChange={(e) => setForm({ ...form, difficulty: e.target.value as QDifficulty })}
-                className={inputCls}
-              >
-                {(Object.keys(DIFFICULTY_LABEL) as QDifficulty[]).map((d) => (
-                  <option key={d} value={d}>{DIFFICULTY_LABEL[d]}</option>
-                ))}
-              </select>
-            </Field>
+            {!hideLevelDifficulty && (
+              <Field label="Cấp độ">
+                <select
+                  value={form.level}
+                  onChange={(e) => setForm({ ...form, level: e.target.value as QLevel })}
+                  className={inputCls}
+                >
+                  {LEVELS.map((l) => (
+                    <option key={l} value={l}>{l}</option>
+                  ))}
+                </select>
+              </Field>
+            )}
+            {!hideLevelDifficulty && (
+              <Field label="Độ khó">
+                <select
+                  value={form.difficulty}
+                  onChange={(e) => setForm({ ...form, difficulty: e.target.value as QDifficulty })}
+                  className={inputCls}
+                >
+                  {(Object.keys(DIFFICULTY_LABEL) as QDifficulty[]).map((d) => (
+                    <option key={d} value={d}>{DIFFICULTY_LABEL[d]}</option>
+                  ))}
+                </select>
+              </Field>
+            )}
             <Field label="Điểm">
               <input
                 type="number"
@@ -1118,6 +1122,7 @@ export function EditDialog({
               />
             </Field>
           </div>
+
 
 
           {/* ===== Type-specific editors ===== */}
