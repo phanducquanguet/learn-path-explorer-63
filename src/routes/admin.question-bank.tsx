@@ -851,6 +851,11 @@ function EditDialog({
           { keyword: "", comment: "" },
         ],
       };
+    if (t === "group")
+      return {
+        passage: "",
+        subQuestions: [],
+      };
     return { options: undefined };
   };
 
