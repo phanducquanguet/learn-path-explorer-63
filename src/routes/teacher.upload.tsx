@@ -2,7 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { levels, getCourse } from "@/lib/lms-data";
-import { ACTIVITY_TYPES, QUIZ_KINDS } from "@/lib/teacher-data";
 import { useCategories, categoryOf, type Category } from "@/lib/course-categories";
 import {
   Upload,
@@ -14,14 +13,12 @@ import {
   ChevronRight,
   ChevronLeft,
   CheckCircle2,
-  FileVideo,
-  FileText,
-  ClipboardList,
   Sparkles,
   Settings2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CategoriesManager } from "@/components/CategoriesManager";
+import { UnitActivityBuilder, type AnyNode } from "@/components/UnitActivityBuilder";
 import {
   Dialog,
   DialogContent,
@@ -38,21 +35,11 @@ export const Route = createFileRoute("/teacher/upload")({
   component: UploadPage,
 });
 
-type ActivityKind = "video" | "reading-pdf" | "audio" | "quiz";
-type ActivityDraft = {
-  id: string;
-  kind: ActivityKind;
-  title: string;
-  duration: number;
-  fileName?: string;
-  quizType?: string;
-  questions?: number;
-};
 type UnitDraft = {
   id: string;
   title: string;
   desc: string;
-  activities: ActivityDraft[];
+  nodes: AnyNode[];
 };
 
 function UploadPage() {
@@ -71,7 +58,7 @@ function UploadPage() {
     thumbnail: "",
   });
   const [units, setUnits] = useState<UnitDraft[]>([
-    { id: "u1", title: "Unit 1: Greetings & Introductions", desc: "", activities: [] },
+    { id: "u1", title: "Unit 1: Greetings & Introductions", desc: "", nodes: [] },
   ]);
   const [saved, setSaved] = useState(false);
 
@@ -94,7 +81,7 @@ function UploadPage() {
           id: u.id,
           title: u.title,
           desc: u.description,
-          activities: [],
+          nodes: [],
         })),
       );
       return;
@@ -128,7 +115,7 @@ function UploadPage() {
   const addUnit = () =>
     setUnits((u) => [
       ...u,
-      { id: `u${u.length + 1}`, title: `Unit ${u.length + 1}: New Unit`, desc: "", activities: [] },
+      { id: `u${u.length + 1}`, title: `Unit ${u.length + 1}: New Unit`, desc: "", nodes: [] },
     ]);
 
   const save = () => {
@@ -336,13 +323,18 @@ function UploadPage() {
           {step === 2 && (
             <div className="space-y-6">
               {units.map((u) => (
-                <UnitActivities
-                  key={u.id}
-                  unit={u}
-                  onChange={(next) =>
-                    setUnits((arr) => arr.map((x) => (x.id === u.id ? next : x)))
-                  }
-                />
+                <div key={u.id} className="rounded-2xl border border-border bg-surface/50 p-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <Layers className="h-4 w-4 text-primary" />
+                    <div className="font-semibold text-foreground">{u.title}</div>
+                  </div>
+                  <UnitActivityBuilder
+                    nodes={u.nodes}
+                    onChange={(nodes) =>
+                      setUnits((arr) => arr.map((x) => (x.id === u.id ? { ...x, nodes } : x)))
+                    }
+                  />
+                </div>
               ))}
               {saved && (
                 <div className="rounded-xl bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-700">
@@ -423,138 +415,3 @@ function Field({ label, required, children }: { label: string; required?: boolea
   );
 }
 
-function UnitActivities({ unit, onChange }: { unit: UnitDraft; onChange: (u: UnitDraft) => void }) {
-  const [adding, setAdding] = useState(false);
-
-  const add = (kind: ActivityKind, extras: Partial<ActivityDraft> = {}) => {
-    const a: ActivityDraft = {
-      id: `${unit.id}-a${unit.activities.length + 1}`,
-      kind,
-      title:
-        kind === "video"
-          ? "Video bài giảng"
-          : kind === "reading-pdf"
-            ? "Tài liệu PDF"
-            : kind === "audio"
-              ? "Audio luyện nghe"
-              : "Quiz cuối bài",
-      duration: 10,
-      ...extras,
-    };
-    onChange({ ...unit, activities: [...unit.activities, a] });
-    setAdding(false);
-  };
-
-  const update = (id: string, patch: Partial<ActivityDraft>) =>
-    onChange({ ...unit, activities: unit.activities.map((a) => (a.id === id ? { ...a, ...patch } : a)) });
-
-  const remove = (id: string) =>
-    onChange({ ...unit, activities: unit.activities.filter((a) => a.id !== id) });
-
-  return (
-    <div className="rounded-2xl border border-border bg-background p-4">
-      <div className="mb-3 flex items-center justify-between">
-        <div className="font-semibold text-foreground">{unit.title}</div>
-        <button
-          onClick={() => setAdding((v) => !v)}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20"
-        >
-          <Plus className="h-3.5 w-3.5" /> Thêm activity
-        </button>
-      </div>
-
-      {adding && (
-        <div className="mb-3 rounded-xl bg-muted/50 p-3">
-          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Tài liệu
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            {ACTIVITY_TYPES.map((t) => (
-              <button
-                key={t.id}
-                onClick={() => add(t.id as ActivityKind)}
-                className="rounded-lg border border-border bg-background px-3 py-2 text-xs font-medium text-foreground hover:border-primary hover:text-primary"
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-          <div className="mb-2 mt-3 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            Bài tập (11 dạng)
-          </div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {QUIZ_KINDS.map((q) => (
-              <button
-                key={q.id}
-                onClick={() => add("quiz", { quizType: q.id, title: q.label, questions: 5 })}
-                className="rounded-lg border border-border bg-background px-3 py-2 text-left text-xs font-medium text-foreground hover:border-primary hover:text-primary"
-              >
-                {q.label}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {unit.activities.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-          Chưa có activity nào. Bấm "Thêm activity" để bắt đầu.
-        </div>
-      ) : (
-        <div className="space-y-2">
-          {unit.activities.map((a) => (
-            <div key={a.id} className="flex items-center gap-3 rounded-xl border border-border bg-surface px-3 py-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                {a.kind === "video" ? (
-                  <FileVideo className="h-4 w-4" />
-                ) : a.kind === "reading-pdf" ? (
-                  <FileText className="h-4 w-4" />
-                ) : a.kind === "audio" ? (
-                  <FileVideo className="h-4 w-4" />
-                ) : (
-                  <ClipboardList className="h-4 w-4" />
-                )}
-              </div>
-              <input
-                value={a.title}
-                onChange={(e) => update(a.id, { title: e.target.value })}
-                className="input flex-1"
-              />
-              {a.kind === "quiz" ? (
-                <input
-                  type="number"
-                  value={a.questions ?? 5}
-                  onChange={(e) => update(a.id, { questions: Number(e.target.value) })}
-                  className="input w-20"
-                  title="Số câu"
-                />
-              ) : (
-                <label className="cursor-pointer rounded-lg border border-dashed border-border px-3 py-1.5 text-[11px] font-medium text-muted-foreground hover:border-primary hover:text-primary">
-                  {a.fileName || "Chọn file"}
-                  <input
-                    type="file"
-                    className="hidden"
-                    onChange={(e) => update(a.id, { fileName: e.target.files?.[0]?.name })}
-                  />
-                </label>
-              )}
-              <input
-                type="number"
-                value={a.duration}
-                onChange={(e) => update(a.id, { duration: Number(e.target.value) })}
-                className="input w-20"
-                title="Phút"
-              />
-              <button
-                onClick={() => remove(a.id)}
-                className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
