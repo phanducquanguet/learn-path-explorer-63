@@ -519,7 +519,7 @@ function QuestionTypeMenuButton({
               Chọn dạng câu hỏi
             </div>
             <div className="max-h-72 overflow-y-auto">
-              {TYPE_ORDER.map((t) => {
+              {TYPE_ORDER_COURSE.map((t) => {
                 const I = Q_TYPE_ICON[t];
                 return (
                   <button
