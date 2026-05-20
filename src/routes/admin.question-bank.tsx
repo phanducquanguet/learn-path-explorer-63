@@ -1883,8 +1883,6 @@ function SubQuestionCard({
   const isMcq = sub.type === "mcq" || sub.type === "mcq-multi";
   const isMcqMulti = sub.type === "mcq-multi";
   const isTF = sub.type === "tf";
-  const isShort = sub.type === "short";
-  const isFill = sub.type === "fill";
   const opts = sub.options ?? [];
 
   const updateOption = (i: number, v: string) => {
@@ -1899,22 +1897,6 @@ function SubQuestionCard({
     else set.add(letter);
     onChange({ correctAnswer: Array.from(set).sort().join(",") });
   };
-
-  const blanks = sub.blanks ?? [];
-  const addBlank = () => {
-    const idx = (blanks.reduce((m, b) => Math.max(m, b.index), 0) || 0) + 1;
-    onChange({
-      passage: (sub.passage ?? "") + ` [${idx}]`,
-      blanks: [...blanks, { index: idx, answers: [""] }],
-    });
-  };
-  const updateBlank = (idx: number, patch: Partial<BlankSpec>) =>
-    onChange({ blanks: blanks.map((b) => (b.index === idx ? { ...b, ...patch } : b)) });
-  const removeBlank = (idx: number) =>
-    onChange({
-      passage: (sub.passage ?? "").replace(new RegExp(`\\s*\\[${idx}\\]`, "g"), ""),
-      blanks: blanks.filter((b) => b.index !== idx),
-    });
 
   return (
     <div className="rounded-xl border border-border bg-background p-3">
