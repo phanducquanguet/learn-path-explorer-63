@@ -1589,37 +1589,21 @@ export function EditDialog({
                       <div className="space-y-1.5">
                         <div className="text-[11px] font-semibold text-muted-foreground">
                           {isDragDrop
-                            ? form.dragMode === "passages"
-                              ? "Đoạn văn đúng cần kéo vào chỗ trống này"
-                              : "Từ/cụm từ đúng cần kéo vào"
+                            ? "Từ/cụm từ đúng cần kéo vào"
                             : "Đáp án chấp nhận (mỗi dòng 1 đáp án)"}
                         </div>
                         {(b.answers ?? []).map((a, ai) => (
                           <div key={ai} className="flex items-center gap-2">
-                            {isDragDrop && form.dragMode === "passages" ? (
-                              <textarea
-                                value={a}
-                                onChange={(e) => {
-                                  const next = [...(b.answers ?? [])];
-                                  next[ai] = e.target.value;
-                                  updateBlank(b.index, { answers: next });
-                                }}
-                                rows={2}
-                                placeholder="Nhập đoạn văn..."
-                                className={cn(inputCls, "flex-1")}
-                              />
-                            ) : (
-                              <input
-                                value={a}
-                                onChange={(e) => {
-                                  const next = [...(b.answers ?? [])];
-                                  next[ai] = e.target.value;
-                                  updateBlank(b.index, { answers: next });
-                                }}
-                                placeholder={isFill ? "Đáp án chấp nhận" : "Từ đúng"}
-                                className={cn(inputCls, "flex-1")}
-                              />
-                            )}
+                            <input
+                              value={a}
+                              onChange={(e) => {
+                                const next = [...(b.answers ?? [])];
+                                next[ai] = e.target.value;
+                                updateBlank(b.index, { answers: next });
+                              }}
+                              placeholder={isFill ? "Đáp án chấp nhận" : "Từ đúng"}
+                              className={cn(inputCls, "flex-1")}
+                            />
                             <button
                               onClick={() => {
                                 const next = (b.answers ?? []).filter((_, x) => x !== ai);
