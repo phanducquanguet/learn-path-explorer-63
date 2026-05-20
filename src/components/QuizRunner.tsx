@@ -1282,14 +1282,14 @@ function MatchBody({
   onChange: (v: (number | null)[]) => void;
   locked: boolean;
 }) {
-  const slots = value ?? q.left.map(() => null);
+  const slots = value ?? q.leftItems.map(() => null);
   const labels = ["A", "B", "C", "D", "E", "F"];
-  const used = new Set(slots.filter((x) => x !== null) as number[]);
+  const used = new Set(slots.filter((x): x is number => x !== null) as number[]);
   const [dragging, setDragging] = useState<number | null>(null);
 
   const drop = (slotIdx: number) => {
     if (dragging === null || locked) return;
-    const next = slots.map((v) => (v === dragging ? null : v));
+    const next = slots.map((vv: number | null) => (vv === dragging ? null : vv));
     next[slotIdx] = dragging;
     onChange(next);
     setDragging(null);
@@ -1307,7 +1307,7 @@ function MatchBody({
         <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
           Drop the matching item into each slot
         </div>
-        {q.left.map((l, i) => {
+        {q.leftItems.map((l: QMatchItem, i: number) => {
           const filled = slots[i];
           const ok = locked && slots[i] === q.answer[i];
           const wrong = locked && slots[i] !== q.answer[i];
@@ -1322,7 +1322,22 @@ function MatchBody({
                 !locked && !ok && !wrong && "border-border",
               )}
             >
-              <div className="text-foreground">{l}</div>
+              {l.image && (
+                <img
+                  src={l.image}
+                  alt=""
+                  className="mb-2 h-32 w-full rounded-xl object-cover ring-1 ring-border"
+                />
+              )}
+              {l.audio && (
+                <audio
+                  controls
+                  src={l.audio}
+                  className="mb-2 h-9 w-full"
+                  preload="none"
+                />
+              )}
+              <div className="text-foreground">{l.text}</div>
               <div
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={() => drop(i)}
