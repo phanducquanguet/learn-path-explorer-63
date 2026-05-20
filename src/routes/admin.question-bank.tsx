@@ -63,6 +63,8 @@ const TYPE_ICON: Record<QType, typeof Plus> = {
   "select-lists": MousePointerSquareDashed,
   "drag-drop": Move,
   essay: FileText,
+  speaking: Music,
+  "error-correction": Pencil,
   group: Layers,
 };
 
@@ -76,6 +78,8 @@ const TYPE_ORDER: QType[] = [
   "select-lists",
   "drag-drop",
   "essay",
+  "speaking",
+  "error-correction",
   "group",
 ];
 
