@@ -2024,6 +2024,7 @@ const SUB_TYPE_LABEL: Record<SubQuestionType, string> = {
   fill: "Fill in Blank",
   matching: "Matching",
   "drag-drop": "Drag the Words",
+  "select-lists": "Select from List",
 };
 
 function defaultSub(type: SubQuestionType): SubQuestion {
@@ -2045,6 +2046,8 @@ function defaultSub(type: SubQuestionType): SubQuestion {
     return { id, type, content: "", blanks: [] };
   if (type === "drag-drop")
     return { id, type, content: "", blanks: [], distractors: [] };
+  if (type === "select-lists")
+    return { id, type, content: "", blanks: [] };
   // short
   return { id, type, content: "", correctAnswer: "" };
 }
@@ -2138,6 +2141,8 @@ function SubQuestionCard({
   const isFill = sub.type === "fill";
   const isMatching = sub.type === "matching";
   const isDragDrop = sub.type === "drag-drop";
+  const isSelectLists = sub.type === "select-lists";
+  const hasBlanks = isFill || isDragDrop || isSelectLists;
   const pairs = sub.pairs ?? [];
   const updatePair = (i: number, patch: Partial<{ left: string; right: string }>) =>
     onChange({ pairs: pairs.map((p, x) => (x === i ? { ...p, ...patch } : p)) });
@@ -2147,9 +2152,12 @@ function SubQuestionCard({
   const nextBlankIndex = (blanks.reduce((m, b) => Math.max(m, b.index), 0) || 0) + 1;
   const addBlank = () => {
     const idx = nextBlankIndex;
+    const newBlank: BlankSpec = isSelectLists
+      ? { index: idx, answers: [], options: ["", ""], correctOption: 0 }
+      : { index: idx, answers: [""] };
     onChange({
       content: (sub.content ?? "") + ` [${idx}]`,
-      blanks: [...blanks, { index: idx, answers: [""] }],
+      blanks: [...blanks, newBlank],
     });
   };
   const updateBlank = (idx: number, patch: Partial<BlankSpec>) =>
@@ -2190,7 +2198,7 @@ function SubQuestionCard({
         </button>
       </div>
 
-      {(isFill || isDragDrop) ? (
+      {hasBlanks ? (
         <div className="mb-2">
           <div className="mb-1 flex items-center justify-between">
             <span className="text-[11px] font-semibold text-muted-foreground">
@@ -2360,6 +2368,83 @@ function SubQuestionCard({
                   </button>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {isSelectLists && (
+        <div className="space-y-2">
+          <div className="text-[11px] font-semibold text-muted-foreground">
+            Danh sách lựa chọn cho từng chỗ trống
+          </div>
+          {blanks.map((b) => {
+            const bOpts = b.options ?? [];
+            const correct = b.correctOption ?? 0;
+            const updateOpt = (i: number, v: string) => {
+              const next = [...bOpts];
+              next[i] = v;
+              updateBlank(b.index, { options: next });
+            };
+            return (
+              <div key={b.index} className="rounded-lg border border-border bg-muted/20 p-2.5">
+                <div className="mb-1.5 flex items-center justify-between">
+                  <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-md bg-primary/10 px-1.5 text-[11px] font-bold text-primary">
+                    [{b.index}]
+                  </span>
+                  <button
+                    onClick={() => removeBlank(b.index)}
+                    className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    title="Xóa chỗ trống"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  {bOpts.map((o, oi) => (
+                    <div key={oi} className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => updateBlank(b.index, { correctOption: oi })}
+                        className={cn(
+                          "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[11px] font-bold",
+                          correct === oi ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/70",
+                        )}
+                        title="Đặt làm đáp án đúng"
+                      >
+                        {String.fromCharCode(65 + oi)}
+                      </button>
+                      <input
+                        value={o}
+                        onChange={(e) => updateOpt(oi, e.target.value)}
+                        placeholder={`Lựa chọn ${String.fromCharCode(65 + oi)}`}
+                        className={cn(inputCls, "flex-1")}
+                      />
+                      <button
+                        onClick={() => {
+                          const next = bOpts.filter((_, x) => x !== oi);
+                          const nextCorrect = correct >= next.length ? Math.max(0, next.length - 1) : correct;
+                          updateBlank(b.index, { options: next, correctOption: nextCorrect });
+                        }}
+                        className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => updateBlank(b.index, { options: [...bOpts, ""] })}
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                  >
+                    <Plus className="h-3 w-3" /> Thêm lựa chọn
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+          {blanks.length === 0 && (
+            <div className="rounded-lg border border-dashed border-border p-2.5 text-center text-[11px] text-muted-foreground">
+              Chưa có chỗ trống. Bấm "Thêm chỗ trống" ở trên.
             </div>
           )}
         </div>
