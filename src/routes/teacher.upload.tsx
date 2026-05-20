@@ -81,7 +81,7 @@ function UploadPage() {
           id: u.id,
           title: u.title,
           desc: u.description,
-          activities: [],
+          nodes: [],
         })),
       );
       return;
@@ -115,7 +115,7 @@ function UploadPage() {
   const addUnit = () =>
     setUnits((u) => [
       ...u,
-      { id: `u${u.length + 1}`, title: `Unit ${u.length + 1}: New Unit`, desc: "", activities: [] },
+      { id: `u${u.length + 1}`, title: `Unit ${u.length + 1}: New Unit`, desc: "", nodes: [] },
     ]);
 
   const save = () => {
