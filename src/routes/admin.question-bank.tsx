@@ -1736,21 +1736,16 @@ function TypePickerDialog({
 // ============================================================
 
 const SUB_TYPE_LABEL: Record<SubQuestionType, string> = {
-  mcq: "Trắc nghiệm 1 đáp án",
-  "mcq-multi": "Trắc nghiệm nhiều đáp án",
-  tf: "Đúng / Sai",
-  short: "Trả lời ngắn",
-  fill: "Điền chỗ trống",
+  mcq: "Single Choice",
+  "mcq-multi": "Multiple Choice",
+  tf: "True / False",
 };
 
 function defaultSub(type: SubQuestionType): SubQuestion {
   const id = `S${Math.random().toString(36).slice(2, 8)}`;
   if (type === "mcq" || type === "mcq-multi")
     return { id, type, content: "", options: ["", "", "", ""], correctAnswer: "A" };
-  if (type === "tf") return { id, type, content: "", correctAnswer: "True" };
-  if (type === "fill")
-    return { id, type, content: "", passage: "Vd: She [1] coffee.", blanks: [{ index: 1, answers: [""] }] };
-  return { id, type, content: "", correctAnswer: "" };
+  return { id, type, content: "", correctAnswer: "True" };
 }
 
 function GroupEditor({
