@@ -82,8 +82,8 @@ export const TYPE_ORDER: QType[] = [
   "group",
 ];
 
-/** Type list cho khóa học (UnitActivityBuilder) — bao gồm error-correction. */
-export const TYPE_ORDER_COURSE: QType[] = [...TYPE_ORDER, "error-correction"];
+/** Type list cho khóa học (UnitActivityBuilder) — bao gồm matching và error-correction. */
+export const TYPE_ORDER_COURSE: QType[] = [...TYPE_ORDER, "matching", "error-correction"];
 
 export function defaultsForType(t: QType): Partial<BankQuestion> {
   if (t === "mcq" || t === "mcq-multi")
@@ -102,7 +102,7 @@ export function defaultsForType(t: QType): Partial<BankQuestion> {
         { index: 1, options: ["drinks", "drink", "drank"], correctOption: 0, answers: [] },
       ],
     };
-  if (t === "drag-drop" || t === "matching")
+  if (t === "drag-drop")
     return {
       passage: "He [1] to the [2] every Sunday.",
       blanks: [
@@ -111,14 +111,22 @@ export function defaultsForType(t: QType): Partial<BankQuestion> {
       ],
       distractors: [],
     };
+  if (t === "matching")
+    return {
+      content: "Sort the food into healthy and unhealthy.",
+      matchingPairs: [
+        { item: "", target: "" },
+        { item: "", target: "" },
+      ],
+    };
   if (t === "short")
     return {
       correctAnswer: "",
     };
   if (t === "error-correction")
     return {
-      passage: "",
-      errors: [{ wrong: "", correct: "" }],
+      passage: "She [1] to school every day.",
+      errors: [{ index: 1, wrong: "go", correct: "goes" }],
     };
   if (t === "essay")
     return {
@@ -371,7 +379,7 @@ function BankPage() {
             </FilterSection>
             <FilterSection label="Loại">
               <Chip on={type === "all"} onClick={() => { setType("all"); setPage(1); }}>Tất cả</Chip>
-              {(Object.keys(TYPE_LABEL) as QType[]).map((t) => (
+              {TYPE_ORDER.map((t) => (
                 <Chip key={t} on={type === t} onClick={() => { setType(t); setPage(1); }}>{TYPE_LABEL[t]}</Chip>
               ))}
             </FilterSection>
@@ -939,7 +947,9 @@ export function EditDialog({
   const isSequence = form.type === "sequence";
   const isFill = form.type === "fill";
   const isSelectLists = form.type === "select-lists";
-  const isDragDrop = form.type === "drag-drop" || form.type === "matching";
+  const isDragDrop = form.type === "drag-drop";
+  const isMatching = form.type === "matching";
+  const isErrorCorrection = form.type === "error-correction";
   const isGroup = form.type === "group";
   const isCloze = isFill || isSelectLists || isDragDrop;
 
@@ -1017,12 +1027,14 @@ export function EditDialog({
 
   const canSave = isCloze
     ? (form.passage ?? "").trim().length > 0 && (form.blanks ?? []).length > 0
-    : form.type === "error-correction"
+    : isErrorCorrection
       ? (form.passage ?? "").trim().length > 0 && (form.errors ?? []).some((e) => e.wrong.trim() && e.correct.trim())
-      : isGroup
-        ? (form.content.trim().length > 0 || (form.passage ?? "").trim().length > 0) &&
-          (form.subQuestions ?? []).length > 0
-        : form.content.trim().length > 0;
+      : isMatching
+        ? (form.matchingPairs ?? []).some((p) => p.item.trim() && p.target.trim())
+        : isGroup
+          ? (form.content.trim().length > 0 || (form.passage ?? "").trim().length > 0) &&
+            (form.subQuestions ?? []).length > 0
+          : form.content.trim().length > 0;
 
   const inputCls =
     "w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm";
@@ -1361,7 +1373,7 @@ export function EditDialog({
           )}
 
           {isShort && (
-            <div className="rounded-2xl border border-primary/20 bg-primary/[0.03] p-4">
+            <div>
               <label className="text-xs font-semibold text-muted-foreground">
                 Đáp án đúng *
               </label>
@@ -1374,146 +1386,125 @@ export function EditDialog({
             </div>
           )}
 
-          {form.type === "error-correction" && (
-            <div className="space-y-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                  <Pencil className="h-3.5 w-3.5" /> Error correction
-                </div>
-                <div className="flex items-center gap-1">
-                  <label
-                    className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
-                    title="Tải ảnh cho câu hỏi"
-                  >
-                    <ImageIcon className="h-3 w-3" /> Ảnh
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={async (e) => {
-                        const f = e.target.files?.[0];
-                        setForm({
-                          ...form,
-                          imageUrl: f ? await fileToDataURL(f) : form.imageUrl,
-                        });
-                      }}
-                    />
-                  </label>
-                  <label
-                    className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
-                    title="Tải audio cho câu hỏi"
-                  >
-                    <Music className="h-3 w-3" /> Audio
-                    <input
-                      type="file"
-                      accept="audio/*"
-                      className="hidden"
-                      onChange={(e) => setQuestionAudio(e.target.files?.[0] ?? null)}
-                    />
-                  </label>
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground">
-                  Câu / đoạn văn (có chứa từ viết sai) *
-                </label>
-                <textarea
-                  value={form.passage ?? ""}
-                  onChange={(e) => setForm({ ...form, passage: e.target.value, content: e.target.value })}
-                  rows={3}
-                  placeholder="Vd: She go to school every day and play football with her freinds."
-                  className="mt-1 w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                />
-              </div>
-              {(form.imageUrl || form.audioUrl) && (
-                <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-background/60 p-2">
-                  {form.imageUrl && (
-                    <div className="flex items-center gap-2">
-                      <img
-                        src={form.imageUrl}
-                        alt=""
-                        className="h-14 w-14 rounded-md border border-border object-cover"
-                      />
-                      <button
-                        onClick={() => setForm({ ...form, imageUrl: undefined })}
-                        className="text-[11px] font-semibold text-rose-500 hover:underline"
-                      >
-                        Bỏ ảnh
+          {isErrorCorrection && (() => {
+            const errs = form.errors ?? [];
+            const nextErrIdx = (errs.reduce((m, e) => Math.max(m, e.index), 0) || 0) + 1;
+            const addErrBlank = () => {
+              const idx = nextErrIdx;
+              setForm({
+                ...form,
+                passage: ((form.passage ?? "") + ` [${idx}]`).trim(),
+                content: form.content || (form.passage ?? ""),
+                errors: [...errs, { index: idx, wrong: "", correct: "" }],
+              });
+            };
+            const removeErrBlank = (idx: number) => {
+              setForm({
+                ...form,
+                passage: (form.passage ?? "").replace(new RegExp(`\\s*\\[${idx}\\]`, "g"), ""),
+                errors: errs.filter((e) => e.index !== idx),
+              });
+            };
+            const updateErr = (idx: number, patch: Partial<{ wrong: string; correct: string }>) => {
+              setForm({
+                ...form,
+                errors: errs.map((e) => (e.index === idx ? { ...e, ...patch } : e)),
+              });
+            };
+            return (
+              <div className="space-y-3">
+                <div>
+                  <div className="mb-1 flex items-center justify-between">
+                    <label className="text-xs font-semibold text-muted-foreground">
+                      Câu / đoạn văn — bấm <span className="font-semibold text-foreground">Thêm chỗ trống</span> để chèn <code className="rounded bg-muted px-1 font-mono">[n]</code> tại vị trí từ sai
+                    </label>
+                    <div className="flex items-center gap-1">
+                      <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted">
+                        <ImageIcon className="h-3 w-3" /> Ảnh
+                        <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                          const f = e.target.files?.[0];
+                          setForm({ ...form, imageUrl: f ? await fileToDataURL(f) : form.imageUrl });
+                        }} />
+                      </label>
+                      <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted">
+                        <Music className="h-3 w-3" /> Audio
+                        <input type="file" accept="audio/*" className="hidden" onChange={(e) => setQuestionAudio(e.target.files?.[0] ?? null)} />
+                      </label>
+                      <button onClick={addErrBlank} className="inline-flex h-7 items-center gap-1 rounded-md bg-foreground px-2 text-[11px] font-semibold text-background">
+                        <Plus className="h-3 w-3" /> Thêm chỗ trống
                       </button>
                     </div>
-                  )}
-                  {form.audioUrl && (
-                    <div className="flex items-center gap-2">
-                      <audio controls src={form.audioUrl} className="h-8" />
-                      <button
-                        onClick={() => setQuestionAudio(null)}
-                        className="text-[11px] font-semibold text-rose-500 hover:underline"
-                      >
-                        Bỏ audio
-                      </button>
+                  </div>
+                  {(form.imageUrl || form.audioUrl) && (
+                    <div className="mb-2 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/20 p-2">
+                      {form.imageUrl && (
+                        <div className="flex items-center gap-2">
+                          <img src={form.imageUrl} alt="" className="h-12 w-12 rounded-md border border-border object-cover" />
+                          <button onClick={() => setForm({ ...form, imageUrl: undefined })} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ ảnh</button>
+                        </div>
+                      )}
+                      {form.audioUrl && (
+                        <div className="flex items-center gap-2">
+                          <audio controls src={form.audioUrl} className="h-8" />
+                          <button onClick={() => setQuestionAudio(null)} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ audio</button>
+                        </div>
+                      )}
                     </div>
                   )}
+                  <textarea
+                    value={form.passage ?? ""}
+                    onChange={(e) => setForm({ ...form, passage: e.target.value, content: e.target.value })}
+                    rows={3}
+                    placeholder="Vd: She [1] to school every day and [2] football with her friends."
+                    className="w-full rounded-xl border border-border bg-background p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
                 </div>
-              )}
-              <div>
-                <div className="mb-1.5 flex items-center justify-between">
-                  <label className="text-xs font-semibold text-muted-foreground">
-                    Danh sách từ sai và cách sửa
-                  </label>
-                  <button
-                    onClick={() =>
-                      setForm({
-                        ...form,
-                        errors: [...(form.errors ?? []), { wrong: "", correct: "" }],
-                      })
-                    }
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
-                  >
-                    <Plus className="h-3 w-3" /> Thêm từ sai
-                  </button>
-                </div>
+
                 <div className="space-y-1.5">
-                  {(form.errors ?? []).map((er, i) => (
-                    <div key={i} className="grid grid-cols-[1fr_auto_1fr_auto] items-center gap-2">
+                  <div className="text-xs font-semibold text-muted-foreground">
+                    Đáp án cho từng chỗ trống — nhập từ sai & từ đúng
+                  </div>
+                  {errs.map((er) => (
+                    <div key={er.index} className="flex items-center gap-2">
+                      <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-md bg-primary/10 px-1.5 text-[11px] font-bold text-primary">
+                        [{er.index}]
+                      </span>
                       <input
                         value={er.wrong}
-                        onChange={(e) => {
-                          const next = [...(form.errors ?? [])];
-                          next[i] = { ...er, wrong: e.target.value };
-                          setForm({ ...form, errors: next });
-                        }}
-                        placeholder="Từ/cụm sai (vd: go)"
-                        className={cn(inputCls, "font-mono")}
+                        onChange={(e) => updateErr(er.index, { wrong: e.target.value })}
+                        placeholder="Từ/cụm sai"
+                        className={cn(inputCls, "flex-1 font-mono")}
                       />
                       <span className="text-xs text-muted-foreground">→</span>
                       <input
                         value={er.correct}
-                        onChange={(e) => {
-                          const next = [...(form.errors ?? [])];
-                          next[i] = { ...er, correct: e.target.value };
-                          setForm({ ...form, errors: next });
-                        }}
-                        placeholder="Sửa thành (vd: goes)"
-                        className={cn(inputCls, "font-mono")}
+                        onChange={(e) => updateErr(er.index, { correct: e.target.value })}
+                        placeholder="Sửa thành"
+                        className={cn(inputCls, "flex-1 font-mono")}
                       />
                       <button
-                        onClick={() => {
-                          const next = (form.errors ?? []).filter((_, x) => x !== i);
-                          setForm({ ...form, errors: next });
-                        }}
+                        onClick={() => removeErrBlank(er.index)}
                         className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        title="Xóa chỗ trống"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   ))}
+                  {errs.length === 0 && (
+                    <div className="rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+                      Chưa có chỗ trống nào. Bấm "Thêm chỗ trống" để bắt đầu.
+                    </div>
+                  )}
                 </div>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Từ sai phải xuất hiện trong câu/đoạn văn ở trên. Học viên sẽ chọn từ sai và viết lại từ đúng.
-                </p>
               </div>
-            </div>
+            );
+          })()}
+
+          {isMatching && (
+            <MatchingEditor form={form} setForm={setForm} inputCls={inputCls} />
           )}
+
 
 
 
@@ -1601,7 +1592,7 @@ export function EditDialog({
           )}
 
           {(isFill || isSelectLists || isDragDrop) && (
-            <div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/[0.03] p-4">
+            <div className="space-y-3">
               {isDragDrop && (
                 <p className="text-[11px] text-muted-foreground">
                   Học viên sẽ thấy danh sách từ/cụm từ (gồm các đáp án ở dưới + đáp án nhiễu) và kéo thả vào đúng chỗ trống.
@@ -1671,29 +1662,26 @@ export function EditDialog({
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <div className="text-xs font-semibold text-muted-foreground">
                   Đáp án cho từng chỗ trống
                 </div>
                 {blanks.map((b) => (
-                  <div key={b.index} className="rounded-xl border border-border bg-background p-3">
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="inline-flex h-6 items-center gap-1 rounded-md bg-primary/10 px-2 text-[11px] font-bold text-primary">
-                        [{b.index}]
-                      </span>
-                      <button
-                        onClick={() => removeBlank(b.index)}
-                        className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-
-                    {isSelectLists ? (
+                  isSelectLists ? (
+                    <div key={b.index} className="rounded-lg border border-border bg-background p-2.5">
+                      <div className="mb-1.5 flex items-center justify-between">
+                        <span className="inline-flex h-6 items-center rounded-md bg-primary/10 px-2 text-[11px] font-bold text-primary">
+                          [{b.index}]
+                        </span>
+                        <button
+                          onClick={() => removeBlank(b.index)}
+                          className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
+                          title="Xóa chỗ trống"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                       <div className="space-y-1.5">
-                        <div className="text-[11px] font-semibold text-muted-foreground">
-                          Tùy chọn cho danh sách thả xuống (text only)
-                        </div>
                         {(b.options ?? []).map((opt, oi) => (
                           <div key={oi} className="flex items-center gap-2">
                             <button
@@ -1743,49 +1731,27 @@ export function EditDialog({
                           <Plus className="h-3 w-3" /> Thêm lựa chọn
                         </button>
                       </div>
-                    ) : (
-                      <div className="space-y-1.5">
-                        <div className="text-[11px] font-semibold text-muted-foreground">
-                          {isDragDrop
-                            ? "Từ/cụm từ đúng cần kéo vào"
-                            : "Đáp án chấp nhận (mỗi dòng 1 đáp án)"}
-                        </div>
-                        {(b.answers ?? []).map((a, ai) => (
-                          <div key={ai} className="flex items-center gap-2">
-                            <input
-                              value={a}
-                              onChange={(e) => {
-                                const next = [...(b.answers ?? [])];
-                                next[ai] = e.target.value;
-                                updateBlank(b.index, { answers: next });
-                              }}
-                              placeholder={isFill ? "Đáp án chấp nhận" : "Từ đúng"}
-                              className={cn(inputCls, "flex-1")}
-                            />
-                            <button
-                              onClick={() => {
-                                const next = (b.answers ?? []).filter((_, x) => x !== ai);
-                                updateBlank(b.index, { answers: next });
-                              }}
-                              className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        ))}
-                        {isFill && (
-                          <button
-                            onClick={() =>
-                              updateBlank(b.index, { answers: [...(b.answers ?? []), ""] })
-                            }
-                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
-                          >
-                            <Plus className="h-3 w-3" /> Thêm đáp án chấp nhận
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <div key={b.index} className="flex items-center gap-2">
+                      <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-md bg-primary/10 px-1.5 text-[11px] font-bold text-primary">
+                        [{b.index}]
+                      </span>
+                      <input
+                        value={(b.answers ?? [])[0] ?? ""}
+                        onChange={(e) => updateBlank(b.index, { answers: [e.target.value] })}
+                        placeholder={isFill ? "Đáp án đúng" : "Từ đúng cần kéo vào"}
+                        className={cn(inputCls, "flex-1")}
+                      />
+                      <button
+                        onClick={() => removeBlank(b.index)}
+                        className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        title="Xóa chỗ trống"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )
                 ))}
                 {blanks.length === 0 && (
                   <div className="rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
@@ -1793,6 +1759,7 @@ export function EditDialog({
                   </div>
                 )}
               </div>
+
 
               {isDragDrop && (
                 <div className="space-y-1.5 rounded-xl border border-dashed border-border bg-background p-3">
@@ -1960,6 +1927,96 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
     <div>
       <label className="text-xs font-semibold text-muted-foreground">{label}</label>
       <div className="mt-1">{children}</div>
+    </div>
+  );
+}
+
+function MatchingEditor({
+  form,
+  setForm,
+  inputCls,
+}: {
+  form: BankQuestion;
+  setForm: (q: BankQuestion) => void;
+  inputCls: string;
+}) {
+  const pairs = form.matchingPairs ?? [];
+  const update = (i: number, patch: Partial<{ item: string; itemImage?: string; itemAudio?: string; target: string }>) =>
+    setForm({ ...form, matchingPairs: pairs.map((p, x) => (x === i ? { ...p, ...patch } : p)) });
+  const remove = (i: number) =>
+    setForm({ ...form, matchingPairs: pairs.filter((_, x) => x !== i) });
+  const add = () =>
+    setForm({ ...form, matchingPairs: [...pairs, { item: "", target: "" }] });
+
+  return (
+    <div className="space-y-2">
+      <div className="flex items-center justify-between">
+        <div className="text-xs font-semibold text-muted-foreground">Correct Matches</div>
+        <button
+          onClick={add}
+          className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+        >
+          <Plus className="h-3 w-3" /> Thêm cặp
+        </button>
+      </div>
+      <div className="overflow-hidden rounded-lg border border-border">
+        <div className="grid grid-cols-[1fr_1fr_36px] gap-px bg-border text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          <div className="bg-muted/40 px-3 py-2">Drag Item</div>
+          <div className="bg-muted/40 px-3 py-2">Drop Target</div>
+          <div className="bg-muted/40" />
+        </div>
+        <div className="divide-y divide-border bg-background">
+          {pairs.map((p, i) => (
+            <div key={i} className="grid grid-cols-[1fr_1fr_36px] items-center gap-2 px-2 py-1.5">
+              <div className="flex items-center gap-1.5">
+                <label
+                  className="relative inline-flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-md border border-border bg-muted/30 text-muted-foreground hover:bg-muted"
+                  title="Tải ảnh"
+                >
+                  {p.itemImage ? (
+                    <img src={p.itemImage} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <ImageIcon className="h-3.5 w-3.5" />
+                  )}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const f = e.target.files?.[0];
+                      update(i, { itemImage: f ? await fileToDataURL(f) : undefined });
+                    }}
+                  />
+                </label>
+                <input
+                  value={p.item}
+                  onChange={(e) => update(i, { item: e.target.value })}
+                  placeholder="Vd: Broccoli"
+                  className={cn(inputCls, "flex-1")}
+                />
+              </div>
+              <input
+                value={p.target}
+                onChange={(e) => update(i, { target: e.target.value })}
+                placeholder="Vd: healthy"
+                className={cn(inputCls)}
+              />
+              <button
+                onClick={() => remove(i)}
+                className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                title="Xóa cặp"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+          {pairs.length === 0 && (
+            <div className="px-3 py-4 text-center text-xs text-muted-foreground">
+              Chưa có cặp nào. Bấm "Thêm cặp" để bắt đầu.
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

@@ -81,8 +81,10 @@ export type BankQuestion = {
   subQuestions?: SubQuestion[];
   /** Đáp án nhiễu bổ sung (drag-drop hiển thị trong pool, short answer để gợi ý sai). */
   distractors?: string[];
-  /** Cấu hình error-correction: từ/cụm sai và bản sửa đúng. */
-  errors?: { wrong: string; correct: string }[];
+  /** Cấu hình error-correction: cho mỗi chỗ trống [n], lưu từ sai và đáp án đúng. */
+  errors?: { index: number; wrong: string; correct: string }[];
+  /** Cấu hình matching: từng cặp item ↔ target. */
+  matchingPairs?: { item: string; itemImage?: string; itemAudio?: string; target: string }[];
 };
 
 export const DIFFICULTY_LABEL: Record<QDifficulty, string> = {
@@ -113,7 +115,7 @@ export const TYPE_LABEL: Record<QType, string> = {
   matching: "Matching",
   fill: "Fill in the Blanks",
   "select-lists": "Select from Lists",
-  "drag-drop": "Drag & Drop / Matching",
+  "drag-drop": "Drag the Words",
   essay: "Essay",
   speaking: "Speaking",
   "error-correction": "Error Correction",
@@ -126,10 +128,10 @@ export const TYPE_DESCRIPTION: Record<QType, string> = {
   tf: "Câu hỏi đúng hoặc sai",
   short: "Trả lời ngắn bằng văn bản",
   sequence: "Sắp xếp các mục theo thứ tự",
-  matching: "Nối cặp các mục tương ứng",
+  matching: "Ghép cặp item ↔ target (kèm ảnh/audio cho item)",
   fill: "Điền vào chỗ trống — tự nhập đáp án",
   "select-lists": "Chọn đáp án từ danh sách thả xuống tại mỗi chỗ trống",
-  "drag-drop": "Kéo thả từ/đoạn văn vào các chỗ trống trong đề",
+  "drag-drop": "Kéo thả từ vào các chỗ trống trong đề",
   essay: "Bài viết tự luận dài",
   speaking: "Luyện nói — ghi âm trả lời theo đề bài",
   "error-correction": "Chọn từ/cụm sai trong câu và viết lại cho đúng",
