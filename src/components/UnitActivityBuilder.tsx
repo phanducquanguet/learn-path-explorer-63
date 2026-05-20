@@ -295,16 +295,14 @@ export function UnitActivityBuilder({
                 selectedId={selectedId}
                 expanded={expanded}
                 addMenuFor={addMenuFor}
-                onSelect={(id) => {
-                  const found = findNode(nodes, id);
-                  if (found?.kind === "question") openEditQuestion(id);
-                  else setSelectedId(id);
-                }}
+                qTypeMenuFor={qTypeMenuFor}
+                onSelect={(id) => setSelectedId(id)}
                 onToggle={(id) => setExpanded((e) => ({ ...e, [id]: !e[id] }))}
                 onRemove={removeNode}
                 onAdd={addNode}
                 onOpenAddMenu={setAddMenuFor}
-                onAddQuestion={openCreateQuestion}
+                onOpenQTypeMenu={setQTypeMenuFor}
+                onPickQuestionType={createQuestionOfType}
               />
             ))}
           </ul>
@@ -313,55 +311,35 @@ export function UnitActivityBuilder({
 
       {/* RIGHT: editor */}
       <div className="rounded-2xl border border-border bg-background p-5">
-        {pickingTypeFor ? (
-          <div>
-            <div className="mb-3 flex items-center justify-between">
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Thêm câu hỏi mới
-              </div>
-              <button
-                onClick={() => setPickingTypeFor(null)}
-                className="rounded-lg border border-border px-2.5 py-1 text-xs font-semibold hover:bg-muted"
-              >
-                Hủy
-              </button>
-            </div>
-            <TypePickerDialog
-              embedded
-              onClose={() => setPickingTypeFor(null)}
-              onPick={(t) => {
-                setCreating({ practiceId: pickingTypeFor, type: t });
-                setPickingTypeFor(null);
-              }}
-            />
-          </div>
-        ) : editing || creating ? (
-          <EditDialog
-            embedded
-            hideLevelDifficulty
-            question={editing?.bank ?? null}
-            initialType={creating?.type}
-            onClose={() => {
-              setEditing(null);
-              setCreating(null);
-            }}
-            onSave={handleSaveQuestion}
-          />
-        ) : !selected ? (
+        {!selected ? (
           <div className="flex h-full min-h-[280px] items-center justify-center text-sm text-muted-foreground">
             Chọn một mục bên trái để chỉnh sửa nội dung.
           </div>
         ) : selected.kind === "question" ? (
-          <div className="text-sm text-muted-foreground">
-            Đang mở câu hỏi trong form chỉnh sửa…
-          </div>
+          <EditDialog
+            key={selected.id}
+            embedded
+            autoSave
+            editableType
+            hideLevelDifficulty
+            question={selected.bank}
+            onClose={() => setSelectedId(null)}
+            onSave={(bank) => updateQuestionBank(selected.id, bank)}
+            onDelete={() => removeNode(selected.id)}
+          />
         ) : (
           <NodeEditor
             node={selected}
             onChange={(p) => updateNode(selected.id, p)}
             onRemove={() => removeNode(selected.id)}
-            onAddQuestion={openCreateQuestion}
-            onEditQuestion={openEditQuestion}
+            onAddQuestion={(practiceId) => {
+              setQTypeMenuFor(practiceId);
+              setExpanded((e) => ({ ...e, [practiceId]: true }));
+            }}
+            onEditQuestion={(id) => setSelectedId(id)}
+            onPickQuestionType={createQuestionOfType}
+            qTypeMenuFor={qTypeMenuFor}
+            onOpenQTypeMenu={setQTypeMenuFor}
           />
         )}
       </div>
