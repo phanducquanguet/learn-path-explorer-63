@@ -947,7 +947,9 @@ export function EditDialog({
   const isSequence = form.type === "sequence";
   const isFill = form.type === "fill";
   const isSelectLists = form.type === "select-lists";
-  const isDragDrop = form.type === "drag-drop" || form.type === "matching";
+  const isDragDrop = form.type === "drag-drop";
+  const isMatching = form.type === "matching";
+  const isErrorCorrection = form.type === "error-correction";
   const isGroup = form.type === "group";
   const isCloze = isFill || isSelectLists || isDragDrop;
 
