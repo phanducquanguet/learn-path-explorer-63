@@ -27,6 +27,8 @@ export type TestStructureItem = {
   pickedIds?: string[];
   /** Câu hỏi do người dùng tự soạn (mode manual). */
   customQuestions?: CustomQuestion[];
+  /** Câu hỏi tự soạn dạng BankQuestion (hỗ trợ đầy đủ form như ngân hàng câu hỏi). */
+  customBank?: BankQuestion[];
 };
 
 export type Test = {
