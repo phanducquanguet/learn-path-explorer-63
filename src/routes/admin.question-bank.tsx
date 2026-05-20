@@ -974,10 +974,8 @@ export function EditDialog({
   const inputCls =
     "w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm";
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <button onClick={onClose} className="absolute inset-0" aria-label="Close" />
-      <div className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-background p-6 shadow-elevated">
+  const body = (
+    <div className={embedded ? "" : "relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-background p-6 shadow-elevated"}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h2 className="font-display text-lg font-semibold">
