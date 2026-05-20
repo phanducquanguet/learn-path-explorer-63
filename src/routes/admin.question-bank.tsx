@@ -1679,14 +1679,14 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export function TypePickerDialog({
   onClose,
   onPick,
+  embedded = false,
 }: {
   onClose: () => void;
   onPick: (t: QType) => void;
+  embedded?: boolean;
 }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <button onClick={onClose} className="absolute inset-0" aria-label="Close" />
-      <div className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-background p-6 shadow-elevated">
+  const inner = (
+    <div className={embedded ? "" : "relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-background p-6 shadow-elevated"}>
         <div className="flex items-start justify-between gap-3">
           <div>
             <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
