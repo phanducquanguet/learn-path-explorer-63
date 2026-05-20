@@ -165,6 +165,8 @@ function TestDetail() {
           </div>
         )}
 
+        {tab === "questions" && <QuestionsTab test={test} />}
+
         {tab === "results" && (
           <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
             <table className="w-full text-sm">
