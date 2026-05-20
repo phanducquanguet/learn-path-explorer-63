@@ -1825,6 +1825,12 @@ function SubQuestionCard({
   const isMcq = sub.type === "mcq" || sub.type === "mcq-multi";
   const isMcqMulti = sub.type === "mcq-multi";
   const isTF = sub.type === "tf";
+  const isShort = sub.type === "short";
+  const isFill = sub.type === "fill";
+  const isMatching = sub.type === "matching";
+  const pairs = sub.pairs ?? [];
+  const updatePair = (i: number, patch: Partial<{ left: string; right: string }>) =>
+    onChange({ pairs: pairs.map((p, x) => (x === i ? { ...p, ...patch } : p)) });
   const opts = sub.options ?? [];
 
   const updateOption = (i: number, v: string) => {
