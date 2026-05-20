@@ -39,6 +39,7 @@ type UnitDraft = {
   id: string;
   title: string;
   desc: string;
+  requirePrevious?: boolean;
   nodes: AnyNode[];
 };
 
