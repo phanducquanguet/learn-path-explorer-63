@@ -819,7 +819,7 @@ export function QuizRunner({
 function questionSkill(kind: Question["kind"]): "reading" | "listening" | "writing" | "speaking" {
   if (kind === "listening") return "listening";
   if (kind === "audio") return "speaking";
-  if (kind === "rewrite" || kind === "highlight") return "writing";
+  if (kind === "rewrite" || kind === "highlight" || kind === "essay") return "writing";
   return "reading";
 }
 
