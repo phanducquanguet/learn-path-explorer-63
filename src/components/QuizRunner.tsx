@@ -1934,3 +1934,139 @@ function ListeningBody({
     </div>
   );
 }
+
+/* ---------------- Essay (writing with word count) ---------------- */
+function EssayBody({
+  q, value, onChange, locked, accent,
+}: {
+  q: QEssay;
+  value: string;
+  onChange: (v: string) => void;
+  locked: boolean;
+  accent: string;
+}) {
+  const words = countWords(value);
+  const minOk = words >= q.minWords;
+  const maxOk = !q.maxWords || words <= q.maxWords;
+  const matched = matchedKeywords(value, q.keywords);
+
+  return (
+    <div className="space-y-4">
+      {/* Brief */}
+      <div className="rounded-2xl bg-muted/40 p-4 ring-1 ring-border">
+        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Yêu cầu đề bài
+        </div>
+        <p className="mt-1.5 whitespace-pre-line text-sm text-foreground">{q.brief}</p>
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
+          <span className="rounded-full bg-background px-2.5 py-1 font-semibold text-muted-foreground ring-1 ring-border">
+            Tối thiểu {q.minWords} từ
+          </span>
+          {q.maxWords && (
+            <span className="rounded-full bg-background px-2.5 py-1 font-semibold text-muted-foreground ring-1 ring-border">
+              Tối đa {q.maxWords} từ
+            </span>
+          )}
+          <span className="rounded-full bg-background px-2.5 py-1 font-semibold text-muted-foreground ring-1 ring-border">
+            {q.keywords.length} keyword chấm điểm
+          </span>
+        </div>
+      </div>
+
+      {/* Editor */}
+      <div>
+        <textarea
+          disabled={locked}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          rows={12}
+          placeholder="Viết bài của bạn ở đây..."
+          className={cn(
+            "w-full resize-y rounded-2xl border-2 bg-surface px-4 py-3 text-sm leading-relaxed text-foreground outline-none transition focus:ring-2",
+            locked ? "border-border bg-muted/30" : "border-border",
+          )}
+          style={!locked ? { ["--tw-ring-color" as string]: accent } : undefined}
+        />
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div className="flex items-center gap-2">
+            <span
+              className={cn(
+                "rounded-full px-2.5 py-0.5 font-semibold",
+                minOk && maxOk
+                  ? "bg-success/15 text-success-foreground"
+                  : "bg-warning/15 text-warning-foreground",
+              )}
+            >
+              {words} từ
+            </span>
+            {!minOk && (
+              <span className="text-muted-foreground">
+                Cần thêm {q.minWords - words} từ để đủ yêu cầu.
+              </span>
+            )}
+            {!maxOk && (
+              <span className="text-warning-foreground">
+                Vượt quá {words - (q.maxWords ?? 0)} từ.
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Review-only: solution + keyword matched */}
+      {locked && (
+        <>
+          <div className="rounded-2xl border border-success/30 bg-success/5 p-4">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="text-sm font-semibold text-foreground">
+                Keyword khớp với đáp án
+              </div>
+              <span className="rounded-full bg-success/15 px-3 py-0.5 text-xs font-bold text-success-foreground">
+                {matched.length}/{q.keywords.length}
+              </span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {q.keywords.map((kw) => {
+                const hit = matched.includes(kw);
+                return (
+                  <span
+                    key={kw}
+                    className={cn(
+                      "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1",
+                      hit
+                        ? "bg-success/15 text-success-foreground ring-success/30"
+                        : "bg-muted text-muted-foreground ring-border line-through",
+                    )}
+                  >
+                    {hit ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
+                    {kw}
+                  </span>
+                );
+              })}
+            </div>
+            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full rounded-full bg-success transition-all"
+                style={{
+                  width: `${q.keywords.length > 0 ? Math.round((matched.length / q.keywords.length) * 100) : 0}%`,
+                }}
+              />
+            </div>
+            <div className="mt-2 text-[11px] text-muted-foreground">
+              Điểm tự động được tính dựa trên tỉ lệ keyword khớp với bài mẫu.
+            </div>
+          </div>
+
+          <div className="rounded-2xl bg-background p-4 ring-1 ring-border">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Bài mẫu / đáp án gợi ý
+            </div>
+            <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground">
+              {q.solution}
+            </pre>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
