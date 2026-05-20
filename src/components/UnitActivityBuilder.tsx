@@ -369,24 +369,28 @@ function TreeRow({
   selectedId,
   expanded,
   addMenuFor,
+  qTypeMenuFor,
   onSelect,
   onToggle,
   onRemove,
   onAdd,
   onOpenAddMenu,
-  onAddQuestion,
+  onOpenQTypeMenu,
+  onPickQuestionType,
 }: {
   node: AnyNode;
   depth: number;
   selectedId: string | null;
   expanded: Record<string, boolean>;
   addMenuFor: string | null;
+  qTypeMenuFor: string | null;
   onSelect: (id: string) => void;
   onToggle: (id: string) => void;
   onRemove: (id: string) => void;
   onAdd: (parentId: string | null, n: AnyNode) => void;
   onOpenAddMenu: (id: string | null) => void;
-  onAddQuestion: (practiceId: string) => void;
+  onOpenQTypeMenu: (id: string | null) => void;
+  onPickQuestionType: (practiceId: string, type: QType) => void;
 }) {
   const isQuestion = node.kind === "question";
   const Icon = isQuestion ? Q_TYPE_ICON[node.bank.type] : KIND_ICON[node.kind];
@@ -457,13 +461,12 @@ function TreeRow({
           />
         )}
         {node.kind === "practice" && (
-          <button
-            onClick={() => onAddQuestion(node.id)}
-            className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary/20"
-            title="Thêm câu hỏi"
-          >
-            <Plus className="h-3 w-3" />
-          </button>
+          <QuestionTypeMenuButton
+            small
+            open={qTypeMenuFor === node.id}
+            onToggle={(v) => onOpenQTypeMenu(v ? node.id : null)}
+            onPick={(t) => onPickQuestionType(node.id, t)}
+          />
         )}
         <button onClick={() => onRemove(node.id)} className="rounded p-1 text-muted-foreground opacity-0 hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100">
           <Trash2 className="h-3.5 w-3.5" />
@@ -483,17 +486,72 @@ function TreeRow({
               selectedId={selectedId}
               expanded={expanded}
               addMenuFor={addMenuFor}
+              qTypeMenuFor={qTypeMenuFor}
               onSelect={onSelect}
               onToggle={onToggle}
               onRemove={onRemove}
               onAdd={onAdd}
               onOpenAddMenu={onOpenAddMenu}
-              onAddQuestion={onAddQuestion}
+              onOpenQTypeMenu={onOpenQTypeMenu}
+              onPickQuestionType={onPickQuestionType}
             />
           ))}
         </ul>
       )}
     </li>
+  );
+}
+
+/* ============================== Question type menu ============================== */
+
+function QuestionTypeMenuButton({
+  open,
+  onToggle,
+  onPick,
+  small,
+}: {
+  open: boolean;
+  onToggle: (v: boolean) => void;
+  onPick: (t: QType) => void;
+  small?: boolean;
+}) {
+  return (
+    <div className="relative">
+      <button
+        onClick={() => onToggle(!open)}
+        className={cn(
+          "inline-flex items-center gap-1 rounded-lg bg-primary/10 font-semibold text-primary hover:bg-primary/20",
+          small ? "px-1.5 py-0.5 text-[10px]" : "px-2.5 py-1.5 text-xs",
+        )}
+        title="Thêm câu hỏi"
+      >
+        <Plus className={small ? "h-3 w-3" : "h-3.5 w-3.5"} />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => onToggle(false)} />
+          <div className="absolute right-0 z-40 mt-1 w-60 rounded-xl border border-border bg-popover p-1.5 shadow-lg">
+            <div className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Chọn dạng câu hỏi
+            </div>
+            <div className="max-h-72 overflow-y-auto">
+              {TYPE_ORDER.map((t) => {
+                const I = Q_TYPE_ICON[t];
+                return (
+                  <button
+                    key={t}
+                    onClick={() => onPick(t)}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted"
+                  >
+                    <I className="h-3.5 w-3.5 text-primary" /> {TYPE_LABEL[t]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
