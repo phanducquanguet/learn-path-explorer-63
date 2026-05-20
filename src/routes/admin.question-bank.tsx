@@ -2198,7 +2198,7 @@ function SubQuestionCard({
         </button>
       </div>
 
-      {(isFill || isDragDrop) ? (
+      {hasBlanks ? (
         <div className="mb-2">
           <div className="mb-1 flex items-center justify-between">
             <span className="text-[11px] font-semibold text-muted-foreground">
