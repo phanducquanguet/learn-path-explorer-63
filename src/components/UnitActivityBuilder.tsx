@@ -820,13 +820,17 @@ function PdfAudioEditor({ node, onChange }: { node: PdfAudioNode; onChange: (p: 
 function PracticeEditor({
   node,
   onChange,
-  onAddQuestion,
   onEditQuestion,
+  qTypeMenuOpen,
+  onOpenQTypeMenu,
+  onPickQuestionType,
 }: {
   node: PracticeNode;
   onChange: (p: Partial<PracticeNode>) => void;
-  onAddQuestion: () => void;
   onEditQuestion: (questionId: string) => void;
+  qTypeMenuOpen: boolean;
+  onOpenQTypeMenu: (open: boolean) => void;
+  onPickQuestionType: (type: QType) => void;
 }) {
   const removeQuestion = (id: string) => {
     onChange({ questions: node.questions.filter((q) => q.id !== id) });
@@ -846,13 +850,13 @@ function PracticeEditor({
           <div className="text-xs font-semibold text-foreground">
             Câu hỏi trong bài thực hành ({node.questions.length})
           </div>
-          <button
-            onClick={onAddQuestion}
-            className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1.5 text-[11px] font-semibold text-primary-foreground hover:opacity-90"
-          >
-            <Plus className="h-3 w-3" /> Thêm câu hỏi
-          </button>
+          <QuestionTypeMenuButton
+            open={qTypeMenuOpen}
+            onToggle={onOpenQTypeMenu}
+            onPick={onPickQuestionType}
+          />
         </div>
+
 
         {node.questions.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
