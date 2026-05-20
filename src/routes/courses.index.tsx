@@ -814,12 +814,30 @@ function AdminCourseRow({
       </div>
       <div className="flex items-center gap-2">
         <Link
+          to="/courses/$courseId"
+          params={{ courseId: course.id }}
+          className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-soft hover:opacity-90"
+          style={{ background: "var(--gradient-brand)" }}
+        >
+          <Play className="h-3.5 w-3.5" /> Xem
+        </Link>
+        <Link
           to="/teacher/upload"
           search={{ edit: course.id }}
           className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground hover:border-primary hover:text-primary"
         >
           <Pencil className="h-3.5 w-3.5" /> Sửa
         </Link>
+        <button
+          type="button"
+          onClick={() => alert(`Xóa khóa "${course.title}" (demo)`)}
+          className="inline-flex items-center justify-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:border-destructive hover:bg-destructive/10 hover:text-destructive"
+          aria-label="Xóa khóa học"
+        >
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
         <button
           type="button"
           onClick={() => alert(`Xóa khóa "${course.title}" (demo)`)}
