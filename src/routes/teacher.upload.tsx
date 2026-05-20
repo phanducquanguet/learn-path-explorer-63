@@ -39,6 +39,7 @@ type UnitDraft = {
   id: string;
   title: string;
   desc: string;
+  requirePrevious?: boolean;
   nodes: AnyNode[];
 };
 
@@ -309,6 +310,30 @@ function UploadPage() {
                     placeholder="Mục tiêu của unit"
                     className="input mt-3"
                   />
+                  {idx > 0 && (
+                    <label className="mt-3 flex items-start gap-3 rounded-xl border border-border bg-surface/60 px-3 py-2.5">
+                      <input
+                        type="checkbox"
+                        checked={u.requirePrevious ?? false}
+                        onChange={(e) =>
+                          setUnits((arr) =>
+                            arr.map((x) =>
+                              x.id === u.id ? { ...x, requirePrevious: e.target.checked } : x,
+                            ),
+                          )
+                        }
+                        className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+                      />
+                      <div className="flex-1">
+                        <div className="text-xs font-semibold text-foreground">
+                          Yêu cầu hoàn thành unit trước đó
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          Học viên phải hoàn thành Unit {idx} thì mới mở khóa unit này.
+                        </div>
+                      </div>
+                    </label>
+                  )}
                 </div>
               ))}
               <button

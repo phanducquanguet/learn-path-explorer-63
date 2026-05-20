@@ -36,7 +36,7 @@ import { EditDialog, TYPE_ORDER_COURSE, makeDefaultBankQuestion } from "@/routes
 
 /* ============================== Types ============================== */
 
-type Common = { id: string; title: string; description?: string };
+type Common = { id: string; title: string; description?: string; requirePrevious?: boolean };
 
 export type VideoNode = Common & {
   kind: "video";
@@ -654,7 +654,7 @@ function NodeEditor({
         </button>
       </div>
 
-      <div className="mb-5">
+      <div className="mb-5 space-y-3">
         <Row label="Giới thiệu nội dung">
           <textarea
             rows={2}
@@ -664,6 +664,20 @@ function NodeEditor({
             className="ui-input"
           />
         </Row>
+        <label className="flex items-start gap-3 rounded-xl border border-border bg-muted/30 px-3 py-2.5">
+          <input
+            type="checkbox"
+            checked={node.requirePrevious ?? false}
+            onChange={(e) => onChange({ requirePrevious: e.target.checked } as Partial<AnyNode>)}
+            className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+          />
+          <div className="flex-1">
+            <div className="text-xs font-semibold text-foreground">Yêu cầu hoàn thành nội dung trước đó</div>
+            <div className="text-[11px] text-muted-foreground">
+              Học viên phải hoàn thành mục liền trước trong unit thì mới có thể bắt đầu mục này.
+            </div>
+          </div>
+        </label>
       </div>
 
       {node.kind === "group" && <GroupEditor node={node} />}
