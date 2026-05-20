@@ -34,7 +34,7 @@ import {
   type BankQuestion,
   type QType,
 } from "@/lib/question-bank";
-import { EditDialog, TypePickerDialog } from "@/routes/admin.question-bank";
+import { EditDialog, TYPE_ORDER, makeDefaultBankQuestion } from "@/routes/admin.question-bank";
 
 /* ============================== Types ============================== */
 
