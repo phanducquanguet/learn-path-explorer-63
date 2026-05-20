@@ -2141,6 +2141,8 @@ function SubQuestionCard({
   const isFill = sub.type === "fill";
   const isMatching = sub.type === "matching";
   const isDragDrop = sub.type === "drag-drop";
+  const isSelectLists = sub.type === "select-lists";
+  const hasBlanks = isFill || isDragDrop || isSelectLists;
   const pairs = sub.pairs ?? [];
   const updatePair = (i: number, patch: Partial<{ left: string; right: string }>) =>
     onChange({ pairs: pairs.map((p, x) => (x === i ? { ...p, ...patch } : p)) });
@@ -2150,9 +2152,12 @@ function SubQuestionCard({
   const nextBlankIndex = (blanks.reduce((m, b) => Math.max(m, b.index), 0) || 0) + 1;
   const addBlank = () => {
     const idx = nextBlankIndex;
+    const newBlank: BlankSpec = isSelectLists
+      ? { index: idx, answers: [], options: ["", ""], correctOption: 0 }
+      : { index: idx, answers: [""] };
     onChange({
       content: (sub.content ?? "") + ` [${idx}]`,
-      blanks: [...blanks, { index: idx, answers: [""] }],
+      blanks: [...blanks, newBlank],
     });
   };
   const updateBlank = (idx: number, patch: Partial<BlankSpec>) =>
