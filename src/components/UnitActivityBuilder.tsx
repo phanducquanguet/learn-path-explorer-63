@@ -761,7 +761,7 @@ function QuestionEditor({ node, onChange }: { node: QuestionNode; onChange: (p: 
           <div className="overflow-hidden rounded-xl border border-border">
             <div className="grid grid-cols-[40px_50px_1fr_36px] items-center gap-2 bg-muted/50 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               <span />
-              <span>{q === "sequence" ? "STT" : "Đúng"}</span>
+              <span>{q === "sequence" ? "STT" : q === "error-correction" ? "Sai" : "Đúng"}</span>
               <span>Nội dung</span>
               <span />
             </div>
