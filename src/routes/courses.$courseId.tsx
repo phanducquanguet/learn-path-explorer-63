@@ -74,7 +74,7 @@ function CoursePage() {
   // Local mutable copy so teacher can add/edit/delete (mock, not persisted)
   const [course, setCourse] = useState(baseCourse);
   const [editMode, setEditMode] = useState(false);
-  const [previewAsStudent, setPreviewAsStudent] = useState(false);
+  const [previewAsStudent, setPreviewAsStudent] = useState(realIsAdmin);
   // When previewing as student, override staff/admin flags so the UI mirrors the learner experience
   const isStaff = realIsStaff && !previewAsStudent;
   const isAdmin = realIsAdmin && !previewAsStudent;
