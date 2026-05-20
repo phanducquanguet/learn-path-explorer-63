@@ -127,10 +127,10 @@ function makeNode(kind: AnyNode["kind"], qType?: QKind): AnyNode {
     case "pdf-audio":
       return { ...base, kind, title: "PDF kèm audio" };
     case "practice":
-      return { ...base, kind, title: "Bài thực hành", instructions: "" };
+      return { ...base, kind, title: "Bài thực hành", instructions: "", questions: [] };
     case "question": {
       const q = qType ?? "mcq";
-      const needsOptions = ["mcq", "mcq-multi", "matching", "drag-drop", "tf", "sequence", "select-lists"].includes(q);
+      const needsOptions = ["mcq", "mcq-multi", "matching", "drag-drop", "tf", "sequence", "select-lists", "error-correction"].includes(q);
       return {
         ...base,
         kind: "question",
@@ -140,10 +140,12 @@ function makeNode(kind: AnyNode["kind"], qType?: QKind): AnyNode {
         options: needsOptions
           ? q === "tf"
             ? ["Đúng", "Sai"]
-            : ["Lựa chọn A", "Lựa chọn B"]
+            : q === "error-correction"
+              ? ["She", "go", "to", "school"]
+              : ["Lựa chọn A", "Lựa chọn B"]
           : [],
         correct: q === "tf" ? [0] : [],
-        points: q === "essay" ? 5 : q === "short" ? 2 : 1,
+        points: q === "essay" ? 5 : q === "short" || q === "speaking" ? 2 : 1,
       };
     }
   }
