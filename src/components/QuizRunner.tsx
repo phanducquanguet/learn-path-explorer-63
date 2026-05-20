@@ -31,10 +31,21 @@ type BaseQ = {
 type QSingle = BaseQ & { kind: "single"; options: string[]; answer: number };
 type QMulti = BaseQ & { kind: "multi"; options: string[]; answer: number[] };
 type QFill = BaseQ & { kind: "fill"; blanks: string[] };
-type QEssay = BaseQ & { kind: "essay"; brief: string; minWords: number };
+type QEssay = BaseQ & {
+  kind: "essay";
+  brief: string;
+  minWords: number;
+  maxWords?: number;
+  /** Từ khoá dùng để chấm tự động — dùng càng nhiều keyword càng cao điểm. */
+  keywords: string[];
+  /** Bài mẫu / đáp án gợi ý — hiện khi xem kết quả. */
+  solution: string;
+};
+type QMatchItem = { text: string; image?: string; audio?: string };
 type QMatch = BaseQ & {
   kind: "match";
-  left: string[];
+  /** Item bên trái — có thể kèm ảnh/audio (đồng bộ với cấu hình admin). */
+  leftItems: QMatchItem[];
   right: string[];
   answer: number[];
 };
@@ -63,6 +74,7 @@ export type Question =
   | QSingle
   | QMulti
   | QFill
+  | QEssay
   | QMatch
   | QRewrite
   | QHighlight
