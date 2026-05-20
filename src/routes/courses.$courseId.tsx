@@ -9,6 +9,7 @@ import {
   ClipboardList,
   Clock,
   ExternalLink,
+  Eye,
   FileText,
   Headphones,
   Mic,
