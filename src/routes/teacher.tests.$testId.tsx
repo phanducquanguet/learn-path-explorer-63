@@ -30,7 +30,7 @@ function TestDetail() {
   const { testId } = Route.useParams();
   const test = getTest(testId);
   if (!test) throw notFound();
-  const [tab, setTab] = useState<"overview" | "structure" | "results">("overview");
+  const [tab, setTab] = useState<"overview" | "structure" | "questions" | "results">("overview");
   const [subs, setSubs] = useState<TestSubmission[]>(getTestSubmissions(testId));
   const [grading, setGrading] = useState<TestSubmission | null>(null);
   const st = testStatus(test);
