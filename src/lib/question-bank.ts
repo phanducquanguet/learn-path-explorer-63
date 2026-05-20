@@ -111,6 +111,8 @@ export const TYPE_LABEL: Record<QType, string> = {
   "select-lists": "Select from Lists",
   "drag-drop": "Drag & Drop / Matching",
   essay: "Essay",
+  speaking: "Speaking",
+  "error-correction": "Error Correction",
   group: "Question Set",
 };
 
@@ -125,6 +127,8 @@ export const TYPE_DESCRIPTION: Record<QType, string> = {
   "select-lists": "Chọn đáp án từ danh sách thả xuống tại mỗi chỗ trống",
   "drag-drop": "Kéo thả từ/đoạn văn vào các chỗ trống trong đề",
   essay: "Bài viết tự luận dài",
+  speaking: "Luyện nói — ghi âm trả lời theo đề bài",
+  "error-correction": "Chọn từ/cụm sai trong câu và viết lại cho đúng",
   group: "1 đề (bài đọc/audio) + nhiều câu hỏi con khai thác",
 };
 
