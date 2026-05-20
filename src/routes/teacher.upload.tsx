@@ -58,7 +58,7 @@ function UploadPage() {
     thumbnail: "",
   });
   const [units, setUnits] = useState<UnitDraft[]>([
-    { id: "u1", title: "Unit 1: Greetings & Introductions", desc: "", activities: [] },
+    { id: "u1", title: "Unit 1: Greetings & Introductions", desc: "", nodes: [] },
   ]);
   const [saved, setSaved] = useState(false);
 
