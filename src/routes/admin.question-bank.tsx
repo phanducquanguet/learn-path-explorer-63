@@ -1197,36 +1197,8 @@ export function EditDialog({
                 placeholder="Nhập nội dung câu hỏi / yêu cầu cho học viên..."
                 className="w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
-              {(form.imageUrl || form.audioUrl) && (
-                <div className="mt-2 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/20 p-2">
-                  {form.imageUrl && (
-                    <div className="flex items-center gap-2">
-                      <img
-                        src={form.imageUrl}
-                        alt=""
-                        className="h-14 w-14 rounded-md border border-border object-cover"
-                      />
-                      <button
-                        onClick={() => setForm({ ...form, imageUrl: undefined })}
-                        className="text-[11px] font-semibold text-rose-500 hover:underline"
-                      >
-                        Bỏ ảnh
-                      </button>
-                    </div>
-                  )}
-                  {form.audioUrl && (
-                    <div className="flex items-center gap-2">
-                      <audio controls src={form.audioUrl} className="h-8" />
-                      <button
-                        onClick={() => setQuestionAudio(null)}
-                        className="text-[11px] font-semibold text-rose-500 hover:underline"
-                      >
-                        Bỏ audio
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+              {mediaPreview}
+
             </div>
           )}
 
