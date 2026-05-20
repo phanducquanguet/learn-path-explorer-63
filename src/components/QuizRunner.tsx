@@ -142,10 +142,19 @@ export function buildQuiz(quizId: string): Question[] {
       kind: "match",
       maxScore: 4,
       prompt:
-        "Drag each statement on the right into the matching slot on the left.",
-      left: [
-        "Have you ever heard of space junk? You might remember the scene in the movie Gravity, where a spacecraft is hit by a cloud of waste. ___",
-        "They are very real reminders of space exploration — what happens when we send satellites up and don't clean up afterwards. ___",
+        "Match each picture / audio clue on the left with the correct statement on the right.",
+      leftItems: [
+        {
+          text: "A floating piece of debris in low Earth orbit.",
+          image:
+            "https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&w=600&q=70",
+        },
+        {
+          text: "The night sky we are slowly losing.",
+          image:
+            "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&w=600&q=70",
+          audio: "https://www.soundjay.com/buttons/sounds/beep-07a.mp3",
+        },
       ],
       right: [
         "Space junk can include anything from motors to nuts and bolts, varying in size from tiny paint flakes to huge metal pieces.",
