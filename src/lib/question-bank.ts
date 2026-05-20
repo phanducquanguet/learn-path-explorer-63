@@ -84,7 +84,7 @@ export const TYPE_LABEL: Record<QType, string> = {
   matching: "Matching",
   fill: "Fill in the Blanks",
   "select-lists": "Select from Lists",
-  "drag-drop": "Drag and Drop",
+  "drag-drop": "Drag & Drop / Matching",
   essay: "Essay",
 };
 
