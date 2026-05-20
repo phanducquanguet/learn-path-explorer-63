@@ -79,6 +79,10 @@ export type BankQuestion = {
   imageUrl?: string;
   /** Câu hỏi con — chỉ dùng với type === "group". */
   subQuestions?: SubQuestion[];
+  /** Đáp án nhiễu bổ sung (drag-drop hiển thị trong pool, short answer để gợi ý sai). */
+  distractors?: string[];
+  /** Cấu hình error-correction: từ/cụm sai và bản sửa đúng. */
+  errors?: { wrong: string; correct: string }[];
 };
 
 export const DIFFICULTY_LABEL: Record<QDifficulty, string> = {
