@@ -56,7 +56,7 @@ export type PracticeNode = Common & {
   kind: "practice";
   instructions?: string;
   audioFileName?: string;
-  attachmentName?: string;
+  questions: QuestionNode[];
 };
 export type QuestionNode = Common & {
   kind: "question";
