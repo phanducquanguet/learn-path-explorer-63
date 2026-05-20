@@ -1750,22 +1750,24 @@ export function EditDialog({
           )}
         </div>
 
-        <div className="mt-6 flex justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted"
-          >
-            Hủy
-          </button>
-          <button
-            disabled={!canSave}
-            onClick={() => onSave(form)}
-            className="rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft disabled:opacity-50"
-            style={{ background: "var(--gradient-brand)" }}
-          >
-            Lưu
-          </button>
-        </div>
+        {!autoSave && (
+          <div className="mt-6 flex justify-end gap-2">
+            <button
+              onClick={onClose}
+              className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted"
+            >
+              Hủy
+            </button>
+            <button
+              disabled={!canSave}
+              onClick={() => onSave(form)}
+              className="rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft disabled:opacity-50"
+              style={{ background: "var(--gradient-brand)" }}
+            >
+              Lưu
+            </button>
+          </div>
+        )}
     </div>
   );
 
