@@ -838,6 +838,44 @@ function PracticeEditor({
 
   return (
     <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label className="text-xs font-semibold text-foreground">
+            Số lần thử
+          </label>
+          <input
+            type="number"
+            min={1}
+            value={node.maxAttempts ?? ""}
+            onChange={(e) => {
+              const v = e.target.value.trim();
+              onChange({ maxAttempts: v === "" ? null : Math.max(1, Number(v)) });
+            }}
+            placeholder="Không giới hạn"
+            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+          />
+          <p className="mt-1 text-[11px] text-muted-foreground">Để trống = không giới hạn lượt làm.</p>
+        </div>
+        <div>
+          <label className="text-xs font-semibold text-foreground">
+            Điểm đạt (%)
+          </label>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            value={node.passingScore ?? ""}
+            onChange={(e) => {
+              const v = e.target.value.trim();
+              onChange({ passingScore: v === "" ? undefined : Math.min(100, Math.max(0, Number(v))) });
+            }}
+            placeholder="Ví dụ 70"
+            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
+          />
+          <p className="mt-1 text-[11px] text-muted-foreground">Học viên đạt khi điểm ≥ ngưỡng này.</p>
+        </div>
+      </div>
+
       <div>
         <div className="mb-2 flex items-center justify-between">
           <div className="text-xs font-semibold text-foreground">
