@@ -15,6 +15,7 @@ import {
   type QType,
   type QDifficulty,
   type FeedbackCriterion,
+  type BlankSpec,
 } from "@/lib/question-bank";
 import {
   Library,
@@ -42,6 +43,10 @@ import {
   MousePointerSquareDashed,
   Move,
   FileText,
+  Image as ImageIcon,
+  Music,
+  GripVertical,
+  Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -64,7 +69,6 @@ const TYPE_ORDER: QType[] = [
   "tf",
   "short",
   "sequence",
-  "matching",
   "fill",
   "select-lists",
   "drag-drop",
@@ -789,6 +793,15 @@ function PreviewDialog({
   );
 }
 
+async function fileToDataURL(f: File): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(String(r.result));
+    r.onerror = reject;
+    r.readAsDataURL(f);
+  });
+}
+
 function EditDialog({
   question,
   initialType,
@@ -802,12 +815,30 @@ function EditDialog({
 }) {
   const defaultsForType = (t: QType): Partial<BankQuestion> => {
     if (t === "mcq" || t === "mcq-multi")
-      return { options: ["A. ", "B. ", "C. ", "D. "], correctAnswer: t === "mcq" ? "A" : "A,B" };
+      return { options: ["", "", "", ""], correctAnswer: t === "mcq" ? "A" : "A,B", optionImages: [] };
     if (t === "tf") return { options: ["True", "False"], correctAnswer: "True" };
-    if (t === "matching") return { options: ["Item 1 → ", "Item 2 → ", "Item 3 → "] };
-    if (t === "sequence") return { options: ["Bước 1", "Bước 2", "Bước 3"] };
-    if (t === "select-lists") return { options: ["List 1: A | B | C", "List 2: X | Y | Z"] };
-    if (t === "drag-drop") return { options: ["Drag item 1", "Drag item 2", "Drag item 3"] };
+    if (t === "sequence") return { options: ["Bước 1", "Bước 2", "Bước 3"], correctAnswer: "1,2,3" };
+    if (t === "fill")
+      return {
+        passage: "Điền vào chỗ trống: I [1] to school every day.",
+        blanks: [{ index: 1, answers: ["go", "walk"] }],
+      };
+    if (t === "select-lists")
+      return {
+        passage: "She [1] coffee in the morning.",
+        blanks: [
+          { index: 1, options: ["drinks", "drink", "drank"], correctOption: 0, answers: [] },
+        ],
+      };
+    if (t === "drag-drop" || t === "matching")
+      return {
+        dragMode: "words",
+        passage: "He [1] to the [2] every Sunday.",
+        blanks: [
+          { index: 1, answers: ["goes"] },
+          { index: 2, answers: ["park"] },
+        ],
+      };
     if (t === "essay")
       return {
         solution: "",
@@ -818,60 +849,134 @@ function EditDialog({
       };
     return { options: undefined };
   };
+
+  const startingType = initialType ?? question?.type ?? "mcq";
   const [form, setForm] = useState<BankQuestion>(
     question ?? {
       id: "",
       content: "",
       skill: "reading",
-      type: initialType ?? "mcq",
+      type: startingType,
       level: "A1",
       difficulty: "medium",
-      points: (initialType === "essay" ? 5 : initialType === "short" ? 2 : 1),
+      points: startingType === "essay" ? 5 : startingType === "short" ? 2 : 1,
       tags: [],
       createdAt: new Date().toISOString(),
       correctAnswer: "",
-      ...defaultsForType(initialType ?? "mcq"),
+      ...defaultsForType(startingType),
     },
   );
-  const [tagInput, setTagInput] = useState("");
+  const [extrasOpen, setExtrasOpen] = useState(false);
 
   const isMcq = form.type === "mcq" || form.type === "mcq-multi";
+  const isMcqMulti = form.type === "mcq-multi";
   const isEssay = form.type === "essay";
-  const hasOptions = isMcq || form.type === "matching" || form.type === "sequence" || form.type === "select-lists" || form.type === "drag-drop";
+  const isShort = form.type === "short";
+  const isTF = form.type === "tf";
+  const isSequence = form.type === "sequence";
+  const isFill = form.type === "fill";
+  const isSelectLists = form.type === "select-lists";
+  const isDragDrop = form.type === "drag-drop" || form.type === "matching";
 
-  const addTag = () => {
-    const v = tagInput.trim();
-    if (!v || form.tags.includes(v)) return;
-    setForm({ ...form, tags: [...form.tags, v] });
-    setTagInput("");
-  };
-  const removeTag = (t: string) =>
-    setForm({ ...form, tags: form.tags.filter((x) => x !== t) });
-
+  // ---------- MCQ helpers ----------
+  const opts = form.options ?? [];
+  const optImages = form.optionImages ?? [];
   const updateOption = (i: number, v: string) => {
-    const opts = [...(form.options ?? [])];
-    opts[i] = v;
-    setForm({ ...form, options: opts });
+    const next = [...opts];
+    next[i] = v;
+    setForm({ ...form, options: next });
   };
-  const addOption = () =>
-    setForm({ ...form, options: [...(form.options ?? []), ""] });
-  const removeOption = (i: number) =>
-    setForm({ ...form, options: (form.options ?? []).filter((_, x) => x !== i) });
+  const setOptionImage = async (i: number, file: File | null) => {
+    const next = [...optImages];
+    next[i] = file ? await fileToDataURL(file) : undefined;
+    setForm({ ...form, optionImages: next });
+  };
+  const addOption = () => setForm({ ...form, options: [...opts, ""] });
+  const removeOption = (i: number) => {
+    const nOpts = opts.filter((_, x) => x !== i);
+    const nImgs = optImages.filter((_, x) => x !== i);
+    setForm({ ...form, options: nOpts, optionImages: nImgs });
+  };
+  const toggleMultiCorrect = (letter: string) => {
+    const cur = (form.correctAnswer ?? "").split(",").filter(Boolean);
+    const set = new Set(cur);
+    if (set.has(letter)) set.delete(letter);
+    else set.add(letter);
+    setForm({ ...form, correctAnswer: Array.from(set).sort().join(",") });
+  };
+
+  // ---------- Audio question ----------
+  const setQuestionAudio = async (file: File | null) => {
+    setForm({ ...form, audioUrl: file ? await fileToDataURL(file) : undefined });
+  };
+
+  // ---------- Sequence ----------
+  const seqOrder = (form.correctAnswer ?? (form.options ?? []).map((_, i) => i + 1).join(","))
+    .split(",")
+    .map((s) => Number(s))
+    .filter((n) => !Number.isNaN(n));
+  const moveSeq = (from: number, to: number) => {
+    const arr = [...seqOrder];
+    const [it] = arr.splice(from, 1);
+    arr.splice(to, 0, it);
+    setForm({ ...form, correctAnswer: arr.join(",") });
+  };
+
+  // ---------- Blanks ----------
+  const blanks = form.blanks ?? [];
+  const nextBlankIndex = (blanks.reduce((m, b) => Math.max(m, b.index), 0) || 0) + 1;
+  const addBlank = () => {
+    const idx = nextBlankIndex;
+    const newBlank: BlankSpec = isSelectLists
+      ? { index: idx, options: ["", "", ""], correctOption: 0, answers: [] }
+      : { index: idx, answers: [""] };
+    setForm({
+      ...form,
+      passage: (form.passage ?? "") + ` [${idx}]`,
+      blanks: [...blanks, newBlank],
+    });
+  };
+  const updateBlank = (idx: number, patch: Partial<BlankSpec>) => {
+    setForm({
+      ...form,
+      blanks: blanks.map((b) => (b.index === idx ? { ...b, ...patch } : b)),
+    });
+  };
+  const removeBlank = (idx: number) => {
+    setForm({
+      ...form,
+      passage: (form.passage ?? "").replace(new RegExp(`\\s*\\[${idx}\\]`, "g"), ""),
+      blanks: blanks.filter((b) => b.index !== idx),
+    });
+  };
 
   const canSave = form.content.trim().length > 0;
+
+  const inputCls =
+    "w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm";
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <button onClick={onClose} className="absolute inset-0" aria-label="Close" />
-      <div className="relative max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl bg-background p-6 shadow-elevated">
+      <div className="relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-background p-6 shadow-elevated">
         <div className="flex items-center justify-between">
-          <h2 className="font-display text-lg font-semibold">
-            {question ? "Sửa câu hỏi" : "Thêm câu hỏi mới"}
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 className="font-display text-lg font-semibold">
+              {question ? "Sửa câu hỏi" : "Thêm câu hỏi mới"}
+            </h2>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+              {(() => {
+                const Icon = TYPE_ICON[form.type];
+                return <Icon className="h-3.5 w-3.5" />;
+              })()}
+              {TYPE_LABEL[form.type]}
+            </span>
+          </div>
           <button onClick={onClose} className="rounded-lg p-2 hover:bg-muted">
             <X className="h-4 w-4" />
           </button>
         </div>
+
         <div className="mt-4 space-y-4">
           <div>
             <label className="text-xs font-semibold text-muted-foreground">
@@ -880,31 +985,21 @@ function EditDialog({
             <textarea
               value={form.content}
               onChange={(e) => setForm({ ...form, content: e.target.value })}
-              rows={3}
-              placeholder="Nhập nội dung câu hỏi..."
+              rows={2}
+              placeholder="Nhập nội dung câu hỏi / yêu cầu cho học viên..."
               className="mt-1 w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Field label="Kỹ năng">
               <select
                 value={form.skill}
                 onChange={(e) => setForm({ ...form, skill: e.target.value as QSkill })}
-                className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
+                className={inputCls}
               >
                 {SKILLS.map((s) => (
                   <option key={s} value={s}>{SKILL_LABEL[s]}</option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Loại">
-              <select
-                value={form.type}
-                onChange={(e) => setForm({ ...form, type: e.target.value as QType })}
-                className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
-              >
-                {(Object.keys(TYPE_LABEL) as QType[]).map((t) => (
-                  <option key={t} value={t}>{TYPE_LABEL[t]}</option>
                 ))}
               </select>
             </Field>
@@ -912,7 +1007,7 @@ function EditDialog({
               <select
                 value={form.level}
                 onChange={(e) => setForm({ ...form, level: e.target.value as QLevel })}
-                className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
+                className={inputCls}
               >
                 {LEVELS.map((l) => (
                   <option key={l} value={l}>{l}</option>
@@ -923,7 +1018,7 @@ function EditDialog({
               <select
                 value={form.difficulty}
                 onChange={(e) => setForm({ ...form, difficulty: e.target.value as QDifficulty })}
-                className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
+                className={inputCls}
               >
                 {(Object.keys(DIFFICULTY_LABEL) as QDifficulty[]).map((d) => (
                   <option key={d} value={d}>{DIFFICULTY_LABEL[d]}</option>
@@ -936,16 +1031,63 @@ function EditDialog({
                 min={1}
                 value={form.points}
                 onChange={(e) => setForm({ ...form, points: Number(e.target.value) })}
-                className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
+                className={inputCls}
               />
             </Field>
           </div>
 
-          {hasOptions && (
+          {/* ===== Optional attachments ===== */}
+          <div className="rounded-2xl border border-dashed border-border">
+            <button
+              type="button"
+              onClick={() => setExtrasOpen((v) => !v)}
+              className="flex w-full items-center justify-between gap-2 px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted/40"
+            >
+              <span className="inline-flex items-center gap-2">
+                <Upload className="h-3.5 w-3.5" /> Tệp đính kèm (tùy chọn): audio cho câu hỏi, ảnh cho từng lựa chọn
+              </span>
+              <span>{extrasOpen ? "Ẩn" : "Hiện"}</span>
+            </button>
+            {extrasOpen && (
+              <div className="space-y-3 border-t border-border bg-muted/20 px-4 py-3">
+                <div>
+                  <label className="text-[11px] font-semibold text-muted-foreground">
+                    <Music className="mr-1 inline h-3 w-3" /> Audio câu hỏi
+                  </label>
+                  <div className="mt-1 flex items-center gap-2">
+                    <input
+                      type="file"
+                      accept="audio/*"
+                      onChange={(e) => setQuestionAudio(e.target.files?.[0] ?? null)}
+                      className="text-xs"
+                    />
+                    {form.audioUrl && (
+                      <button
+                        onClick={() => setQuestionAudio(null)}
+                        className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  {form.audioUrl && (
+                    <audio controls src={form.audioUrl} className="mt-2 h-8 w-full" />
+                  )}
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Ảnh cho từng lựa chọn có thể tải ngay trên từng dòng đáp án (nếu loại câu hỏi có lựa chọn).
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* ===== Type-specific editors ===== */}
+
+          {isMcq && (
             <div>
               <div className="mb-1.5 flex items-center justify-between">
                 <label className="text-xs font-semibold text-muted-foreground">
-                  Lựa chọn
+                  Lựa chọn {isMcqMulti ? "(chọn nhiều đáp án đúng)" : "(chọn đáp án đúng)"}
                 </label>
                 <button
                   onClick={addOption}
@@ -954,35 +1096,399 @@ function EditDialog({
                   <Plus className="h-3 w-3" /> Thêm lựa chọn
                 </button>
               </div>
-              <div className="space-y-1.5">
-                {(form.options ?? []).map((o, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <input
-                      value={o}
-                      onChange={(e) => updateOption(i, e.target.value)}
-                      placeholder={`Lựa chọn ${i + 1}`}
-                      className="flex-1 rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
-                    />
-                    <button
-                      onClick={() => removeOption(i)}
-                      className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
+              <div className="space-y-2">
+                {opts.map((o, i) => {
+                  const letter = String.fromCharCode(65 + i);
+                  const correctSet = (form.correctAnswer ?? "").split(",").filter(Boolean);
+                  const isCorrect = isMcqMulti
+                    ? correctSet.includes(letter)
+                    : form.correctAnswer === letter;
+                  return (
+                    <div key={i} className="rounded-xl border border-border bg-muted/20 p-2">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            isMcqMulti
+                              ? toggleMultiCorrect(letter)
+                              : setForm({ ...form, correctAnswer: letter })
+                          }
+                          className={cn(
+                            "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-xs font-bold",
+                            isCorrect
+                              ? "bg-emerald-500 text-white"
+                              : "bg-muted text-muted-foreground hover:bg-muted/70",
+                          )}
+                          title={isCorrect ? "Đáp án đúng" : "Đặt làm đáp án đúng"}
+                        >
+                          {letter}
+                        </button>
+                        <input
+                          value={o}
+                          onChange={(e) => updateOption(i, e.target.value)}
+                          placeholder={`Phương án ${letter}`}
+                          className={cn(inputCls, "flex-1")}
+                        />
+                        <label className="inline-flex h-8 w-8 cursor-pointer items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted" title="Tải ảnh cho lựa chọn">
+                          <ImageIcon className="h-3.5 w-3.5" />
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => setOptionImage(i, e.target.files?.[0] ?? null)}
+                          />
+                        </label>
+                        <button
+                          onClick={() => removeOption(i)}
+                          className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                      {optImages[i] && (
+                        <div className="mt-2 flex items-center gap-2">
+                          <img
+                            src={optImages[i]}
+                            alt=""
+                            className="h-16 w-16 rounded-md border border-border object-cover"
+                          />
+                          <button
+                            onClick={() => setOptionImage(i, null)}
+                            className="text-[11px] font-semibold text-rose-500 hover:underline"
+                          >
+                            Bỏ ảnh
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {isTF && (
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground">Đáp án đúng</label>
+              <div className="mt-1 flex gap-2">
+                {["True", "False"].map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setForm({ ...form, correctAnswer: v })}
+                    className={cn(
+                      "flex-1 rounded-xl border px-4 py-2 text-sm font-semibold",
+                      form.correctAnswer === v
+                        ? "border-emerald-500 bg-emerald-500/10 text-emerald-600"
+                        : "border-border bg-background hover:bg-muted",
+                    )}
+                  >
+                    {v}
+                  </button>
                 ))}
               </div>
             </div>
           )}
 
-          {isEssay ? (
+          {(isShort || (!isMcq && !isTF && !isSequence && !isFill && !isSelectLists && !isDragDrop && !isEssay)) && (
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground">
+                Đáp án mẫu
+              </label>
+              <input
+                value={form.correctAnswer ?? ""}
+                onChange={(e) => setForm({ ...form, correctAnswer: e.target.value })}
+                placeholder="Nhập đáp án mẫu"
+                className={cn(inputCls, "mt-1")}
+              />
+            </div>
+          )}
+
+          {isSequence && (
+            <div className="space-y-3">
+              <div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    Các mục (được đánh số tự động)
+                  </label>
+                  <button
+                    onClick={() => {
+                      const next = [...opts, ""];
+                      setForm({
+                        ...form,
+                        options: next,
+                        correctAnswer: next.map((_, i) => i + 1).join(","),
+                      });
+                    }}
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                  >
+                    <Plus className="h-3 w-3" /> Thêm mục
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  {opts.map((o, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-foreground text-xs font-bold text-background">
+                        {i + 1}
+                      </span>
+                      <input
+                        value={o}
+                        onChange={(e) => updateOption(i, e.target.value)}
+                        placeholder={`Mục ${i + 1}`}
+                        className={cn(inputCls, "flex-1")}
+                      />
+                      <button
+                        onClick={() => {
+                          const next = opts.filter((_, x) => x !== i);
+                          setForm({
+                            ...form,
+                            options: next,
+                            correctAnswer: next.map((_, j) => j + 1).join(","),
+                          });
+                        }}
+                        className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Đáp án — kéo thả các số theo thứ tự đúng
+                </label>
+                <div className="mt-1 flex flex-wrap gap-2 rounded-xl border border-dashed border-border bg-muted/30 p-3">
+                  {seqOrder.map((n, i) => (
+                    <div
+                      key={`${n}-${i}`}
+                      draggable
+                      onDragStart={(e) => e.dataTransfer.setData("text/plain", String(i))}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        const from = Number(e.dataTransfer.getData("text/plain"));
+                        if (!Number.isNaN(from) && from !== i) moveSeq(from, i);
+                      }}
+                      className="inline-flex cursor-grab items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-sm font-semibold shadow-sm active:cursor-grabbing"
+                    >
+                      <GripVertical className="h-3 w-3 text-muted-foreground" />
+                      <span className="font-mono">{n}</span>
+                      <span className="text-xs text-muted-foreground">— {opts[n - 1] ?? ""}</span>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Thứ tự hiện tại: <code className="font-mono">{seqOrder.join(", ")}</code>
+                </p>
+              </div>
+            </div>
+          )}
+
+          {(isFill || isSelectLists || isDragDrop) && (
+            <div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/[0.03] p-4">
+              {isDragDrop && (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="font-semibold text-muted-foreground">Chế độ kéo thả:</span>
+                  {(["words", "passages"] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setForm({ ...form, dragMode: m })}
+                      className={cn(
+                        "rounded-md px-2.5 py-1 text-[11px] font-semibold",
+                        (form.dragMode ?? "words") === m
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-background border border-border text-muted-foreground hover:bg-muted",
+                      )}
+                    >
+                      {m === "words" ? "Kéo từ" : "Kéo đoạn văn"}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div>
+                <div className="mb-1 flex items-center justify-between">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    Đề bài (sử dụng <code className="rounded bg-muted px-1 font-mono">[1] [2] …</code> làm chỗ trống)
+                  </label>
+                  <button
+                    onClick={addBlank}
+                    className="inline-flex items-center gap-1 rounded-md bg-foreground px-2 py-1 text-[11px] font-semibold text-background"
+                  >
+                    <Plus className="h-3 w-3" /> Thêm chỗ trống
+                  </button>
+                </div>
+                <textarea
+                  value={form.passage ?? ""}
+                  onChange={(e) => setForm({ ...form, passage: e.target.value })}
+                  rows={3}
+                  placeholder={
+                    isDragDrop && form.dragMode === "passages"
+                      ? "Dán đoạn văn có các vị trí [1], [2] cần kéo thả đoạn văn vào..."
+                      : "Vd: She [1] coffee in the [2] morning."
+                  }
+                  className="w-full rounded-xl border border-border bg-background p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <div className="text-xs font-semibold text-muted-foreground">
+                  Đáp án cho từng chỗ trống
+                </div>
+                {blanks.map((b) => (
+                  <div key={b.index} className="rounded-xl border border-border bg-background p-3">
+                    <div className="mb-2 flex items-center justify-between">
+                      <span className="inline-flex h-6 items-center gap-1 rounded-md bg-primary/10 px-2 text-[11px] font-bold text-primary">
+                        [{b.index}]
+                      </span>
+                      <button
+                        onClick={() => removeBlank(b.index)}
+                        className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+
+                    {isSelectLists ? (
+                      <div className="space-y-1.5">
+                        <div className="text-[11px] font-semibold text-muted-foreground">
+                          Tùy chọn cho danh sách thả xuống (text only)
+                        </div>
+                        {(b.options ?? []).map((opt, oi) => (
+                          <div key={oi} className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => updateBlank(b.index, { correctOption: oi })}
+                              className={cn(
+                                "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[11px] font-bold",
+                                b.correctOption === oi
+                                  ? "bg-emerald-500 text-white"
+                                  : "bg-muted text-muted-foreground hover:bg-muted/70",
+                              )}
+                              title="Đặt là đáp án đúng"
+                            >
+                              ✓
+                            </button>
+                            <input
+                              value={opt}
+                              onChange={(e) => {
+                                const next = [...(b.options ?? [])];
+                                next[oi] = e.target.value;
+                                updateBlank(b.index, { options: next });
+                              }}
+                              placeholder={`Lựa chọn ${oi + 1}`}
+                              className={cn(inputCls, "flex-1")}
+                            />
+                            <button
+                              onClick={() => {
+                                const next = (b.options ?? []).filter((_, x) => x !== oi);
+                                const cor = b.correctOption ?? 0;
+                                updateBlank(b.index, {
+                                  options: next,
+                                  correctOption: cor >= next.length ? Math.max(0, next.length - 1) : cor,
+                                });
+                              }}
+                              className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          onClick={() =>
+                            updateBlank(b.index, { options: [...(b.options ?? []), ""] })
+                          }
+                          className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                        >
+                          <Plus className="h-3 w-3" /> Thêm lựa chọn
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-1.5">
+                        <div className="text-[11px] font-semibold text-muted-foreground">
+                          {isDragDrop
+                            ? form.dragMode === "passages"
+                              ? "Đoạn văn đúng cần kéo vào chỗ trống này"
+                              : "Từ/cụm từ đúng cần kéo vào"
+                            : "Đáp án chấp nhận (mỗi dòng 1 đáp án)"}
+                        </div>
+                        {(b.answers ?? []).map((a, ai) => (
+                          <div key={ai} className="flex items-center gap-2">
+                            {isDragDrop && form.dragMode === "passages" ? (
+                              <textarea
+                                value={a}
+                                onChange={(e) => {
+                                  const next = [...(b.answers ?? [])];
+                                  next[ai] = e.target.value;
+                                  updateBlank(b.index, { answers: next });
+                                }}
+                                rows={2}
+                                placeholder="Nhập đoạn văn..."
+                                className={cn(inputCls, "flex-1")}
+                              />
+                            ) : (
+                              <input
+                                value={a}
+                                onChange={(e) => {
+                                  const next = [...(b.answers ?? [])];
+                                  next[ai] = e.target.value;
+                                  updateBlank(b.index, { answers: next });
+                                }}
+                                placeholder={isFill ? "Đáp án chấp nhận" : "Từ đúng"}
+                                className={cn(inputCls, "flex-1")}
+                              />
+                            )}
+                            <button
+                              onClick={() => {
+                                const next = (b.answers ?? []).filter((_, x) => x !== ai);
+                                updateBlank(b.index, { answers: next });
+                              }}
+                              className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                        {isFill && (
+                          <button
+                            onClick={() =>
+                              updateBlank(b.index, { answers: [...(b.answers ?? []), ""] })
+                            }
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                          >
+                            <Plus className="h-3 w-3" /> Thêm đáp án chấp nhận
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {blanks.length === 0 && (
+                  <div className="rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+                    Chưa có chỗ trống nào. Bấm "Thêm chỗ trống" để bắt đầu.
+                  </div>
+                )}
+              </div>
+
+              {isDragDrop && (
+                <p className="text-[11px] text-muted-foreground">
+                  Học viên sẽ thấy danh sách {form.dragMode === "passages" ? "đoạn văn" : "từ"} (gồm các đáp án ở trên + nhiễu) và kéo thả vào đúng chỗ trống.
+                </p>
+              )}
+            </div>
+          )}
+
+          {isEssay && (
             <div className="space-y-4 rounded-2xl border border-violet-500/30 bg-violet-500/5 p-4">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">
                 <FileText className="h-3.5 w-3.5" /> Câu hỏi tự luận — không có đáp án cố định
               </div>
               <div>
                 <label className="text-xs font-semibold text-muted-foreground">
-                  Solution (bài mẫu tham khảo) *
+                  Bài mẫu tham khảo *
                 </label>
                 <textarea
                   value={form.solution ?? ""}
@@ -991,11 +1497,7 @@ function EditDialog({
                   placeholder="Viết một bài mẫu để học viên đối chiếu sau khi nộp..."
                   className="mt-1 w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Học viên sẽ thấy bài mẫu này sau khi gửi bài hoặc bấm "Show solution".
-                </p>
               </div>
-
               <div>
                 <div className="mb-1.5 flex items-center justify-between">
                   <label className="text-xs font-semibold text-muted-foreground">
@@ -1013,9 +1515,6 @@ function EditDialog({
                     <Plus className="h-3 w-3" /> Thêm tiêu chí
                   </button>
                 </div>
-                <p className="mb-2 text-[11px] text-muted-foreground">
-                  Mỗi dòng gồm một <b>từ khóa/sườn</b> cần xuất hiện trong bài và <b>nhận xét</b> tương ứng. Hệ thống dựa vào đây để chấm tự động.
-                </p>
                 <div className="space-y-1.5">
                   {(form.feedback ?? []).map((c, i) => (
                     <div key={i} className="grid grid-cols-[140px_1fr_auto] items-center gap-2">
@@ -1027,7 +1526,7 @@ function EditDialog({
                           setForm({ ...form, feedback: next });
                         }}
                         placeholder="Từ khóa, vd: Dear"
-                        className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm font-mono"
+                        className={cn(inputCls, "font-mono")}
                       />
                       <input
                         value={c.comment}
@@ -1037,73 +1536,25 @@ function EditDialog({
                           setForm({ ...form, feedback: next });
                         }}
                         placeholder="Nhận xét hiển thị cho học viên..."
-                        className="rounded-lg border border-border bg-background px-2 py-1.5 text-sm"
+                        className={inputCls}
                       />
                       <button
                         onClick={() => {
                           const next = (form.feedback ?? []).filter((_, x) => x !== i);
                           setForm({ ...form, feedback: next });
                         }}
-                        className="rounded-lg p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   ))}
-                  {(form.feedback ?? []).length === 0 && (
-                    <div className="rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
-                      Chưa có tiêu chí nào. Thêm các từ khóa làm sườn để chấm.
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
-          ) : (
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground">
-                Đáp án đúng / mẫu
-              </label>
-              <input
-                value={form.correctAnswer ?? ""}
-                onChange={(e) => setForm({ ...form, correctAnswer: e.target.value })}
-                placeholder={isMcq ? "Ví dụ: A" : "Nhập đáp án mẫu (không bắt buộc)"}
-                className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-              />
-            </div>
           )}
-
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground">Tags</label>
-            <div className="mt-1 flex flex-wrap items-center gap-1.5 rounded-xl border border-border bg-background p-2">
-              {form.tags.map((t) => (
-                <span
-                  key={t}
-                  className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold"
-                >
-                  {t}
-                  <button
-                    onClick={() => removeTag(t)}
-                    className="text-muted-foreground hover:text-destructive"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </span>
-              ))}
-              <input
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    addTag();
-                  }
-                }}
-                placeholder="Thêm tag và nhấn Enter"
-                className="flex-1 min-w-[140px] bg-transparent px-1 py-0.5 text-sm outline-none"
-              />
-            </div>
-          </div>
         </div>
+
         <div className="mt-6 flex justify-end gap-2">
           <button
             onClick={onClose}
@@ -1124,6 +1575,7 @@ function EditDialog({
     </div>
   );
 }
+
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (

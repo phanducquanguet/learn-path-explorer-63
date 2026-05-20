@@ -19,6 +19,17 @@ export type FeedbackCriterion = {
   comment: string;
 };
 
+/** Spec cho 1 chỗ trống (dùng cho fill / select-lists / drag-drop). */
+export type BlankSpec = {
+  index: number;
+  /** Đáp án chấp nhận (fill / drag-drop). */
+  answers: string[];
+  /** Tùy chọn cho select-lists (text only). */
+  options?: string[];
+  /** Index đáp án đúng trong options (select-lists). */
+  correctOption?: number;
+};
+
 export type BankQuestion = {
   id: string;
   content: string;
@@ -31,10 +42,18 @@ export type BankQuestion = {
   createdAt: string;
   options?: string[];
   correctAnswer?: string;
-  /** Sample/model answer shown after submission (esp. essay). */
   solution?: string;
-  /** Rubric used to give automatic feedback on open-ended answers (essay). */
   feedback?: FeedbackCriterion[];
+  /** Audio đính kèm câu hỏi (optional). */
+  audioUrl?: string;
+  /** Ảnh kèm từng option (cùng index với options). */
+  optionImages?: (string | undefined)[];
+  /** Đề bài có chỗ trống — fill / select-lists / drag-drop. */
+  passage?: string;
+  /** Spec các chỗ trống. */
+  blanks?: BlankSpec[];
+  /** Chế độ kéo thả: "words" hoặc "passages". */
+  dragMode?: "words" | "passages";
 };
 
 export const DIFFICULTY_LABEL: Record<QDifficulty, string> = {
@@ -65,7 +84,7 @@ export const TYPE_LABEL: Record<QType, string> = {
   matching: "Matching",
   fill: "Fill in the Blanks",
   "select-lists": "Select from Lists",
-  "drag-drop": "Drag and Drop",
+  "drag-drop": "Drag & Drop / Matching",
   essay: "Essay",
 };
 
@@ -76,9 +95,9 @@ export const TYPE_DESCRIPTION: Record<QType, string> = {
   short: "Trả lời ngắn bằng văn bản",
   sequence: "Sắp xếp các mục theo thứ tự",
   matching: "Nối cặp các mục tương ứng",
-  fill: "Điền vào chỗ trống trong câu",
-  "select-lists": "Chọn từ danh sách thả xuống",
-  "drag-drop": "Kéo thả các mục vào vị trí",
+  fill: "Điền vào chỗ trống — tự nhập đáp án",
+  "select-lists": "Chọn đáp án từ danh sách thả xuống tại mỗi chỗ trống",
+  "drag-drop": "Kéo thả từ/đoạn văn vào các chỗ trống trong đề",
   essay: "Bài viết tự luận dài",
 };
 
