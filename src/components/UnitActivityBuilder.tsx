@@ -17,11 +17,17 @@ import {
   Pencil,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { QUIZ_KINDS } from "@/lib/teacher-data";
+import { TYPE_LABEL, TYPE_DESCRIPTION, type QType } from "@/lib/question-bank";
 
 /* ============================== Types ============================== */
 
-export type QKind = (typeof QUIZ_KINDS)[number]["id"];
+export type QKind = QType;
+
+/** Các dạng câu hỏi dùng trong activity builder — đồng bộ với Ngân hàng câu hỏi
+ *  nhưng KHÔNG cần cấp độ (level) hay độ khó (difficulty). */
+export const QUIZ_KINDS: { id: QType; label: string; description: string }[] = (
+  ["mcq", "mcq-multi", "tf", "short", "fill", "matching", "sequence", "select-lists", "drag-drop", "essay"] as QType[]
+).map((id) => ({ id, label: TYPE_LABEL[id], description: TYPE_DESCRIPTION[id] }));
 
 type Common = { id: string; title: string };
 
@@ -124,7 +130,7 @@ function makeNode(kind: AnyNode["kind"], qType?: QKind): AnyNode {
       return { ...base, kind, title: "Bài thực hành", instructions: "" };
     case "question": {
       const q = qType ?? "mcq";
-      const needsOptions = ["mcq", "mcq-multi", "matching", "drag", "tf", "reorder"].includes(q);
+      const needsOptions = ["mcq", "mcq-multi", "matching", "drag-drop", "tf", "sequence", "select-lists"].includes(q);
       return {
         ...base,
         kind: "question",
@@ -137,7 +143,7 @@ function makeNode(kind: AnyNode["kind"], qType?: QKind): AnyNode {
             : ["Lựa chọn A", "Lựa chọn B"]
           : [],
         correct: q === "tf" ? [0] : [],
-        points: 1,
+        points: q === "essay" ? 5 : q === "short" ? 2 : 1,
       };
     }
   }
@@ -603,9 +609,9 @@ function PracticeEditor({ node, onChange }: { node: PracticeNode; onChange: (p: 
 
 function QuestionEditor({ node, onChange }: { node: QuestionNode; onChange: (p: Partial<QuestionNode>) => void }) {
   const q = node.qType;
-  const hasOptions = ["mcq", "mcq-multi", "matching", "drag", "tf", "reorder"].includes(q);
-  const multiCorrect = q === "mcq-multi" || q === "drag";
-  const showSample = ["short", "fill", "cloze", "listening", "vocab"].includes(q);
+  const hasOptions = ["mcq", "mcq-multi", "matching", "drag-drop", "tf", "sequence", "select-lists"].includes(q);
+  const multiCorrect = q === "mcq-multi" || q === "drag-drop" || q === "select-lists";
+  const showSample = ["short", "fill", "essay"].includes(q);
 
   const toggleCorrect = (i: number) => {
     let next: number[];
@@ -662,7 +668,7 @@ function QuestionEditor({ node, onChange }: { node: QuestionNode; onChange: (p: 
         <div>
           <div className="mb-2 flex items-center justify-between">
             <div className="text-xs font-semibold text-foreground">
-              {q === "matching" ? "Cặp ghép" : q === "reorder" ? "Các mục cần sắp xếp (đúng thứ tự)" : "Lựa chọn"}
+              {q === "matching" ? "Cặp ghép" : q === "sequence" ? "Các mục cần sắp xếp (đúng thứ tự)" : "Lựa chọn"}
             </div>
             {q !== "tf" && (
               <button onClick={addOpt} className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary hover:bg-primary/20">
@@ -673,14 +679,14 @@ function QuestionEditor({ node, onChange }: { node: QuestionNode; onChange: (p: 
           <div className="overflow-hidden rounded-xl border border-border">
             <div className="grid grid-cols-[40px_50px_1fr_36px] items-center gap-2 bg-muted/50 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               <span />
-              <span>{q === "reorder" ? "STT" : "Đúng"}</span>
+              <span>{q === "sequence" ? "STT" : "Đúng"}</span>
               <span>Nội dung</span>
               <span />
             </div>
             {node.options.map((opt, i) => (
               <div key={i} className="grid grid-cols-[40px_50px_1fr_36px] items-center gap-2 border-t border-border bg-background px-3 py-1.5">
                 <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
-                {q === "reorder" ? (
+                {q === "sequence" ? (
                   <span className="text-center text-xs font-semibold text-muted-foreground">{i + 1}</span>
                 ) : (
                   <input
