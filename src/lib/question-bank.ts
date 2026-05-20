@@ -115,7 +115,7 @@ export const TYPE_LABEL: Record<QType, string> = {
   matching: "Matching",
   fill: "Fill in the Blanks",
   "select-lists": "Select from Lists",
-  "drag-drop": "Drag & Drop / Matching",
+  "drag-drop": "Drag the Words",
   essay: "Essay",
   speaking: "Speaking",
   "error-correction": "Error Correction",
