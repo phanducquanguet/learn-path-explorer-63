@@ -230,11 +230,7 @@ export function UnitActivityBuilder({
   const [selectedId, setSelectedId] = useState<string | null>(nodes[0]?.id ?? null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [addMenuFor, setAddMenuFor] = useState<string | null>("__root__");
-
-  // Dialogs: tạo / sửa câu hỏi dùng EditDialog của Ngân hàng
-  const [pickingTypeFor, setPickingTypeFor] = useState<string | null>(null); // practiceId
-  const [creating, setCreating] = useState<{ practiceId: string; type: QType } | null>(null);
-  const [editing, setEditing] = useState<{ practiceId: string; questionId: string; bank: BankQuestion } | null>(null);
+  const [qTypeMenuFor, setQTypeMenuFor] = useState<string | null>(null); // practiceId
 
   const selected = useMemo(() => (selectedId ? findNode(nodes, selectedId) : null), [nodes, selectedId]);
 
@@ -252,40 +248,21 @@ export function UnitActivityBuilder({
     setAddMenuFor(null);
   };
 
-  // ----- Câu hỏi: thao tác qua dialog -----
-  const openCreateQuestion = (practiceId: string) => {
-    setPickingTypeFor(practiceId);
+  // Tạo câu hỏi mới với type đã chọn, chèn vào practice và chọn để chỉnh sửa
+  const createQuestionOfType = (practiceId: string, type: QType) => {
+    const bank = makeDefaultBankQuestion(type);
+    const q = makeQuestionFromBank(bank);
+    onChange(addInto(nodes, practiceId, q));
+    setSelectedId(q.id);
     setExpanded((e) => ({ ...e, [practiceId]: true }));
+    setQTypeMenuFor(null);
   };
-  const openEditQuestion = (questionId: string) => {
-    // Tìm practice cha
-    for (const root of nodes) {
-      const found = findParentPractice(root, questionId);
-      if (found) {
-        const q = found.questions.find((x) => x.id === questionId)!;
-        setEditing({ practiceId: found.id, questionId, bank: q.bank });
-        return;
-      }
-    }
-  };
-  const handleSaveQuestion = (bank: BankQuestion) => {
-    if (editing) {
-      onChange(
-        mapTree(nodes, (n) =>
-          n.kind === "question" && n.id === editing.questionId ? { ...n, bank } : n,
-        ),
-      );
-      setEditing(null);
-      return;
-    }
-    if (creating) {
-      const q = makeQuestionFromBank({
-        ...bank,
-        id: bank.id || `CQ-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      });
-      addNode(creating.practiceId, q);
-      setCreating(null);
-    }
+  const updateQuestionBank = (questionId: string, bank: BankQuestion) => {
+    onChange(
+      mapTree(nodes, (n) =>
+        n.kind === "question" && n.id === questionId ? { ...n, bank } : n,
+      ),
+    );
   };
 
   return (
