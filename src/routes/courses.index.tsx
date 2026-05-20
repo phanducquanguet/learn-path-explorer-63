@@ -837,16 +837,7 @@ function AdminCourseRow({
           <Trash2 className="h-3.5 w-3.5" />
         </button>
       </div>
-
-        <button
-          type="button"
-          onClick={() => alert(`Xóa khóa "${course.title}" (demo)`)}
-          className="inline-flex items-center justify-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:border-destructive hover:bg-destructive/10 hover:text-destructive"
-          aria-label="Xóa khóa học"
-        >
-          <Trash2 className="h-3.5 w-3.5" />
-        </button>
-      </div>
     </div>
+
   );
 }
