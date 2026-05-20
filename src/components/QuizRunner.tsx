@@ -40,6 +40,8 @@ type QEssay = BaseQ & {
   keywords: string[];
   /** Bài mẫu / đáp án gợi ý — hiện khi xem kết quả. */
   solution: string;
+  /** Nhận xét theo từng keyword — hiện ở bảng Feedback khi xem kết quả. */
+  feedback?: { keyword: string; comment: string }[];
 };
 type QMatchItem = { text: string; image?: string; audio?: string };
 type QMatch = BaseQ & {
@@ -302,6 +304,17 @@ export function buildQuiz(quizId: string): Question[] {
       ],
       solution:
         "Dear Jordan,\n\nThank you for letting me know about your trip next month. Unfortunately, I'll be away for work that week, so I won't be able to meet you in person — I'm really sorry about the timing.\n\nWhile you're here, you should definitely visit the old town and take a walk along the riverside at sunset; it's the most beautiful part of the city. The little café next to the bridge is a must-try.\n\nHopefully we can catch up around December when things calm down. Have a wonderful trip!\n\nBest wishes,\nAlex",
+      feedback: [
+        { keyword: "Dear Jordan", comment: "Cách mở đầu email rất tự nhiên." },
+        { keyword: "thank", comment: "Hãy cảm ơn Jordan vì đã báo trước." },
+        { keyword: "unfortunately", comment: "Dùng từ nối để báo tin không vui." },
+        { keyword: "work", comment: "Giải thích rõ lý do bạn bận." },
+        { keyword: "visit", comment: "Gợi ý cho Jordan ghé thăm địa điểm cụ thể." },
+        { keyword: "old town", comment: "Đề xuất một địa danh nổi bật trong khu vực." },
+        { keyword: "riverside", comment: "Thêm chi tiết để gợi ý sinh động hơn." },
+        { keyword: "December", comment: "Đề xuất một thời điểm khác để gặp lại." },
+        { keyword: "best wishes", comment: "Kết thư đúng phong cách thân mật." },
+      ],
     },
   ];
 }
@@ -1973,98 +1986,135 @@ function EssayBody({
         </div>
       </div>
 
-      {/* Editor */}
-      <div>
+      {/* Editor with word count inside */}
+      <div className="overflow-hidden rounded-2xl border-2 border-border bg-surface transition focus-within:ring-2"
+           style={!locked ? { ["--tw-ring-color" as string]: accent } : undefined}>
+        <div className="flex items-center justify-between border-b border-border bg-muted/40 px-4 py-2 text-xs">
+          <span className="font-medium text-muted-foreground">
+            Word count:{" "}
+            <span
+              className={cn(
+                "font-bold",
+                minOk && maxOk ? "text-success-foreground" : "text-foreground",
+              )}
+            >
+              {words}
+            </span>
+          </span>
+          <span className="text-[11px] text-muted-foreground">
+            {!minOk
+              ? `Cần thêm ${q.minWords - words} từ`
+              : !maxOk
+                ? `Vượt ${words - (q.maxWords ?? 0)} từ`
+                : "Đủ yêu cầu"}
+          </span>
+        </div>
         <textarea
           disabled={locked}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          rows={12}
+          rows={10}
           placeholder="Viết bài của bạn ở đây..."
           className={cn(
-            "w-full resize-y rounded-2xl border-2 bg-surface px-4 py-3 text-sm leading-relaxed text-foreground outline-none transition focus:ring-2",
-            locked ? "border-border bg-muted/30" : "border-border",
+            "block w-full resize-y bg-transparent px-4 py-3 text-sm leading-relaxed text-foreground outline-none",
+            locked && "bg-muted/20",
           )}
-          style={!locked ? { ["--tw-ring-color" as string]: accent } : undefined}
         />
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
-          <div className="flex items-center gap-2">
-            <span
-              className={cn(
-                "rounded-full px-2.5 py-0.5 font-semibold",
-                minOk && maxOk
-                  ? "bg-success/15 text-success-foreground"
-                  : "bg-warning/15 text-warning-foreground",
-              )}
-            >
-              {words} từ
-            </span>
-            {!minOk && (
-              <span className="text-muted-foreground">
-                Cần thêm {q.minWords - words} từ để đủ yêu cầu.
-              </span>
-            )}
-            {!maxOk && (
-              <span className="text-warning-foreground">
-                Vượt quá {words - (q.maxWords ?? 0)} từ.
-              </span>
-            )}
-          </div>
-        </div>
       </div>
 
-      {/* Review-only: solution + keyword matched */}
+      {/* Review-only: Solution + Feedback table + verdict */}
       {locked && (
         <>
-          <div className="rounded-2xl border border-success/30 bg-success/5 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="text-sm font-semibold text-foreground">
-                Keyword khớp với đáp án
-              </div>
-              <span className="rounded-full bg-success/15 px-3 py-0.5 text-xs font-bold text-success-foreground">
-                {matched.length}/{q.keywords.length}
-              </span>
-            </div>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              {q.keywords.map((kw) => {
-                const hit = matched.includes(kw);
-                return (
-                  <span
-                    key={kw}
-                    className={cn(
-                      "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[11px] font-medium ring-1",
-                      hit
-                        ? "bg-success/15 text-success-foreground ring-success/30"
-                        : "bg-muted text-muted-foreground ring-border line-through",
-                    )}
-                  >
-                    {hit ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
-                    {kw}
-                  </span>
-                );
-              })}
-            </div>
-            <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-              <div
-                className="h-full rounded-full bg-success transition-all"
-                style={{
-                  width: `${q.keywords.length > 0 ? Math.round((matched.length / q.keywords.length) * 100) : 0}%`,
-                }}
-              />
-            </div>
-            <div className="mt-2 text-[11px] text-muted-foreground">
-              Điểm tự động được tính dựa trên tỉ lệ keyword khớp với bài mẫu.
+          {/* Solution */}
+          <div>
+            <h4 className="mb-2 font-display text-base font-bold text-foreground">
+              Solution
+            </h4>
+            <div className="rounded-2xl border-2 border-border bg-surface p-4">
+              <pre className="whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground">
+                {q.solution}
+              </pre>
             </div>
           </div>
 
-          <div className="rounded-2xl bg-background p-4 ring-1 ring-border">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Bài mẫu / đáp án gợi ý
+          {/* Feedback table */}
+          <div>
+            <h4 className="mb-2 font-display text-base font-bold text-foreground">
+              Feedback
+            </h4>
+            <div className="overflow-hidden rounded-2xl border border-border">
+              <table className="w-full table-fixed border-collapse text-sm">
+                <tbody>
+                  {(q.feedback ?? q.keywords.map((k) => ({ keyword: k, comment: "" }))).map(
+                    (row, i) => {
+                      const hit = matchedKeywords(value, [row.keyword]).length > 0;
+                      return (
+                        <tr
+                          key={row.keyword + i}
+                          className={cn(
+                            "border-b border-border last:border-b-0",
+                            i % 2 === 0 ? "bg-surface" : "bg-muted/40",
+                          )}
+                        >
+                          <td className="w-1/3 px-4 py-3 align-top">
+                            {hit ? (
+                              <span className="inline-flex items-center gap-1.5 font-semibold text-success-foreground">
+                                <Check className="h-3.5 w-3.5" /> {row.keyword}
+                              </span>
+                            ) : (
+                              <span className="font-mono text-muted-foreground/60">
+                                · · · · ·
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3 align-top text-foreground">
+                            {row.comment || (
+                              <span className="text-muted-foreground">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    },
+                  )}
+                </tbody>
+              </table>
             </div>
-            <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground">
-              {q.solution}
-            </pre>
           </div>
+
+          {/* Verdict + score bar */}
+          {(() => {
+            const total = q.keywords.length;
+            const hit = matched.length;
+            const pct = total > 0 ? Math.round((hit / total) * 100) : 0;
+            const verdict =
+              pct >= 80
+                ? "Excellent! Bài viết khớp với phần lớn keyword gợi ý."
+                : pct >= 40
+                  ? "Good try! Bổ sung thêm các ý còn thiếu để hoàn thiện hơn."
+                  : "Not good! You may want to refer to Sample Solution for a guide.";
+            const tone =
+              pct >= 80
+                ? "text-success-foreground"
+                : pct >= 40
+                  ? "text-warning-foreground"
+                  : "text-destructive";
+            return (
+              <div className="space-y-3">
+                <div className={cn("text-sm font-bold", tone)}>{verdict}</div>
+                <div className="flex items-center gap-3">
+                  <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{ width: `${pct}%`, background: accent }}
+                    />
+                  </div>
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    {hit}/{total} keyword
+                  </span>
+                </div>
+              </div>
+            );
+          })()}
         </>
       )}
     </div>
