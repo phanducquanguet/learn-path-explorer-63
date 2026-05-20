@@ -2024,6 +2024,7 @@ const SUB_TYPE_LABEL: Record<SubQuestionType, string> = {
   fill: "Fill in Blank",
   matching: "Matching",
   "drag-drop": "Drag the Words",
+  "select-lists": "Select from List",
 };
 
 function defaultSub(type: SubQuestionType): SubQuestion {
@@ -2045,6 +2046,8 @@ function defaultSub(type: SubQuestionType): SubQuestion {
     return { id, type, content: "", blanks: [] };
   if (type === "drag-drop")
     return { id, type, content: "", blanks: [], distractors: [] };
+  if (type === "select-lists")
+    return { id, type, content: "", blanks: [] };
   // short
   return { id, type, content: "", correctAnswer: "" };
 }
