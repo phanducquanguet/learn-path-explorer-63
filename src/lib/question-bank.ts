@@ -32,6 +32,10 @@ export type SubQuestion = {
   correctAnswer?: string;
   /** Cặp ghép cho matching sub-question. */
   pairs?: { left: string; right: string }[];
+  /** Chỗ trống cho fill / drag-drop sub-question. */
+  blanks?: BlankSpec[];
+  /** Đáp án nhiễu cho drag-drop sub-question. */
+  distractors?: string[];
 };
 export type QLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 
