@@ -1914,15 +1914,13 @@ function SubQuestionCard({
         </button>
       </div>
 
-      {!isFill && (
-        <textarea
-          value={sub.content}
-          onChange={(e) => onChange({ content: e.target.value })}
-          rows={2}
-          placeholder="Nội dung câu hỏi..."
-          className={cn(inputCls, "mb-2")}
-        />
-      )}
+      <textarea
+        value={sub.content}
+        onChange={(e) => onChange({ content: e.target.value })}
+        rows={2}
+        placeholder="Nội dung câu hỏi..."
+        className={cn(inputCls, "mb-2")}
+      />
 
       {isMcq && (
         <div className="space-y-1.5">
@@ -1984,83 +1982,6 @@ function SubQuestionCard({
             >
               {v}
             </button>
-          ))}
-        </div>
-      )}
-
-      {isShort && (
-        <input
-          value={sub.correctAnswer ?? ""}
-          onChange={(e) => onChange({ correctAnswer: e.target.value })}
-          placeholder="Đáp án mẫu"
-          className={inputCls}
-        />
-      )}
-
-      {isFill && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-[11px] font-semibold text-muted-foreground">
-              Đề có chỗ trống <code className="rounded bg-muted px-1 font-mono">[n]</code>
-            </span>
-            <button
-              onClick={addBlank}
-              className="inline-flex h-6 items-center gap-1 rounded-md bg-foreground px-2 text-[10px] font-semibold text-background"
-            >
-              <Plus className="h-3 w-3" /> Thêm chỗ trống
-            </button>
-          </div>
-          <textarea
-            value={sub.passage ?? ""}
-            onChange={(e) => onChange({ passage: e.target.value })}
-            rows={2}
-            placeholder="Vd: She [1] coffee in the morning."
-            className={cn(inputCls, "font-mono")}
-          />
-          {blanks.map((b) => (
-            <div key={b.index} className="rounded-lg border border-border bg-muted/30 p-2">
-              <div className="mb-1 flex items-center justify-between">
-                <span className="inline-flex h-5 items-center rounded bg-primary/10 px-1.5 text-[10px] font-bold text-primary">
-                  [{b.index}]
-                </span>
-                <button
-                  onClick={() => removeBlank(b.index)}
-                  className="rounded p-0.5 text-rose-500 hover:bg-rose-500/10"
-                >
-                  <Trash2 className="h-3 w-3" />
-                </button>
-              </div>
-              {(b.answers ?? []).map((a, ai) => (
-                <div key={ai} className="mb-1 flex items-center gap-1">
-                  <input
-                    value={a}
-                    onChange={(e) => {
-                      const next = [...(b.answers ?? [])];
-                      next[ai] = e.target.value;
-                      updateBlank(b.index, { answers: next });
-                    }}
-                    placeholder="Đáp án chấp nhận"
-                    className={cn(inputCls, "flex-1")}
-                  />
-                  <button
-                    onClick={() =>
-                      updateBlank(b.index, {
-                        answers: (b.answers ?? []).filter((_, x) => x !== ai),
-                      })
-                    }
-                    className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-              <button
-                onClick={() => updateBlank(b.index, { answers: [...(b.answers ?? []), ""] })}
-                className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary hover:underline"
-              >
-                <Plus className="h-3 w-3" /> Thêm đáp án
-              </button>
-            </div>
           ))}
         </div>
       )}
