@@ -101,7 +101,7 @@ export const TYPE_LABEL: Record<QType, string> = {
   "select-lists": "Select from Lists",
   "drag-drop": "Drag & Drop / Matching",
   essay: "Essay",
-  group: "Đề kèm câu hỏi con",
+  group: "Question Set",
 };
 
 export const TYPE_DESCRIPTION: Record<QType, string> = {
