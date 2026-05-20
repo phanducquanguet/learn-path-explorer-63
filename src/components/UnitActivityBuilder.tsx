@@ -64,6 +64,8 @@ export type PracticeNode = Common & {
   instructions?: string;
   audioFileName?: string;
   questions: QuestionNode[];
+  maxAttempts?: number | null;
+  passingScore?: number;
 };
 /** Câu hỏi giờ là wrapper mỏng quanh BankQuestion để đồng bộ UI với Ngân hàng câu hỏi. */
 export type QuestionNode = {
