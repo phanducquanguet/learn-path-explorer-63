@@ -171,7 +171,7 @@ function NewTestPage() {
       if (mode === "manual") {
         return structure
           .filter((s) => s.count > 0)
-          .every((s) => (s.customQuestions?.length ?? 0) === s.count);
+          .every((s) => (s.customBank?.length ?? 0) === s.count);
       }
       return structure
         .filter((s) => s.count > 0)
