@@ -998,6 +998,42 @@ export function EditDialog({
     else if (file.type.startsWith("audio/")) await setQuestionAudio(file);
     else if (file.type.startsWith("video/")) await setQuestionVideo(file);
   };
+  const mediaButton = (
+    <label
+      className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
+      title="Tải lên ảnh, audio hoặc video"
+    >
+      <Paperclip className="h-3 w-3" /> Media
+      <input
+        type="file"
+        accept="image/*,audio/*,video/*"
+        className="hidden"
+        onChange={(e) => onPickMedia(e.target.files?.[0] ?? null)}
+      />
+    </label>
+  );
+  const mediaPreview = (form.imageUrl || form.audioUrl || form.videoUrl) ? (
+    <div className="mb-2 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/20 p-2">
+      {form.imageUrl && (
+        <div className="flex items-center gap-2">
+          <img src={form.imageUrl} alt="" className="h-14 w-14 rounded-md border border-border object-cover" />
+          <button onClick={() => setQuestionImage(null)} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ ảnh</button>
+        </div>
+      )}
+      {form.audioUrl && (
+        <div className="flex items-center gap-2">
+          <audio controls src={form.audioUrl} className="h-8" />
+          <button onClick={() => setQuestionAudio(null)} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ audio</button>
+        </div>
+      )}
+      {form.videoUrl && (
+        <div className="flex items-center gap-2">
+          <video controls src={form.videoUrl} className="h-20 rounded-md border border-border" />
+          <button onClick={() => setQuestionVideo(null)} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ video</button>
+        </div>
+      )}
+    </div>
+  ) : null;
 
   // ---------- Sequence ----------
   const seqOrder = (form.correctAnswer ?? (form.options ?? []).map((_, i) => i + 1).join(","))
