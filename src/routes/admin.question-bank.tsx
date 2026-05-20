@@ -1445,24 +1445,9 @@ export function EditDialog({
           {(isFill || isSelectLists || isDragDrop) && (
             <div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/[0.03] p-4">
               {isDragDrop && (
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="font-semibold text-muted-foreground">Chế độ kéo thả:</span>
-                  {(["words", "passages"] as const).map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setForm({ ...form, dragMode: m })}
-                      className={cn(
-                        "rounded-md px-2.5 py-1 text-[11px] font-semibold",
-                        (form.dragMode ?? "words") === m
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-background border border-border text-muted-foreground hover:bg-muted",
-                      )}
-                    >
-                      {m === "words" ? "Kéo từ" : "Kéo đoạn văn"}
-                    </button>
-                  ))}
-                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Học viên sẽ thấy danh sách từ/cụm từ (gồm các đáp án ở dưới + đáp án nhiễu) và kéo thả vào đúng chỗ trống.
+                </p>
               )}
 
               <div>
