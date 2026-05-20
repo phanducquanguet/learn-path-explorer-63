@@ -79,9 +79,11 @@ export const TYPE_ORDER: QType[] = [
   "drag-drop",
   "essay",
   "speaking",
-  "error-correction",
   "group",
 ];
+
+/** Type list cho khóa học (UnitActivityBuilder) — bao gồm error-correction. */
+export const TYPE_ORDER_COURSE: QType[] = [...TYPE_ORDER, "error-correction"];
 
 export function defaultsForType(t: QType): Partial<BankQuestion> {
   if (t === "mcq" || t === "mcq-multi")
@@ -102,12 +104,22 @@ export function defaultsForType(t: QType): Partial<BankQuestion> {
     };
   if (t === "drag-drop" || t === "matching")
     return {
-      dragMode: "words",
       passage: "He [1] to the [2] every Sunday.",
       blanks: [
         { index: 1, answers: ["goes"] },
         { index: 2, answers: ["park"] },
       ],
+      distractors: [],
+    };
+  if (t === "short")
+    return {
+      correctAnswer: "",
+      distractors: [],
+    };
+  if (t === "error-correction")
+    return {
+      passage: "",
+      errors: [{ wrong: "", correct: "" }],
     };
   if (t === "essay")
     return {
@@ -1347,6 +1359,141 @@ export function EditDialog({
             </div>
           )}
 
+          {isShort && (
+            <div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/[0.03] p-4">
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Đáp án đúng *
+                </label>
+                <input
+                  value={form.correctAnswer ?? ""}
+                  onChange={(e) => setForm({ ...form, correctAnswer: e.target.value })}
+                  placeholder="Nhập câu trả lời mong muốn..."
+                  className={cn(inputCls, "mt-1")}
+                />
+              </div>
+              <div>
+                <div className="mb-1 flex items-center justify-between">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    Đáp án nhiễu (tùy chọn)
+                  </label>
+                  <button
+                    onClick={() =>
+                      setForm({ ...form, distractors: [...(form.distractors ?? []), ""] })
+                    }
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                  >
+                    <Plus className="h-3 w-3" /> Thêm đáp án nhiễu
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  {(form.distractors ?? []).map((d, di) => (
+                    <div key={di} className="flex items-center gap-2">
+                      <input
+                        value={d}
+                        onChange={(e) => {
+                          const next = [...(form.distractors ?? [])];
+                          next[di] = e.target.value;
+                          setForm({ ...form, distractors: next });
+                        }}
+                        placeholder="Đáp án sai dùng để gây nhiễu"
+                        className={cn(inputCls, "flex-1")}
+                      />
+                      <button
+                        onClick={() => {
+                          const next = (form.distractors ?? []).filter((_, x) => x !== di);
+                          setForm({ ...form, distractors: next });
+                        }}
+                        className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {form.type === "error-correction" && (
+            <div className="space-y-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                <Pencil className="h-3.5 w-3.5" /> Error correction — chọn từ sai và sửa lại
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Câu / đoạn văn (có chứa từ viết sai) *
+                </label>
+                <textarea
+                  value={form.passage ?? ""}
+                  onChange={(e) => setForm({ ...form, passage: e.target.value })}
+                  rows={3}
+                  placeholder="Vd: She go to school every day and play football with her freinds."
+                  className="mt-1 w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+              <div>
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    Danh sách từ sai và cách sửa
+                  </label>
+                  <button
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        errors: [...(form.errors ?? []), { wrong: "", correct: "" }],
+                      })
+                    }
+                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                  >
+                    <Plus className="h-3 w-3" /> Thêm từ sai
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  {(form.errors ?? []).map((er, i) => (
+                    <div key={i} className="grid grid-cols-[1fr_auto_1fr_auto] items-center gap-2">
+                      <input
+                        value={er.wrong}
+                        onChange={(e) => {
+                          const next = [...(form.errors ?? [])];
+                          next[i] = { ...er, wrong: e.target.value };
+                          setForm({ ...form, errors: next });
+                        }}
+                        placeholder="Từ/cụm sai (vd: go)"
+                        className={cn(inputCls, "font-mono")}
+                      />
+                      <span className="text-xs text-muted-foreground">→</span>
+                      <input
+                        value={er.correct}
+                        onChange={(e) => {
+                          const next = [...(form.errors ?? [])];
+                          next[i] = { ...er, correct: e.target.value };
+                          setForm({ ...form, errors: next });
+                        }}
+                        placeholder="Sửa thành (vd: goes)"
+                        className={cn(inputCls, "font-mono")}
+                      />
+                      <button
+                        onClick={() => {
+                          const next = (form.errors ?? []).filter((_, x) => x !== i);
+                          setForm({ ...form, errors: next });
+                        }}
+                        className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Từ sai phải xuất hiện trong câu/đoạn văn ở trên. Học viên sẽ chọn từ sai và viết lại từ đúng.
+                </p>
+              </div>
+            </div>
+          )}
+
+
+
 
           {isSequence && (
             <div className="space-y-3">
@@ -1433,24 +1580,9 @@ export function EditDialog({
           {(isFill || isSelectLists || isDragDrop) && (
             <div className="space-y-3 rounded-2xl border border-primary/20 bg-primary/[0.03] p-4">
               {isDragDrop && (
-                <div className="flex items-center gap-2 text-xs">
-                  <span className="font-semibold text-muted-foreground">Chế độ kéo thả:</span>
-                  {(["words", "passages"] as const).map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setForm({ ...form, dragMode: m })}
-                      className={cn(
-                        "rounded-md px-2.5 py-1 text-[11px] font-semibold",
-                        (form.dragMode ?? "words") === m
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-background border border-border text-muted-foreground hover:bg-muted",
-                      )}
-                    >
-                      {m === "words" ? "Kéo từ" : "Kéo đoạn văn"}
-                    </button>
-                  ))}
-                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Học viên sẽ thấy danh sách từ/cụm từ (gồm các đáp án ở dưới + đáp án nhiễu) và kéo thả vào đúng chỗ trống.
+                </p>
               )}
 
               <div>
@@ -1511,11 +1643,7 @@ export function EditDialog({
                   value={form.passage ?? ""}
                   onChange={(e) => setForm({ ...form, passage: e.target.value })}
                   rows={3}
-                  placeholder={
-                    isDragDrop && form.dragMode === "passages"
-                      ? "Dán đoạn văn có các vị trí [1], [2] cần kéo thả đoạn văn vào..."
-                      : "Vd: She [1] coffee in the [2] morning."
-                  }
+                  placeholder="Vd: She [1] coffee in the [2] morning."
                   className="w-full rounded-xl border border-border bg-background p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
@@ -1596,37 +1724,21 @@ export function EditDialog({
                       <div className="space-y-1.5">
                         <div className="text-[11px] font-semibold text-muted-foreground">
                           {isDragDrop
-                            ? form.dragMode === "passages"
-                              ? "Đoạn văn đúng cần kéo vào chỗ trống này"
-                              : "Từ/cụm từ đúng cần kéo vào"
+                            ? "Từ/cụm từ đúng cần kéo vào"
                             : "Đáp án chấp nhận (mỗi dòng 1 đáp án)"}
                         </div>
                         {(b.answers ?? []).map((a, ai) => (
                           <div key={ai} className="flex items-center gap-2">
-                            {isDragDrop && form.dragMode === "passages" ? (
-                              <textarea
-                                value={a}
-                                onChange={(e) => {
-                                  const next = [...(b.answers ?? [])];
-                                  next[ai] = e.target.value;
-                                  updateBlank(b.index, { answers: next });
-                                }}
-                                rows={2}
-                                placeholder="Nhập đoạn văn..."
-                                className={cn(inputCls, "flex-1")}
-                              />
-                            ) : (
-                              <input
-                                value={a}
-                                onChange={(e) => {
-                                  const next = [...(b.answers ?? [])];
-                                  next[ai] = e.target.value;
-                                  updateBlank(b.index, { answers: next });
-                                }}
-                                placeholder={isFill ? "Đáp án chấp nhận" : "Từ đúng"}
-                                className={cn(inputCls, "flex-1")}
-                              />
-                            )}
+                            <input
+                              value={a}
+                              onChange={(e) => {
+                                const next = [...(b.answers ?? [])];
+                                next[ai] = e.target.value;
+                                updateBlank(b.index, { answers: next });
+                              }}
+                              placeholder={isFill ? "Đáp án chấp nhận" : "Từ đúng"}
+                              className={cn(inputCls, "flex-1")}
+                            />
                             <button
                               onClick={() => {
                                 const next = (b.answers ?? []).filter((_, x) => x !== ai);
@@ -1660,9 +1772,47 @@ export function EditDialog({
               </div>
 
               {isDragDrop && (
-                <p className="text-[11px] text-muted-foreground">
-                  Học viên sẽ thấy danh sách {form.dragMode === "passages" ? "đoạn văn" : "từ"} (gồm các đáp án ở trên + nhiễu) và kéo thả vào đúng chỗ trống.
-                </p>
+                <div className="space-y-1.5 rounded-xl border border-dashed border-border bg-background p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-xs font-semibold text-muted-foreground">
+                      Đáp án nhiễu (distractors)
+                    </div>
+                    <button
+                      onClick={() =>
+                        setForm({ ...form, distractors: [...(form.distractors ?? []), ""] })
+                      }
+                      className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                    >
+                      <Plus className="h-3 w-3" /> Thêm đáp án nhiễu
+                    </button>
+                  </div>
+                  {(form.distractors ?? []).map((d, di) => (
+                    <div key={di} className="flex items-center gap-2">
+                      <input
+                        value={d}
+                        onChange={(e) => {
+                          const next = [...(form.distractors ?? [])];
+                          next[di] = e.target.value;
+                          setForm({ ...form, distractors: next });
+                        }}
+                        placeholder="Từ/cụm sai để gây nhiễu"
+                        className={cn(inputCls, "flex-1")}
+                      />
+                      <button
+                        onClick={() => {
+                          const next = (form.distractors ?? []).filter((_, x) => x !== di);
+                          setForm({ ...form, distractors: next });
+                        }}
+                        className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                  <p className="text-[11px] text-muted-foreground">
+                    Học viên sẽ thấy đáp án đúng + các đáp án nhiễu trộn lẫn trong pool kéo thả.
+                  </p>
+                </div>
               )}
             </div>
           )}
