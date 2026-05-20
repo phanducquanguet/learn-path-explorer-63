@@ -47,6 +47,7 @@ import {
   FileText,
   Image as ImageIcon,
   Music,
+  Paperclip,
   GripVertical,
   Layers,
 } from "lucide-react";
@@ -980,10 +981,58 @@ export function EditDialog({
     setForm({ ...form, correctAnswer: Array.from(set).sort().join(",") });
   };
 
-  // ---------- Audio question ----------
+  // ---------- Media (image / audio / video) ----------
   const setQuestionAudio = async (file: File | null) => {
     setForm({ ...form, audioUrl: file ? await fileToDataURL(file) : undefined });
   };
+  const setQuestionImage = async (file: File | null) => {
+    setForm({ ...form, imageUrl: file ? await fileToDataURL(file) : undefined });
+  };
+  const setQuestionVideo = async (file: File | null) => {
+    setForm({ ...form, videoUrl: file ? await fileToDataURL(file) : undefined });
+  };
+  const onPickMedia = async (file: File | null) => {
+    if (!file) return;
+    if (file.type.startsWith("image/")) await setQuestionImage(file);
+    else if (file.type.startsWith("audio/")) await setQuestionAudio(file);
+    else if (file.type.startsWith("video/")) await setQuestionVideo(file);
+  };
+  const mediaButton = (
+    <label
+      className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
+      title="Tải lên ảnh, audio hoặc video"
+    >
+      <Paperclip className="h-3 w-3" /> Media
+      <input
+        type="file"
+        accept="image/*,audio/*,video/*"
+        className="hidden"
+        onChange={(e) => onPickMedia(e.target.files?.[0] ?? null)}
+      />
+    </label>
+  );
+  const mediaPreview = (form.imageUrl || form.audioUrl || form.videoUrl) ? (
+    <div className="mb-2 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/20 p-2">
+      {form.imageUrl && (
+        <div className="flex items-center gap-2">
+          <img src={form.imageUrl} alt="" className="h-14 w-14 rounded-md border border-border object-cover" />
+          <button onClick={() => setQuestionImage(null)} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ ảnh</button>
+        </div>
+      )}
+      {form.audioUrl && (
+        <div className="flex items-center gap-2">
+          <audio controls src={form.audioUrl} className="h-8" />
+          <button onClick={() => setQuestionAudio(null)} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ audio</button>
+        </div>
+      )}
+      {form.videoUrl && (
+        <div className="flex items-center gap-2">
+          <video controls src={form.videoUrl} className="h-20 rounded-md border border-border" />
+          <button onClick={() => setQuestionVideo(null)} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ video</button>
+        </div>
+      )}
+    </div>
+  ) : null;
 
   // ---------- Sequence ----------
   const seqOrder = (form.correctAnswer ?? (form.options ?? []).map((_, i) => i + 1).join(","))
@@ -1137,38 +1186,8 @@ export function EditDialog({
                 <label className="text-xs font-semibold text-muted-foreground">
                   Nội dung câu hỏi *
                 </label>
-                <div className="flex items-center gap-1">
-                  <label
-                    className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
-                    title="Tải ảnh cho câu hỏi"
-                  >
-                    <ImageIcon className="h-3 w-3" /> Ảnh
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={async (e) => {
-                        const f = e.target.files?.[0];
-                        setForm({
-                          ...form,
-                          imageUrl: f ? await fileToDataURL(f) : form.imageUrl,
-                        });
-                      }}
-                    />
-                  </label>
-                  <label
-                    className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
-                    title="Tải audio cho câu hỏi"
-                  >
-                    <Music className="h-3 w-3" /> Audio
-                    <input
-                      type="file"
-                      accept="audio/*"
-                      className="hidden"
-                      onChange={(e) => setQuestionAudio(e.target.files?.[0] ?? null)}
-                    />
-                  </label>
-                </div>
+                <div className="flex items-center gap-1">{mediaButton}</div>
+
               </div>
               <textarea
                 value={form.content}
@@ -1177,36 +1196,8 @@ export function EditDialog({
                 placeholder="Nhập nội dung câu hỏi / yêu cầu cho học viên..."
                 className="w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
-              {(form.imageUrl || form.audioUrl) && (
-                <div className="mt-2 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/20 p-2">
-                  {form.imageUrl && (
-                    <div className="flex items-center gap-2">
-                      <img
-                        src={form.imageUrl}
-                        alt=""
-                        className="h-14 w-14 rounded-md border border-border object-cover"
-                      />
-                      <button
-                        onClick={() => setForm({ ...form, imageUrl: undefined })}
-                        className="text-[11px] font-semibold text-rose-500 hover:underline"
-                      >
-                        Bỏ ảnh
-                      </button>
-                    </div>
-                  )}
-                  {form.audioUrl && (
-                    <div className="flex items-center gap-2">
-                      <audio controls src={form.audioUrl} className="h-8" />
-                      <button
-                        onClick={() => setQuestionAudio(null)}
-                        className="text-[11px] font-semibold text-rose-500 hover:underline"
-                      >
-                        Bỏ audio
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
+              {mediaPreview}
+
             </div>
           )}
 
@@ -1419,38 +1410,14 @@ export function EditDialog({
                       Câu / đoạn văn — bấm <span className="font-semibold text-foreground">Thêm chỗ trống</span> để chèn <code className="rounded bg-muted px-1 font-mono">[n]</code> tại vị trí từ sai
                     </label>
                     <div className="flex items-center gap-1">
-                      <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted">
-                        <ImageIcon className="h-3 w-3" /> Ảnh
-                        <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
-                          const f = e.target.files?.[0];
-                          setForm({ ...form, imageUrl: f ? await fileToDataURL(f) : form.imageUrl });
-                        }} />
-                      </label>
-                      <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted">
-                        <Music className="h-3 w-3" /> Audio
-                        <input type="file" accept="audio/*" className="hidden" onChange={(e) => setQuestionAudio(e.target.files?.[0] ?? null)} />
-                      </label>
+                      {mediaButton}
                       <button onClick={addErrBlank} className="inline-flex h-7 items-center gap-1 rounded-md bg-foreground px-2 text-[11px] font-semibold text-background">
                         <Plus className="h-3 w-3" /> Thêm chỗ trống
                       </button>
                     </div>
                   </div>
-                  {(form.imageUrl || form.audioUrl) && (
-                    <div className="mb-2 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/20 p-2">
-                      {form.imageUrl && (
-                        <div className="flex items-center gap-2">
-                          <img src={form.imageUrl} alt="" className="h-12 w-12 rounded-md border border-border object-cover" />
-                          <button onClick={() => setForm({ ...form, imageUrl: undefined })} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ ảnh</button>
-                        </div>
-                      )}
-                      {form.audioUrl && (
-                        <div className="flex items-center gap-2">
-                          <audio controls src={form.audioUrl} className="h-8" />
-                          <button onClick={() => setQuestionAudio(null)} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ audio</button>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {mediaPreview}
+
                   <textarea
                     value={form.passage ?? ""}
                     onChange={(e) => setForm({ ...form, passage: e.target.value, content: e.target.value })}
@@ -1605,30 +1572,7 @@ export function EditDialog({
                     Đề bài có chỗ trống — bấm <span className="font-semibold text-foreground">Thêm chỗ trống</span> để chèn <code className="rounded bg-muted px-1 font-mono">[n]</code>
                   </label>
                   <div className="flex items-center gap-1">
-                    <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted">
-                      <ImageIcon className="h-3 w-3" /> Ảnh
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={async (e) => {
-                          const f = e.target.files?.[0];
-                          setForm({
-                            ...form,
-                            imageUrl: f ? await fileToDataURL(f) : form.imageUrl,
-                          });
-                        }}
-                      />
-                    </label>
-                    <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted">
-                      <Music className="h-3 w-3" /> Audio
-                      <input
-                        type="file"
-                        accept="audio/*"
-                        className="hidden"
-                        onChange={(e) => setQuestionAudio(e.target.files?.[0] ?? null)}
-                      />
-                    </label>
+                    {mediaButton}
                     <button
                       onClick={addBlank}
                       className="inline-flex h-7 items-center gap-1 rounded-md bg-foreground px-2 text-[11px] font-semibold text-background"
@@ -1637,22 +1581,8 @@ export function EditDialog({
                     </button>
                   </div>
                 </div>
-                {(form.imageUrl || form.audioUrl) && (
-                  <div className="mb-2 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-background p-2">
-                    {form.imageUrl && (
-                      <div className="flex items-center gap-2">
-                        <img src={form.imageUrl} alt="" className="h-12 w-12 rounded-md border border-border object-cover" />
-                        <button onClick={() => setForm({ ...form, imageUrl: undefined })} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ ảnh</button>
-                      </div>
-                    )}
-                    {form.audioUrl && (
-                      <div className="flex items-center gap-2">
-                        <audio controls src={form.audioUrl} className="h-8" />
-                        <button onClick={() => setQuestionAudio(null)} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ audio</button>
-                      </div>
-                    )}
-                  </div>
-                )}
+                {mediaPreview}
+
                 <textarea
                   value={form.passage ?? ""}
                   onChange={(e) => setForm({ ...form, passage: e.target.value })}
@@ -2093,6 +2023,7 @@ const SUB_TYPE_LABEL: Record<SubQuestionType, string> = {
   short: "Short Answer",
   fill: "Fill in Blank",
   matching: "Matching",
+  "drag-drop": "Drag the Words",
 };
 
 function defaultSub(type: SubQuestionType): SubQuestion {
@@ -2110,9 +2041,12 @@ function defaultSub(type: SubQuestionType): SubQuestion {
         { left: "", right: "" },
       ],
     };
+  if (type === "drag-drop")
+    return { id, type, content: "", correctAnswer: "" };
   // short, fill
   return { id, type, content: "", correctAnswer: "" };
 }
+
 
 function GroupEditor({
   form,
@@ -2200,6 +2134,7 @@ function SubQuestionCard({
   const isShort = sub.type === "short";
   const isFill = sub.type === "fill";
   const isMatching = sub.type === "matching";
+  const isDragDrop = sub.type === "drag-drop";
   const pairs = sub.pairs ?? [];
   const updatePair = (i: number, patch: Partial<{ left: string; right: string }>) =>
     onChange({ pairs: pairs.map((p, x) => (x === i ? { ...p, ...patch } : p)) });
@@ -2238,9 +2173,14 @@ function SubQuestionCard({
         value={sub.content}
         onChange={(e) => onChange({ content: e.target.value })}
         rows={2}
-        placeholder="Nội dung câu hỏi..."
-        className={cn(inputCls, "mb-2")}
+        placeholder={
+          isDragDrop
+            ? "Đề bài có chỗ trống — dùng [1], [2]... vd: She [1] coffee in the [2] morning."
+            : "Nội dung câu hỏi..."
+        }
+        className={cn(inputCls, "mb-2", isDragDrop && "font-mono")}
       />
+
 
       {isMcq && (
         <div className="space-y-1.5">
@@ -2354,6 +2294,20 @@ function SubQuestionCard({
           </button>
         </div>
       )}
+      {isDragDrop && (
+        <div className="space-y-1.5">
+          <input
+            value={sub.correctAnswer ?? ""}
+            onChange={(e) => onChange({ correctAnswer: e.target.value })}
+            placeholder="Đáp án cho từng chỗ trống — ngăn cách bằng dấu | (vd: drinks|early)"
+            className={cn(inputCls)}
+          />
+          <p className="text-[10px] text-muted-foreground">
+            Học viên sẽ kéo thả các từ trên vào đúng chỗ trống [n] trong đề bài.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
+
