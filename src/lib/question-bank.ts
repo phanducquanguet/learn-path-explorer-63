@@ -95,9 +95,9 @@ export const TYPE_DESCRIPTION: Record<QType, string> = {
   short: "Trả lời ngắn bằng văn bản",
   sequence: "Sắp xếp các mục theo thứ tự",
   matching: "Nối cặp các mục tương ứng",
-  fill: "Điền vào chỗ trống trong câu",
-  "select-lists": "Chọn từ danh sách thả xuống",
-  "drag-drop": "Kéo thả các mục vào vị trí",
+  fill: "Điền vào chỗ trống — tự nhập đáp án",
+  "select-lists": "Chọn đáp án từ danh sách thả xuống tại mỗi chỗ trống",
+  "drag-drop": "Kéo thả từ/đoạn văn vào các chỗ trống trong đề",
   essay: "Bài viết tự luận dài",
 };
 
