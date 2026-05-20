@@ -379,7 +379,7 @@ function BankPage() {
             </FilterSection>
             <FilterSection label="Loại">
               <Chip on={type === "all"} onClick={() => { setType("all"); setPage(1); }}>Tất cả</Chip>
-              {(Object.keys(TYPE_LABEL) as QType[]).map((t) => (
+              {TYPE_ORDER.map((t) => (
                 <Chip key={t} on={type === t} onClick={() => { setType(t); setPage(1); }}>{TYPE_LABEL[t]}</Chip>
               ))}
             </FilterSection>
