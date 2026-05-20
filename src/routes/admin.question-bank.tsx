@@ -901,8 +901,8 @@ export function EditDialog({
   );
 
   // Autosave: gửi thay đổi lên parent ngay khi form đổi
-  const isFirstRef = React.useRef(true);
-  React.useEffect(() => {
+  const isFirstRef = useRef(true);
+  useEffect(() => {
     if (!autoSave) return;
     if (isFirstRef.current) {
       isFirstRef.current = false;
