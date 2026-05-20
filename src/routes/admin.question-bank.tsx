@@ -1373,7 +1373,7 @@ export function EditDialog({
           )}
 
           {isShort && (
-            <div className="rounded-2xl border border-primary/20 bg-primary/[0.03] p-4">
+            <div>
               <label className="text-xs font-semibold text-muted-foreground">
                 Đáp án đúng *
               </label>
