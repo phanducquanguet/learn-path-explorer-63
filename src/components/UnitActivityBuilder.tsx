@@ -13,20 +13,30 @@ import {
   Trash2,
   Upload,
   Image as ImageIcon,
-  GripVertical,
   Pencil,
   Layers,
+  CircleDot,
+  CheckSquare,
+  ToggleLeft,
+  Type as TypeIcon,
+  ListOrdered,
+  GitCompareArrows,
+  TextCursorInput,
+  MousePointerSquareDashed,
+  Move,
+  Music as MusicIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { TYPE_LABEL, TYPE_DESCRIPTION, type QType } from "@/lib/question-bank";
+import {
+  TYPE_LABEL,
+  DIFFICULTY_LABEL,
+  DIFFICULTY_COLOR,
+  type BankQuestion,
+  type QType,
+} from "@/lib/question-bank";
+import { EditDialog, TypePickerDialog } from "@/routes/admin.question-bank";
 
 /* ============================== Types ============================== */
-
-export type QKind = QType;
-
-export const QUIZ_KINDS: { id: QType; label: string; description: string }[] = (
-  ["mcq", "mcq-multi", "tf", "short", "fill", "matching", "sequence", "select-lists", "drag-drop", "essay", "speaking", "error-correction"] as QType[]
-).map((id) => ({ id, label: TYPE_LABEL[id], description: TYPE_DESCRIPTION[id] }));
 
 type Common = { id: string; title: string; description?: string };
 
@@ -57,14 +67,11 @@ export type PracticeNode = Common & {
   audioFileName?: string;
   questions: QuestionNode[];
 };
-export type QuestionNode = Common & {
+/** Câu hỏi giờ là wrapper mỏng quanh BankQuestion để đồng bộ UI với Ngân hàng câu hỏi. */
+export type QuestionNode = {
+  id: string;
   kind: "question";
-  qType: QKind;
-  prompt: string;
-  options: string[];
-  correct: number[];
-  sampleAnswer?: string;
-  points: number;
+  bank: BankQuestion;
 };
 export type GroupNode = Common & {
   kind: "group";
@@ -79,7 +86,8 @@ export type AnyNode =
   | QuestionNode
   | GroupNode;
 
-const ACTIVITY_OPTIONS: { kind: AnyNode["kind"]; label: string; icon: React.ElementType }[] = [
+type LeafKind = Exclude<AnyNode["kind"], "question">;
+const ACTIVITY_OPTIONS: { kind: LeafKind; label: string; icon: React.ElementType }[] = [
   { kind: "video", label: "Video bài giảng", icon: FileVideo },
   { kind: "video-speaking", label: "Video + luyện nói", icon: Mic },
   { kind: "pdf", label: "Tài liệu PDF", icon: FileText },
@@ -87,24 +95,38 @@ const ACTIVITY_OPTIONS: { kind: AnyNode["kind"]; label: string; icon: React.Elem
   { kind: "practice", label: "Bài thực hành", icon: ListChecks },
 ];
 
-const KIND_ICON: Record<AnyNode["kind"], React.ElementType> = {
+const KIND_ICON: Record<Exclude<AnyNode["kind"], "question">, React.ElementType> = {
   group: FolderPlus,
   video: FileVideo,
   "video-speaking": Mic,
   pdf: FileText,
   "pdf-audio": Headphones,
   practice: ListChecks,
-  question: Pencil,
 };
 
-const KIND_LABEL: Record<AnyNode["kind"], string> = {
+const KIND_LABEL: Record<Exclude<AnyNode["kind"], "question">, string> = {
   group: "Group",
   video: "Video",
   "video-speaking": "Video + Nói",
   pdf: "PDF",
   "pdf-audio": "PDF + Audio",
   practice: "Thực hành",
-  question: "Câu hỏi",
+};
+
+const Q_TYPE_ICON: Record<QType, React.ElementType> = {
+  mcq: CircleDot,
+  "mcq-multi": CheckSquare,
+  tf: ToggleLeft,
+  short: TypeIcon,
+  sequence: ListOrdered,
+  matching: GitCompareArrows,
+  fill: TextCursorInput,
+  "select-lists": MousePointerSquareDashed,
+  "drag-drop": Move,
+  essay: FileText,
+  speaking: MusicIcon,
+  "error-correction": Pencil,
+  group: Layers,
 };
 
 const CONTAINER_KINDS: AnyNode["kind"][] = ["group", "practice"];
@@ -114,7 +136,7 @@ const isContainer = (k: AnyNode["kind"]) => CONTAINER_KINDS.includes(k);
 
 const uid = () => `n-${Math.random().toString(36).slice(2, 9)}`;
 
-function makeNode(kind: AnyNode["kind"], qType?: QKind): AnyNode {
+function makeNode(kind: Exclude<AnyNode["kind"], "question">): AnyNode {
   const base = { id: uid() };
   switch (kind) {
     case "group":
@@ -129,27 +151,11 @@ function makeNode(kind: AnyNode["kind"], qType?: QKind): AnyNode {
       return { ...base, kind, title: "PDF kèm audio", description: "" };
     case "practice":
       return { ...base, kind, title: "Bài thực hành", description: "", instructions: "", questions: [] };
-    case "question": {
-      const q = qType ?? "mcq";
-      const needsOptions = ["mcq", "mcq-multi", "matching", "drag-drop", "tf", "sequence", "select-lists", "error-correction"].includes(q);
-      return {
-        ...base,
-        kind: "question",
-        qType: q,
-        title: QUIZ_KINDS.find((k) => k.id === q)?.label ?? "Câu hỏi",
-        prompt: "",
-        options: needsOptions
-          ? q === "tf"
-            ? ["Đúng", "Sai"]
-            : q === "error-correction"
-              ? ["She", "go", "to", "school"]
-              : ["Lựa chọn A", "Lựa chọn B"]
-          : [],
-        correct: q === "tf" ? [0] : [],
-        points: q === "essay" ? 5 : q === "short" || q === "speaking" ? 2 : 1,
-      };
-    }
   }
+}
+
+function makeQuestionFromBank(bank: BankQuestion): QuestionNode {
+  return { id: uid(), kind: "question", bank };
 }
 
 function mapTree(nodes: AnyNode[], fn: (n: AnyNode) => AnyNode | null): AnyNode[] {
@@ -208,6 +214,10 @@ function containerCount(n: AnyNode): number {
   return 0;
 }
 
+function questionLabel(q: QuestionNode) {
+  return q.bank.content?.trim() || q.bank.passage?.trim() || "Chưa có nội dung";
+}
+
 /* ============================== Component ============================== */
 
 export function UnitActivityBuilder({
@@ -221,12 +231,15 @@ export function UnitActivityBuilder({
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [addMenuFor, setAddMenuFor] = useState<string | null>("__root__");
 
+  // Dialogs: tạo / sửa câu hỏi dùng EditDialog của Ngân hàng
+  const [pickingTypeFor, setPickingTypeFor] = useState<string | null>(null); // practiceId
+  const [creating, setCreating] = useState<{ practiceId: string; type: QType } | null>(null);
+  const [editing, setEditing] = useState<{ practiceId: string; questionId: string; bank: BankQuestion } | null>(null);
+
   const selected = useMemo(() => (selectedId ? findNode(nodes, selectedId) : null), [nodes, selectedId]);
 
   const updateNode = (id: string, patch: Partial<AnyNode>) => {
-    onChange(
-      mapTree(nodes, (n) => (n.id === id ? ({ ...n, ...patch } as AnyNode) : n)),
-    );
+    onChange(mapTree(nodes, (n) => (n.id === id ? ({ ...n, ...patch } as AnyNode) : n)));
   };
   const removeNode = (id: string) => {
     onChange(mapTree(nodes, (n) => (n.id === id ? null : n)));
@@ -239,6 +252,42 @@ export function UnitActivityBuilder({
     setAddMenuFor(null);
   };
 
+  // ----- Câu hỏi: thao tác qua dialog -----
+  const openCreateQuestion = (practiceId: string) => {
+    setPickingTypeFor(practiceId);
+    setExpanded((e) => ({ ...e, [practiceId]: true }));
+  };
+  const openEditQuestion = (questionId: string) => {
+    // Tìm practice cha
+    for (const root of nodes) {
+      const found = findParentPractice(root, questionId);
+      if (found) {
+        const q = found.questions.find((x) => x.id === questionId)!;
+        setEditing({ practiceId: found.id, questionId, bank: q.bank });
+        return;
+      }
+    }
+  };
+  const handleSaveQuestion = (bank: BankQuestion) => {
+    if (editing) {
+      onChange(
+        mapTree(nodes, (n) =>
+          n.kind === "question" && n.id === editing.questionId ? { ...n, bank } : n,
+        ),
+      );
+      setEditing(null);
+      return;
+    }
+    if (creating) {
+      const q = makeQuestionFromBank({
+        ...bank,
+        id: bank.id || `CQ-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+      });
+      addNode(creating.practiceId, q);
+      setCreating(null);
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 gap-4 lg:grid-cols-[340px_1fr]">
       {/* LEFT: tree */}
@@ -247,7 +296,7 @@ export function UnitActivityBuilder({
           <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             Cấu trúc nội dung
           </div>
-          <AddMenuButton open={addMenuFor === "__root__"} onToggle={(v) => setAddMenuFor(v ? "__root__" : null)} onPick={(n) => addNode(null, n)} />
+          <AddActivityMenuButton open={addMenuFor === "__root__"} onToggle={(v) => setAddMenuFor(v ? "__root__" : null)} onPick={(n) => addNode(null, n)} />
         </div>
 
         <div className="mb-2 flex items-center gap-3 px-1 text-[10px] text-muted-foreground">
@@ -269,11 +318,16 @@ export function UnitActivityBuilder({
                 selectedId={selectedId}
                 expanded={expanded}
                 addMenuFor={addMenuFor}
-                onSelect={setSelectedId}
+                onSelect={(id) => {
+                  const found = findNode(nodes, id);
+                  if (found?.kind === "question") openEditQuestion(id);
+                  else setSelectedId(id);
+                }}
                 onToggle={(id) => setExpanded((e) => ({ ...e, [id]: !e[id] }))}
                 onRemove={removeNode}
                 onAdd={addNode}
                 onOpenAddMenu={setAddMenuFor}
+                onAddQuestion={openCreateQuestion}
               />
             ))}
           </ul>
@@ -286,12 +340,57 @@ export function UnitActivityBuilder({
           <div className="flex h-full min-h-[280px] items-center justify-center text-sm text-muted-foreground">
             Chọn một mục bên trái để chỉnh sửa nội dung.
           </div>
+        ) : selected.kind === "question" ? (
+          <div className="text-sm text-muted-foreground">
+            Đang mở câu hỏi trong cửa sổ chỉnh sửa…
+          </div>
         ) : (
-          <NodeEditor node={selected} onChange={(p) => updateNode(selected.id, p)} onRemove={() => removeNode(selected.id)} onSelectChild={setSelectedId} />
+          <NodeEditor
+            node={selected}
+            onChange={(p) => updateNode(selected.id, p)}
+            onRemove={() => removeNode(selected.id)}
+            onAddQuestion={openCreateQuestion}
+            onEditQuestion={openEditQuestion}
+          />
         )}
       </div>
+
+      {/* ===== Dialogs đồng bộ với Ngân hàng câu hỏi ===== */}
+      {pickingTypeFor && (
+        <TypePickerDialog
+          onClose={() => setPickingTypeFor(null)}
+          onPick={(t) => {
+            setCreating({ practiceId: pickingTypeFor, type: t });
+            setPickingTypeFor(null);
+          }}
+        />
+      )}
+      {(editing || creating) && (
+        <EditDialog
+          question={editing?.bank ?? null}
+          initialType={creating?.type}
+          onClose={() => {
+            setEditing(null);
+            setCreating(null);
+          }}
+          onSave={handleSaveQuestion}
+        />
+      )}
     </div>
   );
+}
+
+function findParentPractice(node: AnyNode, questionId: string): PracticeNode | null {
+  if (node.kind === "practice") {
+    if (node.questions.some((q) => q.id === questionId)) return node;
+  }
+  if (node.kind === "group") {
+    for (const c of node.children) {
+      const x = findParentPractice(c, questionId);
+      if (x) return x;
+    }
+  }
+  return null;
 }
 
 /* ============================== Tree row ============================== */
@@ -307,6 +406,7 @@ function TreeRow({
   onRemove,
   onAdd,
   onOpenAddMenu,
+  onAddQuestion,
 }: {
   node: AnyNode;
   depth: number;
@@ -318,8 +418,10 @@ function TreeRow({
   onRemove: (id: string) => void;
   onAdd: (parentId: string | null, n: AnyNode) => void;
   onOpenAddMenu: (id: string | null) => void;
+  onAddQuestion: (practiceId: string) => void;
 }) {
-  const Icon = KIND_ICON[node.kind];
+  const isQuestion = node.kind === "question";
+  const Icon = isQuestion ? Q_TYPE_ICON[node.bank.type] : KIND_ICON[node.kind];
   const container = isContainer(node.kind);
   const isOpen = container && (expanded[node.id] ?? true);
   const isSelected = selectedId === node.id;
@@ -328,7 +430,9 @@ function TreeRow({
   const children: AnyNode[] =
     node.kind === "group" ? node.children : node.kind === "practice" ? node.questions : [];
 
-  // Container styling: amber accent + tinted bg; Leaf: subtle
+  const title = isQuestion ? questionLabel(node) : node.title;
+  const kindLabel = isQuestion ? TYPE_LABEL[node.bank.type] : KIND_LABEL[node.kind];
+
   const rowCls = container
     ? cn(
         "group flex items-center gap-1 rounded-lg border px-1.5 py-2 text-sm font-medium transition",
@@ -360,7 +464,7 @@ function TreeRow({
           )}
         />
         <button onClick={() => onSelect(node.id)} className="flex-1 truncate text-left">
-          {node.title || <span className="italic text-muted-foreground">Chưa đặt tên</span>}
+          {title || <span className="italic text-muted-foreground">Chưa đặt tên</span>}
         </button>
         {container && (
           <span
@@ -374,10 +478,10 @@ function TreeRow({
           </span>
         )}
         <span className="hidden text-[10px] uppercase tracking-wider text-muted-foreground group-hover:inline">
-          {KIND_LABEL[node.kind]}
+          {kindLabel}
         </span>
         {node.kind === "group" && (
-          <AddMenuButton
+          <AddActivityMenuButton
             small
             open={addMenuFor === node.id}
             onToggle={(v) => onOpenAddMenu(v ? node.id : null)}
@@ -385,7 +489,13 @@ function TreeRow({
           />
         )}
         {node.kind === "practice" && (
-          <AddQuestionButton small onPick={(qt) => onAdd(node.id, makeNode("question", qt))} />
+          <button
+            onClick={() => onAddQuestion(node.id)}
+            className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary/20"
+            title="Thêm câu hỏi"
+          >
+            <Plus className="h-3 w-3" />
+          </button>
         )}
         <button onClick={() => onRemove(node.id)} className="rounded p-1 text-muted-foreground opacity-0 hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100">
           <Trash2 className="h-3.5 w-3.5" />
@@ -410,6 +520,7 @@ function TreeRow({
               onRemove={onRemove}
               onAdd={onAdd}
               onOpenAddMenu={onOpenAddMenu}
+              onAddQuestion={onAddQuestion}
             />
           ))}
         </ul>
@@ -418,9 +529,9 @@ function TreeRow({
   );
 }
 
-/* ============================== Add menu ============================== */
+/* ============================== Add activity menu ============================== */
 
-function AddMenuButton({
+function AddActivityMenuButton({
   open,
   onToggle,
   onPick,
@@ -475,67 +586,20 @@ function AddMenuButton({
   );
 }
 
-function AddQuestionButton({
-  small,
-  onPick,
-}: {
-  small?: boolean;
-  onPick: (qt: QKind) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className={cn(
-          "inline-flex items-center gap-1 rounded-lg bg-primary/10 font-semibold text-primary hover:bg-primary/20",
-          small ? "px-1.5 py-0.5 text-[10px]" : "px-2.5 py-1.5 text-xs",
-        )}
-        title="Thêm câu hỏi"
-      >
-        <Plus className={small ? "h-3 w-3" : "h-3.5 w-3.5"} />
-      </button>
-      {open && (
-        <>
-          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-40 mt-1 w-72 rounded-xl border border-border bg-popover p-2 shadow-lg">
-            <div className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Chọn dạng câu hỏi
-            </div>
-            <div className="grid grid-cols-2 gap-1">
-              {QUIZ_KINDS.map((q) => (
-                <button
-                  key={q.id}
-                  onClick={() => {
-                    onPick(q.id);
-                    setOpen(false);
-                  }}
-                  className="rounded-md px-2 py-1.5 text-left text-[11px] hover:bg-muted"
-                  title={q.description}
-                >
-                  {q.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
 /* ============================== Node editors ============================== */
 
 function NodeEditor({
   node,
   onChange,
   onRemove,
-  onSelectChild,
+  onAddQuestion,
+  onEditQuestion,
 }: {
-  node: AnyNode;
+  node: Exclude<AnyNode, QuestionNode>;
   onChange: (patch: Partial<AnyNode>) => void;
   onRemove: () => void;
-  onSelectChild: (id: string) => void;
+  onAddQuestion: (practiceId: string) => void;
+  onEditQuestion: (questionId: string) => void;
 }) {
   const Icon = KIND_ICON[node.kind];
   const container = isContainer(node.kind);
@@ -553,7 +617,6 @@ function NodeEditor({
         <div className="flex-1">
           <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
             <span>{KIND_LABEL[node.kind]}</span>
-            {node.kind === "question" && <span>• {QUIZ_KINDS.find((k) => k.id === node.qType)?.label}</span>}
             {container && (
               <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[9px] text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">
                 Khối chứa
@@ -575,20 +638,17 @@ function NodeEditor({
         </button>
       </div>
 
-      {/* Intro / description — chung cho mọi loại */}
-      {node.kind !== "question" && (
-        <div className="mb-5">
-          <Row label="Giới thiệu nội dung">
-            <textarea
-              rows={2}
-              value={node.description ?? ""}
-              onChange={(e) => onChange({ description: e.target.value } as Partial<AnyNode>)}
-              placeholder="Mô tả ngắn về nội dung của phần này — học viên sẽ nhìn thấy trước khi bắt đầu."
-              className="ui-input"
-            />
-          </Row>
-        </div>
-      )}
+      <div className="mb-5">
+        <Row label="Giới thiệu nội dung">
+          <textarea
+            rows={2}
+            value={node.description ?? ""}
+            onChange={(e) => onChange({ description: e.target.value } as Partial<AnyNode>)}
+            placeholder="Mô tả ngắn về nội dung của phần này — học viên sẽ nhìn thấy trước khi bắt đầu."
+            className="ui-input"
+          />
+        </Row>
+      </div>
 
       {node.kind === "group" && <GroupEditor node={node} />}
       {node.kind === "video" && <VideoEditor node={node} onChange={onChange as (p: Partial<VideoNode>) => void} />}
@@ -603,11 +663,9 @@ function NodeEditor({
         <PracticeEditor
           node={node}
           onChange={onChange as (p: Partial<PracticeNode>) => void}
-          onSelectChild={onSelectChild}
+          onAddQuestion={() => onAddQuestion(node.id)}
+          onEditQuestion={onEditQuestion}
         />
-      )}
-      {node.kind === "question" && (
-        <QuestionEditor node={node} onChange={onChange as (p: Partial<QuestionNode>) => void} />
       )}
 
       <style>{`
@@ -728,20 +786,14 @@ function PdfAudioEditor({ node, onChange }: { node: PdfAudioNode; onChange: (p: 
 function PracticeEditor({
   node,
   onChange,
-  onSelectChild,
+  onAddQuestion,
+  onEditQuestion,
 }: {
   node: PracticeNode;
   onChange: (p: Partial<PracticeNode>) => void;
-  onSelectChild: (id: string) => void;
+  onAddQuestion: () => void;
+  onEditQuestion: (questionId: string) => void;
 }) {
-  const [pickerOpen, setPickerOpen] = useState(false);
-
-  const addQuestion = (qType: QKind) => {
-    const q = makeNode("question", qType) as QuestionNode;
-    onChange({ questions: [...node.questions, q] });
-    onSelectChild(q.id);
-    setPickerOpen(false);
-  };
   const removeQuestion = (id: string) => {
     onChange({ questions: node.questions.filter((q) => q.id !== id) });
   };
@@ -760,189 +812,66 @@ function PracticeEditor({
           <div className="text-xs font-semibold text-foreground">
             Câu hỏi trong bài thực hành ({node.questions.length})
           </div>
-          <div className="relative">
-            <button
-              onClick={() => setPickerOpen((v) => !v)}
-              className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1.5 text-[11px] font-semibold text-primary-foreground hover:opacity-90"
-            >
-              <Plus className="h-3 w-3" /> Thêm câu hỏi
-            </button>
-            {pickerOpen && (
-              <>
-                <div className="fixed inset-0 z-30" onClick={() => setPickerOpen(false)} />
-                <div className="absolute right-0 z-40 mt-1 w-72 rounded-xl border border-border bg-popover p-2 shadow-lg">
-                  <div className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                    Chọn dạng câu hỏi
-                  </div>
-                  <div className="grid grid-cols-2 gap-1">
-                    {QUIZ_KINDS.map((q) => (
-                      <button
-                        key={q.id}
-                        onClick={() => addQuestion(q.id)}
-                        className="rounded-md px-2 py-1.5 text-left text-[11px] hover:bg-muted"
-                        title={q.description}
-                      >
-                        {q.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
+          <button
+            onClick={onAddQuestion}
+            className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1.5 text-[11px] font-semibold text-primary-foreground hover:opacity-90"
+          >
+            <Plus className="h-3 w-3" /> Thêm câu hỏi
+          </button>
         </div>
 
         {node.questions.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
-            Chưa có câu hỏi nào. Bấm <span className="font-semibold text-foreground">Thêm câu hỏi</span> hoặc dùng sidebar bên trái.
+            Chưa có câu hỏi nào. Bấm <span className="font-semibold text-foreground">Thêm câu hỏi</span> để chọn dạng và soạn bằng form của ngân hàng.
           </div>
         ) : (
-          <div className="space-y-1.5">
-            {node.questions.map((q, idx) => (
-              <div key={q.id} className="flex items-center gap-2 rounded-lg border border-border bg-background px-3 py-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-[11px] font-bold text-primary">{idx + 1}</span>
-                <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  {QUIZ_KINDS.find((k) => k.id === q.qType)?.label}
-                </span>
-                <span className="flex-1 truncate text-sm text-foreground">
-                  {q.prompt || <span className="italic text-muted-foreground">Chưa có nội dung</span>}
-                </span>
-                <button
-                  onClick={() => onSelectChild(q.id)}
-                  className="rounded-md border border-border px-2 py-1 text-[11px] font-semibold text-foreground hover:bg-muted"
+          <ul className="space-y-2">
+            {node.questions.map((q, idx) => {
+              const Icon = Q_TYPE_ICON[q.bank.type];
+              return (
+                <li
+                  key={q.id}
+                  className="flex items-start gap-2 rounded-2xl border border-border bg-background px-3 py-2.5 text-sm"
                 >
-                  Sửa
-                </button>
-                <button
-                  onClick={() => removeQuestion(q.id)}
-                  className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            ))}
-          </div>
+                  <span className="mt-0.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-muted text-[11px] font-bold">
+                    {idx + 1}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <div className="truncate text-foreground">
+                      {questionLabel(q) || <span className="italic text-muted-foreground">(Chưa có nội dung)</span>}
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+                      <span className="inline-flex items-center gap-1 rounded-md bg-muted px-1.5 py-0.5 font-semibold">
+                        <Icon className="h-3 w-3" /> {TYPE_LABEL[q.bank.type]}
+                      </span>
+                      <span className="rounded-md bg-muted px-1.5 py-0.5 font-semibold">{q.bank.level}</span>
+                      <span className={cn("rounded-md px-1.5 py-0.5 font-semibold", DIFFICULTY_COLOR[q.bank.difficulty])}>
+                        {DIFFICULTY_LABEL[q.bank.difficulty]}
+                      </span>
+                      <span className="rounded-md bg-muted px-1.5 py-0.5 font-semibold">{q.bank.points} điểm</span>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1">
+                    <button
+                      onClick={() => onEditQuestion(q.id)}
+                      className="rounded-md px-2 py-1 text-[11px] font-semibold text-primary hover:bg-primary/10"
+                    >
+                      Sửa
+                    </button>
+                    <button
+                      onClick={() => removeQuestion(q.id)}
+                      className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
+                      title="Xóa"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
         )}
       </div>
-    </div>
-  );
-}
-
-/* ============================== Question editor ============================== */
-
-function QuestionEditor({ node, onChange }: { node: QuestionNode; onChange: (p: Partial<QuestionNode>) => void }) {
-  const q = node.qType;
-  const hasOptions = ["mcq", "mcq-multi", "matching", "drag-drop", "tf", "sequence", "select-lists", "error-correction"].includes(q);
-  const multiCorrect = q === "mcq-multi" || q === "drag-drop" || q === "select-lists" || q === "error-correction";
-  const showSample = ["short", "fill", "essay", "speaking", "error-correction"].includes(q);
-
-  const toggleCorrect = (i: number) => {
-    let next: number[];
-    if (multiCorrect) {
-      next = node.correct.includes(i) ? node.correct.filter((x) => x !== i) : [...node.correct, i];
-    } else {
-      next = [i];
-    }
-    onChange({ correct: next });
-  };
-
-  const updateOpt = (i: number, v: string) => {
-    const opts = [...node.options];
-    opts[i] = v;
-    onChange({ options: opts });
-  };
-  const addOpt = () => onChange({ options: [...node.options, `Lựa chọn ${String.fromCharCode(65 + node.options.length)}`] });
-  const removeOpt = (i: number) =>
-    onChange({
-      options: node.options.filter((_, x) => x !== i),
-      correct: node.correct.filter((x) => x !== i).map((x) => (x > i ? x - 1 : x)),
-    });
-
-  return (
-    <div className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-[1fr_120px]">
-        <Row label="Dạng câu hỏi">
-          <select
-            value={q}
-            onChange={(e) => {
-              const newType = e.target.value as QKind;
-              const fresh = makeNode("question", newType) as QuestionNode;
-              onChange({ qType: newType, options: fresh.options, correct: fresh.correct });
-            }}
-            className="ui-input"
-          >
-            {QUIZ_KINDS.map((k) => (
-              <option key={k.id} value={k.id}>
-                {k.label}
-              </option>
-            ))}
-          </select>
-        </Row>
-        <Row label="Điểm">
-          <input type="number" min={0} value={node.points} onChange={(e) => onChange({ points: Number(e.target.value) })} className="ui-input" />
-        </Row>
-      </div>
-
-      <Row label="Nội dung câu hỏi">
-        <textarea rows={3} value={node.prompt} onChange={(e) => onChange({ prompt: e.target.value })} placeholder="Nhập nội dung câu hỏi..." className="ui-input" />
-      </Row>
-
-      {hasOptions && (
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <div className="text-xs font-semibold text-foreground">
-              {q === "matching" ? "Cặp ghép" : q === "sequence" ? "Các mục cần sắp xếp (đúng thứ tự)" : q === "error-correction" ? "Các từ/cụm trong câu (tích chọn từ sai)" : "Lựa chọn"}
-            </div>
-            {q !== "tf" && (
-              <button onClick={addOpt} className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary hover:bg-primary/20">
-                <Plus className="h-3 w-3" /> Thêm
-              </button>
-            )}
-          </div>
-          <div className="overflow-hidden rounded-xl border border-border">
-            <div className="grid grid-cols-[40px_50px_1fr_36px] items-center gap-2 bg-muted/50 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              <span />
-              <span>{q === "sequence" ? "STT" : q === "error-correction" ? "Sai" : "Đúng"}</span>
-              <span>Nội dung</span>
-              <span />
-            </div>
-            {node.options.map((opt, i) => (
-              <div key={i} className="grid grid-cols-[40px_50px_1fr_36px] items-center gap-2 border-t border-border bg-background px-3 py-1.5">
-                <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
-                {q === "sequence" ? (
-                  <span className="text-center text-xs font-semibold text-muted-foreground">{i + 1}</span>
-                ) : (
-                  <input
-                    type={multiCorrect ? "checkbox" : "radio"}
-                    name={`q-${node.id}-correct`}
-                    checked={node.correct.includes(i)}
-                    onChange={() => toggleCorrect(i)}
-                    className="mx-auto h-4 w-4"
-                  />
-                )}
-                <input value={opt} onChange={(e) => updateOpt(i, e.target.value)} className="ui-input border-0 bg-transparent p-1" />
-                {q !== "tf" && (
-                  <button onClick={() => removeOpt(i)} className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive">
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {showSample && (
-        <Row label={q === "error-correction" ? "Câu viết lại đúng" : q === "speaking" ? "Đáp án mẫu / Câu trả lời tham khảo" : "Đáp án mẫu / Gợi ý chấm"}>
-          <textarea
-            rows={3}
-            value={node.sampleAnswer ?? ""}
-            onChange={(e) => onChange({ sampleAnswer: e.target.value })}
-            placeholder={q === "error-correction" ? "VD: She goes to school." : "Câu trả lời tham khảo dùng để chấm..."}
-            className="ui-input"
-          />
-        </Row>
-      )}
     </div>
   );
 }
