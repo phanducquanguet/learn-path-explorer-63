@@ -81,8 +81,10 @@ export type BankQuestion = {
   subQuestions?: SubQuestion[];
   /** Đáp án nhiễu bổ sung (drag-drop hiển thị trong pool, short answer để gợi ý sai). */
   distractors?: string[];
-  /** Cấu hình error-correction: từ/cụm sai và bản sửa đúng. */
-  errors?: { wrong: string; correct: string }[];
+  /** Cấu hình error-correction: cho mỗi chỗ trống [n], lưu từ sai và đáp án đúng. */
+  errors?: { index: number; wrong: string; correct: string }[];
+  /** Cấu hình matching: từng cặp item ↔ target. */
+  matchingPairs?: { item: string; itemImage?: string; itemAudio?: string; target: string }[];
 };
 
 export const DIFFICULTY_LABEL: Record<QDifficulty, string> = {
