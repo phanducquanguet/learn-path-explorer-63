@@ -2174,9 +2174,14 @@ function SubQuestionCard({
         value={sub.content}
         onChange={(e) => onChange({ content: e.target.value })}
         rows={2}
-        placeholder="Nội dung câu hỏi..."
-        className={cn(inputCls, "mb-2")}
+        placeholder={
+          isDragDrop
+            ? "Đề bài có chỗ trống — dùng [1], [2]... vd: She [1] coffee in the [2] morning."
+            : "Nội dung câu hỏi..."
+        }
+        className={cn(inputCls, "mb-2", isDragDrop && "font-mono")}
       />
+
 
       {isMcq && (
         <div className="space-y-1.5">
