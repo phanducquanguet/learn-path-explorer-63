@@ -47,6 +47,8 @@ import {
   FileText,
   Image as ImageIcon,
   Music,
+  FileVideo,
+  Paperclip,
   GripVertical,
   Layers,
 } from "lucide-react";
