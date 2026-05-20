@@ -248,6 +248,25 @@ function CoursePage() {
         </div>
       </header>
 
+      {realIsAdmin && previewAsStudent && (
+        <div className="border-b border-primary/30 bg-primary/10">
+          <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-3 px-4 py-2.5 sm:px-6 lg:px-8">
+            <div className="flex items-center gap-2 text-sm">
+              <Eye className="h-4 w-4 text-primary" />
+              <span className="font-semibold text-primary">Bạn đang xem khóa học dưới góc nhìn học viên</span>
+              <span className="hidden text-muted-foreground sm:inline">— mọi thao tác chỉnh sửa của admin đã bị ẩn.</span>
+            </div>
+            <button
+              onClick={() => setPreviewAsStudent(false)}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground hover:opacity-90"
+            >
+              Thoát chế độ xem
+            </button>
+          </div>
+        </div>
+      )}
+
+
       <div className="mx-auto flex max-w-[1500px] gap-6 px-4 py-6 sm:px-6 lg:px-8">
         {/* Sidebar */}
         {sidebarOpen && (
