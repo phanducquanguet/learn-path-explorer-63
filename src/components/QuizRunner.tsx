@@ -940,6 +940,20 @@ function grade(q: Question, v: AnswerState): Result {
       const s = ratio(ok.filter(Boolean).length, q.blanks.length);
       return { status: s, earned: earn(s, q.maxScore) };
     }
+    case "essay": {
+      const text = (v as string) || "";
+      const words = countWords(text);
+      const matched = matchedKeywords(text, q.keywords).length;
+      const total = q.keywords.length;
+      // Cần đủ minWords để được chấm; điểm = tỉ lệ keyword × maxScore.
+      if (words < q.minWords) {
+        return { status: "incorrect", earned: 0 };
+      }
+      const pct = total > 0 ? matched / total : 0;
+      const earned = Math.round(pct * q.maxScore);
+      const s: Status = pct >= 0.8 ? "correct" : pct >= 0.4 ? "partial" : "incorrect";
+      return { status: s, earned };
+    }
     case "match": {
       const arr = (v as (number | null)[]) || [];
       const ok = q.answer.map((a, i) => arr[i] === a);
