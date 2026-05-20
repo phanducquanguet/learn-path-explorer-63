@@ -2041,11 +2041,14 @@ function defaultSub(type: SubQuestionType): SubQuestion {
         { left: "", right: "" },
       ],
     };
+  if (type === "fill")
+    return { id, type, content: "", blanks: [] };
   if (type === "drag-drop")
-    return { id, type, content: "", correctAnswer: "" };
-  // short, fill
+    return { id, type, content: "", blanks: [], distractors: [] };
+  // short
   return { id, type, content: "", correctAnswer: "" };
 }
+
 
 
 function GroupEditor({
@@ -2139,6 +2142,23 @@ function SubQuestionCard({
   const updatePair = (i: number, patch: Partial<{ left: string; right: string }>) =>
     onChange({ pairs: pairs.map((p, x) => (x === i ? { ...p, ...patch } : p)) });
   const opts = sub.options ?? [];
+  const blanks = sub.blanks ?? [];
+  const distractors = sub.distractors ?? [];
+  const nextBlankIndex = (blanks.reduce((m, b) => Math.max(m, b.index), 0) || 0) + 1;
+  const addBlank = () => {
+    const idx = nextBlankIndex;
+    onChange({
+      content: (sub.content ?? "") + ` [${idx}]`,
+      blanks: [...blanks, { index: idx, answers: [""] }],
+    });
+  };
+  const updateBlank = (idx: number, patch: Partial<BlankSpec>) =>
+    onChange({ blanks: blanks.map((b) => (b.index === idx ? { ...b, ...patch } : b)) });
+  const removeBlank = (idx: number) =>
+    onChange({
+      content: (sub.content ?? "").replace(new RegExp(`\\s*\\[${idx}\\]`, "g"), ""),
+      blanks: blanks.filter((b) => b.index !== idx),
+    });
 
   const updateOption = (i: number, v: string) => {
     const next = [...opts];
@@ -2152,6 +2172,7 @@ function SubQuestionCard({
     else set.add(letter);
     onChange({ correctAnswer: Array.from(set).sort().join(",") });
   };
+
 
   return (
     <div className="rounded-xl border border-border bg-background p-3">
@@ -2169,17 +2190,38 @@ function SubQuestionCard({
         </button>
       </div>
 
-      <textarea
-        value={sub.content}
-        onChange={(e) => onChange({ content: e.target.value })}
-        rows={2}
-        placeholder={
-          isDragDrop
-            ? "Đề bài có chỗ trống — dùng [1], [2]... vd: She [1] coffee in the [2] morning."
-            : "Nội dung câu hỏi..."
-        }
-        className={cn(inputCls, "mb-2", isDragDrop && "font-mono")}
-      />
+      {(isFill || isDragDrop) ? (
+        <div className="mb-2">
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-[11px] font-semibold text-muted-foreground">
+              Đề bài có chỗ trống — bấm <span className="font-semibold text-foreground">Thêm chỗ trống</span> để chèn <code className="rounded bg-muted px-1 font-mono">[n]</code>
+            </span>
+            <button
+              onClick={addBlank}
+              className="inline-flex h-6 items-center gap-1 rounded-md bg-foreground px-2 text-[10px] font-semibold text-background"
+            >
+              <Plus className="h-3 w-3" /> Thêm chỗ trống
+            </button>
+          </div>
+          <textarea
+            value={sub.content}
+            onChange={(e) => onChange({ content: e.target.value })}
+            rows={2}
+            placeholder="Vd: She [1] coffee in the [2] morning."
+            className={cn(inputCls, "font-mono")}
+          />
+        </div>
+      ) : (
+        <textarea
+          value={sub.content}
+          onChange={(e) => onChange({ content: e.target.value })}
+          rows={2}
+          placeholder="Nội dung câu hỏi..."
+          className={cn(inputCls, "mb-2")}
+        />
+      )}
+
+
 
 
       {isMcq && (
@@ -2245,68 +2287,135 @@ function SubQuestionCard({
           ))}
         </div>
       )}
-      {(isShort || isFill) && (
+      {isShort && (
         <input
           value={sub.correctAnswer ?? ""}
           onChange={(e) => onChange({ correctAnswer: e.target.value })}
-          placeholder={
-            isFill
-              ? "Đáp án chấp nhận (ngăn cách bằng dấu | nếu nhiều)"
-              : "Đáp án mẫu / từ khóa chấm điểm"
-          }
+          placeholder="Đáp án mẫu / từ khóa chấm điểm"
           className={cn(inputCls)}
         />
       )}
 
-      {isMatching && (
+      {(isFill || isDragDrop) && (
         <div className="space-y-1.5">
-          {pairs.map((p, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <span className="inline-flex h-7 w-6 shrink-0 items-center justify-center rounded-md bg-muted text-[11px] font-bold text-muted-foreground">
-                {i + 1}
+          <div className="text-[11px] font-semibold text-muted-foreground">
+            Đáp án cho từng chỗ trống
+          </div>
+          {blanks.map((b) => (
+            <div key={b.index} className="flex items-center gap-2">
+              <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-md bg-primary/10 px-1.5 text-[11px] font-bold text-primary">
+                [{b.index}]
               </span>
               <input
-                value={p.left}
-                onChange={(e) => updatePair(i, { left: e.target.value })}
-                placeholder="Mục bên trái"
-                className={cn(inputCls, "flex-1")}
-              />
-              <span className="text-xs text-muted-foreground">↔</span>
-              <input
-                value={p.right}
-                onChange={(e) => updatePair(i, { right: e.target.value })}
-                placeholder="Mục ghép bên phải"
+                value={(b.answers ?? [])[0] ?? ""}
+                onChange={(e) => updateBlank(b.index, { answers: [e.target.value] })}
+                placeholder={isDragDrop ? "Từ đúng cần kéo vào" : "Đáp án đúng (dùng | nếu nhiều biến thể)"}
                 className={cn(inputCls, "flex-1")}
               />
               <button
-                onClick={() => onChange({ pairs: pairs.filter((_, x) => x !== i) })}
-                className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                onClick={() => removeBlank(b.index)}
+                className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                title="Xóa chỗ trống"
               >
-                <Trash2 className="h-3 w-3" />
+                <Trash2 className="h-3.5 w-3.5" />
               </button>
             </div>
           ))}
-          <button
-            onClick={() => onChange({ pairs: [...pairs, { left: "", right: "" }] })}
-            className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
-          >
-            <Plus className="h-3 w-3" /> Thêm cặp ghép
-          </button>
+          {blanks.length === 0 && (
+            <div className="rounded-lg border border-dashed border-border p-2.5 text-center text-[11px] text-muted-foreground">
+              Chưa có chỗ trống. Bấm "Thêm chỗ trống" ở trên.
+            </div>
+          )}
+
+          {isDragDrop && (
+            <div className="mt-2 space-y-1.5 rounded-lg border border-dashed border-border bg-muted/20 p-2.5">
+              <div className="flex items-center justify-between">
+                <div className="text-[11px] font-semibold text-muted-foreground">
+                  Đáp án nhiễu (distractors)
+                </div>
+                <button
+                  onClick={() => onChange({ distractors: [...distractors, ""] })}
+                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+                >
+                  <Plus className="h-3 w-3" /> Thêm nhiễu
+                </button>
+              </div>
+              {distractors.map((d, di) => (
+                <div key={di} className="flex items-center gap-2">
+                  <input
+                    value={d}
+                    onChange={(e) => {
+                      const next = [...distractors];
+                      next[di] = e.target.value;
+                      onChange({ distractors: next });
+                    }}
+                    placeholder="Từ/cụm gây nhiễu"
+                    className={cn(inputCls, "flex-1")}
+                  />
+                  <button
+                    onClick={() => onChange({ distractors: distractors.filter((_, x) => x !== di) })}
+                    className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
-      {isDragDrop && (
-        <div className="space-y-1.5">
-          <input
-            value={sub.correctAnswer ?? ""}
-            onChange={(e) => onChange({ correctAnswer: e.target.value })}
-            placeholder="Đáp án cho từng chỗ trống — ngăn cách bằng dấu | (vd: drinks|early)"
-            className={cn(inputCls)}
-          />
-          <p className="text-[10px] text-muted-foreground">
-            Học viên sẽ kéo thả các từ trên vào đúng chỗ trống [n] trong đề bài.
-          </p>
+
+      {isMatching && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="text-[11px] font-semibold text-muted-foreground">Correct Matches</div>
+            <button
+              onClick={() => onChange({ pairs: [...pairs, { left: "", right: "" }] })}
+              className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+            >
+              <Plus className="h-3 w-3" /> Thêm cặp
+            </button>
+          </div>
+          <div className="overflow-hidden rounded-lg border border-border">
+            <div className="grid grid-cols-[1fr_1fr_36px] gap-px bg-border text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <div className="bg-muted/40 px-3 py-1.5">Drag Item</div>
+              <div className="bg-muted/40 px-3 py-1.5">Drop Target</div>
+              <div className="bg-muted/40" />
+            </div>
+            <div className="divide-y divide-border bg-background">
+              {pairs.map((p, i) => (
+                <div key={i} className="grid grid-cols-[1fr_1fr_36px] items-center gap-2 px-2 py-1.5">
+                  <input
+                    value={p.left}
+                    onChange={(e) => updatePair(i, { left: e.target.value })}
+                    placeholder="Vd: Broccoli"
+                    className={cn(inputCls)}
+                  />
+                  <input
+                    value={p.right}
+                    onChange={(e) => updatePair(i, { right: e.target.value })}
+                    placeholder="Vd: healthy"
+                    className={cn(inputCls)}
+                  />
+                  <button
+                    onClick={() => onChange({ pairs: pairs.filter((_, x) => x !== i) })}
+                    className="flex h-8 w-8 items-center justify-center rounded-md text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    title="Xóa cặp"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+              {pairs.length === 0 && (
+                <div className="px-3 py-3 text-center text-[11px] text-muted-foreground">
+                  Chưa có cặp nào. Bấm "Thêm cặp" để bắt đầu.
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
+
     </div>
   );
 }
