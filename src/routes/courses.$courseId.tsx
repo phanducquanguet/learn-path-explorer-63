@@ -189,7 +189,7 @@ function CoursePage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            {realIsStaff && (
+            {realIsAdmin && (
               <button
                 onClick={() => {
                   setPreviewAsStudent((v) => {
