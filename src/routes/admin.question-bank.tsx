@@ -1718,13 +1718,28 @@ const SUB_TYPE_LABEL: Record<SubQuestionType, string> = {
   mcq: "Single Choice",
   "mcq-multi": "Multiple Choice",
   tf: "True / False",
+  short: "Short Answer",
+  fill: "Fill in Blank",
+  matching: "Matching",
 };
 
 function defaultSub(type: SubQuestionType): SubQuestion {
   const id = `S${Math.random().toString(36).slice(2, 8)}`;
   if (type === "mcq" || type === "mcq-multi")
     return { id, type, content: "", options: ["", "", "", ""], correctAnswer: "A" };
-  return { id, type, content: "", correctAnswer: "True" };
+  if (type === "tf") return { id, type, content: "", correctAnswer: "True" };
+  if (type === "matching")
+    return {
+      id,
+      type,
+      content: "",
+      pairs: [
+        { left: "", right: "" },
+        { left: "", right: "" },
+      ],
+    };
+  // short, fill
+  return { id, type, content: "", correctAnswer: "" };
 }
 
 function GroupEditor({
