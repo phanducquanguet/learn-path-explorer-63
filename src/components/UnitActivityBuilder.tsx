@@ -347,20 +347,6 @@ export function UnitActivityBuilder({
   );
 }
 
-
-function findParentPractice(node: AnyNode, questionId: string): PracticeNode | null {
-  if (node.kind === "practice") {
-    if (node.questions.some((q) => q.id === questionId)) return node;
-  }
-  if (node.kind === "group") {
-    for (const c of node.children) {
-      const x = findParentPractice(c, questionId);
-      if (x) return x;
-    }
-  }
-  return null;
-}
-
 /* ============================== Tree row ============================== */
 
 function TreeRow({
