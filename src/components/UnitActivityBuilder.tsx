@@ -764,36 +764,23 @@ function GroupEditor({ node }: { node: GroupNode }) {
 
 function VideoEditor({ node, onChange }: { node: VideoNode; onChange: (p: Partial<VideoNode>) => void }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <Row label="Thời lượng (phút)">
-        <input type="number" value={node.duration ?? 0} onChange={(e) => onChange({ duration: Number(e.target.value) })} className="ui-input" />
+    <div className="grid gap-4">
+      <Row label="Tệp video">
+        <FileBox icon={FileVideo} label="Tải lên video" fileName={node.fileName} onChange={(fileName) => onChange({ fileName })} accept="video/*" />
       </Row>
-      <Row label="Thumbnail (tuỳ chọn)">
-        <FileBox icon={ImageIcon} label="Chọn ảnh thumbnail" fileName={node.thumbnail} onChange={(thumbnail) => onChange({ thumbnail })} accept="image/*" />
-      </Row>
-      <div className="sm:col-span-2">
-        <Row label="Tệp video">
-          <FileBox icon={FileVideo} label="Tải lên video" fileName={node.fileName} onChange={(fileName) => onChange({ fileName })} accept="video/*" />
-        </Row>
-      </div>
     </div>
   );
 }
 
 function VideoSpeakingEditor({ node, onChange }: { node: VideoSpeakingNode; onChange: (p: Partial<VideoSpeakingNode>) => void }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <Row label="Thời lượng (phút)">
-        <input type="number" value={node.duration ?? 0} onChange={(e) => onChange({ duration: Number(e.target.value) })} className="ui-input" />
-      </Row>
+    <div className="grid gap-4">
       <Row label="Tệp video">
         <FileBox icon={FileVideo} label="Tải lên video" fileName={node.fileName} onChange={(fileName) => onChange({ fileName })} accept="video/*" />
       </Row>
-      <div className="sm:col-span-2">
-        <Row label="Câu hỏi / chủ đề luyện nói">
-          <textarea rows={3} value={node.prompt ?? ""} onChange={(e) => onChange({ prompt: e.target.value })} placeholder="VD: Sau khi xem video, mô tả thói quen ăn uống của bạn..." className="ui-input" />
-        </Row>
-      </div>
+      <Row label="Câu hỏi / chủ đề luyện nói">
+        <textarea rows={3} value={node.prompt ?? ""} onChange={(e) => onChange({ prompt: e.target.value })} placeholder="VD: Sau khi xem video, mô tả thói quen ăn uống của bạn..." className="ui-input" />
+      </Row>
     </div>
   );
 }
