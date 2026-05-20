@@ -100,6 +100,7 @@ export const TYPE_LABEL: Record<QType, string> = {
   "select-lists": "Select from Lists",
   "drag-drop": "Drag & Drop / Matching",
   essay: "Essay",
+  group: "Đề kèm câu hỏi con",
 };
 
 export const TYPE_DESCRIPTION: Record<QType, string> = {
@@ -113,6 +114,7 @@ export const TYPE_DESCRIPTION: Record<QType, string> = {
   "select-lists": "Chọn đáp án từ danh sách thả xuống tại mỗi chỗ trống",
   "drag-drop": "Kéo thả từ/đoạn văn vào các chỗ trống trong đề",
   essay: "Bài viết tự luận dài",
+  group: "1 đề (bài đọc/audio) + nhiều câu hỏi con khai thác",
 };
 
 const SAMPLE_CONTENTS: Record<QSkill, string[]> = {
