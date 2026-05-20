@@ -792,12 +792,12 @@ function QuestionEditor({ node, onChange }: { node: QuestionNode; onChange: (p: 
       )}
 
       {showSample && (
-        <Row label="Đáp án mẫu / Gợi ý chấm">
+        <Row label={q === "error-correction" ? "Câu viết lại đúng" : q === "speaking" ? "Đáp án mẫu / Câu trả lời tham khảo" : "Đáp án mẫu / Gợi ý chấm"}>
           <textarea
             rows={3}
             value={node.sampleAnswer ?? ""}
             onChange={(e) => onChange({ sampleAnswer: e.target.value })}
-            placeholder="Câu trả lời tham khảo dùng để chấm..."
+            placeholder={q === "error-correction" ? "VD: She goes to school." : "Câu trả lời tham khảo dùng để chấm..."}
             className="ui-input"
           />
         </Row>
