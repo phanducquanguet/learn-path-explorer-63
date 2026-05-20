@@ -870,8 +870,6 @@ function EditDialog({
       ...defaultsForType(startingType),
     },
   );
-  const [extrasOpen, setExtrasOpen] = useState(false);
-
   const isMcq = form.type === "mcq" || form.type === "mcq-multi";
   const isMcqMulti = form.type === "mcq-multi";
   const isEssay = form.type === "essay";
@@ -881,6 +879,8 @@ function EditDialog({
   const isFill = form.type === "fill";
   const isSelectLists = form.type === "select-lists";
   const isDragDrop = form.type === "drag-drop" || form.type === "matching";
+  const isGroup = form.type === "group";
+  const isCloze = isFill || isSelectLists || isDragDrop;
 
   // ---------- MCQ helpers ----------
   const opts = form.options ?? [];
