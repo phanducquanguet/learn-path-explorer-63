@@ -17,11 +17,17 @@ import {
   Pencil,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { QUIZ_KINDS } from "@/lib/teacher-data";
+import { TYPE_LABEL, TYPE_DESCRIPTION, type QType } from "@/lib/question-bank";
 
 /* ============================== Types ============================== */
 
-export type QKind = (typeof QUIZ_KINDS)[number]["id"];
+export type QKind = QType;
+
+/** Các dạng câu hỏi dùng trong activity builder — đồng bộ với Ngân hàng câu hỏi
+ *  nhưng KHÔNG cần cấp độ (level) hay độ khó (difficulty). */
+export const QUIZ_KINDS: { id: QType; label: string; description: string }[] = (
+  ["mcq", "mcq-multi", "tf", "short", "fill", "matching", "sequence", "select-lists", "drag-drop", "essay"] as QType[]
+).map((id) => ({ id, label: TYPE_LABEL[id], description: TYPE_DESCRIPTION[id] }));
 
 type Common = { id: string; title: string };
 
