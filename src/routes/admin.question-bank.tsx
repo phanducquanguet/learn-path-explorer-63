@@ -1016,23 +1016,94 @@ export function EditDialog({
 
   const body = (
     <div className={embedded ? "" : "relative max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-background p-6 shadow-elevated"}>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <h2 className="font-display text-lg font-semibold">
-              {question ? "Sửa câu hỏi" : "Thêm câu hỏi mới"}
-            </h2>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
-              {(() => {
-                const Icon = TYPE_ICON[form.type];
-                return <Icon className="h-3.5 w-3.5" />;
-              })()}
-              {TYPE_LABEL[form.type]}
-            </span>
+        {editableType ? (
+          <div className={cn("grid gap-3 items-end", hideLevelDifficulty ? "grid-cols-[1.4fr_1fr_80px_auto]" : "grid-cols-[1.4fr_1fr_1fr_1fr_80px_auto]")}>
+            <Field label="Loại câu hỏi">
+              <select
+                value={form.type}
+                onChange={(e) => changeType(e.target.value as QType)}
+                className={inputCls}
+              >
+                {TYPE_ORDER.map((t) => (
+                  <option key={t} value={t}>{TYPE_LABEL[t]}</option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Kỹ năng">
+              <select
+                value={form.skill}
+                onChange={(e) => setForm({ ...form, skill: e.target.value as QSkill })}
+                className={inputCls}
+              >
+                {SKILLS.map((s) => (
+                  <option key={s} value={s}>{SKILL_LABEL[s]}</option>
+                ))}
+              </select>
+            </Field>
+            {!hideLevelDifficulty && (
+              <Field label="Cấp độ">
+                <select
+                  value={form.level}
+                  onChange={(e) => setForm({ ...form, level: e.target.value as QLevel })}
+                  className={inputCls}
+                >
+                  {LEVELS.map((l) => (
+                    <option key={l} value={l}>{l}</option>
+                  ))}
+                </select>
+              </Field>
+            )}
+            {!hideLevelDifficulty && (
+              <Field label="Độ khó">
+                <select
+                  value={form.difficulty}
+                  onChange={(e) => setForm({ ...form, difficulty: e.target.value as QDifficulty })}
+                  className={inputCls}
+                >
+                  {(Object.keys(DIFFICULTY_LABEL) as QDifficulty[]).map((d) => (
+                    <option key={d} value={d}>{DIFFICULTY_LABEL[d]}</option>
+                  ))}
+                </select>
+              </Field>
+            )}
+            <Field label="Điểm">
+              <input
+                type="number"
+                min={1}
+                value={form.points}
+                onChange={(e) => setForm({ ...form, points: Number(e.target.value) })}
+                className={inputCls}
+              />
+            </Field>
+            {onDelete && (
+              <button
+                onClick={onDelete}
+                title="Xóa câu hỏi"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-rose-500 hover:border-rose-300 hover:bg-rose-500/10"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
           </div>
-          <button onClick={onClose} className="rounded-lg p-2 hover:bg-muted">
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+        ) : (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <h2 className="font-display text-lg font-semibold">
+                {question ? "Sửa câu hỏi" : "Thêm câu hỏi mới"}
+              </h2>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+                {(() => {
+                  const Icon = TYPE_ICON[form.type];
+                  return <Icon className="h-3.5 w-3.5" />;
+                })()}
+                {TYPE_LABEL[form.type]}
+              </span>
+            </div>
+            <button onClick={onClose} className="rounded-lg p-2 hover:bg-muted">
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        )}
 
         <div className="mt-4 space-y-4">
           {!isFill && !isSelectLists && !isDragDrop && (
