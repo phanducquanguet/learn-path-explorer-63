@@ -336,13 +336,47 @@ export function UnitActivityBuilder({
 
       {/* RIGHT: editor */}
       <div className="rounded-2xl border border-border bg-background p-5">
-        {!selected ? (
+        {pickingTypeFor ? (
+          <div>
+            <div className="mb-3 flex items-center justify-between">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Thêm câu hỏi mới
+              </div>
+              <button
+                onClick={() => setPickingTypeFor(null)}
+                className="rounded-lg border border-border px-2.5 py-1 text-xs font-semibold hover:bg-muted"
+              >
+                Hủy
+              </button>
+            </div>
+            <TypePickerDialog
+              embedded
+              onClose={() => setPickingTypeFor(null)}
+              onPick={(t) => {
+                setCreating({ practiceId: pickingTypeFor, type: t });
+                setPickingTypeFor(null);
+              }}
+            />
+          </div>
+        ) : editing || creating ? (
+          <EditDialog
+            embedded
+            hideLevelDifficulty
+            question={editing?.bank ?? null}
+            initialType={creating?.type}
+            onClose={() => {
+              setEditing(null);
+              setCreating(null);
+            }}
+            onSave={handleSaveQuestion}
+          />
+        ) : !selected ? (
           <div className="flex h-full min-h-[280px] items-center justify-center text-sm text-muted-foreground">
             Chọn một mục bên trái để chỉnh sửa nội dung.
           </div>
         ) : selected.kind === "question" ? (
           <div className="text-sm text-muted-foreground">
-            Đang mở câu hỏi trong cửa sổ chỉnh sửa…
+            Đang mở câu hỏi trong form chỉnh sửa…
           </div>
         ) : (
           <NodeEditor
@@ -354,31 +388,10 @@ export function UnitActivityBuilder({
           />
         )}
       </div>
-
-      {/* ===== Dialogs đồng bộ với Ngân hàng câu hỏi ===== */}
-      {pickingTypeFor && (
-        <TypePickerDialog
-          onClose={() => setPickingTypeFor(null)}
-          onPick={(t) => {
-            setCreating({ practiceId: pickingTypeFor, type: t });
-            setPickingTypeFor(null);
-          }}
-        />
-      )}
-      {(editing || creating) && (
-        <EditDialog
-          question={editing?.bank ?? null}
-          initialType={creating?.type}
-          onClose={() => {
-            setEditing(null);
-            setCreating(null);
-          }}
-          onSave={handleSaveQuestion}
-        />
-      )}
     </div>
   );
 }
+
 
 function findParentPractice(node: AnyNode, questionId: string): PracticeNode | null {
   if (node.kind === "practice") {
