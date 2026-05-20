@@ -53,11 +53,13 @@ export type VideoSpeakingNode = Common & {
 export type PdfNode = Common & {
   kind: "pdf";
   fileName?: string;
+  hiddenFromStudents?: boolean;
 };
 export type PdfAudioNode = Common & {
   kind: "pdf-audio";
   fileName?: string;
   audioFileName?: string;
+  hiddenFromStudents?: boolean;
 };
 export type PracticeNode = Common & {
   kind: "practice";
