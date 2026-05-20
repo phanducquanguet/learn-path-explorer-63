@@ -40,6 +40,8 @@ type QEssay = BaseQ & {
   keywords: string[];
   /** Bài mẫu / đáp án gợi ý — hiện khi xem kết quả. */
   solution: string;
+  /** Nhận xét theo từng keyword — hiện ở bảng Feedback khi xem kết quả. */
+  feedback?: { keyword: string; comment: string }[];
 };
 type QMatchItem = { text: string; image?: string; audio?: string };
 type QMatch = BaseQ & {
