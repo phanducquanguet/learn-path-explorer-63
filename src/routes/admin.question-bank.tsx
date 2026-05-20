@@ -16,6 +16,8 @@ import {
   type QDifficulty,
   type FeedbackCriterion,
   type BlankSpec,
+  type SubQuestion,
+  type SubQuestionType,
 } from "@/lib/question-bank";
 import {
   Library,
@@ -46,7 +48,7 @@ import {
   Image as ImageIcon,
   Music,
   GripVertical,
-  Upload,
+  Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -61,6 +63,7 @@ const TYPE_ICON: Record<QType, typeof Plus> = {
   "select-lists": MousePointerSquareDashed,
   "drag-drop": Move,
   essay: FileText,
+  group: Layers,
 };
 
 const TYPE_ORDER: QType[] = [
@@ -73,6 +76,7 @@ const TYPE_ORDER: QType[] = [
   "select-lists",
   "drag-drop",
   "essay",
+  "group",
 ];
 
 export const Route = createFileRoute("/admin/question-bank")({
@@ -531,10 +535,15 @@ function BankPage() {
             setCreating(false);
           }}
           onSave={(qn) => {
+            // For cloze: derive a readable content from passage if empty
+            const final: BankQuestion =
+              (qn.type === "fill" || qn.type === "select-lists" || qn.type === "drag-drop") && !qn.content.trim()
+                ? { ...qn, content: (qn.passage ?? "").slice(0, 120) || "Câu hỏi điền chỗ trống" }
+                : qn;
             if (editing) {
-              setItems((p) => p.map((x) => (x.id === qn.id ? qn : x)));
+              setItems((p) => p.map((x) => (x.id === final.id ? final : x)));
             } else {
-              setItems((p) => [{ ...qn, id: nextId(items) }, ...p]);
+              setItems((p) => [{ ...final, id: nextId(items) }, ...p]);
             }
             setEditing(null);
             setCreating(false);
@@ -847,6 +856,11 @@ function EditDialog({
           { keyword: "", comment: "" },
         ],
       };
+    if (t === "group")
+      return {
+        passage: "",
+        subQuestions: [],
+      };
     return { options: undefined };
   };
 
@@ -866,8 +880,6 @@ function EditDialog({
       ...defaultsForType(startingType),
     },
   );
-  const [extrasOpen, setExtrasOpen] = useState(false);
-
   const isMcq = form.type === "mcq" || form.type === "mcq-multi";
   const isMcqMulti = form.type === "mcq-multi";
   const isEssay = form.type === "essay";
@@ -877,6 +889,8 @@ function EditDialog({
   const isFill = form.type === "fill";
   const isSelectLists = form.type === "select-lists";
   const isDragDrop = form.type === "drag-drop" || form.type === "matching";
+  const isGroup = form.type === "group";
+  const isCloze = isFill || isSelectLists || isDragDrop;
 
   // ---------- MCQ helpers ----------
   const opts = form.options ?? [];
@@ -950,7 +964,12 @@ function EditDialog({
     });
   };
 
-  const canSave = form.content.trim().length > 0;
+  const canSave = isCloze
+    ? (form.passage ?? "").trim().length > 0 && (form.blanks ?? []).length > 0
+    : isGroup
+      ? (form.content.trim().length > 0 || (form.passage ?? "").trim().length > 0) &&
+        (form.subQuestions ?? []).length > 0
+      : form.content.trim().length > 0;
 
   const inputCls =
     "w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm";
@@ -978,18 +997,84 @@ function EditDialog({
         </div>
 
         <div className="mt-4 space-y-4">
-          <div>
-            <label className="text-xs font-semibold text-muted-foreground">
-              Nội dung câu hỏi *
-            </label>
-            <textarea
-              value={form.content}
-              onChange={(e) => setForm({ ...form, content: e.target.value })}
-              rows={2}
-              placeholder="Nhập nội dung câu hỏi / yêu cầu cho học viên..."
-              className="mt-1 w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-            />
-          </div>
+          {!isFill && !isSelectLists && !isDragDrop && (
+            <div>
+              <div className="mb-1 flex items-center justify-between">
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Nội dung câu hỏi *
+                </label>
+                <div className="flex items-center gap-1">
+                  <label
+                    className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
+                    title="Tải ảnh cho câu hỏi"
+                  >
+                    <ImageIcon className="h-3 w-3" /> Ảnh
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const f = e.target.files?.[0];
+                        setForm({
+                          ...form,
+                          imageUrl: f ? await fileToDataURL(f) : form.imageUrl,
+                        });
+                      }}
+                    />
+                  </label>
+                  <label
+                    className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
+                    title="Tải audio cho câu hỏi"
+                  >
+                    <Music className="h-3 w-3" /> Audio
+                    <input
+                      type="file"
+                      accept="audio/*"
+                      className="hidden"
+                      onChange={(e) => setQuestionAudio(e.target.files?.[0] ?? null)}
+                    />
+                  </label>
+                </div>
+              </div>
+              <textarea
+                value={form.content}
+                onChange={(e) => setForm({ ...form, content: e.target.value })}
+                rows={2}
+                placeholder="Nhập nội dung câu hỏi / yêu cầu cho học viên..."
+                className="w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              {(form.imageUrl || form.audioUrl) && (
+                <div className="mt-2 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/20 p-2">
+                  {form.imageUrl && (
+                    <div className="flex items-center gap-2">
+                      <img
+                        src={form.imageUrl}
+                        alt=""
+                        className="h-14 w-14 rounded-md border border-border object-cover"
+                      />
+                      <button
+                        onClick={() => setForm({ ...form, imageUrl: undefined })}
+                        className="text-[11px] font-semibold text-rose-500 hover:underline"
+                      >
+                        Bỏ ảnh
+                      </button>
+                    </div>
+                  )}
+                  {form.audioUrl && (
+                    <div className="flex items-center gap-2">
+                      <audio controls src={form.audioUrl} className="h-8" />
+                      <button
+                        onClick={() => setQuestionAudio(null)}
+                        className="text-[11px] font-semibold text-rose-500 hover:underline"
+                      >
+                        Bỏ audio
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <Field label="Kỹ năng">
@@ -1036,50 +1121,6 @@ function EditDialog({
             </Field>
           </div>
 
-          {/* ===== Optional attachments ===== */}
-          <div className="rounded-2xl border border-dashed border-border">
-            <button
-              type="button"
-              onClick={() => setExtrasOpen((v) => !v)}
-              className="flex w-full items-center justify-between gap-2 px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted/40"
-            >
-              <span className="inline-flex items-center gap-2">
-                <Upload className="h-3.5 w-3.5" /> Tệp đính kèm (tùy chọn): audio cho câu hỏi, ảnh cho từng lựa chọn
-              </span>
-              <span>{extrasOpen ? "Ẩn" : "Hiện"}</span>
-            </button>
-            {extrasOpen && (
-              <div className="space-y-3 border-t border-border bg-muted/20 px-4 py-3">
-                <div>
-                  <label className="text-[11px] font-semibold text-muted-foreground">
-                    <Music className="mr-1 inline h-3 w-3" /> Audio câu hỏi
-                  </label>
-                  <div className="mt-1 flex items-center gap-2">
-                    <input
-                      type="file"
-                      accept="audio/*"
-                      onChange={(e) => setQuestionAudio(e.target.files?.[0] ?? null)}
-                      className="text-xs"
-                    />
-                    {form.audioUrl && (
-                      <button
-                        onClick={() => setQuestionAudio(null)}
-                        className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    )}
-                  </div>
-                  {form.audioUrl && (
-                    <audio controls src={form.audioUrl} className="mt-2 h-8 w-full" />
-                  )}
-                </div>
-                <p className="text-[11px] text-muted-foreground">
-                  Ảnh cho từng lựa chọn có thể tải ngay trên từng dòng đáp án (nếu loại câu hỏi có lựa chọn).
-                </p>
-              </div>
-            )}
-          </div>
 
           {/* ===== Type-specific editors ===== */}
 
@@ -1312,15 +1353,57 @@ function EditDialog({
               <div>
                 <div className="mb-1 flex items-center justify-between">
                   <label className="text-xs font-semibold text-muted-foreground">
-                    Đề bài (sử dụng <code className="rounded bg-muted px-1 font-mono">[1] [2] …</code> làm chỗ trống)
+                    Đề bài có chỗ trống — bấm <span className="font-semibold text-foreground">Thêm chỗ trống</span> để chèn <code className="rounded bg-muted px-1 font-mono">[n]</code>
                   </label>
-                  <button
-                    onClick={addBlank}
-                    className="inline-flex items-center gap-1 rounded-md bg-foreground px-2 py-1 text-[11px] font-semibold text-background"
-                  >
-                    <Plus className="h-3 w-3" /> Thêm chỗ trống
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted">
+                      <ImageIcon className="h-3 w-3" /> Ảnh
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={async (e) => {
+                          const f = e.target.files?.[0];
+                          setForm({
+                            ...form,
+                            imageUrl: f ? await fileToDataURL(f) : form.imageUrl,
+                          });
+                        }}
+                      />
+                    </label>
+                    <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted">
+                      <Music className="h-3 w-3" /> Audio
+                      <input
+                        type="file"
+                        accept="audio/*"
+                        className="hidden"
+                        onChange={(e) => setQuestionAudio(e.target.files?.[0] ?? null)}
+                      />
+                    </label>
+                    <button
+                      onClick={addBlank}
+                      className="inline-flex h-7 items-center gap-1 rounded-md bg-foreground px-2 text-[11px] font-semibold text-background"
+                    >
+                      <Plus className="h-3 w-3" /> Thêm chỗ trống
+                    </button>
+                  </div>
                 </div>
+                {(form.imageUrl || form.audioUrl) && (
+                  <div className="mb-2 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-background p-2">
+                    {form.imageUrl && (
+                      <div className="flex items-center gap-2">
+                        <img src={form.imageUrl} alt="" className="h-12 w-12 rounded-md border border-border object-cover" />
+                        <button onClick={() => setForm({ ...form, imageUrl: undefined })} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ ảnh</button>
+                      </div>
+                    )}
+                    {form.audioUrl && (
+                      <div className="flex items-center gap-2">
+                        <audio controls src={form.audioUrl} className="h-8" />
+                        <button onClick={() => setQuestionAudio(null)} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ audio</button>
+                      </div>
+                    )}
+                  </div>
+                )}
                 <textarea
                   value={form.passage ?? ""}
                   onChange={(e) => setForm({ ...form, passage: e.target.value })}
@@ -1481,6 +1564,15 @@ function EditDialog({
             </div>
           )}
 
+          {isGroup && (
+            <GroupEditor
+              form={form}
+              setForm={setForm}
+              setQuestionAudio={setQuestionAudio}
+              inputCls={inputCls}
+            />
+          )}
+
           {isEssay && (
             <div className="space-y-4 rounded-2xl border border-violet-500/30 bg-violet-500/5 p-4">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">
@@ -1635,6 +1727,366 @@ function TypePickerDialog({
           })}
         </div>
       </div>
+    </div>
+  );
+}
+
+// ============================================================
+// Group editor: 1 parent prompt + list of sub-questions
+// ============================================================
+
+const SUB_TYPE_LABEL: Record<SubQuestionType, string> = {
+  mcq: "Trắc nghiệm 1 đáp án",
+  "mcq-multi": "Trắc nghiệm nhiều đáp án",
+  tf: "Đúng / Sai",
+  short: "Trả lời ngắn",
+  fill: "Điền chỗ trống",
+};
+
+function defaultSub(type: SubQuestionType): SubQuestion {
+  const id = `S${Math.random().toString(36).slice(2, 8)}`;
+  if (type === "mcq" || type === "mcq-multi")
+    return { id, type, content: "", options: ["", "", "", ""], correctAnswer: "A" };
+  if (type === "tf") return { id, type, content: "", correctAnswer: "True" };
+  if (type === "fill")
+    return { id, type, content: "", passage: "Vd: She [1] coffee.", blanks: [{ index: 1, answers: [""] }] };
+  return { id, type, content: "", correctAnswer: "" };
+}
+
+function GroupEditor({
+  form,
+  setForm,
+  setQuestionAudio,
+  inputCls,
+}: {
+  form: BankQuestion;
+  setForm: (q: BankQuestion) => void;
+  setQuestionAudio: (f: File | null) => void;
+  inputCls: string;
+}) {
+  const subs = form.subQuestions ?? [];
+  const updateSub = (id: string, patch: Partial<SubQuestion>) =>
+    setForm({ ...form, subQuestions: subs.map((s) => (s.id === id ? { ...s, ...patch } : s)) });
+  const removeSub = (id: string) =>
+    setForm({ ...form, subQuestions: subs.filter((s) => s.id !== id) });
+  const addSub = (t: SubQuestionType) =>
+    setForm({ ...form, subQuestions: [...subs, defaultSub(t)] });
+
+  return (
+    <div className="space-y-4 rounded-2xl border border-primary/20 bg-primary/[0.03] p-4">
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+        <Layers className="h-3.5 w-3.5" /> Đề kèm câu hỏi con
+      </div>
+
+      <div>
+        <div className="mb-1 flex items-center justify-between">
+          <label className="text-xs font-semibold text-muted-foreground">
+            Đề / Bài đọc / Mô tả nguồn (hiển thị 1 lần phía trên các câu con)
+          </label>
+          <div className="flex items-center gap-1">
+            <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted">
+              <ImageIcon className="h-3 w-3" /> Ảnh
+              <input
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={async (e) => {
+                  const f = e.target.files?.[0];
+                  setForm({ ...form, imageUrl: f ? await fileToDataURL(f) : form.imageUrl });
+                }}
+              />
+            </label>
+            <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted">
+              <Music className="h-3 w-3" /> Audio
+              <input
+                type="file"
+                accept="audio/*"
+                className="hidden"
+                onChange={(e) => setQuestionAudio(e.target.files?.[0] ?? null)}
+              />
+            </label>
+          </div>
+        </div>
+        <textarea
+          value={form.passage ?? ""}
+          onChange={(e) => setForm({ ...form, passage: e.target.value })}
+          rows={5}
+          placeholder="Dán đoạn văn bài đọc, mô tả audio, hoặc bối cảnh chung cho các câu hỏi con..."
+          className="w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+        />
+        {(form.imageUrl || form.audioUrl) && (
+          <div className="mt-2 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-background p-2">
+            {form.imageUrl && (
+              <div className="flex items-center gap-2">
+                <img src={form.imageUrl} alt="" className="h-14 w-14 rounded-md border border-border object-cover" />
+                <button onClick={() => setForm({ ...form, imageUrl: undefined })} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ ảnh</button>
+              </div>
+            )}
+            {form.audioUrl && (
+              <div className="flex items-center gap-2">
+                <audio controls src={form.audioUrl} className="h-8" />
+                <button onClick={() => setQuestionAudio(null)} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ audio</button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="text-xs font-semibold text-muted-foreground">
+            Câu hỏi con ({subs.length})
+          </div>
+          <div className="flex flex-wrap items-center gap-1">
+            {(Object.keys(SUB_TYPE_LABEL) as SubQuestionType[]).map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => addSub(t)}
+                className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold hover:bg-muted"
+              >
+                <Plus className="h-3 w-3" /> {SUB_TYPE_LABEL[t]}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {subs.length === 0 && (
+          <div className="rounded-lg border border-dashed border-border bg-background p-4 text-center text-xs text-muted-foreground">
+            Chưa có câu hỏi con. Bấm các nút bên trên để thêm.
+          </div>
+        )}
+
+        {subs.map((s, i) => (
+          <SubQuestionCard
+            key={s.id}
+            sub={s}
+            index={i + 1}
+            inputCls={inputCls}
+            onChange={(patch) => updateSub(s.id, patch)}
+            onRemove={() => removeSub(s.id)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SubQuestionCard({
+  sub,
+  index,
+  inputCls,
+  onChange,
+  onRemove,
+}: {
+  sub: SubQuestion;
+  index: number;
+  inputCls: string;
+  onChange: (patch: Partial<SubQuestion>) => void;
+  onRemove: () => void;
+}) {
+  const isMcq = sub.type === "mcq" || sub.type === "mcq-multi";
+  const isMcqMulti = sub.type === "mcq-multi";
+  const isTF = sub.type === "tf";
+  const isShort = sub.type === "short";
+  const isFill = sub.type === "fill";
+  const opts = sub.options ?? [];
+
+  const updateOption = (i: number, v: string) => {
+    const next = [...opts];
+    next[i] = v;
+    onChange({ options: next });
+  };
+  const toggleMulti = (letter: string) => {
+    const cur = (sub.correctAnswer ?? "").split(",").filter(Boolean);
+    const set = new Set(cur);
+    if (set.has(letter)) set.delete(letter);
+    else set.add(letter);
+    onChange({ correctAnswer: Array.from(set).sort().join(",") });
+  };
+
+  const blanks = sub.blanks ?? [];
+  const addBlank = () => {
+    const idx = (blanks.reduce((m, b) => Math.max(m, b.index), 0) || 0) + 1;
+    onChange({
+      passage: (sub.passage ?? "") + ` [${idx}]`,
+      blanks: [...blanks, { index: idx, answers: [""] }],
+    });
+  };
+  const updateBlank = (idx: number, patch: Partial<BlankSpec>) =>
+    onChange({ blanks: blanks.map((b) => (b.index === idx ? { ...b, ...patch } : b)) });
+  const removeBlank = (idx: number) =>
+    onChange({
+      passage: (sub.passage ?? "").replace(new RegExp(`\\s*\\[${idx}\\]`, "g"), ""),
+      blanks: blanks.filter((b) => b.index !== idx),
+    });
+
+  return (
+    <div className="rounded-xl border border-border bg-background p-3">
+      <div className="mb-2 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <span className="inline-flex h-6 min-w-[24px] items-center justify-center rounded-md bg-foreground px-1.5 text-[11px] font-bold text-background">
+            {index}
+          </span>
+          <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">
+            {SUB_TYPE_LABEL[sub.type]}
+          </span>
+        </div>
+        <button onClick={onRemove} className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10">
+          <Trash2 className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      {!isFill && (
+        <textarea
+          value={sub.content}
+          onChange={(e) => onChange({ content: e.target.value })}
+          rows={2}
+          placeholder="Nội dung câu hỏi..."
+          className={cn(inputCls, "mb-2")}
+        />
+      )}
+
+      {isMcq && (
+        <div className="space-y-1.5">
+          {opts.map((o, i) => {
+            const letter = String.fromCharCode(65 + i);
+            const correctSet = (sub.correctAnswer ?? "").split(",").filter(Boolean);
+            const isCorrect = isMcqMulti ? correctSet.includes(letter) : sub.correctAnswer === letter;
+            return (
+              <div key={i} className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    isMcqMulti ? toggleMulti(letter) : onChange({ correctAnswer: letter })
+                  }
+                  className={cn(
+                    "inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-[11px] font-bold",
+                    isCorrect ? "bg-emerald-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/70",
+                  )}
+                >
+                  {letter}
+                </button>
+                <input
+                  value={o}
+                  onChange={(e) => updateOption(i, e.target.value)}
+                  placeholder={`Phương án ${letter}`}
+                  className={cn(inputCls, "flex-1")}
+                />
+                <button
+                  onClick={() => onChange({ options: opts.filter((_, x) => x !== i) })}
+                  className="rounded-md p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+            );
+          })}
+          <button
+            onClick={() => onChange({ options: [...opts, ""] })}
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
+          >
+            <Plus className="h-3 w-3" /> Thêm lựa chọn
+          </button>
+        </div>
+      )}
+
+      {isTF && (
+        <div className="flex gap-2">
+          {["True", "False"].map((v) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => onChange({ correctAnswer: v })}
+              className={cn(
+                "flex-1 rounded-lg border px-3 py-1.5 text-xs font-semibold",
+                sub.correctAnswer === v
+                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-600"
+                  : "border-border bg-background hover:bg-muted",
+              )}
+            >
+              {v}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {isShort && (
+        <input
+          value={sub.correctAnswer ?? ""}
+          onChange={(e) => onChange({ correctAnswer: e.target.value })}
+          placeholder="Đáp án mẫu"
+          className={inputCls}
+        />
+      )}
+
+      {isFill && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-semibold text-muted-foreground">
+              Đề có chỗ trống <code className="rounded bg-muted px-1 font-mono">[n]</code>
+            </span>
+            <button
+              onClick={addBlank}
+              className="inline-flex h-6 items-center gap-1 rounded-md bg-foreground px-2 text-[10px] font-semibold text-background"
+            >
+              <Plus className="h-3 w-3" /> Thêm chỗ trống
+            </button>
+          </div>
+          <textarea
+            value={sub.passage ?? ""}
+            onChange={(e) => onChange({ passage: e.target.value })}
+            rows={2}
+            placeholder="Vd: She [1] coffee in the morning."
+            className={cn(inputCls, "font-mono")}
+          />
+          {blanks.map((b) => (
+            <div key={b.index} className="rounded-lg border border-border bg-muted/30 p-2">
+              <div className="mb-1 flex items-center justify-between">
+                <span className="inline-flex h-5 items-center rounded bg-primary/10 px-1.5 text-[10px] font-bold text-primary">
+                  [{b.index}]
+                </span>
+                <button
+                  onClick={() => removeBlank(b.index)}
+                  className="rounded p-0.5 text-rose-500 hover:bg-rose-500/10"
+                >
+                  <Trash2 className="h-3 w-3" />
+                </button>
+              </div>
+              {(b.answers ?? []).map((a, ai) => (
+                <div key={ai} className="mb-1 flex items-center gap-1">
+                  <input
+                    value={a}
+                    onChange={(e) => {
+                      const next = [...(b.answers ?? [])];
+                      next[ai] = e.target.value;
+                      updateBlank(b.index, { answers: next });
+                    }}
+                    placeholder="Đáp án chấp nhận"
+                    className={cn(inputCls, "flex-1")}
+                  />
+                  <button
+                    onClick={() =>
+                      updateBlank(b.index, {
+                        answers: (b.answers ?? []).filter((_, x) => x !== ai),
+                      })
+                    }
+                    className="rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => updateBlank(b.index, { answers: [...(b.answers ?? []), ""] })}
+                className="inline-flex items-center gap-1 text-[10px] font-semibold text-primary hover:underline"
+              >
+                <Plus className="h-3 w-3" /> Thêm đáp án
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

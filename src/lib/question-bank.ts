@@ -9,7 +9,21 @@ export type QType =
   | "fill"
   | "select-lists"
   | "drag-drop"
-  | "essay";
+  | "essay"
+  | "group";
+
+export type SubQuestionType = "mcq" | "mcq-multi" | "tf" | "short" | "fill";
+
+export type SubQuestion = {
+  id: string;
+  type: SubQuestionType;
+  content: string;
+  options?: string[];
+  correctAnswer?: string;
+  /** for fill */
+  blanks?: BlankSpec[];
+  passage?: string;
+};
 export type QLevel = "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
 
 export type QDifficulty = "easy" | "medium" | "hard";
@@ -54,6 +68,10 @@ export type BankQuestion = {
   blanks?: BlankSpec[];
   /** Chế độ kéo thả: "words" hoặc "passages". */
   dragMode?: "words" | "passages";
+  /** Ảnh đính kèm câu hỏi (optional). */
+  imageUrl?: string;
+  /** Câu hỏi con — chỉ dùng với type === "group". */
+  subQuestions?: SubQuestion[];
 };
 
 export const DIFFICULTY_LABEL: Record<QDifficulty, string> = {
@@ -86,6 +104,7 @@ export const TYPE_LABEL: Record<QType, string> = {
   "select-lists": "Select from Lists",
   "drag-drop": "Drag & Drop / Matching",
   essay: "Essay",
+  group: "Đề kèm câu hỏi con",
 };
 
 export const TYPE_DESCRIPTION: Record<QType, string> = {
@@ -99,6 +118,7 @@ export const TYPE_DESCRIPTION: Record<QType, string> = {
   "select-lists": "Chọn đáp án từ danh sách thả xuống tại mỗi chỗ trống",
   "drag-drop": "Kéo thả từ/đoạn văn vào các chỗ trống trong đề",
   essay: "Bài viết tự luận dài",
+  group: "1 đề (bài đọc/audio) + nhiều câu hỏi con khai thác",
 };
 
 const SAMPLE_CONTENTS: Record<QSkill, string[]> = {
