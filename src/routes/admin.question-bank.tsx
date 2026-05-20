@@ -2190,17 +2190,38 @@ function SubQuestionCard({
         </button>
       </div>
 
-      <textarea
-        value={sub.content}
-        onChange={(e) => onChange({ content: e.target.value })}
-        rows={2}
-        placeholder={
-          isDragDrop
-            ? "Đề bài có chỗ trống — dùng [1], [2]... vd: She [1] coffee in the [2] morning."
-            : "Nội dung câu hỏi..."
-        }
-        className={cn(inputCls, "mb-2", isDragDrop && "font-mono")}
-      />
+      {(isFill || isDragDrop) ? (
+        <div className="mb-2">
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-[11px] font-semibold text-muted-foreground">
+              Đề bài có chỗ trống — bấm <span className="font-semibold text-foreground">Thêm chỗ trống</span> để chèn <code className="rounded bg-muted px-1 font-mono">[n]</code>
+            </span>
+            <button
+              onClick={addBlank}
+              className="inline-flex h-6 items-center gap-1 rounded-md bg-foreground px-2 text-[10px] font-semibold text-background"
+            >
+              <Plus className="h-3 w-3" /> Thêm chỗ trống
+            </button>
+          </div>
+          <textarea
+            value={sub.content}
+            onChange={(e) => onChange({ content: e.target.value })}
+            rows={2}
+            placeholder="Vd: She [1] coffee in the [2] morning."
+            className={cn(inputCls, "font-mono")}
+          />
+        </div>
+      ) : (
+        <textarea
+          value={sub.content}
+          onChange={(e) => onChange({ content: e.target.value })}
+          rows={2}
+          placeholder="Nội dung câu hỏi..."
+          className={cn(inputCls, "mb-2")}
+        />
+      )}
+
+
 
 
       {isMcq && (
