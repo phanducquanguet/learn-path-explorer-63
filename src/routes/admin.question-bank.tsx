@@ -1752,59 +1752,7 @@ function GroupEditor({
         <Layers className="h-3.5 w-3.5" /> Question Set
       </div>
 
-      <div>
-        <div className="mb-1 flex items-center justify-between">
-          <label className="text-xs font-semibold text-muted-foreground">
-            Đề / Bài đọc / Mô tả nguồn (hiển thị 1 lần phía trên các câu con)
-          </label>
-          <div className="flex items-center gap-1">
-            <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted">
-              <ImageIcon className="h-3 w-3" /> Ảnh
-              <input
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={async (e) => {
-                  const f = e.target.files?.[0];
-                  setForm({ ...form, imageUrl: f ? await fileToDataURL(f) : form.imageUrl });
-                }}
-              />
-            </label>
-            <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted">
-              <Music className="h-3 w-3" /> Audio
-              <input
-                type="file"
-                accept="audio/*"
-                className="hidden"
-                onChange={(e) => setQuestionAudio(e.target.files?.[0] ?? null)}
-              />
-            </label>
-          </div>
-        </div>
-        <textarea
-          value={form.passage ?? ""}
-          onChange={(e) => setForm({ ...form, passage: e.target.value })}
-          rows={5}
-          placeholder="Dán đoạn văn bài đọc, mô tả audio, hoặc bối cảnh chung cho các câu hỏi con..."
-          className="w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-        />
-        {(form.imageUrl || form.audioUrl) && (
-          <div className="mt-2 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-background p-2">
-            {form.imageUrl && (
-              <div className="flex items-center gap-2">
-                <img src={form.imageUrl} alt="" className="h-14 w-14 rounded-md border border-border object-cover" />
-                <button onClick={() => setForm({ ...form, imageUrl: undefined })} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ ảnh</button>
-              </div>
-            )}
-            {form.audioUrl && (
-              <div className="flex items-center gap-2">
-                <audio controls src={form.audioUrl} className="h-8" />
-                <button onClick={() => setQuestionAudio(null)} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ audio</button>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      {/* Nguồn (đề/audio/ảnh) đã quản lý ở phần đính kèm phía trên — không lặp lại tại đây. */}
 
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
