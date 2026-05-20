@@ -803,7 +803,7 @@ async function fileToDataURL(f: File): Promise<string> {
   });
 }
 
-function EditDialog({
+export function EditDialog({
   question,
   initialType,
   onClose,
@@ -1657,7 +1657,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function TypePickerDialog({
+export function TypePickerDialog({
   onClose,
   onPick,
 }: {
