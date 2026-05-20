@@ -10,6 +10,8 @@ export type QType =
   | "select-lists"
   | "drag-drop"
   | "essay"
+  | "speaking"
+  | "error-correction"
   | "group";
 
 export type SubQuestionType =
