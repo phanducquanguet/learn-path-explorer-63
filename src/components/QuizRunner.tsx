@@ -304,6 +304,17 @@ export function buildQuiz(quizId: string): Question[] {
       ],
       solution:
         "Dear Jordan,\n\nThank you for letting me know about your trip next month. Unfortunately, I'll be away for work that week, so I won't be able to meet you in person — I'm really sorry about the timing.\n\nWhile you're here, you should definitely visit the old town and take a walk along the riverside at sunset; it's the most beautiful part of the city. The little café next to the bridge is a must-try.\n\nHopefully we can catch up around December when things calm down. Have a wonderful trip!\n\nBest wishes,\nAlex",
+      feedback: [
+        { keyword: "Dear Jordan", comment: "Cách mở đầu email rất tự nhiên." },
+        { keyword: "thank", comment: "Hãy cảm ơn Jordan vì đã báo trước." },
+        { keyword: "unfortunately", comment: "Dùng từ nối để báo tin không vui." },
+        { keyword: "work", comment: "Giải thích rõ lý do bạn bận." },
+        { keyword: "visit", comment: "Gợi ý cho Jordan ghé thăm địa điểm cụ thể." },
+        { keyword: "old town", comment: "Đề xuất một địa danh nổi bật trong khu vực." },
+        { keyword: "riverside", comment: "Thêm chi tiết để gợi ý sinh động hơn." },
+        { keyword: "December", comment: "Đề xuất một thời điểm khác để gặp lại." },
+        { keyword: "best wishes", comment: "Kết thư đúng phong cách thân mật." },
+      ],
     },
   ];
 }
