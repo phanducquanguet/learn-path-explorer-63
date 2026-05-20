@@ -130,7 +130,7 @@ function makeNode(kind: AnyNode["kind"], qType?: QKind): AnyNode {
       return { ...base, kind, title: "Bài thực hành", instructions: "" };
     case "question": {
       const q = qType ?? "mcq";
-      const needsOptions = ["mcq", "mcq-multi", "matching", "drag", "tf", "reorder"].includes(q);
+      const needsOptions = ["mcq", "mcq-multi", "matching", "drag-drop", "tf", "sequence", "select-lists"].includes(q);
       return {
         ...base,
         kind: "question",
@@ -143,7 +143,7 @@ function makeNode(kind: AnyNode["kind"], qType?: QKind): AnyNode {
             : ["Lựa chọn A", "Lựa chọn B"]
           : [],
         correct: q === "tf" ? [0] : [],
-        points: 1,
+        points: q === "essay" ? 5 : q === "short" ? 2 : 1,
       };
     }
   }
