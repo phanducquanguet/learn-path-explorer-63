@@ -1508,11 +1508,7 @@ export function EditDialog({
                   value={form.passage ?? ""}
                   onChange={(e) => setForm({ ...form, passage: e.target.value })}
                   rows={3}
-                  placeholder={
-                    isDragDrop && form.dragMode === "passages"
-                      ? "Dán đoạn văn có các vị trí [1], [2] cần kéo thả đoạn văn vào..."
-                      : "Vd: She [1] coffee in the [2] morning."
-                  }
+                  placeholder="Vd: She [1] coffee in the [2] morning."
                   className="w-full rounded-xl border border-border bg-background p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
