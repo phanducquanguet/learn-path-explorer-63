@@ -82,8 +82,8 @@ export const TYPE_ORDER: QType[] = [
   "group",
 ];
 
-/** Type list cho khóa học (UnitActivityBuilder) — bao gồm error-correction. */
-export const TYPE_ORDER_COURSE: QType[] = [...TYPE_ORDER, "error-correction"];
+/** Type list cho khóa học (UnitActivityBuilder) — bao gồm matching và error-correction. */
+export const TYPE_ORDER_COURSE: QType[] = [...TYPE_ORDER, "matching", "error-correction"];
 
 export function defaultsForType(t: QType): Partial<BankQuestion> {
   if (t === "mcq" || t === "mcq-multi")
@@ -102,7 +102,7 @@ export function defaultsForType(t: QType): Partial<BankQuestion> {
         { index: 1, options: ["drinks", "drink", "drank"], correctOption: 0, answers: [] },
       ],
     };
-  if (t === "drag-drop" || t === "matching")
+  if (t === "drag-drop")
     return {
       passage: "He [1] to the [2] every Sunday.",
       blanks: [
@@ -111,14 +111,22 @@ export function defaultsForType(t: QType): Partial<BankQuestion> {
       ],
       distractors: [],
     };
+  if (t === "matching")
+    return {
+      content: "Sort the food into healthy and unhealthy.",
+      matchingPairs: [
+        { item: "", target: "" },
+        { item: "", target: "" },
+      ],
+    };
   if (t === "short")
     return {
       correctAnswer: "",
     };
   if (t === "error-correction")
     return {
-      passage: "",
-      errors: [{ wrong: "", correct: "" }],
+      passage: "She [1] to school every day.",
+      errors: [{ index: 1, wrong: "go", correct: "goes" }],
     };
   if (t === "essay")
     return {
