@@ -34,7 +34,7 @@ import {
   type BankQuestion,
   type QType,
 } from "@/lib/question-bank";
-import { EditDialog, TypePickerDialog } from "@/routes/admin.question-bank";
+import { EditDialog, TYPE_ORDER, makeDefaultBankQuestion } from "@/routes/admin.question-bank";
 
 /* ============================== Types ============================== */
 
@@ -230,11 +230,7 @@ export function UnitActivityBuilder({
   const [selectedId, setSelectedId] = useState<string | null>(nodes[0]?.id ?? null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [addMenuFor, setAddMenuFor] = useState<string | null>("__root__");
-
-  // Dialogs: tạo / sửa câu hỏi dùng EditDialog của Ngân hàng
-  const [pickingTypeFor, setPickingTypeFor] = useState<string | null>(null); // practiceId
-  const [creating, setCreating] = useState<{ practiceId: string; type: QType } | null>(null);
-  const [editing, setEditing] = useState<{ practiceId: string; questionId: string; bank: BankQuestion } | null>(null);
+  const [qTypeMenuFor, setQTypeMenuFor] = useState<string | null>(null); // practiceId
 
   const selected = useMemo(() => (selectedId ? findNode(nodes, selectedId) : null), [nodes, selectedId]);
 
@@ -252,40 +248,21 @@ export function UnitActivityBuilder({
     setAddMenuFor(null);
   };
 
-  // ----- Câu hỏi: thao tác qua dialog -----
-  const openCreateQuestion = (practiceId: string) => {
-    setPickingTypeFor(practiceId);
+  // Tạo câu hỏi mới với type đã chọn, chèn vào practice và chọn để chỉnh sửa
+  const createQuestionOfType = (practiceId: string, type: QType) => {
+    const bank = makeDefaultBankQuestion(type);
+    const q = makeQuestionFromBank(bank);
+    onChange(addInto(nodes, practiceId, q));
+    setSelectedId(q.id);
     setExpanded((e) => ({ ...e, [practiceId]: true }));
+    setQTypeMenuFor(null);
   };
-  const openEditQuestion = (questionId: string) => {
-    // Tìm practice cha
-    for (const root of nodes) {
-      const found = findParentPractice(root, questionId);
-      if (found) {
-        const q = found.questions.find((x) => x.id === questionId)!;
-        setEditing({ practiceId: found.id, questionId, bank: q.bank });
-        return;
-      }
-    }
-  };
-  const handleSaveQuestion = (bank: BankQuestion) => {
-    if (editing) {
-      onChange(
-        mapTree(nodes, (n) =>
-          n.kind === "question" && n.id === editing.questionId ? { ...n, bank } : n,
-        ),
-      );
-      setEditing(null);
-      return;
-    }
-    if (creating) {
-      const q = makeQuestionFromBank({
-        ...bank,
-        id: bank.id || `CQ-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-      });
-      addNode(creating.practiceId, q);
-      setCreating(null);
-    }
+  const updateQuestionBank = (questionId: string, bank: BankQuestion) => {
+    onChange(
+      mapTree(nodes, (n) =>
+        n.kind === "question" && n.id === questionId ? { ...n, bank } : n,
+      ),
+    );
   };
 
   return (
@@ -318,16 +295,14 @@ export function UnitActivityBuilder({
                 selectedId={selectedId}
                 expanded={expanded}
                 addMenuFor={addMenuFor}
-                onSelect={(id) => {
-                  const found = findNode(nodes, id);
-                  if (found?.kind === "question") openEditQuestion(id);
-                  else setSelectedId(id);
-                }}
+                qTypeMenuFor={qTypeMenuFor}
+                onSelect={(id) => setSelectedId(id)}
                 onToggle={(id) => setExpanded((e) => ({ ...e, [id]: !e[id] }))}
                 onRemove={removeNode}
                 onAdd={addNode}
                 onOpenAddMenu={setAddMenuFor}
-                onAddQuestion={openCreateQuestion}
+                onOpenQTypeMenu={setQTypeMenuFor}
+                onPickQuestionType={createQuestionOfType}
               />
             ))}
           </ul>
@@ -336,74 +311,40 @@ export function UnitActivityBuilder({
 
       {/* RIGHT: editor */}
       <div className="rounded-2xl border border-border bg-background p-5">
-        {pickingTypeFor ? (
-          <div>
-            <div className="mb-3 flex items-center justify-between">
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Thêm câu hỏi mới
-              </div>
-              <button
-                onClick={() => setPickingTypeFor(null)}
-                className="rounded-lg border border-border px-2.5 py-1 text-xs font-semibold hover:bg-muted"
-              >
-                Hủy
-              </button>
-            </div>
-            <TypePickerDialog
-              embedded
-              onClose={() => setPickingTypeFor(null)}
-              onPick={(t) => {
-                setCreating({ practiceId: pickingTypeFor, type: t });
-                setPickingTypeFor(null);
-              }}
-            />
-          </div>
-        ) : editing || creating ? (
-          <EditDialog
-            embedded
-            hideLevelDifficulty
-            question={editing?.bank ?? null}
-            initialType={creating?.type}
-            onClose={() => {
-              setEditing(null);
-              setCreating(null);
-            }}
-            onSave={handleSaveQuestion}
-          />
-        ) : !selected ? (
+        {!selected ? (
           <div className="flex h-full min-h-[280px] items-center justify-center text-sm text-muted-foreground">
             Chọn một mục bên trái để chỉnh sửa nội dung.
           </div>
         ) : selected.kind === "question" ? (
-          <div className="text-sm text-muted-foreground">
-            Đang mở câu hỏi trong form chỉnh sửa…
-          </div>
+          <EditDialog
+            key={selected.id}
+            embedded
+            autoSave
+            editableType
+            hideLevelDifficulty
+            question={selected.bank}
+            onClose={() => setSelectedId(null)}
+            onSave={(bank) => updateQuestionBank(selected.id, bank)}
+            onDelete={() => removeNode(selected.id)}
+          />
         ) : (
           <NodeEditor
             node={selected}
             onChange={(p) => updateNode(selected.id, p)}
             onRemove={() => removeNode(selected.id)}
-            onAddQuestion={openCreateQuestion}
-            onEditQuestion={openEditQuestion}
+            onAddQuestion={(practiceId) => {
+              setQTypeMenuFor(practiceId);
+              setExpanded((e) => ({ ...e, [practiceId]: true }));
+            }}
+            onEditQuestion={(id) => setSelectedId(id)}
+            onPickQuestionType={createQuestionOfType}
+            qTypeMenuFor={qTypeMenuFor}
+            onOpenQTypeMenu={setQTypeMenuFor}
           />
         )}
       </div>
     </div>
   );
-}
-
-
-function findParentPractice(node: AnyNode, questionId: string): PracticeNode | null {
-  if (node.kind === "practice") {
-    if (node.questions.some((q) => q.id === questionId)) return node;
-  }
-  if (node.kind === "group") {
-    for (const c of node.children) {
-      const x = findParentPractice(c, questionId);
-      if (x) return x;
-    }
-  }
-  return null;
 }
 
 /* ============================== Tree row ============================== */
@@ -414,24 +355,28 @@ function TreeRow({
   selectedId,
   expanded,
   addMenuFor,
+  qTypeMenuFor,
   onSelect,
   onToggle,
   onRemove,
   onAdd,
   onOpenAddMenu,
-  onAddQuestion,
+  onOpenQTypeMenu,
+  onPickQuestionType,
 }: {
   node: AnyNode;
   depth: number;
   selectedId: string | null;
   expanded: Record<string, boolean>;
   addMenuFor: string | null;
+  qTypeMenuFor: string | null;
   onSelect: (id: string) => void;
   onToggle: (id: string) => void;
   onRemove: (id: string) => void;
   onAdd: (parentId: string | null, n: AnyNode) => void;
   onOpenAddMenu: (id: string | null) => void;
-  onAddQuestion: (practiceId: string) => void;
+  onOpenQTypeMenu: (id: string | null) => void;
+  onPickQuestionType: (practiceId: string, type: QType) => void;
 }) {
   const isQuestion = node.kind === "question";
   const Icon = isQuestion ? Q_TYPE_ICON[node.bank.type] : KIND_ICON[node.kind];
@@ -502,13 +447,12 @@ function TreeRow({
           />
         )}
         {node.kind === "practice" && (
-          <button
-            onClick={() => onAddQuestion(node.id)}
-            className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary hover:bg-primary/20"
-            title="Thêm câu hỏi"
-          >
-            <Plus className="h-3 w-3" />
-          </button>
+          <QuestionTypeMenuButton
+            small
+            open={qTypeMenuFor === node.id}
+            onToggle={(v) => onOpenQTypeMenu(v ? node.id : null)}
+            onPick={(t) => onPickQuestionType(node.id, t)}
+          />
         )}
         <button onClick={() => onRemove(node.id)} className="rounded p-1 text-muted-foreground opacity-0 hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100">
           <Trash2 className="h-3.5 w-3.5" />
@@ -528,17 +472,72 @@ function TreeRow({
               selectedId={selectedId}
               expanded={expanded}
               addMenuFor={addMenuFor}
+              qTypeMenuFor={qTypeMenuFor}
               onSelect={onSelect}
               onToggle={onToggle}
               onRemove={onRemove}
               onAdd={onAdd}
               onOpenAddMenu={onOpenAddMenu}
-              onAddQuestion={onAddQuestion}
+              onOpenQTypeMenu={onOpenQTypeMenu}
+              onPickQuestionType={onPickQuestionType}
             />
           ))}
         </ul>
       )}
     </li>
+  );
+}
+
+/* ============================== Question type menu ============================== */
+
+function QuestionTypeMenuButton({
+  open,
+  onToggle,
+  onPick,
+  small,
+}: {
+  open: boolean;
+  onToggle: (v: boolean) => void;
+  onPick: (t: QType) => void;
+  small?: boolean;
+}) {
+  return (
+    <div className="relative">
+      <button
+        onClick={() => onToggle(!open)}
+        className={cn(
+          "inline-flex items-center gap-1 rounded-lg bg-primary/10 font-semibold text-primary hover:bg-primary/20",
+          small ? "px-1.5 py-0.5 text-[10px]" : "px-2.5 py-1.5 text-xs",
+        )}
+        title="Thêm câu hỏi"
+      >
+        <Plus className={small ? "h-3 w-3" : "h-3.5 w-3.5"} />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => onToggle(false)} />
+          <div className="absolute right-0 z-40 mt-1 w-60 rounded-xl border border-border bg-popover p-1.5 shadow-lg">
+            <div className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Chọn dạng câu hỏi
+            </div>
+            <div className="max-h-72 overflow-y-auto">
+              {TYPE_ORDER.map((t) => {
+                const I = Q_TYPE_ICON[t];
+                return (
+                  <button
+                    key={t}
+                    onClick={() => onPick(t)}
+                    className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-xs hover:bg-muted"
+                  >
+                    <I className="h-3.5 w-3.5 text-primary" /> {TYPE_LABEL[t]}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -607,12 +606,18 @@ function NodeEditor({
   onRemove,
   onAddQuestion,
   onEditQuestion,
+  qTypeMenuFor,
+  onOpenQTypeMenu,
+  onPickQuestionType,
 }: {
   node: Exclude<AnyNode, QuestionNode>;
   onChange: (patch: Partial<AnyNode>) => void;
   onRemove: () => void;
   onAddQuestion: (practiceId: string) => void;
   onEditQuestion: (questionId: string) => void;
+  qTypeMenuFor: string | null;
+  onOpenQTypeMenu: (id: string | null) => void;
+  onPickQuestionType: (practiceId: string, type: QType) => void;
 }) {
   const Icon = KIND_ICON[node.kind];
   const container = isContainer(node.kind);
@@ -676,8 +681,10 @@ function NodeEditor({
         <PracticeEditor
           node={node}
           onChange={onChange as (p: Partial<PracticeNode>) => void}
-          onAddQuestion={() => onAddQuestion(node.id)}
           onEditQuestion={onEditQuestion}
+          qTypeMenuOpen={qTypeMenuFor === node.id}
+          onOpenQTypeMenu={(open) => onOpenQTypeMenu(open ? node.id : null)}
+          onPickQuestionType={(t) => onPickQuestionType(node.id, t)}
         />
       )}
 
@@ -799,13 +806,17 @@ function PdfAudioEditor({ node, onChange }: { node: PdfAudioNode; onChange: (p: 
 function PracticeEditor({
   node,
   onChange,
-  onAddQuestion,
   onEditQuestion,
+  qTypeMenuOpen,
+  onOpenQTypeMenu,
+  onPickQuestionType,
 }: {
   node: PracticeNode;
   onChange: (p: Partial<PracticeNode>) => void;
-  onAddQuestion: () => void;
   onEditQuestion: (questionId: string) => void;
+  qTypeMenuOpen: boolean;
+  onOpenQTypeMenu: (open: boolean) => void;
+  onPickQuestionType: (type: QType) => void;
 }) {
   const removeQuestion = (id: string) => {
     onChange({ questions: node.questions.filter((q) => q.id !== id) });
@@ -825,13 +836,13 @@ function PracticeEditor({
           <div className="text-xs font-semibold text-foreground">
             Câu hỏi trong bài thực hành ({node.questions.length})
           </div>
-          <button
-            onClick={onAddQuestion}
-            className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1.5 text-[11px] font-semibold text-primary-foreground hover:opacity-90"
-          >
-            <Plus className="h-3 w-3" /> Thêm câu hỏi
-          </button>
+          <QuestionTypeMenuButton
+            open={qTypeMenuOpen}
+            onToggle={onOpenQTypeMenu}
+            onPick={onPickQuestionType}
+          />
         </div>
+
 
         {node.questions.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
