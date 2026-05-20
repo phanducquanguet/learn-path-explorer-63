@@ -1384,146 +1384,125 @@ export function EditDialog({
             </div>
           )}
 
-          {form.type === "error-correction" && (
-            <div className="space-y-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                  <Pencil className="h-3.5 w-3.5" /> Error correction
-                </div>
-                <div className="flex items-center gap-1">
-                  <label
-                    className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
-                    title="Tải ảnh cho câu hỏi"
-                  >
-                    <ImageIcon className="h-3 w-3" /> Ảnh
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={async (e) => {
-                        const f = e.target.files?.[0];
-                        setForm({
-                          ...form,
-                          imageUrl: f ? await fileToDataURL(f) : form.imageUrl,
-                        });
-                      }}
-                    />
-                  </label>
-                  <label
-                    className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
-                    title="Tải audio cho câu hỏi"
-                  >
-                    <Music className="h-3 w-3" /> Audio
-                    <input
-                      type="file"
-                      accept="audio/*"
-                      className="hidden"
-                      onChange={(e) => setQuestionAudio(e.target.files?.[0] ?? null)}
-                    />
-                  </label>
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-semibold text-muted-foreground">
-                  Câu / đoạn văn (có chứa từ viết sai) *
-                </label>
-                <textarea
-                  value={form.passage ?? ""}
-                  onChange={(e) => setForm({ ...form, passage: e.target.value, content: e.target.value })}
-                  rows={3}
-                  placeholder="Vd: She go to school every day and play football with her freinds."
-                  className="mt-1 w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                />
-              </div>
-              {(form.imageUrl || form.audioUrl) && (
-                <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-background/60 p-2">
-                  {form.imageUrl && (
-                    <div className="flex items-center gap-2">
-                      <img
-                        src={form.imageUrl}
-                        alt=""
-                        className="h-14 w-14 rounded-md border border-border object-cover"
-                      />
-                      <button
-                        onClick={() => setForm({ ...form, imageUrl: undefined })}
-                        className="text-[11px] font-semibold text-rose-500 hover:underline"
-                      >
-                        Bỏ ảnh
+          {isErrorCorrection && (() => {
+            const errs = form.errors ?? [];
+            const nextErrIdx = (errs.reduce((m, e) => Math.max(m, e.index), 0) || 0) + 1;
+            const addErrBlank = () => {
+              const idx = nextErrIdx;
+              setForm({
+                ...form,
+                passage: ((form.passage ?? "") + ` [${idx}]`).trim(),
+                content: form.content || (form.passage ?? ""),
+                errors: [...errs, { index: idx, wrong: "", correct: "" }],
+              });
+            };
+            const removeErrBlank = (idx: number) => {
+              setForm({
+                ...form,
+                passage: (form.passage ?? "").replace(new RegExp(`\\s*\\[${idx}\\]`, "g"), ""),
+                errors: errs.filter((e) => e.index !== idx),
+              });
+            };
+            const updateErr = (idx: number, patch: Partial<{ wrong: string; correct: string }>) => {
+              setForm({
+                ...form,
+                errors: errs.map((e) => (e.index === idx ? { ...e, ...patch } : e)),
+              });
+            };
+            return (
+              <div className="space-y-3">
+                <div>
+                  <div className="mb-1 flex items-center justify-between">
+                    <label className="text-xs font-semibold text-muted-foreground">
+                      Câu / đoạn văn — bấm <span className="font-semibold text-foreground">Thêm chỗ trống</span> để chèn <code className="rounded bg-muted px-1 font-mono">[n]</code> tại vị trí từ sai
+                    </label>
+                    <div className="flex items-center gap-1">
+                      <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted">
+                        <ImageIcon className="h-3 w-3" /> Ảnh
+                        <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                          const f = e.target.files?.[0];
+                          setForm({ ...form, imageUrl: f ? await fileToDataURL(f) : form.imageUrl });
+                        }} />
+                      </label>
+                      <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted">
+                        <Music className="h-3 w-3" /> Audio
+                        <input type="file" accept="audio/*" className="hidden" onChange={(e) => setQuestionAudio(e.target.files?.[0] ?? null)} />
+                      </label>
+                      <button onClick={addErrBlank} className="inline-flex h-7 items-center gap-1 rounded-md bg-foreground px-2 text-[11px] font-semibold text-background">
+                        <Plus className="h-3 w-3" /> Thêm chỗ trống
                       </button>
                     </div>
-                  )}
-                  {form.audioUrl && (
-                    <div className="flex items-center gap-2">
-                      <audio controls src={form.audioUrl} className="h-8" />
-                      <button
-                        onClick={() => setQuestionAudio(null)}
-                        className="text-[11px] font-semibold text-rose-500 hover:underline"
-                      >
-                        Bỏ audio
-                      </button>
+                  </div>
+                  {(form.imageUrl || form.audioUrl) && (
+                    <div className="mb-2 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/20 p-2">
+                      {form.imageUrl && (
+                        <div className="flex items-center gap-2">
+                          <img src={form.imageUrl} alt="" className="h-12 w-12 rounded-md border border-border object-cover" />
+                          <button onClick={() => setForm({ ...form, imageUrl: undefined })} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ ảnh</button>
+                        </div>
+                      )}
+                      {form.audioUrl && (
+                        <div className="flex items-center gap-2">
+                          <audio controls src={form.audioUrl} className="h-8" />
+                          <button onClick={() => setQuestionAudio(null)} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ audio</button>
+                        </div>
+                      )}
                     </div>
                   )}
+                  <textarea
+                    value={form.passage ?? ""}
+                    onChange={(e) => setForm({ ...form, passage: e.target.value, content: e.target.value })}
+                    rows={3}
+                    placeholder="Vd: She [1] to school every day and [2] football with her friends."
+                    className="w-full rounded-xl border border-border bg-background p-3 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  />
                 </div>
-              )}
-              <div>
-                <div className="mb-1.5 flex items-center justify-between">
-                  <label className="text-xs font-semibold text-muted-foreground">
-                    Danh sách từ sai và cách sửa
-                  </label>
-                  <button
-                    onClick={() =>
-                      setForm({
-                        ...form,
-                        errors: [...(form.errors ?? []), { wrong: "", correct: "" }],
-                      })
-                    }
-                    className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
-                  >
-                    <Plus className="h-3 w-3" /> Thêm từ sai
-                  </button>
-                </div>
+
                 <div className="space-y-1.5">
-                  {(form.errors ?? []).map((er, i) => (
-                    <div key={i} className="grid grid-cols-[1fr_auto_1fr_auto] items-center gap-2">
+                  <div className="text-xs font-semibold text-muted-foreground">
+                    Đáp án cho từng chỗ trống — nhập từ sai & từ đúng
+                  </div>
+                  {errs.map((er) => (
+                    <div key={er.index} className="flex items-center gap-2">
+                      <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-md bg-primary/10 px-1.5 text-[11px] font-bold text-primary">
+                        [{er.index}]
+                      </span>
                       <input
                         value={er.wrong}
-                        onChange={(e) => {
-                          const next = [...(form.errors ?? [])];
-                          next[i] = { ...er, wrong: e.target.value };
-                          setForm({ ...form, errors: next });
-                        }}
-                        placeholder="Từ/cụm sai (vd: go)"
-                        className={cn(inputCls, "font-mono")}
+                        onChange={(e) => updateErr(er.index, { wrong: e.target.value })}
+                        placeholder="Từ/cụm sai"
+                        className={cn(inputCls, "flex-1 font-mono")}
                       />
                       <span className="text-xs text-muted-foreground">→</span>
                       <input
                         value={er.correct}
-                        onChange={(e) => {
-                          const next = [...(form.errors ?? [])];
-                          next[i] = { ...er, correct: e.target.value };
-                          setForm({ ...form, errors: next });
-                        }}
-                        placeholder="Sửa thành (vd: goes)"
-                        className={cn(inputCls, "font-mono")}
+                        onChange={(e) => updateErr(er.index, { correct: e.target.value })}
+                        placeholder="Sửa thành"
+                        className={cn(inputCls, "flex-1 font-mono")}
                       />
                       <button
-                        onClick={() => {
-                          const next = (form.errors ?? []).filter((_, x) => x !== i);
-                          setForm({ ...form, errors: next });
-                        }}
+                        onClick={() => removeErrBlank(er.index)}
                         className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        title="Xóa chỗ trống"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   ))}
+                  {errs.length === 0 && (
+                    <div className="rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
+                      Chưa có chỗ trống nào. Bấm "Thêm chỗ trống" để bắt đầu.
+                    </div>
+                  )}
                 </div>
-                <p className="mt-1 text-[11px] text-muted-foreground">
-                  Từ sai phải xuất hiện trong câu/đoạn văn ở trên. Học viên sẽ chọn từ sai và viết lại từ đúng.
-                </p>
               </div>
-            </div>
+            );
+          })()}
+
+          {isMatching && (
+            <MatchingEditor form={form} setForm={setForm} inputCls={inputCls} />
           )}
+
 
 
 
