@@ -620,12 +620,18 @@ function NodeEditor({
   onRemove,
   onAddQuestion,
   onEditQuestion,
+  qTypeMenuFor,
+  onOpenQTypeMenu,
+  onPickQuestionType,
 }: {
   node: Exclude<AnyNode, QuestionNode>;
   onChange: (patch: Partial<AnyNode>) => void;
   onRemove: () => void;
   onAddQuestion: (practiceId: string) => void;
   onEditQuestion: (questionId: string) => void;
+  qTypeMenuFor: string | null;
+  onOpenQTypeMenu: (id: string | null) => void;
+  onPickQuestionType: (practiceId: string, type: QType) => void;
 }) {
   const Icon = KIND_ICON[node.kind];
   const container = isContainer(node.kind);
