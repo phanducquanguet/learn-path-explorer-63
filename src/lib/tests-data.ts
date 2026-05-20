@@ -1,4 +1,4 @@
-import type { QSkill, QType, QLevel, QDifficulty } from "./question-bank";
+import type { QSkill, QType, QLevel, QDifficulty, BankQuestion } from "./question-bank";
 
 export type CustomQuestion = {
   id: string;
@@ -27,6 +27,8 @@ export type TestStructureItem = {
   pickedIds?: string[];
   /** Câu hỏi do người dùng tự soạn (mode manual). */
   customQuestions?: CustomQuestion[];
+  /** Câu hỏi tự soạn dạng BankQuestion (hỗ trợ đầy đủ form như ngân hàng câu hỏi). */
+  customBank?: BankQuestion[];
 };
 
 export type Test = {
