@@ -2135,6 +2135,7 @@ function SubQuestionCard({
   const isShort = sub.type === "short";
   const isFill = sub.type === "fill";
   const isMatching = sub.type === "matching";
+  const isDragDrop = sub.type === "drag-drop";
   const pairs = sub.pairs ?? [];
   const updatePair = (i: number, patch: Partial<{ left: string; right: string }>) =>
     onChange({ pairs: pairs.map((p, x) => (x === i ? { ...p, ...patch } : p)) });
