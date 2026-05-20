@@ -1185,54 +1185,56 @@ export function EditDialog({
             </div>
           )}
 
-          <div className={cn("grid gap-3", hideLevelDifficulty ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4")}>
-            <Field label="Kỹ năng">
-              <select
-                value={form.skill}
-                onChange={(e) => setForm({ ...form, skill: e.target.value as QSkill })}
-                className={inputCls}
-              >
-                {SKILLS.map((s) => (
-                  <option key={s} value={s}>{SKILL_LABEL[s]}</option>
-                ))}
-              </select>
-            </Field>
-            {!hideLevelDifficulty && (
-              <Field label="Cấp độ">
+          {!editableType && (
+            <div className={cn("grid gap-3", hideLevelDifficulty ? "grid-cols-2" : "grid-cols-2 sm:grid-cols-4")}>
+              <Field label="Kỹ năng">
                 <select
-                  value={form.level}
-                  onChange={(e) => setForm({ ...form, level: e.target.value as QLevel })}
+                  value={form.skill}
+                  onChange={(e) => setForm({ ...form, skill: e.target.value as QSkill })}
                   className={inputCls}
                 >
-                  {LEVELS.map((l) => (
-                    <option key={l} value={l}>{l}</option>
+                  {SKILLS.map((s) => (
+                    <option key={s} value={s}>{SKILL_LABEL[s]}</option>
                   ))}
                 </select>
               </Field>
-            )}
-            {!hideLevelDifficulty && (
-              <Field label="Độ khó">
-                <select
-                  value={form.difficulty}
-                  onChange={(e) => setForm({ ...form, difficulty: e.target.value as QDifficulty })}
+              {!hideLevelDifficulty && (
+                <Field label="Cấp độ">
+                  <select
+                    value={form.level}
+                    onChange={(e) => setForm({ ...form, level: e.target.value as QLevel })}
+                    className={inputCls}
+                  >
+                    {LEVELS.map((l) => (
+                      <option key={l} value={l}>{l}</option>
+                    ))}
+                  </select>
+                </Field>
+              )}
+              {!hideLevelDifficulty && (
+                <Field label="Độ khó">
+                  <select
+                    value={form.difficulty}
+                    onChange={(e) => setForm({ ...form, difficulty: e.target.value as QDifficulty })}
+                    className={inputCls}
+                  >
+                    {(Object.keys(DIFFICULTY_LABEL) as QDifficulty[]).map((d) => (
+                      <option key={d} value={d}>{DIFFICULTY_LABEL[d]}</option>
+                    ))}
+                  </select>
+                </Field>
+              )}
+              <Field label="Điểm">
+                <input
+                  type="number"
+                  min={1}
+                  value={form.points}
+                  onChange={(e) => setForm({ ...form, points: Number(e.target.value) })}
                   className={inputCls}
-                >
-                  {(Object.keys(DIFFICULTY_LABEL) as QDifficulty[]).map((d) => (
-                    <option key={d} value={d}>{DIFFICULTY_LABEL[d]}</option>
-                  ))}
-                </select>
+                />
               </Field>
-            )}
-            <Field label="Điểm">
-              <input
-                type="number"
-                min={1}
-                value={form.points}
-                onChange={(e) => setForm({ ...form, points: Number(e.target.value) })}
-                className={inputCls}
-              />
-            </Field>
-          </div>
+            </div>
+          )}
 
 
 
