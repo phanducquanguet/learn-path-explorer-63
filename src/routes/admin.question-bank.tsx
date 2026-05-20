@@ -102,12 +102,22 @@ export function defaultsForType(t: QType): Partial<BankQuestion> {
     };
   if (t === "drag-drop" || t === "matching")
     return {
-      dragMode: "words",
       passage: "He [1] to the [2] every Sunday.",
       blanks: [
         { index: 1, answers: ["goes"] },
         { index: 2, answers: ["park"] },
       ],
+      distractors: [],
+    };
+  if (t === "short")
+    return {
+      correctAnswer: "",
+      distractors: [],
+    };
+  if (t === "error-correction")
+    return {
+      passage: "",
+      errors: [{ wrong: "", correct: "" }],
     };
   if (t === "essay")
     return {
