@@ -26,7 +26,7 @@ export type QKind = QType;
 /** Các dạng câu hỏi dùng trong activity builder — đồng bộ với Ngân hàng câu hỏi
  *  nhưng KHÔNG cần cấp độ (level) hay độ khó (difficulty). */
 export const QUIZ_KINDS: { id: QType; label: string; description: string }[] = (
-  ["mcq", "mcq-multi", "tf", "short", "fill", "matching", "sequence", "select-lists", "drag-drop", "essay"] as QType[]
+  ["mcq", "mcq-multi", "tf", "short", "fill", "matching", "sequence", "select-lists", "drag-drop", "essay", "speaking", "error-correction"] as QType[]
 ).map((id) => ({ id, label: TYPE_LABEL[id], description: TYPE_DESCRIPTION[id] }));
 
 type Common = { id: string; title: string };
@@ -56,7 +56,7 @@ export type PracticeNode = Common & {
   kind: "practice";
   instructions?: string;
   audioFileName?: string;
-  attachmentName?: string;
+  questions: QuestionNode[];
 };
 export type QuestionNode = Common & {
   kind: "question";
@@ -127,10 +127,10 @@ function makeNode(kind: AnyNode["kind"], qType?: QKind): AnyNode {
     case "pdf-audio":
       return { ...base, kind, title: "PDF kèm audio" };
     case "practice":
-      return { ...base, kind, title: "Bài thực hành", instructions: "" };
+      return { ...base, kind, title: "Bài thực hành", instructions: "", questions: [] };
     case "question": {
       const q = qType ?? "mcq";
-      const needsOptions = ["mcq", "mcq-multi", "matching", "drag-drop", "tf", "sequence", "select-lists"].includes(q);
+      const needsOptions = ["mcq", "mcq-multi", "matching", "drag-drop", "tf", "sequence", "select-lists", "error-correction"].includes(q);
       return {
         ...base,
         kind: "question",
@@ -140,10 +140,12 @@ function makeNode(kind: AnyNode["kind"], qType?: QKind): AnyNode {
         options: needsOptions
           ? q === "tf"
             ? ["Đúng", "Sai"]
-            : ["Lựa chọn A", "Lựa chọn B"]
+            : q === "error-correction"
+              ? ["She", "go", "to", "school"]
+              : ["Lựa chọn A", "Lựa chọn B"]
           : [],
         correct: q === "tf" ? [0] : [],
-        points: q === "essay" ? 5 : q === "short" ? 2 : 1,
+        points: q === "essay" ? 5 : q === "short" || q === "speaking" ? 2 : 1,
       };
     }
   }
@@ -399,20 +401,8 @@ function AddMenuButton({
                 <I className="h-3.5 w-3.5 text-primary" /> {label}
               </button>
             ))}
-            <div className="my-1 border-t border-border" />
-            <div className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Câu hỏi (11 dạng)
-            </div>
-            <div className="grid grid-cols-2 gap-1">
-              {QUIZ_KINDS.map((q) => (
-                <button
-                  key={q.id}
-                  onClick={() => onPick(makeNode("question", q.id))}
-                  className="rounded-md px-2 py-1.5 text-left text-[11px] hover:bg-muted"
-                >
-                  {q.label}
-                </button>
-              ))}
+            <div className="mt-1 rounded-md bg-muted/40 px-2 py-1.5 text-[10px] text-muted-foreground">
+              Câu hỏi được thêm bên trong <span className="font-semibold text-foreground">Bài thực hành</span>.
             </div>
           </div>
         </>
@@ -588,18 +578,110 @@ function PdfAudioEditor({ node, onChange }: { node: PdfAudioNode; onChange: (p: 
 }
 
 function PracticeEditor({ node, onChange }: { node: PracticeNode; onChange: (p: Partial<PracticeNode>) => void }) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const addQuestion = (qType: QKind) => {
+    const q = makeNode("question", qType) as QuestionNode;
+    onChange({ questions: [...node.questions, q] });
+    setEditingId(q.id);
+    setPickerOpen(false);
+  };
+  const updateQuestion = (id: string, patch: Partial<QuestionNode>) => {
+    onChange({ questions: node.questions.map((q) => (q.id === id ? { ...q, ...patch } : q)) });
+  };
+  const removeQuestion = (id: string) => {
+    onChange({ questions: node.questions.filter((q) => q.id !== id) });
+    if (editingId === id) setEditingId(null);
+  };
+
   return (
     <div className="space-y-4">
       <Row label="Hướng dẫn / Đề bài">
-        <textarea rows={4} value={node.instructions ?? ""} onChange={(e) => onChange({ instructions: e.target.value })} placeholder="VD: Đọc đoạn văn và viết tóm tắt..." className="ui-input" />
+        <textarea rows={3} value={node.instructions ?? ""} onChange={(e) => onChange({ instructions: e.target.value })} placeholder="VD: Đọc đoạn văn và trả lời các câu hỏi bên dưới..." className="ui-input" />
       </Row>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Row label="Audio (nếu có)">
-          <FileBox icon={Music2} label="Audio đi kèm" fileName={node.audioFileName} onChange={(audioFileName) => onChange({ audioFileName })} accept="audio/*" />
-        </Row>
-        <Row label="Tệp đính kèm">
-          <FileBox icon={FileText} label="PDF / hình ảnh" fileName={node.attachmentName} onChange={(attachmentName) => onChange({ attachmentName })} />
-        </Row>
+      <Row label="Audio (nếu có)">
+        <FileBox icon={Music2} label="Audio đi kèm" fileName={node.audioFileName} onChange={(audioFileName) => onChange({ audioFileName })} accept="audio/*" />
+      </Row>
+
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <div className="text-xs font-semibold text-foreground">
+            Câu hỏi trong bài thực hành ({node.questions.length})
+          </div>
+          <div className="relative">
+            <button
+              onClick={() => setPickerOpen((v) => !v)}
+              className="inline-flex items-center gap-1 rounded-md bg-primary px-2.5 py-1.5 text-[11px] font-semibold text-primary-foreground hover:opacity-90"
+            >
+              <Plus className="h-3 w-3" /> Thêm câu hỏi
+            </button>
+            {pickerOpen && (
+              <>
+                <div className="fixed inset-0 z-30" onClick={() => setPickerOpen(false)} />
+                <div className="absolute right-0 z-40 mt-1 w-72 rounded-xl border border-border bg-popover p-2 shadow-lg">
+                  <div className="px-2 pb-1 pt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Chọn dạng câu hỏi
+                  </div>
+                  <div className="grid grid-cols-2 gap-1">
+                    {QUIZ_KINDS.map((q) => (
+                      <button
+                        key={q.id}
+                        onClick={() => addQuestion(q.id)}
+                        className="rounded-md px-2 py-1.5 text-left text-[11px] hover:bg-muted"
+                        title={q.description}
+                      >
+                        {q.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {node.questions.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
+            Chưa có câu hỏi nào. Bấm <span className="font-semibold text-foreground">Thêm câu hỏi</span> để chọn dạng từ ngân hàng câu hỏi.
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {node.questions.map((q, idx) => {
+              const open = editingId === q.id;
+              return (
+                <div key={q.id} className="rounded-xl border border-border bg-background">
+                  <div className="flex items-center gap-2 px-3 py-2">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-md bg-primary/10 text-[11px] font-bold text-primary">{idx + 1}</span>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {QUIZ_KINDS.find((k) => k.id === q.qType)?.label}
+                    </span>
+                    <span className="flex-1 truncate text-sm text-foreground">
+                      {q.prompt || <span className="italic text-muted-foreground">Chưa có nội dung</span>}
+                    </span>
+                    <button
+                      onClick={() => setEditingId(open ? null : q.id)}
+                      className="rounded-md border border-border px-2 py-1 text-[11px] font-semibold text-foreground hover:bg-muted"
+                    >
+                      {open ? "Đóng" : "Sửa"}
+                    </button>
+                    <button
+                      onClick={() => removeQuestion(q.id)}
+                      className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  {open && (
+                    <div className="border-t border-border p-3">
+                      <QuestionEditor node={q} onChange={(p) => updateQuestion(q.id, p)} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -609,9 +691,9 @@ function PracticeEditor({ node, onChange }: { node: PracticeNode; onChange: (p: 
 
 function QuestionEditor({ node, onChange }: { node: QuestionNode; onChange: (p: Partial<QuestionNode>) => void }) {
   const q = node.qType;
-  const hasOptions = ["mcq", "mcq-multi", "matching", "drag-drop", "tf", "sequence", "select-lists"].includes(q);
-  const multiCorrect = q === "mcq-multi" || q === "drag-drop" || q === "select-lists";
-  const showSample = ["short", "fill", "essay"].includes(q);
+  const hasOptions = ["mcq", "mcq-multi", "matching", "drag-drop", "tf", "sequence", "select-lists", "error-correction"].includes(q);
+  const multiCorrect = q === "mcq-multi" || q === "drag-drop" || q === "select-lists" || q === "error-correction";
+  const showSample = ["short", "fill", "essay", "speaking", "error-correction"].includes(q);
 
   const toggleCorrect = (i: number) => {
     let next: number[];
@@ -668,7 +750,7 @@ function QuestionEditor({ node, onChange }: { node: QuestionNode; onChange: (p: 
         <div>
           <div className="mb-2 flex items-center justify-between">
             <div className="text-xs font-semibold text-foreground">
-              {q === "matching" ? "Cặp ghép" : q === "sequence" ? "Các mục cần sắp xếp (đúng thứ tự)" : "Lựa chọn"}
+              {q === "matching" ? "Cặp ghép" : q === "sequence" ? "Các mục cần sắp xếp (đúng thứ tự)" : q === "error-correction" ? "Các từ/cụm trong câu (tích chọn từ sai)" : "Lựa chọn"}
             </div>
             {q !== "tf" && (
               <button onClick={addOpt} className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary hover:bg-primary/20">
@@ -679,7 +761,7 @@ function QuestionEditor({ node, onChange }: { node: QuestionNode; onChange: (p: 
           <div className="overflow-hidden rounded-xl border border-border">
             <div className="grid grid-cols-[40px_50px_1fr_36px] items-center gap-2 bg-muted/50 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               <span />
-              <span>{q === "sequence" ? "STT" : "Đúng"}</span>
+              <span>{q === "sequence" ? "STT" : q === "error-correction" ? "Sai" : "Đúng"}</span>
               <span>Nội dung</span>
               <span />
             </div>
@@ -710,12 +792,12 @@ function QuestionEditor({ node, onChange }: { node: QuestionNode; onChange: (p: 
       )}
 
       {showSample && (
-        <Row label="Đáp án mẫu / Gợi ý chấm">
+        <Row label={q === "error-correction" ? "Câu viết lại đúng" : q === "speaking" ? "Đáp án mẫu / Câu trả lời tham khảo" : "Đáp án mẫu / Gợi ý chấm"}>
           <textarea
             rows={3}
             value={node.sampleAnswer ?? ""}
             onChange={(e) => onChange({ sampleAnswer: e.target.value })}
-            placeholder="Câu trả lời tham khảo dùng để chấm..."
+            placeholder={q === "error-correction" ? "VD: She goes to school." : "Câu trả lời tham khảo dùng để chấm..."}
             className="ui-input"
           />
         </Row>
