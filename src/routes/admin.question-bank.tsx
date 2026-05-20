@@ -869,6 +869,9 @@ export function EditDialog({
   onSave,
   embedded = false,
   hideLevelDifficulty = false,
+  autoSave = false,
+  editableType = false,
+  onDelete,
 }: {
   question: BankQuestion | null;
   initialType?: QType;
@@ -876,49 +879,10 @@ export function EditDialog({
   onSave: (q: BankQuestion) => void;
   embedded?: boolean;
   hideLevelDifficulty?: boolean;
+  autoSave?: boolean;
+  editableType?: boolean;
+  onDelete?: () => void;
 }) {
-  const defaultsForType = (t: QType): Partial<BankQuestion> => {
-    if (t === "mcq" || t === "mcq-multi")
-      return { options: ["", "", "", ""], correctAnswer: t === "mcq" ? "A" : "A,B", optionImages: [] };
-    if (t === "tf") return { options: ["True", "False"], correctAnswer: "True" };
-    if (t === "sequence") return { options: ["Bước 1", "Bước 2", "Bước 3"], correctAnswer: "1,2,3" };
-    if (t === "fill")
-      return {
-        passage: "Điền vào chỗ trống: I [1] to school every day.",
-        blanks: [{ index: 1, answers: ["go", "walk"] }],
-      };
-    if (t === "select-lists")
-      return {
-        passage: "She [1] coffee in the morning.",
-        blanks: [
-          { index: 1, options: ["drinks", "drink", "drank"], correctOption: 0, answers: [] },
-        ],
-      };
-    if (t === "drag-drop" || t === "matching")
-      return {
-        dragMode: "words",
-        passage: "He [1] to the [2] every Sunday.",
-        blanks: [
-          { index: 1, answers: ["goes"] },
-          { index: 2, answers: ["park"] },
-        ],
-      };
-    if (t === "essay")
-      return {
-        solution: "",
-        feedback: [
-          { keyword: "", comment: "" },
-          { keyword: "", comment: "" },
-        ],
-      };
-    if (t === "group")
-      return {
-        passage: "",
-        subQuestions: [],
-      };
-    return { options: undefined };
-  };
-
   const startingType = initialType ?? question?.type ?? "mcq";
   const [form, setForm] = useState<BankQuestion>(
     question ?? {
@@ -935,6 +899,27 @@ export function EditDialog({
       ...defaultsForType(startingType),
     },
   );
+
+  // Autosave: gửi thay đổi lên parent ngay khi form đổi
+  const isFirstRef = React.useRef(true);
+  React.useEffect(() => {
+    if (!autoSave) return;
+    if (isFirstRef.current) {
+      isFirstRef.current = false;
+      return;
+    }
+    onSave(form);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form, autoSave]);
+
+  const changeType = (t: QType) => {
+    setForm((f) => ({
+      ...f,
+      type: t,
+      ...defaultsForType(t),
+    }));
+  };
+
   const isMcq = form.type === "mcq" || form.type === "mcq-multi";
   const isMcqMulti = form.type === "mcq-multi";
   const isEssay = form.type === "essay";
