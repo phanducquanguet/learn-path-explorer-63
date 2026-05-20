@@ -1187,38 +1187,8 @@ export function EditDialog({
                 <label className="text-xs font-semibold text-muted-foreground">
                   Nội dung câu hỏi *
                 </label>
-                <div className="flex items-center gap-1">
-                  <label
-                    className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
-                    title="Tải ảnh cho câu hỏi"
-                  >
-                    <ImageIcon className="h-3 w-3" /> Ảnh
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={async (e) => {
-                        const f = e.target.files?.[0];
-                        setForm({
-                          ...form,
-                          imageUrl: f ? await fileToDataURL(f) : form.imageUrl,
-                        });
-                      }}
-                    />
-                  </label>
-                  <label
-                    className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted"
-                    title="Tải audio cho câu hỏi"
-                  >
-                    <Music className="h-3 w-3" /> Audio
-                    <input
-                      type="file"
-                      accept="audio/*"
-                      className="hidden"
-                      onChange={(e) => setQuestionAudio(e.target.files?.[0] ?? null)}
-                    />
-                  </label>
-                </div>
+                <div className="flex items-center gap-1">{mediaButton}</div>
+
               </div>
               <textarea
                 value={form.content}
