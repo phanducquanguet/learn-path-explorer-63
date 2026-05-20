@@ -800,22 +800,47 @@ function VideoSpeakingEditor({ node, onChange }: { node: VideoSpeakingNode; onCh
 
 function PdfEditor({ node, onChange }: { node: PdfNode; onChange: (p: Partial<PdfNode>) => void }) {
   return (
-    <Row label="Tệp PDF">
-      <FileBox icon={FileText} label="Tải lên PDF" fileName={node.fileName} onChange={(fileName) => onChange({ fileName })} accept=".pdf" />
-    </Row>
+    <div className="space-y-4">
+      <Row label="Tệp PDF">
+        <FileBox icon={FileText} label="Tải lên PDF" fileName={node.fileName} onChange={(fileName) => onChange({ fileName })} accept=".pdf" />
+      </Row>
+      <HiddenFromStudentsToggle checked={!!node.hiddenFromStudents} onChange={(v) => onChange({ hiddenFromStudents: v })} />
+    </div>
   );
 }
 
 function PdfAudioEditor({ node, onChange }: { node: PdfAudioNode; onChange: (p: Partial<PdfAudioNode>) => void }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <Row label="Tệp PDF">
-        <FileBox icon={FileText} label="Tải lên PDF" fileName={node.fileName} onChange={(fileName) => onChange({ fileName })} accept=".pdf" />
-      </Row>
-      <Row label="Tệp audio đi kèm">
-        <FileBox icon={Music2} label="Tải lên audio" fileName={node.audioFileName} onChange={(audioFileName) => onChange({ audioFileName })} accept="audio/*" />
-      </Row>
+    <div className="space-y-4">
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Row label="Tệp PDF">
+          <FileBox icon={FileText} label="Tải lên PDF" fileName={node.fileName} onChange={(fileName) => onChange({ fileName })} accept=".pdf" />
+        </Row>
+        <Row label="Tệp audio đi kèm">
+          <FileBox icon={Music2} label="Tải lên audio" fileName={node.audioFileName} onChange={(audioFileName) => onChange({ audioFileName })} accept="audio/*" />
+        </Row>
+      </div>
+      <HiddenFromStudentsToggle checked={!!node.hiddenFromStudents} onChange={(v) => onChange({ hiddenFromStudents: v })} />
     </div>
+  );
+}
+
+function HiddenFromStudentsToggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <label className="flex items-start gap-3 rounded-xl border border-border bg-surface/60 px-3 py-2.5">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+      />
+      <div className="flex-1">
+        <div className="text-xs font-semibold text-foreground">Ẩn tài liệu với học viên</div>
+        <div className="text-[11px] text-muted-foreground">
+          Khi bật, chỉ giáo viên thấy tài liệu này. Học viên sẽ không nhìn thấy trong giao diện học tập.
+        </div>
+      </div>
+    </label>
   );
 }
 
