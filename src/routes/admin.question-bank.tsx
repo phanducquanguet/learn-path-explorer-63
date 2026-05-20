@@ -114,7 +114,6 @@ export function defaultsForType(t: QType): Partial<BankQuestion> {
   if (t === "short")
     return {
       correctAnswer: "",
-      distractors: [],
     };
   if (t === "error-correction")
     return {
