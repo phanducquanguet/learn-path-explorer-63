@@ -750,7 +750,7 @@ function QuestionEditor({ node, onChange }: { node: QuestionNode; onChange: (p: 
         <div>
           <div className="mb-2 flex items-center justify-between">
             <div className="text-xs font-semibold text-foreground">
-              {q === "matching" ? "Cặp ghép" : q === "sequence" ? "Các mục cần sắp xếp (đúng thứ tự)" : "Lựa chọn"}
+              {q === "matching" ? "Cặp ghép" : q === "sequence" ? "Các mục cần sắp xếp (đúng thứ tự)" : q === "error-correction" ? "Các từ/cụm trong câu (tích chọn từ sai)" : "Lựa chọn"}
             </div>
             {q !== "tf" && (
               <button onClick={addOpt} className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary hover:bg-primary/20">
