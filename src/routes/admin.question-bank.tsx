@@ -1573,30 +1573,7 @@ export function EditDialog({
                     Đề bài có chỗ trống — bấm <span className="font-semibold text-foreground">Thêm chỗ trống</span> để chèn <code className="rounded bg-muted px-1 font-mono">[n]</code>
                   </label>
                   <div className="flex items-center gap-1">
-                    <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted">
-                      <ImageIcon className="h-3 w-3" /> Ảnh
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={async (e) => {
-                          const f = e.target.files?.[0];
-                          setForm({
-                            ...form,
-                            imageUrl: f ? await fileToDataURL(f) : form.imageUrl,
-                          });
-                        }}
-                      />
-                    </label>
-                    <label className="inline-flex h-7 cursor-pointer items-center gap-1 rounded-md border border-border bg-background px-2 text-[11px] font-semibold text-muted-foreground hover:bg-muted">
-                      <Music className="h-3 w-3" /> Audio
-                      <input
-                        type="file"
-                        accept="audio/*"
-                        className="hidden"
-                        onChange={(e) => setQuestionAudio(e.target.files?.[0] ?? null)}
-                      />
-                    </label>
+                    {mediaButton}
                     <button
                       onClick={addBlank}
                       className="inline-flex h-7 items-center gap-1 rounded-md bg-foreground px-2 text-[11px] font-semibold text-background"
@@ -1605,22 +1582,8 @@ export function EditDialog({
                     </button>
                   </div>
                 </div>
-                {(form.imageUrl || form.audioUrl) && (
-                  <div className="mb-2 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-background p-2">
-                    {form.imageUrl && (
-                      <div className="flex items-center gap-2">
-                        <img src={form.imageUrl} alt="" className="h-12 w-12 rounded-md border border-border object-cover" />
-                        <button onClick={() => setForm({ ...form, imageUrl: undefined })} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ ảnh</button>
-                      </div>
-                    )}
-                    {form.audioUrl && (
-                      <div className="flex items-center gap-2">
-                        <audio controls src={form.audioUrl} className="h-8" />
-                        <button onClick={() => setQuestionAudio(null)} className="text-[11px] font-semibold text-rose-500 hover:underline">Bỏ audio</button>
-                      </div>
-                    )}
-                  </div>
-                )}
+                {mediaPreview}
+
                 <textarea
                   value={form.passage ?? ""}
                   onChange={(e) => setForm({ ...form, passage: e.target.value })}
