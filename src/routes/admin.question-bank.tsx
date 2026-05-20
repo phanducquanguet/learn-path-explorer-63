@@ -1660,29 +1660,26 @@ export function EditDialog({
                 />
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <div className="text-xs font-semibold text-muted-foreground">
                   Đáp án cho từng chỗ trống
                 </div>
                 {blanks.map((b) => (
-                  <div key={b.index} className="rounded-xl border border-border bg-background p-3">
-                    <div className="mb-2 flex items-center justify-between">
-                      <span className="inline-flex h-6 items-center gap-1 rounded-md bg-primary/10 px-2 text-[11px] font-bold text-primary">
-                        [{b.index}]
-                      </span>
-                      <button
-                        onClick={() => removeBlank(b.index)}
-                        className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-
-                    {isSelectLists ? (
+                  isSelectLists ? (
+                    <div key={b.index} className="rounded-lg border border-border bg-background p-2.5">
+                      <div className="mb-1.5 flex items-center justify-between">
+                        <span className="inline-flex h-6 items-center rounded-md bg-primary/10 px-2 text-[11px] font-bold text-primary">
+                          [{b.index}]
+                        </span>
+                        <button
+                          onClick={() => removeBlank(b.index)}
+                          className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
+                          title="Xóa chỗ trống"
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                       <div className="space-y-1.5">
-                        <div className="text-[11px] font-semibold text-muted-foreground">
-                          Tùy chọn cho danh sách thả xuống (text only)
-                        </div>
                         {(b.options ?? []).map((opt, oi) => (
                           <div key={oi} className="flex items-center gap-2">
                             <button
@@ -1732,49 +1729,27 @@ export function EditDialog({
                           <Plus className="h-3 w-3" /> Thêm lựa chọn
                         </button>
                       </div>
-                    ) : (
-                      <div className="space-y-1.5">
-                        <div className="text-[11px] font-semibold text-muted-foreground">
-                          {isDragDrop
-                            ? "Từ/cụm từ đúng cần kéo vào"
-                            : "Đáp án chấp nhận (mỗi dòng 1 đáp án)"}
-                        </div>
-                        {(b.answers ?? []).map((a, ai) => (
-                          <div key={ai} className="flex items-center gap-2">
-                            <input
-                              value={a}
-                              onChange={(e) => {
-                                const next = [...(b.answers ?? [])];
-                                next[ai] = e.target.value;
-                                updateBlank(b.index, { answers: next });
-                              }}
-                              placeholder={isFill ? "Đáp án chấp nhận" : "Từ đúng"}
-                              className={cn(inputCls, "flex-1")}
-                            />
-                            <button
-                              onClick={() => {
-                                const next = (b.answers ?? []).filter((_, x) => x !== ai);
-                                updateBlank(b.index, { answers: next });
-                              }}
-                              className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </div>
-                        ))}
-                        {isFill && (
-                          <button
-                            onClick={() =>
-                              updateBlank(b.index, { answers: [...(b.answers ?? []), ""] })
-                            }
-                            className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline"
-                          >
-                            <Plus className="h-3 w-3" /> Thêm đáp án chấp nhận
-                          </button>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                    </div>
+                  ) : (
+                    <div key={b.index} className="flex items-center gap-2">
+                      <span className="inline-flex h-7 min-w-7 items-center justify-center rounded-md bg-primary/10 px-1.5 text-[11px] font-bold text-primary">
+                        [{b.index}]
+                      </span>
+                      <input
+                        value={(b.answers ?? [])[0] ?? ""}
+                        onChange={(e) => updateBlank(b.index, { answers: [e.target.value] })}
+                        placeholder={isFill ? "Đáp án đúng" : "Từ đúng cần kéo vào"}
+                        className={cn(inputCls, "flex-1")}
+                      />
+                      <button
+                        onClick={() => removeBlank(b.index)}
+                        className="rounded-md p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                        title="Xóa chỗ trống"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  )
                 ))}
                 {blanks.length === 0 && (
                   <div className="rounded-lg border border-dashed border-border p-3 text-center text-xs text-muted-foreground">
@@ -1782,6 +1757,7 @@ export function EditDialog({
                   </div>
                 )}
               </div>
+
 
               {isDragDrop && (
                 <div className="space-y-1.5 rounded-xl border border-dashed border-border bg-background p-3">
