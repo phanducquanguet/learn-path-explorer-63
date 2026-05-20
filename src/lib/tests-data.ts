@@ -1,4 +1,4 @@
-import type { QSkill, QType, QLevel, QDifficulty } from "./question-bank";
+import type { QSkill, QType, QLevel, QDifficulty, BankQuestion } from "./question-bank";
 
 export type CustomQuestion = {
   id: string;
