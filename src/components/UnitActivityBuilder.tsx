@@ -36,7 +36,7 @@ import { EditDialog, TYPE_ORDER_COURSE, makeDefaultBankQuestion } from "@/routes
 
 /* ============================== Types ============================== */
 
-type Common = { id: string; title: string; description?: string };
+type Common = { id: string; title: string; description?: string; requirePrevious?: boolean };
 
 export type VideoNode = Common & {
   kind: "video";
