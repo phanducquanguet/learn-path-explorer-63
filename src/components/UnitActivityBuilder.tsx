@@ -86,7 +86,8 @@ export type AnyNode =
   | QuestionNode
   | GroupNode;
 
-const ACTIVITY_OPTIONS: { kind: AnyNode["kind"]; label: string; icon: React.ElementType }[] = [
+type LeafKind = Exclude<AnyNode["kind"], "question">;
+const ACTIVITY_OPTIONS: { kind: LeafKind; label: string; icon: React.ElementType }[] = [
   { kind: "video", label: "Video bài giảng", icon: FileVideo },
   { kind: "video-speaking", label: "Video + luyện nói", icon: Mic },
   { kind: "pdf", label: "Tài liệu PDF", icon: FileText },
