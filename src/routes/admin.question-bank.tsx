@@ -730,14 +730,6 @@ function PreviewDialog({
           </div>
         )}
 
-        {question.correctAnswer && !question.options?.length && question.type !== "essay" && (
-          <div className="mt-4 rounded-xl border border-emerald-500/40 bg-emerald-500/5 p-3 text-sm">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-              Đáp án mẫu
-            </div>
-            <div className="mt-1">{question.correctAnswer}</div>
-          </div>
-        )}
 
         {question.type === "essay" && (
           <div className="mt-4 space-y-3">
@@ -1231,19 +1223,6 @@ function EditDialog({
             </div>
           )}
 
-          {(isShort || (!isMcq && !isTF && !isSequence && !isFill && !isSelectLists && !isDragDrop && !isEssay)) && (
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground">
-                Đáp án mẫu
-              </label>
-              <input
-                value={form.correctAnswer ?? ""}
-                onChange={(e) => setForm({ ...form, correctAnswer: e.target.value })}
-                placeholder="Nhập đáp án mẫu"
-                className={cn(inputCls, "mt-1")}
-              />
-            </div>
-          )}
 
           {isSequence && (
             <div className="space-y-3">
