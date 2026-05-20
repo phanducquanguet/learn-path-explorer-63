@@ -1653,10 +1653,18 @@ export function EditDialog({
             Lưu
           </button>
         </div>
-      </div>
+    </div>
+  );
+
+  if (embedded) return body;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <button onClick={onClose} className="absolute inset-0" aria-label="Close" />
+      {body}
     </div>
   );
 }
+
 
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
