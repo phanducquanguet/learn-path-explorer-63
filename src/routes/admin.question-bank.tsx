@@ -16,6 +16,8 @@ import {
   type QDifficulty,
   type FeedbackCriterion,
   type BlankSpec,
+  type SubQuestion,
+  type SubQuestionType,
 } from "@/lib/question-bank";
 import {
   Library,
