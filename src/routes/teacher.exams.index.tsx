@@ -261,6 +261,7 @@ function ExamsList() {
                     </button>
                   )}
                 </div>
+                </div>
               </div>
             ))}
           </div>
