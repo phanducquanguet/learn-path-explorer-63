@@ -20,6 +20,8 @@ import {
   Trash2,
   FileAudio,
   FileText,
+  ImagePlus,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
