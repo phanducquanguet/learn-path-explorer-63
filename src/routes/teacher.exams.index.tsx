@@ -172,22 +172,37 @@ function ExamsList() {
             {exams.map((exam, idx) => (
               <div
                 key={exam.id ?? idx}
-                className="group relative flex flex-col rounded-3xl border border-border bg-surface p-5 shadow-soft transition hover:shadow-lg"
+                className="group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-soft transition hover:shadow-lg"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-primary">
+                <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
+                  {exam.thumbnail ? (
+                    <img
+                      src={exam.thumbnail}
+                      alt={exam.name}
+                      className="h-full w-full object-cover transition group-hover:scale-105"
+                    />
+                  ) : (
+                    <div
+                      className="flex h-full w-full items-center justify-center text-primary-foreground"
+                      style={{ background: "var(--gradient-brand)" }}
+                    >
+                      <ClipboardCheck className="h-10 w-10 opacity-80" />
+                    </div>
+                  )}
+                  <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-lg bg-background/90 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-primary backdrop-blur">
                     {exam.levelCode}
                   </div>
                   {isAdmin && (
                     <button
                       onClick={() => remove(idx)}
-                      className="rounded-lg p-1.5 text-muted-foreground opacity-0 transition hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                      className="absolute right-3 top-3 rounded-lg bg-background/90 p-1.5 text-muted-foreground opacity-0 backdrop-blur transition hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
                       aria-label="Xóa bài thi"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
                   )}
                 </div>
+                <div className="flex flex-1 flex-col p-5">
 
                 <h3 className="mt-3 font-display text-lg font-semibold text-foreground line-clamp-1">
                   {exam.name || "Bài thi chưa đặt tên"}
