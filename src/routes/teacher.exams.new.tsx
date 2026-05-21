@@ -82,6 +82,7 @@ function ExamBuilder() {
     levelCode: "B1" as QLevel,
     duration: 90,
     description: "",
+    thumbnail: "" as string,
   });
   const [selectedSkills, setSelectedSkills] = useState<QSkill[]>(["listening", "reading"]);
   const [groups, setGroups] = useState<Record<string, SkillGroup>>({
