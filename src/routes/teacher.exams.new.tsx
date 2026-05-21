@@ -20,6 +20,8 @@ import {
   Trash2,
   FileAudio,
   FileText,
+  ImagePlus,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -80,6 +82,7 @@ function ExamBuilder() {
     levelCode: "B1" as QLevel,
     duration: 90,
     description: "",
+    thumbnail: "" as string,
   });
   const [selectedSkills, setSelectedSkills] = useState<QSkill[]>(["listening", "reading"]);
   const [groups, setGroups] = useState<Record<string, SkillGroup>>({
@@ -226,6 +229,14 @@ function ExamBuilder() {
                 value={meta.description}
                 onChange={(e) => setMeta({ ...meta, description: e.target.value })}
                 className="input"
+              />
+            </Field>
+          </div>
+          <div className="sm:col-span-4">
+            <Field label="Ảnh thumbnail">
+              <ThumbnailUploader
+                value={meta.thumbnail}
+                onChange={(v) => setMeta({ ...meta, thumbnail: v })}
               />
             </Field>
           </div>
@@ -515,6 +526,52 @@ function Field({
     <label className={cn("block", cls)}>
       <div className="mb-1.5 text-xs font-semibold text-foreground">{label}</div>
       {children}
+    </label>
+  );
+}
+
+function ThumbnailUploader({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const onFile = (file?: File | null) => {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => onChange(typeof reader.result === "string" ? reader.result : "");
+    reader.readAsDataURL(file);
+  };
+  if (value) {
+    return (
+      <div className="relative inline-block">
+        <img
+          src={value}
+          alt="thumbnail"
+          className="h-40 w-72 rounded-xl border border-border object-cover"
+        />
+        <button
+          type="button"
+          onClick={() => onChange("")}
+          className="absolute -right-2 -top-2 rounded-full bg-foreground p-1 text-background shadow-soft hover:opacity-90"
+          aria-label="Xoá ảnh"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    );
+  }
+  return (
+    <label className="flex h-40 w-72 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-background text-xs text-muted-foreground transition hover:bg-muted">
+      <ImagePlus className="h-6 w-6" />
+      <span>Tải ảnh thumbnail</span>
+      <input
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => onFile(e.target.files?.[0])}
+      />
     </label>
   );
 }
