@@ -28,6 +28,7 @@ type SavedExam = {
   levelCode: string;
   duration: number;
   description?: string;
+  thumbnail?: string;
   skills: string[];
   totalQuestions?: number;
   groups?: Record<string, { questions: unknown[] }>;
