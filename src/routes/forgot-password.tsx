@@ -330,12 +330,14 @@ function EmailStep({
   onSend,
   onContinue,
   demoOtp,
+  onOpenMail,
 }: {
   email: string;
   setEmail: (v: string) => void;
   onSend: () => void;
   onContinue: () => void;
   demoOtp: string;
+  onOpenMail: () => void;
 }) {
   return (
     <div>
