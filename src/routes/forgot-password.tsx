@@ -510,6 +510,15 @@ function OtpStep({
 
       <button
         type="button"
+        onClick={onOpenMail}
+        className="mt-3 inline-flex w-full items-center justify-center gap-2 text-xs font-medium text-muted-foreground hover:text-primary"
+      >
+        <Mail className="h-3.5 w-3.5" /> Xem lại email demo
+      </button>
+
+
+      <button
+        type="button"
         onClick={verify}
         className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-semibold text-primary-foreground shadow-soft transition hover:opacity-95"
         style={{ background: "var(--gradient-brand)" }}
