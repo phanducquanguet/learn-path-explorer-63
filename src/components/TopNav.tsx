@@ -208,9 +208,13 @@ export function TopNav() {
               </Link>
 
               <div className="my-1.5 h-px bg-border" />
-              <button className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground">
+              <Link
+                to="/login"
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
                 <LogOut className="h-4 w-4" /> Đăng xuất
-              </button>
+              </Link>
             </div>
           )}
         </div>
