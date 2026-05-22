@@ -10,6 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as PracticeRouteImport } from './routes/practice'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ExamsRouteImport } from './routes/exams'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TeacherIndexRouteImport } from './routes/teacher.index'
@@ -33,6 +35,16 @@ import { Route as TeacherExamsExamIdSubmissionsRouteImport } from './routes/teac
 const PracticeRoute = PracticeRouteImport.update({
   id: '/practice',
   path: '/practice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExamsRoute = ExamsRouteImport.update({
@@ -135,6 +147,8 @@ const TeacherExamsExamIdSubmissionsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/exams': typeof ExamsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
@@ -157,6 +171,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/exams': typeof ExamsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
@@ -180,6 +196,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/exams': typeof ExamsRoute
+  '/forgot-password': typeof ForgotPasswordRoute
+  '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
@@ -204,6 +222,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/exams'
+    | '/forgot-password'
+    | '/login'
     | '/practice'
     | '/admin/question-bank'
     | '/courses/$courseId'
@@ -226,6 +246,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/exams'
+    | '/forgot-password'
+    | '/login'
     | '/practice'
     | '/admin/question-bank'
     | '/courses/$courseId'
@@ -248,6 +270,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/exams'
+    | '/forgot-password'
+    | '/login'
     | '/practice'
     | '/admin/question-bank'
     | '/courses/$courseId'
@@ -271,6 +295,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   ExamsRoute: typeof ExamsRoute
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
+  LoginRoute: typeof LoginRoute
   PracticeRoute: typeof PracticeRoute
   AdminQuestionBankRoute: typeof AdminQuestionBankRoute
   CoursesCourseIdRoute: typeof CoursesCourseIdRoute
@@ -297,6 +323,20 @@ declare module '@tanstack/react-router' {
       path: '/practice'
       fullPath: '/practice'
       preLoaderRoute: typeof PracticeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/exams': {
@@ -449,6 +489,8 @@ const TeacherExamsExamIdRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   ExamsRoute: ExamsRoute,
+  ForgotPasswordRoute: ForgotPasswordRoute,
+  LoginRoute: LoginRoute,
   PracticeRoute: PracticeRoute,
   AdminQuestionBankRoute: AdminQuestionBankRoute,
   CoursesCourseIdRoute: CoursesCourseIdRoute,
@@ -470,13 +512,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
