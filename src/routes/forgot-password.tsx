@@ -369,34 +369,15 @@ function EmailStep({
       </button>
 
       {demoOtp && (
-        <div className="mt-4 rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">
-                Mã OTP demo (chỉ để FE thử nghiệm)
-              </div>
-              <div className="mt-1 font-mono text-2xl font-bold tracking-[0.4em] text-foreground">
-                {demoOtp}
-              </div>
-              <div className="mt-1 text-[11px] text-muted-foreground">
-                Email gửi đến: <span className="font-medium text-foreground">{email}</span>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                if (typeof navigator !== "undefined" && navigator.clipboard) {
-                  navigator.clipboard.writeText(demoOtp);
-                  toast.success("Đã sao chép mã OTP");
-                }
-              }}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:text-foreground"
-              title="Sao chép"
-            >
-              <Copy className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
+        <button
+          type="button"
+          onClick={onOpenMail}
+          className="mt-3 inline-flex w-full items-center justify-center gap-2 text-xs font-medium text-primary hover:underline"
+        >
+          <Mail className="h-3.5 w-3.5" /> Xem lại email demo
+        </button>
       )}
+
 
       <button
         type="button"
