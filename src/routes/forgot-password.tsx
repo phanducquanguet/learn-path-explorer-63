@@ -398,12 +398,14 @@ function OtpStep({
   onBack,
   onResend,
   onVerified,
+  onOpenMail,
 }: {
   email: string;
   expected: string;
   onBack: () => void;
   onResend: () => void;
   onVerified: () => void;
+  onOpenMail: () => void;
 }) {
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
   const [seconds, setSeconds] = useState(RESEND_SECONDS);
