@@ -12,9 +12,22 @@ import {
   Eye,
   EyeOff,
   Copy,
+  Inbox,
+  Star,
+  Reply,
+  Forward,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type Step = "email" | "otp" | "reset" | "done";
 
