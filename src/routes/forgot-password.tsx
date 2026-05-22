@@ -12,9 +12,22 @@ import {
   Eye,
   EyeOff,
   Copy,
+  Inbox,
+  Star,
+  Reply,
+  Forward,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 type Step = "email" | "otp" | "reset" | "done";
 
@@ -39,6 +52,8 @@ function ForgotPasswordPage() {
   const [step, setStep] = useState<Step>("email");
   const [email, setEmail] = useState("");
   const [demoOtp, setDemoOtp] = useState<string>("");
+  const [mailOpen, setMailOpen] = useState(false);
+  const [sentAt, setSentAt] = useState<Date | null>(null);
 
   const handleSendOtp = () => {
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -47,9 +62,9 @@ function ForgotPasswordPage() {
     }
     const otp = genOtp();
     setDemoOtp(otp);
-    toast.success(`Đã gửi mã OTP đến ${email}`, {
-      description: `Mã demo: ${otp}`,
-    });
+    setSentAt(new Date());
+    setMailOpen(true);
+    toast.success(`Đã gửi mã OTP đến ${email}`);
   };
 
   return (
@@ -75,9 +90,7 @@ function ForgotPasswordPage() {
             <EmailStep
               email={email}
               setEmail={setEmail}
-              onSend={() => {
-                handleSendOtp();
-              }}
+              onSend={handleSendOtp}
               onContinue={() => {
                 if (!demoOtp) {
                   toast.error("Vui lòng bấm 'Gửi mã OTP' trước");
@@ -86,6 +99,7 @@ function ForgotPasswordPage() {
                 setStep("otp");
               }}
               demoOtp={demoOtp}
+              onOpenMail={() => setMailOpen(true)}
             />
           )}
 
@@ -97,9 +111,12 @@ function ForgotPasswordPage() {
               onResend={() => {
                 const otp = genOtp();
                 setDemoOtp(otp);
-                toast.success("Đã gửi lại mã OTP", { description: `Mã demo: ${otp}` });
+                setSentAt(new Date());
+                setMailOpen(true);
+                toast.success("Đã gửi lại mã OTP");
               }}
               onVerified={() => setStep("reset")}
+              onOpenMail={() => setMailOpen(true)}
             />
           )}
 
@@ -123,7 +140,146 @@ function ForgotPasswordPage() {
           </p>
         )}
       </div>
+
+      <DemoMailDialog
+        open={mailOpen}
+        onOpenChange={setMailOpen}
+        email={email}
+        otp={demoOtp}
+        sentAt={sentAt}
+        onClose={() => {
+          setMailOpen(false);
+          if (step === "email") setStep("otp");
+        }}
+      />
     </div>
+  );
+}
+
+function DemoMailDialog({
+  open,
+  onOpenChange,
+  email,
+  otp,
+  sentAt,
+  onClose,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  email: string;
+  otp: string;
+  sentAt: Date | null;
+  onClose: () => void;
+}) {
+  const time = sentAt
+    ? sentAt.toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit", year: "numeric" })
+    : "";
+
+  const copyOtp = () => {
+    if (typeof navigator !== "undefined" && navigator.clipboard) {
+      navigator.clipboard.writeText(otp);
+      toast.success("Đã sao chép mã OTP");
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-xl gap-0 overflow-hidden rounded-2xl p-0">
+        {/* Mail header bar */}
+        <div className="flex items-center gap-2 border-b border-border bg-surface px-5 py-3">
+          <Inbox className="h-4 w-4 text-primary" />
+          <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Hộp thư demo
+          </span>
+          <span className="ml-auto text-[11px] text-muted-foreground">Chỉ hiển thị cho FE</span>
+        </div>
+
+        <div className="px-6 pt-5">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="text-lg">Mã OTP khôi phục mật khẩu — UNICOM LMS</DialogTitle>
+            <DialogDescription className="sr-only">Email demo chứa mã OTP</DialogDescription>
+          </DialogHeader>
+
+          <div className="mt-3 flex items-start justify-between gap-3 border-b border-border pb-3">
+            <div className="flex items-start gap-3">
+              <div
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-primary-foreground"
+                style={{ background: "var(--gradient-brand)" }}
+              >
+                UC
+              </div>
+              <div className="min-w-0">
+                <div className="text-sm font-medium text-foreground">
+                  UNICOM LMS{" "}
+                  <span className="font-normal text-muted-foreground">&lt;no-reply@unicom.edu.vn&gt;</span>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  đến <span className="font-medium text-foreground">{email || "bạn"}</span>
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <span className="text-[11px]">{time}</span>
+              <Star className="h-3.5 w-3.5" />
+            </div>
+          </div>
+
+          {/* Mail body */}
+          <div className="space-y-4 py-5 text-sm text-foreground">
+            <p>Xin chào,</p>
+            <p>
+              Bạn đã yêu cầu khôi phục mật khẩu cho tài khoản UNICOM LMS. Vui lòng sử dụng mã OTP
+              bên dưới để tiếp tục. Mã có hiệu lực trong <strong>10 phút</strong>.
+            </p>
+
+            <div className="rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-5 text-center">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+                Mã xác thực (OTP)
+              </div>
+              <div className="mt-2 font-mono text-3xl font-bold tracking-[0.4em] text-foreground">
+                {otp}
+              </div>
+              <button
+                type="button"
+                onClick={copyOtp}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted"
+              >
+                <Copy className="h-3.5 w-3.5" /> Sao chép mã
+              </button>
+            </div>
+
+            <p className="text-xs text-muted-foreground">
+              Nếu bạn không yêu cầu khôi phục mật khẩu, vui lòng bỏ qua email này.
+            </p>
+            <p className="text-xs text-muted-foreground">— Đội ngũ UNICOM LMS</p>
+          </div>
+
+          {/* Mail action toolbar */}
+          <div className="flex items-center gap-1 border-t border-border py-2 text-muted-foreground">
+            <button className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs hover:bg-muted">
+              <Reply className="h-3.5 w-3.5" /> Trả lời
+            </button>
+            <button className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs hover:bg-muted">
+              <Forward className="h-3.5 w-3.5" /> Chuyển tiếp
+            </button>
+            <button className="ml-auto inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs hover:bg-muted">
+              <Trash2 className="h-3.5 w-3.5" /> Xoá
+            </button>
+          </div>
+        </div>
+
+        <DialogFooter className="border-t border-border bg-surface px-6 py-3 sm:justify-end">
+          <button
+            type="button"
+            onClick={onClose}
+            className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2 text-sm font-semibold text-primary-foreground shadow-soft transition hover:opacity-95"
+            style={{ background: "var(--gradient-brand)" }}
+          >
+            Đóng & nhập mã OTP <ArrowRight className="h-4 w-4" />
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -174,12 +330,14 @@ function EmailStep({
   onSend,
   onContinue,
   demoOtp,
+  onOpenMail,
 }: {
   email: string;
   setEmail: (v: string) => void;
   onSend: () => void;
   onContinue: () => void;
   demoOtp: string;
+  onOpenMail: () => void;
 }) {
   return (
     <div>
@@ -211,34 +369,15 @@ function EmailStep({
       </button>
 
       {demoOtp && (
-        <div className="mt-4 rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-primary">
-                Mã OTP demo (chỉ để FE thử nghiệm)
-              </div>
-              <div className="mt-1 font-mono text-2xl font-bold tracking-[0.4em] text-foreground">
-                {demoOtp}
-              </div>
-              <div className="mt-1 text-[11px] text-muted-foreground">
-                Email gửi đến: <span className="font-medium text-foreground">{email}</span>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                if (typeof navigator !== "undefined" && navigator.clipboard) {
-                  navigator.clipboard.writeText(demoOtp);
-                  toast.success("Đã sao chép mã OTP");
-                }
-              }}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground hover:text-foreground"
-              title="Sao chép"
-            >
-              <Copy className="h-4 w-4" />
-            </button>
-          </div>
-        </div>
+        <button
+          type="button"
+          onClick={onOpenMail}
+          className="mt-3 inline-flex w-full items-center justify-center gap-2 text-xs font-medium text-primary hover:underline"
+        >
+          <Mail className="h-3.5 w-3.5" /> Xem lại email demo
+        </button>
       )}
+
 
       <button
         type="button"
@@ -259,12 +398,14 @@ function OtpStep({
   onBack,
   onResend,
   onVerified,
+  onOpenMail,
 }: {
   email: string;
   expected: string;
   onBack: () => void;
   onResend: () => void;
   onVerified: () => void;
+  onOpenMail: () => void;
 }) {
   const [digits, setDigits] = useState<string[]>(Array(6).fill(""));
   const [seconds, setSeconds] = useState(RESEND_SECONDS);
@@ -366,6 +507,15 @@ function OtpStep({
           Gửi lại mã
         </button>
       </div>
+
+      <button
+        type="button"
+        onClick={onOpenMail}
+        className="mt-3 inline-flex w-full items-center justify-center gap-2 text-xs font-medium text-muted-foreground hover:text-primary"
+      >
+        <Mail className="h-3.5 w-3.5" /> Xem lại email demo
+      </button>
+
 
       <button
         type="button"
