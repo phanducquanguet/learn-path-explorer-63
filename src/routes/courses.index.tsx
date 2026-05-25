@@ -231,6 +231,17 @@ function CoursesListPage() {
                   ]}
                 />
               )}
+              {isAdmin && (
+                <FilterSelect
+                  value={statusFilter}
+                  onChange={(v) => setStatusFilter(v as "all" | PublishStatus)}
+                  options={[
+                    { value: "all", label: "Tất cả xuất bản" },
+                    { value: "published", label: "Đã xuất bản" },
+                    { value: "draft", label: "Bản nháp" },
+                  ]}
+                />
+              )}
 
 
               {/* Group by */}
