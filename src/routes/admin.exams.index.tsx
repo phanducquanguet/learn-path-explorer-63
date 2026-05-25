@@ -170,6 +170,37 @@ function ExamsList() {
           />
         </div>
 
+        {/* Filter trạng thái xuất bản (chỉ admin) */}
+        {isAdmin && (
+          <div className="mt-6 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3">
+            <span className="text-xs font-semibold text-muted-foreground">Trạng thái:</span>
+            {([
+              { id: "all", label: `Tất cả (${exams.length})` },
+              {
+                id: "published",
+                label: `Đã xuất bản (${exams.filter((e) => getStatus(e.id ?? "") === "published").length})`,
+              },
+              {
+                id: "draft",
+                label: `Bản nháp (${exams.filter((e) => getStatus(e.id ?? "") === "draft").length})`,
+              },
+            ] as const).map((opt) => (
+              <button
+                key={opt.id}
+                onClick={() => setStatusFilter(opt.id)}
+                className={cn(
+                  "rounded-lg px-2.5 py-1 text-xs font-semibold transition",
+                  statusFilter === opt.id
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
+
         {/* List */}
         {exams.length === 0 ? (
           <div className="mt-8 rounded-3xl border border-dashed border-border bg-surface/40 p-16 text-center">
