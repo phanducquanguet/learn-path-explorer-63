@@ -240,13 +240,7 @@ function ExamBuilder() {
               />
             </Field>
           </div>
-          <div className="sm:col-span-4">
-            <OrgClassPicker
-              orgId={meta.orgId}
-              classIds={meta.classIds}
-              onChange={(orgId, classIds) => setMeta({ ...meta, orgId, classIds })}
-            />
-          </div>
+
           <div className="sm:col-span-4">
             <div className="mb-1.5 text-xs font-semibold text-foreground">Kỹ năng tích hợp</div>
             <div className="flex flex-wrap gap-2">
