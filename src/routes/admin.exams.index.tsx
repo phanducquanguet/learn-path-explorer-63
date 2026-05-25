@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { EXAM_SKILLS } from "@/lib/teacher-data";
 import { useRole } from "@/contexts/RoleContext";
+import { usePublishStatus, STATUS_LABEL } from "@/lib/publish-status";
 import {
   ClipboardCheck,
   Plus,
@@ -14,6 +15,8 @@ import {
   Pencil,
   Eye,
   MessageSquare,
+  Send,
+  FileEdit,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
