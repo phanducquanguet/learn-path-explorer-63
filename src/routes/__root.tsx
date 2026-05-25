@@ -10,6 +10,7 @@ import {
 
 import appCss from "../styles.css?url";
 import { RoleProvider } from "@/contexts/RoleContext";
+import { Toaster } from "sonner";
 
 function NotFoundComponent() {
   return (
