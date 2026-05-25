@@ -566,6 +566,7 @@ function NewTestPage() {
                 <Row label="Tên đề" value={name || "—"} />
                 <Row label="Cấp độ" value={level} />
                 <Row label="Thời lượng" value={`${duration} phút`} />
+                <Row label="Đơn vị" value={orgs.find((o) => o.id === orgId)?.name ?? "—"} />
                 <Row label="Lớp" value={classIds.length ? classIds.length + " lớp" : "—"} />
                 <Row label="Mở" value={openAt || "—"} />
                 <Row label="Đóng" value={closeAt || "—"} />
