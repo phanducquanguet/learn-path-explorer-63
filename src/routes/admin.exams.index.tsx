@@ -75,6 +75,8 @@ function ExamsList() {
   const { role } = useRole();
   const isAdmin = role === "admin";
   const [exams, setExams] = useState<SavedExam[]>([]);
+  const { getStatus, toggle } = usePublishStatus("exams", "published");
+  const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "published">("all");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
