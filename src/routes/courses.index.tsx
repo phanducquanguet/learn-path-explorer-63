@@ -897,7 +897,28 @@ function AdminCourseRow({
         >
           <Play className="h-3.5 w-3.5" /> Xem
         </Link>
+        <button
+          type="button"
+          onClick={onTogglePublish}
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition",
+            isDraft
+              ? "bg-emerald-600 text-white hover:bg-emerald-700"
+              : "border border-border bg-background text-foreground hover:bg-muted",
+          )}
+          title={isDraft ? "Xuất bản cho học viên" : "Chuyển về bản nháp"}
+        >
+          {isDraft ? <Send className="h-3.5 w-3.5" /> : <FileEdit className="h-3.5 w-3.5" />}
+          {isDraft ? "Xuất bản" : "Bỏ xuất bản"}
+        </button>
         <Link
+          to="/teacher/upload"
+          search={{ edit: course.id }}
+          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground hover:border-primary hover:text-primary"
+        >
+          <Pencil className="h-3.5 w-3.5" /> Sửa
+        </Link>
+        <button
           to="/teacher/upload"
           search={{ edit: course.id }}
           className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground hover:border-primary hover:text-primary"
