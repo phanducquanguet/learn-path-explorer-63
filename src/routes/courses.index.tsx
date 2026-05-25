@@ -919,13 +919,6 @@ function AdminCourseRow({
           <Pencil className="h-3.5 w-3.5" /> Sửa
         </Link>
         <button
-          to="/teacher/upload"
-          search={{ edit: course.id }}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground hover:border-primary hover:text-primary"
-        >
-          <Pencil className="h-3.5 w-3.5" /> Sửa
-        </Link>
-        <button
           type="button"
           onClick={() => alert(`Xóa khóa "${course.title}" (demo)`)}
           className="inline-flex items-center justify-center rounded-lg border border-border bg-background p-2 text-muted-foreground hover:border-destructive hover:bg-destructive/10 hover:text-destructive"
