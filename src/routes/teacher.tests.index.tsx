@@ -105,6 +105,9 @@ function TestsList() {
   const isAdmin = role === "admin";
   const [view, setView] = useState<"grid" | "table">("grid");
   const [tests, setTests] = useState<Test[]>(seedTests);
+  const [orgFilter, setOrgFilter] = useState<string>("all");
+  const [selected, setSelected] = useState<string[]>([]);
+  const [copyTarget, setCopyTarget] = useState<Test[] | null>(null);
   const simCounts = useMemo(() => {
     const m: Record<string, number> = {};
     for (const t of tests) {
@@ -114,10 +117,43 @@ function TestsList() {
     return m;
   }, [tests]);
 
+  const filtered = useMemo(
+    () => (orgFilter === "all" ? tests : tests.filter((t) => t.orgId === orgFilter)),
+    [tests, orgFilter],
+  );
+
   const duplicate = (t: Test) => {
     const base = t.id.split("-sim-")[0];
     const idx = (simCounts[base] ?? 0) + 1;
     setTests((arr) => [cloneTestSimilar(t, idx), ...arr]);
+  };
+
+  const toggleSelect = (id: string) =>
+    setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+
+  const openBulkCopy = () => {
+    const list = tests.filter((t) => selected.includes(t.id));
+    if (list.length > 0) setCopyTarget(list);
+  };
+
+  const performCopy = (sources: Test[], targetOrgId: string, targetClassIds: string[]) => {
+    const stamp = Date.now();
+    const clones: Test[] = sources.map((src, i) => ({
+      ...src,
+      id: `${src.id}-copy-${stamp}-${i}`,
+      name: `${src.name} (Bản sao)`,
+      orgId: targetOrgId,
+      classIds: targetClassIds,
+      copiedFromId: src.id,
+      registered: 0,
+      submitted: 0,
+      graded: 0,
+      avgScore: undefined,
+      createdAt: new Date().toISOString(),
+    }));
+    setTests((arr) => [...clones, ...arr]);
+    setCopyTarget(null);
+    setSelected([]);
   };
 
   return (
