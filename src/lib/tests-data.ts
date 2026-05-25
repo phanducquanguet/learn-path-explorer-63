@@ -35,6 +35,8 @@ export type Test = {
   id: string;
   name: string;
   description: string;
+  /** Đơn vị (trường / trung tâm) mà bài thi thuộc về. */
+  orgId?: string;
   classIds: string[];
   level: QLevel;
   durationMinutes: number;
@@ -47,6 +49,8 @@ export type Test = {
   graded: number;
   avgScore?: number;
   createdAt: string;
+  /** Nếu được tạo bằng cách sao chép từ bài khác. */
+  copiedFromId?: string;
 };
 
 export type TestSubmission = {
@@ -81,6 +85,7 @@ export const tests: Test[] = [
     id: "test-1",
     name: "Kiểm tra giữa kỳ B1 — Tháng 5",
     description: "Bài kiểm tra giữa kỳ tổng hợp Reading + Listening + Writing.",
+    orgId: "org-unicom-hcm",
     classIds: ["cls-b1-fast"],
     level: "B1",
     durationMinutes: 90,
@@ -103,6 +108,7 @@ export const tests: Test[] = [
     id: "test-2",
     name: "Quiz Unit 3 — A1 Morning Stars",
     description: "Quiz nhỏ kiểm tra từ vựng và ngữ pháp Unit 3.",
+    orgId: "org-unicom-hn",
     classIds: ["cls-a1-morning"],
     level: "A1",
     durationMinutes: 30,
@@ -122,6 +128,7 @@ export const tests: Test[] = [
     id: "test-3",
     name: "Đề thi cuối khóa A2 — Weekend Boost",
     description: "Đề thi cuối khóa 4 kỹ năng.",
+    orgId: "org-unicom-hcm",
     classIds: ["cls-a2-weekend"],
     level: "A2",
     durationMinutes: 120,
@@ -143,6 +150,7 @@ export const tests: Test[] = [
     id: "test-4",
     name: "Mock Test B1 — Evening Pro",
     description: "Bài thi thử mô phỏng đề thi chuẩn B1.",
+    orgId: "org-thpt-abc",
     classIds: ["cls-b1-evening"],
     level: "B1",
     durationMinutes: 100,

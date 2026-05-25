@@ -4,6 +4,7 @@ import { TopNav } from "@/components/TopNav";
 import { useRole } from "@/contexts/RoleContext";
 import { tests as seedTests, testStatus, type Test } from "@/lib/tests-data";
 import { classes } from "@/lib/teacher-data";
+import { orgs, classOrgMap, getOrg } from "@/lib/orgs";
 import { questionBank } from "@/lib/question-bank";
 import {
   ScrollText,
@@ -19,6 +20,10 @@ import {
   GraduationCap,
   Copy,
   Sparkles,
+  Building2,
+  CheckSquare,
+  Square,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -100,6 +105,9 @@ function TestsList() {
   const isAdmin = role === "admin";
   const [view, setView] = useState<"grid" | "table">("grid");
   const [tests, setTests] = useState<Test[]>(seedTests);
+  const [orgFilter, setOrgFilter] = useState<string>("all");
+  const [selected, setSelected] = useState<string[]>([]);
+  const [copyTarget, setCopyTarget] = useState<Test[] | null>(null);
   const simCounts = useMemo(() => {
     const m: Record<string, number> = {};
     for (const t of tests) {
@@ -109,10 +117,43 @@ function TestsList() {
     return m;
   }, [tests]);
 
+  const filtered = useMemo(
+    () => (orgFilter === "all" ? tests : tests.filter((t) => t.orgId === orgFilter)),
+    [tests, orgFilter],
+  );
+
   const duplicate = (t: Test) => {
     const base = t.id.split("-sim-")[0];
     const idx = (simCounts[base] ?? 0) + 1;
     setTests((arr) => [cloneTestSimilar(t, idx), ...arr]);
+  };
+
+  const toggleSelect = (id: string) =>
+    setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+
+  const openBulkCopy = () => {
+    const list = tests.filter((t) => selected.includes(t.id));
+    if (list.length > 0) setCopyTarget(list);
+  };
+
+  const performCopy = (sources: Test[], targetOrgId: string, targetClassIds: string[]) => {
+    const stamp = Date.now();
+    const clones: Test[] = sources.map((src, i) => ({
+      ...src,
+      id: `${src.id}-copy-${stamp}-${i}`,
+      name: `${src.name} (Bản sao)`,
+      orgId: targetOrgId,
+      classIds: targetClassIds,
+      copiedFromId: src.id,
+      registered: 0,
+      submitted: 0,
+      graded: 0,
+      avgScore: undefined,
+      createdAt: new Date().toISOString(),
+    }));
+    setTests((arr) => [...clones, ...arr]);
+    setCopyTarget(null);
+    setSelected([]);
   };
 
   return (
@@ -178,16 +219,76 @@ function TestsList() {
           />
         </div>
 
+        {/* Toolbar: org filter + bulk copy */}
+        <div className="mt-6 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3">
+          <div className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+            <Building2 className="h-3.5 w-3.5" /> Đơn vị:
+          </div>
+          <button
+            onClick={() => setOrgFilter("all")}
+            className={cn(
+              "rounded-lg px-2.5 py-1 text-xs font-semibold transition",
+              orgFilter === "all"
+                ? "bg-foreground text-background"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Tất cả ({tests.length})
+          </button>
+          {orgs.map((o) => {
+            const count = tests.filter((t) => t.orgId === o.id).length;
+            return (
+              <button
+                key={o.id}
+                onClick={() => setOrgFilter(o.id)}
+                className={cn(
+                  "rounded-lg px-2.5 py-1 text-xs font-semibold transition",
+                  orgFilter === o.id
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {o.shortName} ({count})
+              </button>
+            );
+          })}
+          {isAdmin && selected.length > 0 && (
+            <div className="ml-auto flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">
+                Đã chọn <b className="text-foreground">{selected.length}</b> đề
+              </span>
+              <button
+                onClick={openBulkCopy}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-3 py-1.5 text-xs font-semibold text-background hover:opacity-90"
+              >
+                <Copy className="h-3.5 w-3.5" /> Sao chép sang đơn vị
+              </button>
+              <button
+                onClick={() => setSelected([])}
+                className="rounded-xl border border-border bg-background p-1.5 text-muted-foreground hover:text-foreground"
+                aria-label="Bỏ chọn"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+        </div>
+
         {view === "grid" ? (
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {tests.map((t) => {
+            {filtered.map((t) => {
               const st = testStatus(t);
               const m = statusMeta(st);
               const Icon = m.icon;
+              const org = getOrg(t.orgId);
+              const isSelected = selected.includes(t.id);
               return (
                 <div
                   key={t.id}
-                  className="group relative flex flex-col rounded-3xl border border-border bg-surface p-5 shadow-soft transition hover:shadow-lg"
+                  className={cn(
+                    "group relative flex flex-col rounded-3xl border bg-surface p-5 shadow-soft transition hover:shadow-lg",
+                    isSelected ? "border-primary ring-2 ring-primary/30" : "border-border",
+                  )}
                 >
                   <Link
                     to="/teacher/tests/$testId"
@@ -204,10 +305,36 @@ function TestsList() {
                     >
                       <Icon className="h-3 w-3" /> {m.label}
                     </span>
-                    <span className="rounded-lg bg-primary/10 px-2 py-1 text-[11px] font-bold uppercase text-primary">
-                      {t.level}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="rounded-lg bg-primary/10 px-2 py-1 text-[11px] font-bold uppercase text-primary">
+                        {t.level}
+                      </span>
+                      {isAdmin && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleSelect(t.id);
+                          }}
+                          className="rounded-lg border border-border bg-background p-1 text-foreground hover:bg-muted"
+                          aria-label="Chọn để sao chép"
+                          title="Chọn để sao chép hàng loạt"
+                        >
+                          {isSelected ? (
+                            <CheckSquare className="h-3.5 w-3.5 text-primary" />
+                          ) : (
+                            <Square className="h-3.5 w-3.5" />
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </div>
+
+                  {org && (
+                    <div className="relative mt-2 inline-flex w-fit items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                      <Building2 className="h-3 w-3" /> {org.shortName}
+                    </div>
+                  )}
 
                   <h3 className="relative mt-3 font-display text-lg font-semibold text-foreground line-clamp-1">
                     {t.name}
@@ -247,17 +374,30 @@ function TestsList() {
                   </div>
 
                   {isAdmin && (
-                    <button
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        duplicate(t);
-                      }}
-                      title="Tạo đề tương tự cho cùng lớp (giữ nguyên dạng và độ khó, đổi nội dung câu hỏi)"
-                      className="relative mt-3 inline-flex w-fit items-center gap-1.5 self-end rounded-lg border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
-                    >
-                      <Sparkles className="h-3.5 w-3.5" /> Tạo đề tương tự
-                    </button>
+                    <div className="relative mt-3 flex flex-wrap items-center justify-end gap-1.5">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setCopyTarget([t]);
+                        }}
+                        title="Sao chép sang đơn vị khác"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
+                      >
+                        <Copy className="h-3.5 w-3.5" /> Sao chép
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          duplicate(t);
+                        }}
+                        title="Tạo đề tương tự cho cùng lớp (giữ nguyên dạng và độ khó, đổi nội dung câu hỏi)"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
+                      >
+                        <Sparkles className="h-3.5 w-3.5" /> Tạo đề tương tự
+                      </button>
+                    </div>
                   )}
                 </div>
               );
@@ -271,6 +411,7 @@ function TestsList() {
                 <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left font-semibold">Đề thi</th>
+                    <th className="px-4 py-3 text-left font-semibold">Đơn vị</th>
                     <th className="px-4 py-3 text-left font-semibold">Lớp</th>
                     <th className="px-4 py-3 text-left font-semibold">Trình độ</th>
                     <th className="px-4 py-3 text-left font-semibold">Trạng thái</th>
@@ -282,10 +423,11 @@ function TestsList() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {tests.map((t) => {
+                  {filtered.map((t) => {
                     const st = testStatus(t);
                     const m = statusMeta(st);
                     const Icon = m.icon;
+                    const org = getOrg(t.orgId);
                     return (
                       <tr key={t.id} className="transition hover:bg-muted/30">
                         <td className="px-4 py-3">
@@ -301,6 +443,15 @@ function TestsList() {
                               {t.description}
                             </span>
                           </Link>
+                        </td>
+                        <td className="px-4 py-3">
+                          {org ? (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                              <Building2 className="h-3 w-3" /> {org.shortName}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex flex-wrap gap-1">
@@ -344,13 +495,22 @@ function TestsList() {
                         </td>
                         <td className="px-4 py-3 text-right">
                           {isAdmin && (
-                            <button
-                              onClick={() => duplicate(t)}
-                              title="Tạo đề tương tự"
-                              className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2 py-1 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
-                            >
-                              <Copy className="h-3 w-3" /> Tương tự
-                            </button>
+                            <div className="inline-flex items-center gap-1">
+                              <button
+                                onClick={() => setCopyTarget([t])}
+                                title="Sao chép sang đơn vị khác"
+                                className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2 py-1 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
+                              >
+                                <Copy className="h-3 w-3" /> Sao chép
+                              </button>
+                              <button
+                                onClick={() => duplicate(t)}
+                                title="Tạo đề tương tự"
+                                className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2 py-1 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
+                              >
+                                <Sparkles className="h-3 w-3" /> Tương tự
+                              </button>
+                            </div>
                           )}
                         </td>
                       </tr>
@@ -361,6 +521,172 @@ function TestsList() {
             </div>
           </div>
         )}
+      </div>
+
+      {copyTarget && (
+        <CopyDialog
+          sources={copyTarget}
+          onClose={() => setCopyTarget(null)}
+          onConfirm={performCopy}
+        />
+      )}
+    </div>
+  );
+}
+
+function CopyDialog({
+  sources,
+  onClose,
+  onConfirm,
+}: {
+  sources: Test[];
+  onClose: () => void;
+  onConfirm: (sources: Test[], orgId: string, classIds: string[]) => void;
+}) {
+  const sourceOrgIds = new Set(sources.map((s) => s.orgId).filter(Boolean));
+  const defaultTarget =
+    orgs.find((o) => !sourceOrgIds.has(o.id))?.id ?? orgs[0]?.id ?? "";
+  const [orgId, setOrgId] = useState(defaultTarget);
+  const [classIds, setClassIds] = useState<string[]>([]);
+
+  const classesInOrg = classes.filter((c) => classOrgMap[c.id] === orgId);
+  const allSelected =
+    classesInOrg.length > 0 && classesInOrg.every((c) => classIds.includes(c.id));
+  const toggle = (id: string) =>
+    setClassIds((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4">
+      <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-border bg-surface shadow-2xl">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <div>
+            <h2 className="font-display text-lg font-semibold text-foreground">
+              Sao chép {sources.length} đề thi sang đơn vị khác
+            </h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Bản sao giữ nguyên cấu trúc đề và câu hỏi, được gán cho đơn vị và lớp đích. Lịch mở/đóng và dữ liệu nộp bài sẽ được làm mới.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label="Đóng"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="space-y-5 p-6">
+          <div>
+            <div className="mb-1.5 text-xs font-semibold text-foreground">Đề thi nguồn</div>
+            <div className="flex flex-wrap gap-1.5">
+              {sources.map((s) => (
+                <span
+                  key={s.id}
+                  className="rounded-lg border border-border bg-background px-2.5 py-1 text-xs text-foreground"
+                >
+                  {s.name}
+                  {s.orgId && (
+                    <span className="ml-1.5 text-[10px] text-muted-foreground">
+                      ({getOrg(s.orgId)?.shortName})
+                    </span>
+                  )}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-1.5 text-xs font-semibold text-foreground">Đơn vị đích</div>
+            <select
+              value={orgId}
+              onChange={(e) => {
+                setOrgId(e.target.value);
+                setClassIds([]);
+              }}
+              className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary"
+            >
+              {orgs.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <div className="mb-1.5 flex items-center justify-between">
+              <div className="text-xs font-semibold text-foreground">
+                Gán cho lớp ({classIds.length}/{classesInOrg.length})
+              </div>
+              {classesInOrg.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setClassIds(allSelected ? [] : classesInOrg.map((c) => c.id))
+                  }
+                  className="text-[11px] font-semibold text-primary hover:underline"
+                >
+                  {allSelected ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+                </button>
+              )}
+            </div>
+            {classesInOrg.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-center text-xs text-muted-foreground">
+                Đơn vị này chưa có lớp. Đề vẫn được sao chép và có thể gán lớp sau.
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {classesInOrg.map((c) => {
+                  const active = classIds.includes(c.id);
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => toggle(c.id)}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition",
+                        active
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-background text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "inline-flex h-4 w-4 items-center justify-center rounded border",
+                          active
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border",
+                        )}
+                      >
+                        {active && <CheckCircle2 className="h-3 w-3" />}
+                      </span>
+                      {c.name}
+                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        {c.levelCode}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 border-t border-border bg-muted/30 px-6 py-4">
+          <button
+            onClick={onClose}
+            className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
+          >
+            Hủy
+          </button>
+          <button
+            onClick={() => onConfirm(sources, orgId, classIds)}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background hover:opacity-90"
+          >
+            <Copy className="h-4 w-4" /> Sao chép {sources.length} đề
+          </button>
+        </div>
       </div>
     </div>
   );
