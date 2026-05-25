@@ -19,7 +19,8 @@ import {
   Send,
   FileEdit,
 } from "lucide-react";
-import { usePublishStatus, STATUS_LABEL, type PublishStatus } from "@/lib/publish-status";
+import { usePublishStatus, STATUS_LABEL, type PublishStatus, type PublishEvent } from "@/lib/publish-status";
+import { confirmPublishAction } from "@/lib/publish-actions";
 import { levels, type Course, type Level } from "@/lib/lms-data";
 import { useCategories, categoryOf, type Category } from "@/lib/course-categories";
 import { TopNav } from "@/components/TopNav";
