@@ -214,8 +214,17 @@ function ExamsList() {
           </div>
         ) : (
           <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {exams.map((exam) => {
+            {exams
+              .filter((e) => {
+                const st = getStatus(e.id ?? "");
+                if (!isAdmin) return st === "published";
+                if (statusFilter === "all") return true;
+                return st === statusFilter;
+              })
+              .map((exam) => {
               const id = exam.id ?? "";
+              const status = getStatus(id);
+              const isDraft = status === "draft";
               return (
                 <div
                   key={id}
