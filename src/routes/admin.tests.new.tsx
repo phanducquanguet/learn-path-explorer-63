@@ -154,6 +154,7 @@ function NewTestPage() {
         name,
         description: desc,
         level,
+        orgId,
         classIds,
         durationMinutes: duration,
         openAt,
