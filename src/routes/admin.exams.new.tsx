@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/teacher/exams/new")({
+export const Route = createFileRoute("/admin/exams/new")({
   head: () => ({ meta: [{ title: "Tạo bài luyện thi — UNICOM LMS" }] }),
   component: ExamBuilder,
 });
@@ -136,7 +136,7 @@ function ExamBuilder() {
       window.localStorage.setItem("unicom.exams", JSON.stringify(drafts));
     }
     setSaved(true);
-    setTimeout(() => navigate({ to: "/teacher/exams" }), 700);
+    setTimeout(() => navigate({ to: "/admin/exams" }), 700);
   };
 
   const isMulti = selectedSkills.length > 1;

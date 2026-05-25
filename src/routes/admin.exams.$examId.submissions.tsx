@@ -5,7 +5,7 @@ import { getSubmissionsByExam, type ExamSubmission, type ExamAnswer } from "@/li
 import { ArrowLeft, Clock, CheckCircle2, AlertCircle, Send, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/teacher/exams/$examId/submissions")({
+export const Route = createFileRoute("/admin/exams/$examId/submissions")({
   head: () => ({ meta: [{ title: "Bài làm học viên — UNICOM LMS" }] }),
   component: SubmissionsPage,
 });
@@ -23,7 +23,7 @@ function SubmissionsPage() {
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
         <Link
-          to="/teacher/exams"
+          to="/admin/exams"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" /> Trở lại danh sách bài luyện thi
