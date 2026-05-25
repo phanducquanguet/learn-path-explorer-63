@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/teacher/exams/$examId")({
+export const Route = createFileRoute("/admin/exams/$examId")({
   head: ({ params }) => ({
     meta: [{ title: `Bài luyện thi ${params.examId} — UNICOM LMS` }],
   }),
@@ -83,7 +83,7 @@ function ExamDetail() {
         <TopNav />
         <div className="mx-auto max-w-4xl px-6 pt-16 text-center">
           <Link
-            to="/teacher/exams"
+            to="/admin/exams"
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Trở lại Luyện thi
@@ -107,7 +107,7 @@ function ExamDetail() {
       <TopNav />
       <div className="mx-auto max-w-6xl px-6 pb-20 pt-10 sm:px-8">
         <Link
-          to="/teacher/exams"
+          to="/admin/exams"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" /> Trở lại Luyện thi
@@ -145,7 +145,7 @@ function ExamDetail() {
               value={String(exam.totalQuestions ?? totalFromGroups)}
             />
             <Link
-              to="/teacher/exams/$examId/submissions"
+              to="/admin/exams/$examId/submissions"
               params={{ examId: exam.id ?? examId }}
               className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-foreground px-3 py-2 text-xs font-semibold text-background hover:opacity-90"
             >
