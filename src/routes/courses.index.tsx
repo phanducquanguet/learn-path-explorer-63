@@ -723,11 +723,16 @@ function AdminCourseCard({
   course,
   level,
   category,
+  status,
+  onTogglePublish,
 }: {
   course: Course;
   level: Level;
   category: Category;
+  status: PublishStatus;
+  onTogglePublish: () => void;
 }) {
+  const isDraft = status === "draft";
   return (
     <div className="group relative flex flex-col overflow-hidden rounded-3xl bg-surface ring-1 ring-border shadow-soft transition hover:-translate-y-1 hover:shadow-elevated">
       <Link
@@ -736,8 +741,21 @@ function AdminCourseCard({
         className="relative aspect-[16/10] w-full overflow-hidden"
       >
         <CourseCover course={course} level={level} category={category} />
-        <div className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-background/90 px-2.5 py-1 text-[11px] font-semibold text-foreground ring-1 ring-border backdrop-blur">
-          {level.code}
+        <div className="absolute right-3 top-3 flex items-center gap-1.5">
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold backdrop-blur",
+              isDraft
+                ? "bg-amber-100/95 text-amber-800"
+                : "bg-emerald-100/95 text-emerald-800",
+            )}
+          >
+            {isDraft ? <FileEdit className="h-3 w-3" /> : <Send className="h-3 w-3" />}
+            {STATUS_LABEL[status]}
+          </span>
+          <span className="inline-flex items-center gap-1 rounded-full bg-background/90 px-2.5 py-1 text-[11px] font-semibold text-foreground ring-1 ring-border backdrop-blur">
+            {level.code}
+          </span>
         </div>
       </Link>
       <div className="flex flex-1 flex-col p-5">
