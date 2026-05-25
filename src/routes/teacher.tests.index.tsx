@@ -280,10 +280,15 @@ function TestsList() {
               const st = testStatus(t);
               const m = statusMeta(st);
               const Icon = m.icon;
+              const org = getOrg(t.orgId);
+              const isSelected = selected.includes(t.id);
               return (
                 <div
                   key={t.id}
-                  className="group relative flex flex-col rounded-3xl border border-border bg-surface p-5 shadow-soft transition hover:shadow-lg"
+                  className={cn(
+                    "group relative flex flex-col rounded-3xl border bg-surface p-5 shadow-soft transition hover:shadow-lg",
+                    isSelected ? "border-primary ring-2 ring-primary/30" : "border-border",
+                  )}
                 >
                   <Link
                     to="/teacher/tests/$testId"
@@ -300,10 +305,36 @@ function TestsList() {
                     >
                       <Icon className="h-3 w-3" /> {m.label}
                     </span>
-                    <span className="rounded-lg bg-primary/10 px-2 py-1 text-[11px] font-bold uppercase text-primary">
-                      {t.level}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="rounded-lg bg-primary/10 px-2 py-1 text-[11px] font-bold uppercase text-primary">
+                        {t.level}
+                      </span>
+                      {isAdmin && (
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleSelect(t.id);
+                          }}
+                          className="rounded-lg border border-border bg-background p-1 text-foreground hover:bg-muted"
+                          aria-label="Chọn để sao chép"
+                          title="Chọn để sao chép hàng loạt"
+                        >
+                          {isSelected ? (
+                            <CheckSquare className="h-3.5 w-3.5 text-primary" />
+                          ) : (
+                            <Square className="h-3.5 w-3.5" />
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </div>
+
+                  {org && (
+                    <div className="relative mt-2 inline-flex w-fit items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                      <Building2 className="h-3 w-3" /> {org.shortName}
+                    </div>
+                  )}
 
                   <h3 className="relative mt-3 font-display text-lg font-semibold text-foreground line-clamp-1">
                     {t.name}
