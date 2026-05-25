@@ -150,6 +150,7 @@ export const tests: Test[] = [
     id: "test-4",
     name: "Mock Test B1 — Evening Pro",
     description: "Bài thi thử mô phỏng đề thi chuẩn B1.",
+    orgId: "org-thpt-abc",
     classIds: ["cls-b1-evening"],
     level: "B1",
     durationMinutes: 100,
