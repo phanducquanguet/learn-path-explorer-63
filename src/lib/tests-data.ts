@@ -128,6 +128,7 @@ export const tests: Test[] = [
     id: "test-3",
     name: "Đề thi cuối khóa A2 — Weekend Boost",
     description: "Đề thi cuối khóa 4 kỹ năng.",
+    orgId: "org-unicom-hcm",
     classIds: ["cls-a2-weekend"],
     level: "A2",
     durationMinutes: 120,
