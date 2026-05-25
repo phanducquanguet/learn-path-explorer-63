@@ -837,12 +837,17 @@ function AdminCourseRow({
   level,
   category,
   isLast,
+  status,
+  onTogglePublish,
 }: {
   course: Course;
   level: Level;
   category: Category;
   isLast: boolean;
+  status: PublishStatus;
+  onTogglePublish: () => void;
 }) {
+  const isDraft = status === "draft";
   return (
     <div
       className={cn(
