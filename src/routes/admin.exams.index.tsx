@@ -340,7 +340,7 @@ function ExamsList() {
                       </Link>
                       {isAdmin && (
                         <button
-                          onClick={() => toggle(id)}
+                          onClick={() => handleTogglePublish(id, exam.name || "Bài thi chưa đặt tên")}
                           className={cn(
                             "inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition",
                             isDraft
