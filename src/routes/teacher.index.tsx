@@ -61,7 +61,7 @@ function TeacherOverview() {
               <BarChart3 className="h-3.5 w-3.5" /> Báo cáo & Phân tích
             </Link>
             <Link
-              to="/teacher/exams"
+              to="/admin/exams"
               className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-muted"
             >
               <ClipboardCheck className="h-3.5 w-3.5" /> Tạo bài thi
