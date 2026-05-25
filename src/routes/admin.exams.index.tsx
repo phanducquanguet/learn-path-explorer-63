@@ -183,7 +183,7 @@ function ExamsList() {
             </Link>
             {isAdmin && (
               <Link
-                to="/teacher/exams/new"
+                to="/admin/exams/new"
                 className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
                 style={{ background: "var(--gradient-brand)" }}
               >
@@ -380,14 +380,14 @@ function ExamsList() {
 
                     <div className="mt-4 flex flex-wrap gap-2">
                       <Link
-                        to="/teacher/exams/$examId"
+                        to="/admin/exams/$examId"
                         params={{ examId: id }}
                         className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted"
                       >
                         <FileQuestion className="h-3.5 w-3.5" /> Xem câu hỏi
                       </Link>
                       <Link
-                        to="/teacher/exams/$examId/submissions"
+                        to="/admin/exams/$examId/submissions"
                         params={{ examId: id }}
                         className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-foreground px-3 py-2 text-xs font-semibold text-background hover:opacity-90"
                       >
