@@ -19,7 +19,8 @@ import {
   Send,
   FileEdit,
 } from "lucide-react";
-import { usePublishStatus, STATUS_LABEL, type PublishStatus } from "@/lib/publish-status";
+import { usePublishStatus, STATUS_LABEL, type PublishStatus, type PublishEvent } from "@/lib/publish-status";
+import { confirmPublishAction } from "@/lib/publish-actions";
 import { levels, type Course, type Level } from "@/lib/lms-data";
 import { useCategories, categoryOf, type Category } from "@/lib/course-categories";
 import { TopNav } from "@/components/TopNav";
@@ -64,7 +65,17 @@ function CoursesListPage() {
   const { role } = useRole();
   const isAdmin = role === "admin";
   const [categories] = useCategories();
-  const { getStatus, toggle } = usePublishStatus("courses", "published");
+  const { getStatus, toggle, wasEverPublished } = usePublishStatus("courses", "published");
+
+  const handleTogglePublish = (id: string, name: string) => {
+    const current = getStatus(id);
+    const willBe: PublishStatus = current === "published" ? "draft" : "published";
+    const ever = wasEverPublished(id);
+    const event: PublishEvent =
+      willBe === "draft" ? "unpublish" : ever ? "republish" : "first-publish";
+    if (!confirmPublishAction("course", name, event)) return;
+    toggle(id);
+  };
   const [statusFilter, setStatusFilter] = useState<"all" | PublishStatus>("all");
   const allCourses = useMemo(
     () =>
@@ -342,7 +353,7 @@ function CoursesListPage() {
                       level={level}
                       category={category}
                       status={getStatus(course.id)}
-                      onTogglePublish={() => toggle(course.id)}
+                      onTogglePublish={() => handleTogglePublish(course.id, course.title)}
                     />
                   ) : (
                     <CourseCard
@@ -365,7 +376,7 @@ function CoursesListPage() {
                       category={category}
                       isLast={i === group.items.length - 1}
                       status={getStatus(course.id)}
-                      onTogglePublish={() => toggle(course.id)}
+                      onTogglePublish={() => handleTogglePublish(course.id, course.title)}
                     />
                   ) : (
                     <CourseRow

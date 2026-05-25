@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { EXAM_SKILLS } from "@/lib/teacher-data";
 import { useRole } from "@/contexts/RoleContext";
-import { usePublishStatus, STATUS_LABEL } from "@/lib/publish-status";
+import { usePublishStatus, STATUS_LABEL, type PublishStatus, type PublishEvent } from "@/lib/publish-status";
+import { confirmPublishAction } from "@/lib/publish-actions";
 import {
   ClipboardCheck,
   Plus,
@@ -75,7 +76,17 @@ function ExamsList() {
   const { role } = useRole();
   const isAdmin = role === "admin";
   const [exams, setExams] = useState<SavedExam[]>([]);
-  const { getStatus, toggle } = usePublishStatus("exams", "published");
+  const { getStatus, toggle, wasEverPublished } = usePublishStatus("exams", "published");
+
+  const handleTogglePublish = (id: string, name: string) => {
+    const current = getStatus(id);
+    const willBe: PublishStatus = current === "published" ? "draft" : "published";
+    const ever = wasEverPublished(id);
+    const event: PublishEvent =
+      willBe === "draft" ? "unpublish" : ever ? "republish" : "first-publish";
+    if (!confirmPublishAction("exam", name, event)) return;
+    toggle(id);
+  };
   const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "published">("all");
 
   useEffect(() => {
@@ -329,7 +340,7 @@ function ExamsList() {
                       </Link>
                       {isAdmin && (
                         <button
-                          onClick={() => toggle(id)}
+                          onClick={() => handleTogglePublish(id, exam.name || "Bài thi chưa đặt tên")}
                           className={cn(
                             "inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition",
                             isDraft
