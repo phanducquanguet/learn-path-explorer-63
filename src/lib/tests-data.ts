@@ -85,6 +85,7 @@ export const tests: Test[] = [
     id: "test-1",
     name: "Kiểm tra giữa kỳ B1 — Tháng 5",
     description: "Bài kiểm tra giữa kỳ tổng hợp Reading + Listening + Writing.",
+    orgId: "org-unicom-hcm",
     classIds: ["cls-b1-fast"],
     level: "B1",
     durationMinutes: 90,
