@@ -65,7 +65,17 @@ function CoursesListPage() {
   const { role } = useRole();
   const isAdmin = role === "admin";
   const [categories] = useCategories();
-  const { getStatus, toggle } = usePublishStatus("courses", "published");
+  const { getStatus, toggle, wasEverPublished } = usePublishStatus("courses", "published");
+
+  const handleTogglePublish = (id: string, name: string) => {
+    const current = getStatus(id);
+    const willBe: PublishStatus = current === "published" ? "draft" : "published";
+    const ever = wasEverPublished(id);
+    const event: PublishEvent =
+      willBe === "draft" ? "unpublish" : ever ? "republish" : "first-publish";
+    if (!confirmPublishAction("course", name, event)) return;
+    toggle(id);
+  };
   const [statusFilter, setStatusFilter] = useState<"all" | PublishStatus>("all");
   const allCourses = useMemo(
     () =>
