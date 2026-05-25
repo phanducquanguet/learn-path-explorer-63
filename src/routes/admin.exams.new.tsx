@@ -83,8 +83,6 @@ function ExamBuilder() {
     duration: 90,
     description: "",
     thumbnail: "" as string,
-    orgId: orgs[0]?.id ?? "",
-    classIds: [] as string[],
   });
   const [selectedSkills, setSelectedSkills] = useState<QSkill[]>(["listening", "reading"]);
   const [groups, setGroups] = useState<Record<string, SkillGroup>>({
