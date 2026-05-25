@@ -865,6 +865,15 @@ function AdminCourseRow({
           </span>
           <span className="text-[10px] text-muted-foreground">•</span>
           <span className="text-[10px] text-muted-foreground">{category}</span>
+          <span
+            className={cn(
+              "inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] font-semibold",
+              isDraft ? "bg-amber-100 text-amber-800" : "bg-emerald-100 text-emerald-800",
+            )}
+          >
+            {isDraft ? <FileEdit className="h-2.5 w-2.5" /> : <Send className="h-2.5 w-2.5" />}
+            {STATUS_LABEL[status]}
+          </span>
         </div>
         <div className="mt-0.5 truncate text-sm font-semibold text-foreground">
           {course.title}
