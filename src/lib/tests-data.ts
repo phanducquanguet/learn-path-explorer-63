@@ -108,6 +108,7 @@ export const tests: Test[] = [
     id: "test-2",
     name: "Quiz Unit 3 — A1 Morning Stars",
     description: "Quiz nhỏ kiểm tra từ vựng và ngữ pháp Unit 3.",
+    orgId: "org-unicom-hn",
     classIds: ["cls-a1-morning"],
     level: "A1",
     durationMinutes: 30,
