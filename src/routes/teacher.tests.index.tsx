@@ -411,6 +411,7 @@ function TestsList() {
                 <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
                   <tr>
                     <th className="px-4 py-3 text-left font-semibold">Đề thi</th>
+                    <th className="px-4 py-3 text-left font-semibold">Đơn vị</th>
                     <th className="px-4 py-3 text-left font-semibold">Lớp</th>
                     <th className="px-4 py-3 text-left font-semibold">Trình độ</th>
                     <th className="px-4 py-3 text-left font-semibold">Trạng thái</th>
