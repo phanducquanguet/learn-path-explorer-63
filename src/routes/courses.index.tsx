@@ -341,6 +341,8 @@ function CoursesListPage() {
                       course={course}
                       level={level}
                       category={category}
+                      status={getStatus(course.id)}
+                      onTogglePublish={() => toggle(course.id)}
                     />
                   ) : (
                     <CourseCard
