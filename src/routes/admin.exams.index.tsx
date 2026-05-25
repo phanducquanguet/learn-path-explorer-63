@@ -247,8 +247,25 @@ function ExamsList() {
                         <ClipboardCheck className="h-10 w-10 opacity-80" />
                       </div>
                     )}
-                    <div className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-lg bg-background/90 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-primary backdrop-blur">
-                      {exam.levelCode}
+                    <div className="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1.5 rounded-lg bg-background/90 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-primary backdrop-blur">
+                        {exam.levelCode}
+                      </span>
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold backdrop-blur",
+                          isDraft
+                            ? "bg-amber-100/95 text-amber-800"
+                            : "bg-emerald-100/95 text-emerald-800",
+                        )}
+                      >
+                        {isDraft ? (
+                          <FileEdit className="h-3 w-3" />
+                        ) : (
+                          <Send className="h-3 w-3" />
+                        )}
+                        {STATUS_LABEL[status]}
+                      </span>
                     </div>
                     {isAdmin && (
                       <div className="absolute right-3 top-3 flex gap-1.5">
