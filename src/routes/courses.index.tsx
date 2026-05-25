@@ -353,7 +353,7 @@ function CoursesListPage() {
                       level={level}
                       category={category}
                       status={getStatus(course.id)}
-                      onTogglePublish={() => toggle(course.id)}
+                      onTogglePublish={() => handleTogglePublish(course.id, course.title)}
                     />
                   ) : (
                     <CourseCard
@@ -376,7 +376,7 @@ function CoursesListPage() {
                       category={category}
                       isLast={i === group.items.length - 1}
                       status={getStatus(course.id)}
-                      onTogglePublish={() => toggle(course.id)}
+                      onTogglePublish={() => handleTogglePublish(course.id, course.title)}
                     />
                   ) : (
                     <CourseRow
