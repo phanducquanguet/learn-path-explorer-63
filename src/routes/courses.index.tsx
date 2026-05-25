@@ -16,7 +16,10 @@ import {
   Trash2,
   Layers,
   Settings2,
+  Send,
+  FileEdit,
 } from "lucide-react";
+import { usePublishStatus, STATUS_LABEL, type PublishStatus } from "@/lib/publish-status";
 import { levels, type Course, type Level } from "@/lib/lms-data";
 import { useCategories, categoryOf, type Category } from "@/lib/course-categories";
 import { TopNav } from "@/components/TopNav";
