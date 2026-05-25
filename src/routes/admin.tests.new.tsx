@@ -266,33 +266,66 @@ function NewTestPage() {
                   />
                 </Field>
               </div>
-              <Field label="Lớp được giao (chọn nhiều)">
-                <div className="grid grid-cols-2 gap-2">
-                  {classes.map((c) => {
-                    const on = classIds.includes(c.id);
+              <Field label="Đơn vị (trường / trung tâm)">
+                <select
+                  value={orgId}
+                  onChange={(e) => {
+                    setOrgId(e.target.value);
+                    setClassIds([]);
+                  }}
+                  className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                >
+                  {orgs.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.name}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Bài thi chỉ thuộc 1 đơn vị. Có thể sao chép sang đơn vị khác sau khi tạo.
+                </p>
+              </Field>
+              <Field label="Lớp được giao (chỉ trong đơn vị đã chọn)">
+                {(() => {
+                  const classesInOrg = classes.filter(
+                    (c) => classOrgMap[c.id] === orgId,
+                  );
+                  if (classesInOrg.length === 0) {
                     return (
-                      <button
-                        key={c.id}
-                        onClick={() =>
-                          setClassIds((p) =>
-                            on ? p.filter((x) => x !== c.id) : [...p, c.id],
-                          )
-                        }
-                        className={cn(
-                          "rounded-xl border px-3 py-2 text-left text-xs font-semibold transition",
-                          on
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border bg-background hover:bg-muted",
-                        )}
-                      >
-                        {c.name}
-                        <div className="text-[10px] font-normal text-muted-foreground">
-                          {c.studentCount} HS • {c.levelCode}
-                        </div>
-                      </button>
+                      <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-center text-xs text-muted-foreground">
+                        Đơn vị này chưa có lớp. Bạn vẫn có thể tạo bài và gán lớp sau.
+                      </div>
                     );
-                  })}
-                </div>
+                  }
+                  return (
+                    <div className="grid grid-cols-2 gap-2">
+                      {classesInOrg.map((c) => {
+                        const on = classIds.includes(c.id);
+                        return (
+                          <button
+                            key={c.id}
+                            onClick={() =>
+                              setClassIds((p) =>
+                                on ? p.filter((x) => x !== c.id) : [...p, c.id],
+                              )
+                            }
+                            className={cn(
+                              "rounded-xl border px-3 py-2 text-left text-xs font-semibold transition",
+                              on
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border bg-background hover:bg-muted",
+                            )}
+                          >
+                            {c.name}
+                            <div className="text-[10px] font-normal text-muted-foreground">
+                              {c.studentCount} HS • {c.levelCode}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </Field>
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Mở lúc">
