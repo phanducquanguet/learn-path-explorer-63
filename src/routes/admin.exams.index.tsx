@@ -14,7 +14,6 @@ import {
   Trash2,
   FileQuestion,
   Pencil,
-  Eye,
   MessageSquare,
   Send,
   FileEdit,
