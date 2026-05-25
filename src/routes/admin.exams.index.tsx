@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { EXAM_SKILLS } from "@/lib/teacher-data";
 import { useRole } from "@/contexts/RoleContext";
-import { usePublishStatus, STATUS_LABEL } from "@/lib/publish-status";
+import { usePublishStatus, STATUS_LABEL, type PublishStatus, type PublishEvent } from "@/lib/publish-status";
+import { confirmPublishAction } from "@/lib/publish-actions";
 import {
   ClipboardCheck,
   Plus,
