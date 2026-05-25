@@ -35,6 +35,8 @@ export type Test = {
   id: string;
   name: string;
   description: string;
+  /** Đơn vị (trường / trung tâm) mà bài thi thuộc về. */
+  orgId?: string;
   classIds: string[];
   level: QLevel;
   durationMinutes: number;
@@ -47,6 +49,8 @@ export type Test = {
   graded: number;
   avgScore?: number;
   createdAt: string;
+  /** Nếu được tạo bằng cách sao chép từ bài khác. */
+  copiedFromId?: string;
 };
 
 export type TestSubmission = {
