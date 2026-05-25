@@ -85,6 +85,9 @@ function CoursesListPage() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return allCourses.filter(({ course, level, category }) => {
+      const courseStatus = getStatus(course.id);
+      if (!isAdmin && courseStatus !== "published") return false;
+      if (isAdmin && statusFilter !== "all" && courseStatus !== statusFilter) return false;
       if (levelFilter !== "all" && level.code !== levelFilter) return false;
       if (categoryFilter !== "all" && category !== categoryFilter) return false;
       if (status === "completed" && course.progress < 100) return false;
@@ -100,7 +103,7 @@ function CoursesListPage() {
         return false;
       return true;
     });
-  }, [allCourses, query, levelFilter, categoryFilter, status]);
+  }, [allCourses, query, levelFilter, categoryFilter, status, getStatus, isAdmin, statusFilter]);
 
   const groups = useMemo(() => {
     const map = new Map<string, typeof filtered>();
