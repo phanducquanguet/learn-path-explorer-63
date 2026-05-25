@@ -3,7 +3,8 @@ import { useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { ManualQuestionEditor } from "@/components/ManualQuestionEditor";
 import { levels } from "@/lib/lms-data";
-import { EXAM_SKILLS } from "@/lib/teacher-data";
+import { EXAM_SKILLS, classes as allClasses } from "@/lib/teacher-data";
+import { orgs, classOrgMap } from "@/lib/orgs";
 import type { CustomQuestion } from "@/lib/tests-data";
 import type { QLevel, QSkill } from "@/lib/question-bank";
 import {
