@@ -83,6 +83,7 @@ function NewTestPage() {
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [level, setLevel] = useState<QLevel>("B1");
+  const [orgId, setOrgId] = useState<string>(orgs[0]?.id ?? "");
   const [classIds, setClassIds] = useState<string[]>([]);
   const [duration, setDuration] = useState(60);
   const [openAt, setOpenAt] = useState("");
