@@ -76,7 +76,17 @@ function ExamsList() {
   const { role } = useRole();
   const isAdmin = role === "admin";
   const [exams, setExams] = useState<SavedExam[]>([]);
-  const { getStatus, toggle } = usePublishStatus("exams", "published");
+  const { getStatus, toggle, wasEverPublished } = usePublishStatus("exams", "published");
+
+  const handleTogglePublish = (id: string, name: string) => {
+    const current = getStatus(id);
+    const willBe: PublishStatus = current === "published" ? "draft" : "published";
+    const ever = wasEverPublished(id);
+    const event: PublishEvent =
+      willBe === "draft" ? "unpublish" : ever ? "republish" : "first-publish";
+    if (!confirmPublishAction("exam", name, event)) return;
+    toggle(id);
+  };
   const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "published">("all");
 
   useEffect(() => {
