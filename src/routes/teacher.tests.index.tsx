@@ -522,6 +522,172 @@ function TestsList() {
           </div>
         )}
       </div>
+
+      {copyTarget && (
+        <CopyDialog
+          sources={copyTarget}
+          onClose={() => setCopyTarget(null)}
+          onConfirm={performCopy}
+        />
+      )}
+    </div>
+  );
+}
+
+function CopyDialog({
+  sources,
+  onClose,
+  onConfirm,
+}: {
+  sources: Test[];
+  onClose: () => void;
+  onConfirm: (sources: Test[], orgId: string, classIds: string[]) => void;
+}) {
+  const sourceOrgIds = new Set(sources.map((s) => s.orgId).filter(Boolean));
+  const defaultTarget =
+    orgs.find((o) => !sourceOrgIds.has(o.id))?.id ?? orgs[0]?.id ?? "";
+  const [orgId, setOrgId] = useState(defaultTarget);
+  const [classIds, setClassIds] = useState<string[]>([]);
+
+  const classesInOrg = classes.filter((c) => classOrgMap[c.id] === orgId);
+  const allSelected =
+    classesInOrg.length > 0 && classesInOrg.every((c) => classIds.includes(c.id));
+  const toggle = (id: string) =>
+    setClassIds((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-foreground/40 p-4">
+      <div className="w-full max-w-2xl overflow-hidden rounded-3xl border border-border bg-surface shadow-2xl">
+        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+          <div>
+            <h2 className="font-display text-lg font-semibold text-foreground">
+              Sao chép {sources.length} đề thi sang đơn vị khác
+            </h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Bản sao giữ nguyên cấu trúc đề và câu hỏi, được gán cho đơn vị và lớp đích. Lịch mở/đóng và dữ liệu nộp bài sẽ được làm mới.
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+            aria-label="Đóng"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="space-y-5 p-6">
+          <div>
+            <div className="mb-1.5 text-xs font-semibold text-foreground">Đề thi nguồn</div>
+            <div className="flex flex-wrap gap-1.5">
+              {sources.map((s) => (
+                <span
+                  key={s.id}
+                  className="rounded-lg border border-border bg-background px-2.5 py-1 text-xs text-foreground"
+                >
+                  {s.name}
+                  {s.orgId && (
+                    <span className="ml-1.5 text-[10px] text-muted-foreground">
+                      ({getOrg(s.orgId)?.shortName})
+                    </span>
+                  )}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-1.5 text-xs font-semibold text-foreground">Đơn vị đích</div>
+            <select
+              value={orgId}
+              onChange={(e) => {
+                setOrgId(e.target.value);
+                setClassIds([]);
+              }}
+              className="h-10 w-full rounded-xl border border-border bg-background px-3 text-sm text-foreground outline-none focus:border-primary"
+            >
+              {orgs.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <div className="mb-1.5 flex items-center justify-between">
+              <div className="text-xs font-semibold text-foreground">
+                Gán cho lớp ({classIds.length}/{classesInOrg.length})
+              </div>
+              {classesInOrg.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setClassIds(allSelected ? [] : classesInOrg.map((c) => c.id))
+                  }
+                  className="text-[11px] font-semibold text-primary hover:underline"
+                >
+                  {allSelected ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+                </button>
+              )}
+            </div>
+            {classesInOrg.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-center text-xs text-muted-foreground">
+                Đơn vị này chưa có lớp. Đề vẫn được sao chép và có thể gán lớp sau.
+              </div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {classesInOrg.map((c) => {
+                  const active = classIds.includes(c.id);
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => toggle(c.id)}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-xs font-semibold transition",
+                        active
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border bg-background text-muted-foreground hover:text-foreground",
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "inline-flex h-4 w-4 items-center justify-center rounded border",
+                          active
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border",
+                        )}
+                      >
+                        {active && <CheckCircle2 className="h-3 w-3" />}
+                      </span>
+                      {c.name}
+                      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                        {c.levelCode}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-end gap-2 border-t border-border bg-muted/30 px-6 py-4">
+          <button
+            onClick={onClose}
+            className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold text-foreground hover:bg-muted"
+          >
+            Hủy
+          </button>
+          <button
+            onClick={() => onConfirm(sources, orgId, classIds)}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background hover:opacity-90"
+          >
+            <Copy className="h-4 w-4" /> Sao chép {sources.length} đề
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
