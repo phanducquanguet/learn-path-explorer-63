@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { useRole } from "@/contexts/RoleContext";
 import { classes } from "@/lib/teacher-data";
+import { orgs, classOrgMap } from "@/lib/orgs";
 import {
   SKILL_LABEL,
   TYPE_LABEL,
