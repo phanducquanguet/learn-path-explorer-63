@@ -364,6 +364,8 @@ function CoursesListPage() {
                       level={level}
                       category={category}
                       isLast={i === group.items.length - 1}
+                      status={getStatus(course.id)}
+                      onTogglePublish={() => toggle(course.id)}
                     />
                   ) : (
                     <CourseRow
