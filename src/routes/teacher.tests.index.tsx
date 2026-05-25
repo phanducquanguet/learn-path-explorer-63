@@ -423,10 +423,11 @@ function TestsList() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {tests.map((t) => {
+                  {filtered.map((t) => {
                     const st = testStatus(t);
                     const m = statusMeta(st);
                     const Icon = m.icon;
+                    const org = getOrg(t.orgId);
                     return (
                       <tr key={t.id} className="transition hover:bg-muted/30">
                         <td className="px-4 py-3">
@@ -442,6 +443,15 @@ function TestsList() {
                               {t.description}
                             </span>
                           </Link>
+                        </td>
+                        <td className="px-4 py-3">
+                          {org ? (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                              <Building2 className="h-3 w-3" /> {org.shortName}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex flex-wrap gap-1">
