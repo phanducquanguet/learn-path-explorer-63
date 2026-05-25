@@ -4,6 +4,7 @@ import { TopNav } from "@/components/TopNav";
 import { useRole } from "@/contexts/RoleContext";
 import { tests as seedTests, testStatus, type Test } from "@/lib/tests-data";
 import { classes } from "@/lib/teacher-data";
+import { orgs, classOrgMap, getOrg } from "@/lib/orgs";
 import { questionBank } from "@/lib/question-bank";
 import {
   ScrollText,
@@ -19,6 +20,10 @@ import {
   GraduationCap,
   Copy,
   Sparkles,
+  Building2,
+  CheckSquare,
+  Square,
+  X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
