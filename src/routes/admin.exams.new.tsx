@@ -131,6 +131,16 @@ function ExamBuilder() {
         savedAt: new Date().toISOString(),
       });
       window.localStorage.setItem("unicom.exams", JSON.stringify(drafts));
+      // Đánh dấu bài thi mới ở trạng thái "Bản nháp" để admin chủ động xuất bản.
+      try {
+        const id = drafts[drafts.length - 1].id;
+        const pubKey = "unicom.publish.exams";
+        const pub = JSON.parse(window.localStorage.getItem(pubKey) || "{}");
+        pub[id] = "draft";
+        window.localStorage.setItem(pubKey, JSON.stringify(pub));
+      } catch {
+        /* noop */
+      }
     }
     setSaved(true);
     setTimeout(() => navigate({ to: "/admin/exams" }), 700);
