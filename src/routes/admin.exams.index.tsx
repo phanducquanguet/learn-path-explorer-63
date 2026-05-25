@@ -243,131 +243,131 @@ function ExamsList() {
                     "group relative flex flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-soft transition hover:shadow-lg",
                   )}
                 >
-                  <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
-                    {exam.thumbnail ? (
-                      <img
-                        src={exam.thumbnail}
-                        alt={exam.name}
-                        className="h-full w-full object-cover transition group-hover:scale-105"
-                      />
-                    ) : (
-                      <div
-                        className="flex h-full w-full items-center justify-center text-primary-foreground"
-                        style={{ background: "var(--gradient-brand)" }}
-                      >
-                        <ClipboardCheck className="h-10 w-10 opacity-80" />
-                      </div>
-                    )}
-                    <div className="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
-                      <span className="inline-flex items-center gap-1.5 rounded-lg bg-background/90 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-primary backdrop-blur">
-                        {exam.levelCode}
-                      </span>
-                      <span
-                        className={cn(
-                          "inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold backdrop-blur",
-                          isDraft
-                            ? "bg-amber-100/95 text-amber-800"
-                            : "bg-emerald-100/95 text-emerald-800",
-                        )}
-                      >
-                        {isDraft ? (
-                          <FileEdit className="h-3 w-3" />
-                        ) : (
-                          <Send className="h-3 w-3" />
-                        )}
-                        {STATUS_LABEL[status]}
-                      </span>
-                    </div>
-                    {isAdmin && (
-                      <div className="absolute right-3 top-3 flex gap-1.5">
-                        <button
-                          onClick={() => remove(id)}
-                          className="rounded-lg bg-background/90 p-1.5 text-muted-foreground opacity-0 backdrop-blur transition hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
-                          aria-label="Xóa bài thi"
+                  <Link
+                    to="/admin/exams/$examId"
+                    params={{ examId: id }}
+                    className="flex flex-1 flex-col"
+                  >
+                    <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
+                      {exam.thumbnail ? (
+                        <img
+                          src={exam.thumbnail}
+                          alt={exam.name}
+                          className="h-full w-full object-cover transition group-hover:scale-105"
+                        />
+                      ) : (
+                        <div
+                          className="flex h-full w-full items-center justify-center text-primary-foreground"
+                          style={{ background: "var(--gradient-brand)" }}
                         >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex flex-1 flex-col p-5">
-                    <h3 className="font-display text-lg font-semibold text-foreground line-clamp-1">
-                      {exam.name || "Bài thi chưa đặt tên"}
-                    </h3>
-                    {exam.description && (
-                      <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
-                        {exam.description}
-                      </p>
-                    )}
-
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {exam.skills.map((s) => (
-                        <span
-                          key={s}
-                          className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground"
-                        >
-                          {skillLabel(s)}
+                          <ClipboardCheck className="h-10 w-10 opacity-80" />
+                        </div>
+                      )}
+                      <div className="absolute left-3 top-3 flex flex-wrap items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-background/90 px-2 py-1 text-[11px] font-bold uppercase tracking-wider text-primary backdrop-blur">
+                          {exam.levelCode}
                         </span>
-                      ))}
-                    </div>
-
-                    <div className="mt-4 flex items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
-                      <span className="inline-flex items-center gap-1">
-                        <Clock className="h-3.5 w-3.5" /> {exam.duration} phút
-                      </span>
-                      <span className="inline-flex items-center gap-1">
-                        <FileQuestion className="h-3.5 w-3.5" /> {exam.totalQuestions ?? 0} câu
-                      </span>
-                      <span className="ml-auto">
-                        {new Date(exam.savedAt).toLocaleDateString("vi-VN")}
-                      </span>
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      <Link
-                        to="/admin/exams/$examId"
-                        params={{ examId: id }}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted"
-                      >
-                        <FileQuestion className="h-3.5 w-3.5" /> Xem câu hỏi
-                      </Link>
-                      <Link
-                        to="/admin/exams/$examId/submissions"
-                        params={{ examId: id }}
-                        className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl bg-foreground px-3 py-2 text-xs font-semibold text-background hover:opacity-90"
-                      >
-                        <Eye className="h-3.5 w-3.5" /> Xem bài làm
-                      </Link>
-                      {isAdmin && (
-                        <button
-                          onClick={() => handleTogglePublish(id, exam.name || "Bài thi chưa đặt tên")}
+                        <span
                           className={cn(
-                            "inline-flex items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition",
+                            "inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold backdrop-blur",
                             isDraft
-                              ? "bg-emerald-600 text-white hover:bg-emerald-700"
-                              : "border border-border bg-background text-foreground hover:bg-muted",
+                              ? "bg-amber-100/95 text-amber-800"
+                              : "bg-emerald-100/95 text-emerald-800",
                           )}
-                          title={isDraft ? "Xuất bản cho học viên" : "Chuyển về bản nháp"}
                         >
                           {isDraft ? (
-                            <>
-                              <Send className="h-3.5 w-3.5" /> Xuất bản
-                            </>
+                            <FileEdit className="h-3 w-3" />
                           ) : (
-                            <>
-                              <FileEdit className="h-3.5 w-3.5" /> Bỏ xuất bản
-                            </>
+                            <Send className="h-3 w-3" />
                           )}
-                        </button>
-                      )}
+                          {STATUS_LABEL[status]}
+                        </span>
+                      </div>
                       {isAdmin && (
-                        <button
-                          className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted"
-                        >
-                          <Pencil className="h-3.5 w-3.5" /> Sửa
-                        </button>
+                        <div className="absolute right-3 top-3 flex gap-1.5">
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              remove(id);
+                            }}
+                            className="rounded-lg bg-background/90 p-1.5 text-muted-foreground opacity-0 backdrop-blur transition hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                            aria-label="Xóa bài thi"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
                       )}
                     </div>
+                    <div className="flex flex-1 flex-col p-5">
+                      <h3 className="font-display text-lg font-semibold text-foreground line-clamp-1">
+                        {exam.name || "Bài thi chưa đặt tên"}
+                      </h3>
+                      {exam.description && (
+                        <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
+                          {exam.description}
+                        </p>
+                      )}
+
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        {exam.skills.map((s) => (
+                          <span
+                            key={s}
+                            className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground"
+                          >
+                            {skillLabel(s)}
+                          </span>
+                        ))}
+                      </div>
+
+                      <div className="mt-4 flex items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" /> {exam.duration} phút
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <FileQuestion className="h-3.5 w-3.5" /> {exam.totalQuestions ?? 0} câu
+                        </span>
+                        <span className="ml-auto">
+                          {new Date(exam.savedAt).toLocaleDateString("vi-VN")}
+                        </span>
+                      </div>
+                    </div>
+                  </Link>
+
+                  <div className="flex flex-wrap gap-2 px-5 pb-5">
+                    {isAdmin && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTogglePublish(id, exam.name || "Bài thi chưa đặt tên");
+                        }}
+                        className={cn(
+                          "inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold transition",
+                          isDraft
+                            ? "bg-emerald-600 text-white hover:bg-emerald-700"
+                            : "border border-border bg-background text-foreground hover:bg-muted",
+                        )}
+                        title={isDraft ? "Xuất bản cho học viên" : "Chuyển về bản nháp"}
+                      >
+                        {isDraft ? (
+                          <>
+                            <Send className="h-3.5 w-3.5" /> Xuất bản
+                          </>
+                        ) : (
+                          <>
+                            <FileEdit className="h-3.5 w-3.5" /> Bỏ xuất bản
+                          </>
+                        )}
+                      </button>
+                    )}
+                    {isAdmin && (
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted"
+                      >
+                        <Pencil className="h-3.5 w-3.5" /> Sửa
+                      </button>
+                    )}
                   </div>
                 </div>
               );
