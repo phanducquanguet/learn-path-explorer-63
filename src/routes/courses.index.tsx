@@ -64,6 +64,8 @@ function CoursesListPage() {
   const { role } = useRole();
   const isAdmin = role === "admin";
   const [categories] = useCategories();
+  const { getStatus, toggle } = usePublishStatus("courses", "published");
+  const [statusFilter, setStatusFilter] = useState<"all" | PublishStatus>("all");
   const allCourses = useMemo(
     () =>
       levels.flatMap((lv) =>
