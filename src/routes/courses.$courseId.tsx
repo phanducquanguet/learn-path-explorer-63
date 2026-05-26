@@ -734,7 +734,7 @@ function OverviewView({
       <div className="rounded-3xl bg-surface p-6 ring-1 ring-border shadow-soft">
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h3 className="font-display text-lg font-semibold text-foreground">Lộ trình units</h3>
+            <h3 className="font-display text-lg font-semibold text-foreground">Lộ trình</h3>
             <p className="text-sm text-muted-foreground">
               Hoàn thành tuần tự để mở khoá nội dung tiếp theo.
             </p>
