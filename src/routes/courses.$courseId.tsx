@@ -998,42 +998,333 @@ function ActivitiesView({
 
 /* =========== Competence View =========== */
 
+type SubSkill = { name: string; value: number };
+type CoreSkill = {
+  key: string;
+  name: string;
+  value: number;
+  hue: number;
+  icon: React.ComponentType<{ className?: string }>;
+  subs: SubSkill[];
+  tips: { title: string; desc: string; cta: string }[];
+};
+
+const WEAK_THRESHOLD = 75;
+
 function CompetenceView() {
-  const skills = [
-    { name: "Listening", value: 82, hue: 200 },
-    { name: "Speaking", value: 74, hue: 280 },
-    { name: "Reading", value: 88, hue: 155 },
-    { name: "Writing", value: 70, hue: 25 },
-    { name: "Vocabulary", value: 85, hue: 320 },
-    { name: "Grammar", value: 78, hue: 250 },
+  const cores: CoreSkill[] = [
+    {
+      key: "listening",
+      name: "Listening",
+      value: 82,
+      hue: 200,
+      icon: Headphones,
+      subs: [
+        { name: "Listening for Gist", value: 84 },
+        { name: "Listening for Details", value: 70 },
+        { name: "Recognizing Attitude", value: 88 },
+        { name: "Connected Speech", value: 66 },
+      ],
+      tips: [
+        {
+          title: "Luyện Connected Speech 15'/ngày",
+          desc: "Nghe shadowing các đoạn hội thoại tốc độ tự nhiên, tập trung vào nối âm và nuốt âm.",
+          cta: "Bắt đầu bài luyện",
+        },
+        {
+          title: "Bài tập Listening for Details",
+          desc: "Làm 2 bài note-taking mỗi tuần với câu hỏi số liệu, tên riêng, thời gian.",
+          cta: "Mở bộ đề",
+        },
+      ],
+    },
+    {
+      key: "reading",
+      name: "Reading",
+      value: 88,
+      hue: 155,
+      icon: BookOpen,
+      subs: [
+        { name: "Skimming", value: 90 },
+        { name: "Scanning", value: 85 },
+        { name: "Inference", value: 72 },
+        { name: "Lexical Context", value: 80 },
+      ],
+      tips: [
+        {
+          title: "Cải thiện Inference",
+          desc: "Đọc 1 bài Op-Ed/ngày, gạch chân ý ngầm và viết lại bằng từ của bạn.",
+          cta: "Mở bài đọc gợi ý",
+        },
+      ],
+    },
+    {
+      key: "writing",
+      name: "Writing",
+      value: 70,
+      hue: 25,
+      icon: PenLine,
+      subs: [
+        { name: "Vocabulary", value: 74 },
+        { name: "Grammar", value: 68 },
+        { name: "Coherence", value: 70 },
+      ],
+      tips: [
+        {
+          title: "Ôn Grammar trọng tâm",
+          desc: "Tập trung thì hoàn thành, mệnh đề quan hệ và liên từ — 1 mini-quiz/ngày.",
+          cta: "Mở Grammar drill",
+        },
+        {
+          title: "Viết lại theo mẫu",
+          desc: "Mỗi ngày viết 1 đoạn 120 từ theo prompt và đối chiếu bài mẫu band 7.",
+          cta: "Nhận prompt hôm nay",
+        },
+      ],
+    },
+    {
+      key: "speaking",
+      name: "Speaking",
+      value: 74,
+      hue: 280,
+      icon: Mic,
+      subs: [
+        { name: "Vocabulary", value: 78 },
+        { name: "Pronunciation", value: 66 },
+        { name: "Grammar", value: 72 },
+      ],
+      tips: [
+        {
+          title: "Luyện Pronunciation",
+          desc: "Ghi âm shadowing 5 phút/ngày, so sánh với native bằng waveform.",
+          cta: "Mở phòng luyện nói",
+        },
+      ],
+    },
   ];
+
+  const weakSubs = cores
+    .flatMap((c) =>
+      c.subs
+        .filter((s) => s.value < WEAK_THRESHOLD)
+        .map((s) => ({ ...s, parent: c.name, hue: c.hue })),
+    )
+    .sort((a, b) => a.value - b.value);
+
   return (
-    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      {skills.map((s) => (
-        <div key={s.name} className="rounded-3xl bg-surface p-5 ring-1 ring-border shadow-soft">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold text-foreground">{s.name}</span>
-            <span className="text-xl font-bold" style={{ color: `oklch(0.55 0.18 ${s.hue})` }}>
-              {s.value}
-            </span>
-          </div>
-          <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-muted">
-            <div
-              className="h-full rounded-full"
-              style={{
-                width: `${s.value}%`,
-                background: `linear-gradient(90deg, oklch(0.55 0.2 ${s.hue}), oklch(0.7 0.18 ${(s.hue + 40) % 360}))`,
-              }}
-            />
-          </div>
-          <p className="mt-3 text-xs text-muted-foreground">
-            Mức độ thành thạo dựa trên đánh giá của giáo viên & bài kiểm tra.
-          </p>
+    <div className="space-y-8">
+      {/* GROUP 1: Core skills */}
+      <section>
+        <div className="mb-3 flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-primary">
+            <Sparkles className="h-3.5 w-3.5" /> Nhóm 1
+          </span>
+          <h3 className="font-display text-lg font-semibold text-foreground">
+            Các kỹ năng chính
+          </h3>
         </div>
-      ))}
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {cores.map((s) => {
+            const Icon = s.icon;
+            return (
+              <div
+                key={s.key}
+                className="rounded-3xl bg-surface p-5 ring-1 ring-border shadow-soft"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="inline-flex h-9 w-9 items-center justify-center rounded-xl"
+                      style={{
+                        background: `oklch(0.95 0.04 ${s.hue})`,
+                        color: `oklch(0.45 0.18 ${s.hue})`,
+                      }}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <span className="text-sm font-semibold text-foreground">
+                      {s.name}
+                    </span>
+                  </div>
+                  <span
+                    className="text-xl font-bold"
+                    style={{ color: `oklch(0.55 0.18 ${s.hue})` }}
+                  >
+                    {s.value}
+                  </span>
+                </div>
+                <div className="mt-3 h-2.5 overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${s.value}%`,
+                      background: `linear-gradient(90deg, oklch(0.55 0.2 ${s.hue}), oklch(0.7 0.18 ${(s.hue + 40) % 360}))`,
+                    }}
+                  />
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Tổng hợp từ kết quả bài kiểm tra và đánh giá giáo viên.
+                </p>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* GROUP 2: Sub-skills */}
+      <section>
+        <div className="mb-3 flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-accent-foreground">
+            <TrendingUp className="h-3.5 w-3.5" /> Nhóm 2
+          </span>
+          <h3 className="font-display text-lg font-semibold text-foreground">
+            Kỹ năng mở rộng theo từng kỹ năng chính
+          </h3>
+        </div>
+        <div className="grid gap-4 lg:grid-cols-2">
+          {cores.map((c) => {
+            const Icon = c.icon;
+            return (
+              <div
+                key={c.key}
+                className="rounded-3xl bg-surface p-5 ring-1 ring-border shadow-soft"
+              >
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="inline-flex h-8 w-8 items-center justify-center rounded-lg"
+                      style={{
+                        background: `oklch(0.95 0.04 ${c.hue})`,
+                        color: `oklch(0.45 0.18 ${c.hue})`,
+                      }}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="font-semibold text-foreground">{c.name}</div>
+                  </div>
+                  <span className="text-[11px] text-muted-foreground">
+                    {c.subs.length} kỹ năng con
+                  </span>
+                </div>
+                <div className="space-y-3">
+                  {c.subs.map((s) => {
+                    const weak = s.value < WEAK_THRESHOLD;
+                    return (
+                      <div key={s.name}>
+                        <div className="mb-1 flex items-center justify-between text-xs">
+                          <span className="font-medium text-foreground">
+                            {s.name}
+                            {weak && (
+                              <span className="ml-2 rounded-md bg-destructive/10 px-1.5 py-0.5 text-[10px] font-semibold text-destructive">
+                                Cần cải thiện
+                              </span>
+                            )}
+                          </span>
+                          <span
+                            className="font-semibold"
+                            style={{ color: `oklch(0.5 0.18 ${c.hue})` }}
+                          >
+                            {s.value}
+                          </span>
+                        </div>
+                        <div className="h-2 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className="h-full rounded-full"
+                            style={{
+                              width: `${s.value}%`,
+                              background: weak
+                                ? "linear-gradient(90deg, oklch(0.65 0.2 25), oklch(0.7 0.2 45))"
+                                : `linear-gradient(90deg, oklch(0.55 0.2 ${c.hue}), oklch(0.7 0.18 ${(c.hue + 40) % 360}))`,
+                            }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      {/* Improvement plan for weak skills */}
+      <section>
+        <div className="mb-3 flex items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-destructive">
+            <Lightbulb className="h-3.5 w-3.5" /> Cần cải thiện
+          </span>
+          <h3 className="font-display text-lg font-semibold text-foreground">
+            Lộ trình cải thiện cá nhân
+          </h3>
+        </div>
+
+        {weakSubs.length === 0 ? (
+          <div className="rounded-3xl border border-dashed border-border bg-surface/50 p-10 text-center text-sm text-muted-foreground">
+            Tất cả kỹ năng con đều đạt mức tốt. Tiếp tục duy trì nhé! 🎉
+          </div>
+        ) : (
+          <div className="grid gap-4 lg:grid-cols-2">
+            {cores
+              .filter((c) => c.subs.some((s) => s.value < WEAK_THRESHOLD))
+              .map((c) => {
+                const Icon = c.icon;
+                const weak = c.subs.filter((s) => s.value < WEAK_THRESHOLD);
+                return (
+                  <div
+                    key={c.key}
+                    className="rounded-3xl bg-surface p-5 ring-1 ring-border shadow-soft"
+                  >
+                    <div className="mb-3 flex items-center gap-2">
+                      <div
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg"
+                        style={{
+                          background: `oklch(0.95 0.04 ${c.hue})`,
+                          color: `oklch(0.45 0.18 ${c.hue})`,
+                        }}
+                      >
+                        <Icon className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-foreground">{c.name}</div>
+                        <div className="text-[11px] text-muted-foreground">
+                          Yếu ở: {weak.map((w) => w.name).join(", ")}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="space-y-2.5">
+                      {c.tips.map((t, i) => (
+                        <div
+                          key={i}
+                          className="flex items-start gap-3 rounded-2xl border border-border bg-background p-3"
+                        >
+                          <div className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                            <Lightbulb className="h-3.5 w-3.5" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-semibold text-foreground">
+                              {t.title}
+                            </div>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              {t.desc}
+                            </p>
+                            <button className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline">
+                              {t.cta} <ArrowRight className="h-3 w-3" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </section>
     </div>
   );
 }
+
 
 function MembersView({
   course,
