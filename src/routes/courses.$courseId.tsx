@@ -27,6 +27,9 @@ import {
   GraduationCap,
   MessageSquare,
   Send,
+  Lightbulb,
+  ArrowRight,
+  TrendingUp,
 } from "lucide-react";
 import { getCourse, type Activity, type Unit } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
