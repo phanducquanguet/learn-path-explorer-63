@@ -1,13 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { useRole } from "@/contexts/RoleContext";
 import { courseQuestions, type CourseQuestion, type QAAnswer } from "@/lib/qa-data";
+import { levels, getCourse } from "@/lib/lms-data";
 import { ArrowLeft, MessageSquare, Send, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+type QASearch = { courseId?: string };
+
 export const Route = createFileRoute("/teacher/qa")({
   head: () => ({ meta: [{ title: "Hỏi đáp học viên — UNICOM LMS" }] }),
+  validateSearch: (s: Record<string, unknown>): QASearch => ({
+    courseId: typeof s.courseId === "string" ? s.courseId : undefined,
+  }),
   component: QAPage,
 });
 
