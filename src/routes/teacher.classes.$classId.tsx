@@ -25,6 +25,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   ArrowLeft,
   BookOpen,
@@ -772,43 +773,99 @@ function StudentDetailDialog({
           {courses.length === 0 ? (
             <p className="text-xs text-muted-foreground">Chưa có khóa học.</p>
           ) : (
-            <ul className="space-y-2">
+            <div className="space-y-2">
+
               {courses.map((c) => {
                 const p = getStudentCourseProgress(student, c.id);
                 const doneUnits = Math.round((p / 100) * c.units.length);
                 return (
-                  <li
-                    key={c.id}
-                    className="rounded-xl border border-border bg-muted/30 p-3"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
+                  <Popover key={c.id}>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        className="w-full rounded-xl border border-border bg-muted/30 p-3 text-left transition hover:border-primary/40 hover:bg-muted/60"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div>
+                            <div className="text-sm font-semibold">{c.title}</div>
+                            <div className="text-[11px] text-muted-foreground">
+                              {c.level} • {doneUnits}/{c.units.length} units hoàn thành • Nhấn để xem điểm
+                            </div>
+                          </div>
+                          <div className="text-sm font-bold text-primary">{p}%</div>
+                        </div>
+                        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className={cn(
+                              "h-full",
+                              p >= 80
+                                ? "bg-emerald-500"
+                                : p >= 60
+                                  ? "bg-sky-500"
+                                  : p >= 40
+                                    ? "bg-amber-500"
+                                    : "bg-rose-500",
+                            )}
+                            style={{ width: `${p}%` }}
+                          />
+                        </div>
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-80 p-0">
+                      <div className="border-b border-border px-4 py-3">
                         <div className="text-sm font-semibold">{c.title}</div>
                         <div className="text-[11px] text-muted-foreground">
-                          {c.level} • {doneUnits}/{c.units.length} units hoàn thành
+                          Điểm chi tiết theo unit
                         </div>
                       </div>
-                      <div className="text-sm font-bold text-primary">{p}%</div>
-                    </div>
-                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
-                      <div
-                        className={cn(
-                          "h-full",
-                          p >= 80
-                            ? "bg-emerald-500"
-                            : p >= 60
-                              ? "bg-sky-500"
-                              : p >= 40
-                                ? "bg-amber-500"
-                                : "bg-rose-500",
-                        )}
-                        style={{ width: `${p}%` }}
-                      />
-                    </div>
-                  </li>
+                      <ul className="max-h-72 overflow-y-auto p-2">
+                        {c.units.map((u, idx) => {
+                          const isDone = idx < doneUnits;
+                          const score = isDone
+                            ? jitter(hashSeed(student.id, c.id, u.id), student.skills.reading, 18)
+                            : null;
+                          return (
+                            <li
+                              key={u.id}
+                              className="flex items-center justify-between gap-2 rounded-lg px-2 py-1.5 text-xs hover:bg-muted/60"
+                            >
+                              <span className="flex-1 truncate text-foreground">
+                                <span className="mr-1 font-semibold text-muted-foreground">
+                                  U{u.index}.
+                                </span>
+                                {u.title.replace(/^Unit \d+: /, "")}
+                              </span>
+                              {score === null ? (
+                                <span className="rounded-md bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+                                  Chưa làm
+                                </span>
+                              ) : (
+                                <span
+                                  className={cn(
+                                    "rounded-md px-1.5 py-0.5 text-[11px] font-semibold tabular-nums",
+                                    score >= 90
+                                      ? "bg-emerald-500/10 text-emerald-700"
+                                      : score >= 75
+                                        ? "bg-sky-500/10 text-sky-700"
+                                        : score >= 60
+                                          ? "bg-amber-500/10 text-amber-700"
+                                          : "bg-rose-500/10 text-rose-700",
+                                  )}
+                                >
+                                  {score}
+                                </span>
+                              )}
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </PopoverContent>
+                  </Popover>
+
                 );
               })}
-            </ul>
+            </div>
+
           )}
         </section>
 
