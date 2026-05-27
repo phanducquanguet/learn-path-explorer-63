@@ -28,9 +28,10 @@ import {
   Users,
 } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
-import { getCourse, type Unit } from "@/lib/lms-data";
+import { getCourse } from "@/lib/lms-data";
 import { classes, students, type TeacherStudent } from "@/lib/teacher-data";
 import { cn } from "@/lib/utils";
+import { CourseContentViewer } from "@/components/CourseContentViewer";
 import {
   Dialog,
   DialogContent,
