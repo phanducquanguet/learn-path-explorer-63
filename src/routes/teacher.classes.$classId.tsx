@@ -390,7 +390,7 @@ function OverviewTab({
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {courses.map((c) => (
-              <CourseMiniCard key={c.id} course={c} />
+              <CourseMiniCard key={c.id} course={c} onPick={onPickCourse} />
             ))}
           </div>
         )}
