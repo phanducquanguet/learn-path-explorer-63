@@ -210,10 +210,19 @@ function ClassDetailPage() {
         <div className="mt-6">
           {tab === "overview" && <OverviewTab cls={cls} members={members} courses={courses} />}
           {tab === "courses" && <CoursesTab courses={courses} />}
-          {tab === "members" && <MembersTab members={members} />}
-          {tab === "reports" && <ReportsTab cls={cls} members={members} />}
+          {tab === "members" && <MembersTab members={members} onPickStudent={setPicked} />}
+          {tab === "reports" && (
+            <ReportsTab members={members} courses={courses} onPickStudent={setPicked} />
+          )}
         </div>
       </div>
+      <StudentDetailDialog
+        student={picked}
+        courses={courses}
+        open={picked !== null}
+        onOpenChange={(v) => !v && setPicked(null)}
+      />
+
     </div>
   );
 }
