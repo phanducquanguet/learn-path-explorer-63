@@ -232,7 +232,7 @@ const sec5 = [
 
   H3("5.1 Màn hình \"Lớp học của tôi\" (TC-LST)"),
   tableFromRows(
-    [900, 1500, 1100, 1700, 2300, 2300, 700, 860],
+    [700, 1100, 850, 1400, 2150, 2250, 500, 796],
     ["ID", "Màn hình", "Vai trò", "Tiền điều kiện", "Các bước", "Kết quả mong đợi", "P/F", "Ghi chú"],
     [
       tc("TC-LST-01","Lớp học của tôi","GV chính","Có ≥1 lớp được phân","Mở menu Lớp học","Hiển thị danh sách thẻ lớp, đúng số lượng GV chính/Trợ giảng ở mô tả trên đầu trang"),
@@ -252,7 +252,7 @@ const sec5 = [
 
   H3("5.2 Chi tiết lớp – Header & điều hướng (TC-DET-H)"),
   tableFromRows(
-    [900, 1500, 1100, 1700, 2300, 2300, 700, 860],
+    [700, 1100, 850, 1400, 2150, 2250, 500, 796],
     ["ID", "Màn hình", "Vai trò", "Tiền điều kiện", "Các bước", "Kết quả mong đợi", "P/F", "Ghi chú"],
     [
       tc("TC-DET-H01","Chi tiết lớp","GV","Đã mở chi tiết một lớp","Quan sát header","Tên lớp, nhãn cấp độ, badge vai trò, lịch học, phòng học hiển thị đúng dữ liệu lớp"),
@@ -264,7 +264,7 @@ const sec5 = [
 
   H3("5.3 Tab Tổng quan (TC-OVR)"),
   tableFromRows(
-    [900, 1500, 1100, 1700, 2300, 2300, 700, 860],
+    [700, 1100, 850, 1400, 2150, 2250, 500, 796],
     ["ID", "Màn hình", "Vai trò", "Tiền điều kiện", "Các bước", "Kết quả mong đợi", "P/F", "Ghi chú"],
     [
       tc("TC-OVR-01","Tab Tổng quan","GV","Đang ở tab Tổng quan","Quan sát 4 KPI","Hiển thị Sĩ số, Tiến độ TB, Điểm TB, Tỉ lệ tham gia"),
@@ -276,7 +276,7 @@ const sec5 = [
 
   H3("5.4 Tab Khóa học (TC-COU)"),
   tableFromRows(
-    [900, 1500, 1100, 1700, 2300, 2300, 700, 860],
+    [700, 1100, 850, 1400, 2150, 2250, 500, 796],
     ["ID", "Màn hình", "Vai trò", "Tiền điều kiện", "Các bước", "Kết quả mong đợi", "P/F", "Ghi chú"],
     [
       tc("TC-COU-01","Tab Khóa học","GV","Lớp có levelCode = A1","Mở tab","Chỉ hiển thị các khóa thuộc cấp độ A1"),
@@ -288,7 +288,7 @@ const sec5 = [
 
   H3("5.5 Tab Thành viên (TC-MEM)"),
   tableFromRows(
-    [900, 1500, 1100, 1700, 2300, 2300, 700, 860],
+    [700, 1100, 850, 1400, 2150, 2250, 500, 796],
     ["ID", "Màn hình", "Vai trò", "Tiền điều kiện", "Các bước", "Kết quả mong đợi", "P/F", "Ghi chú"],
     [
       tc("TC-MEM-01","Tab Thành viên","GV","Đang ở tab","Quan sát bảng","Có cột Họ tên, Email, Tiến độ, Điểm TB, Hoạt động gần nhất, Trạng thái"),
@@ -302,7 +302,7 @@ const sec5 = [
 
   H3("5.6 Tab Báo cáo học tập (TC-REP)"),
   tableFromRows(
-    [900, 1500, 1100, 1700, 2300, 2300, 700, 860],
+    [700, 1100, 850, 1400, 2150, 2250, 500, 796],
     ["ID", "Màn hình", "Vai trò", "Tiền điều kiện", "Các bước", "Kết quả mong đợi", "P/F", "Ghi chú"],
     [
       tc("TC-REP-01","Tab Báo cáo","GV","Đang ở tab","Quan sát radar 4 kỹ năng","Render đủ 4 trục, có nhãn Nghe/Nói/Đọc/Viết"),
@@ -315,7 +315,7 @@ const sec5 = [
 
   H3("5.7 Phân quyền & Responsive (TC-RBAC)"),
   tableFromRows(
-    [900, 1500, 1100, 1700, 2300, 2300, 700, 860],
+    [700, 1100, 850, 1400, 2150, 2250, 500, 796],
     ["ID", "Màn hình", "Vai trò", "Tiền điều kiện", "Các bước", "Kết quả mong đợi", "P/F", "Ghi chú"],
     [
       tc("TC-RBAC-01","Toàn module","Trợ giảng","Đăng nhập với role assistant","Mở danh sách và chi tiết","Không thấy thao tác chỉnh sửa lớp/thành viên"),
