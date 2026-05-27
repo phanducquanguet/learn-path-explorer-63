@@ -191,7 +191,7 @@ function TeacherCourseDetailPage() {
         </div>
 
         <div className="mt-6">
-          {tab === "content" && <ContentTab units={course.units} />}
+          {tab === "content" && <CourseContentViewer course={course} level={level} />}
           {tab === "students" && (
             <StudentsTab
               students={filteredStudents}
