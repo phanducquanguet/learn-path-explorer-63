@@ -258,10 +258,12 @@ function OverviewTab({
   cls,
   members,
   courses,
+  onPickCourse,
 }: {
   cls: (typeof classes)[number];
   members: TeacherStudent[];
   courses: Course[];
+  onPickCourse: (c: Course) => void;
 }) {
   // Phân loại học viên theo mức độ hoạt động (dựa trên điểm TB)
   const engagement = useMemo(() => {
