@@ -864,7 +864,8 @@ function StudentDetailDialog({
 
                 );
               })}
-            </ul>
+            </div>
+
           )}
         </section>
 
