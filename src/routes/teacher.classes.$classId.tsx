@@ -238,8 +238,22 @@ function OverviewTab({
   members: TeacherStudent[];
   courses: Course[];
 }) {
-  const days = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
-  const weekly = cls.weeklyMinutes.map((m, i) => ({ day: days[i], minutes: m }));
+  // Phân loại học viên theo mức tiến độ trung bình của lớp
+  const engagement = useMemo(() => {
+    const buckets = [
+      { label: "Tích cực", min: 80, count: 0, color: "oklch(0.65 0.18 150)" },
+      { label: "Ổn định", min: 60, count: 0, color: "oklch(0.7 0.16 90)" },
+      { label: "Cần nhắc nhở", min: 30, count: 0, color: "oklch(0.7 0.16 60)" },
+      { label: "Ít hoạt động", min: 0, count: 0, color: "oklch(0.65 0.18 25)" },
+    ];
+    for (const s of members) {
+      const avg =
+        s.scoresByUnit.reduce((a, x) => a + x.score, 0) / Math.max(1, s.scoresByUnit.length);
+      const b = buckets.find((b) => avg >= b.min)!;
+      b.count++;
+    }
+    return buckets;
+  }, [members]);
 
   const top = [...members]
     .map((s) => ({
@@ -251,28 +265,44 @@ function OverviewTab({
     .sort((a, b) => b.avg - a.avg)
     .slice(0, 5);
 
+  // Tiến độ TB lớp theo từng khóa học
+  const courseProgress = useMemo(
+    () =>
+      courses.map((c) => {
+        const avg =
+          members.reduce((a, s) => a + getStudentCourseProgress(s, c.id), 0) /
+          Math.max(1, members.length);
+        return { name: c.title, progress: Math.round(avg) };
+      }),
+    [courses, members],
+  );
+
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft lg:col-span-2">
-        <div className="mb-3 text-sm font-semibold">Số phút học theo ngày trong tuần</div>
+        <div className="mb-3 flex items-center justify-between">
+          <div className="text-sm font-semibold">Tiến độ trung bình của lớp theo khóa học</div>
+          <span className="text-[11px] text-muted-foreground">{courses.length} khóa</span>
+        </div>
         <div className="h-64 w-full">
-          <ResponsiveContainer>
-            <AreaChart data={weekly}>
-              <defs>
-                <linearGradient id="cm" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="oklch(0.55 0.18 260)" stopOpacity={0.5} />
-                  <stop offset="100%" stopColor="oklch(0.55 0.18 260)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-              <XAxis dataKey="day" fontSize={11} />
-              <YAxis fontSize={11} />
-              <Tooltip />
-              <Area dataKey="minutes" stroke="oklch(0.55 0.18 260)" fill="url(#cm)" strokeWidth={2} />
-            </AreaChart>
-          </ResponsiveContainer>
+          {courseProgress.length === 0 ? (
+            <div className="grid h-full place-items-center text-sm text-muted-foreground">
+              Chưa có khóa học gắn với lớp.
+            </div>
+          ) : (
+            <ResponsiveContainer>
+              <BarChart data={courseProgress} layout="vertical" margin={{ left: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.2} horizontal={false} />
+                <XAxis type="number" domain={[0, 100]} fontSize={11} unit="%" />
+                <YAxis type="category" dataKey="name" fontSize={11} width={150} />
+                <Tooltip formatter={(v: number) => `${v}%`} />
+                <Bar dataKey="progress" radius={[0, 6, 6, 0]} fill="oklch(0.55 0.18 260)" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
+
 
       <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft">
         <div className="mb-3 text-sm font-semibold">Top học viên</div>
