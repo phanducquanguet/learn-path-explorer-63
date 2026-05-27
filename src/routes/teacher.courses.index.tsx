@@ -11,6 +11,7 @@ import {
   Layers,
   Sparkles,
   ArrowRight,
+  MessageSquare,
 } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
 import { levels, type Course, type Level } from "@/lib/lms-data";
