@@ -120,6 +120,7 @@ function ClassDetailPage() {
   const { cls } = Route.useLoaderData();
   const [tab, setTab] = useState<TabId>("overview");
   const [picked, setPicked] = useState<TeacherStudent | null>(null);
+  const [pickedCourse, setPickedCourse] = useState<Course | null>(null);
 
 
   const members = useMemo(
@@ -209,8 +210,10 @@ function ClassDetailPage() {
         </div>
 
         <div className="mt-6">
-          {tab === "overview" && <OverviewTab cls={cls} members={members} courses={courses} />}
-          {tab === "courses" && <CoursesTab courses={courses} />}
+          {tab === "overview" && (
+            <OverviewTab cls={cls} members={members} courses={courses} onPickCourse={setPickedCourse} />
+          )}
+          {tab === "courses" && <CoursesTab courses={courses} onPickCourse={setPickedCourse} />}
           {tab === "members" && <MembersTab members={members} onPickStudent={setPicked} />}
           {tab === "reports" && (
             <ReportsTab members={members} courses={courses} onPickStudent={setPicked} />
@@ -222,6 +225,16 @@ function ClassDetailPage() {
         courses={courses}
         open={picked !== null}
         onOpenChange={(v) => !v && setPicked(null)}
+      />
+      <CourseDetailDialog
+        course={pickedCourse}
+        members={members}
+        open={pickedCourse !== null}
+        onOpenChange={(v) => !v && setPickedCourse(null)}
+        onPickStudent={(s) => {
+          setPickedCourse(null);
+          setPicked(s);
+        }}
       />
 
     </div>
@@ -245,10 +258,12 @@ function OverviewTab({
   cls,
   members,
   courses,
+  onPickCourse,
 }: {
   cls: (typeof classes)[number];
   members: TeacherStudent[];
   courses: Course[];
+  onPickCourse: (c: Course) => void;
 }) {
   // Phân loại học viên theo mức độ hoạt động (dựa trên điểm TB)
   const engagement = useMemo(() => {
@@ -375,7 +390,7 @@ function OverviewTab({
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {courses.map((c) => (
-              <CourseMiniCard key={c.id} course={c} />
+              <CourseMiniCard key={c.id} course={c} onPick={onPickCourse} />
             ))}
           </div>
         )}
@@ -385,7 +400,7 @@ function OverviewTab({
 }
 
 /* ----------------------------- Courses tab ----------------------------- */
-function CoursesTab({ courses }: { courses: Course[] }) {
+function CoursesTab({ courses, onPickCourse }: { courses: Course[]; onPickCourse: (c: Course) => void }) {
   if (courses.length === 0) {
     return (
       <div className="rounded-3xl border border-dashed border-border bg-surface/40 p-12 text-center">
@@ -403,7 +418,7 @@ function CoursesTab({ courses }: { courses: Course[] }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {courses.map((c) => (
-        <CourseMiniCard key={c.id} course={c} />
+        <CourseMiniCard key={c.id} course={c} onPick={onPickCourse} />
       ))}
     </div>
   );
@@ -411,14 +426,16 @@ function CoursesTab({ courses }: { courses: Course[] }) {
 
 function CourseMiniCard({
   course,
+  onPick,
 }: {
   course: Course;
+  onPick: (c: Course) => void;
 }) {
   return (
-    <Link
-      to="/courses/$courseId"
-      params={{ courseId: course.id }}
-      className="group rounded-2xl border border-border bg-surface p-4 shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated"
+    <button
+      type="button"
+      onClick={() => onPick(course)}
+      className="group w-full rounded-2xl border border-border bg-surface p-4 text-left shadow-soft transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-elevated"
     >
       <div className="flex items-center gap-2">
         <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">
@@ -437,8 +454,11 @@ function CourseMiniCard({
           <div className="h-full bg-primary" style={{ width: `${course.progress}%` }} />
         </div>
       </div>
-      <div className="mt-3 text-[11px] text-muted-foreground">{course.units.length} units</div>
-    </Link>
+      <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+        <span>{course.units.length} units</span>
+        <span className="font-medium text-primary group-hover:underline">Xem thống kê →</span>
+      </div>
+    </button>
   );
 }
 
@@ -949,6 +969,262 @@ function StudentDetailDialog({
             </div>
           </div>
         </section>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/* ----------------------------- Course Detail Dialog ----------------------------- */
+function CourseDetailDialog({
+  course,
+  members,
+  open,
+  onOpenChange,
+  onPickStudent,
+}: {
+  course: Course | null;
+  members: TeacherStudent[];
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  onPickStudent: (s: TeacherStudent) => void;
+}) {
+  if (!course) return null;
+
+  const rows = members.map((s) => {
+    const progress = getStudentCourseProgress(s, course.id);
+    const doneUnits = Math.round((progress / 100) * course.units.length);
+    const unitScores: number[] = [];
+    for (let i = 0; i < doneUnits; i++) {
+      unitScores.push(jitter(hashSeed(s.id, course.id, course.units[i].id), s.skills.reading, 18));
+    }
+    const avgScore = unitScores.length
+      ? Math.round(unitScores.reduce((a, b) => a + b, 0) / unitScores.length)
+      : null;
+    return { student: s, progress, doneUnits, avgScore };
+  });
+
+  const avgProgress = rows.length
+    ? Math.round(rows.reduce((a, r) => a + r.progress, 0) / rows.length)
+    : 0;
+  const scored = rows.filter((r) => r.avgScore !== null);
+  const avgScore = scored.length
+    ? Math.round(scored.reduce((a, r) => a + (r.avgScore as number), 0) / scored.length)
+    : 0;
+  const startedCount = rows.filter((r) => r.progress > 0).length;
+  const completedCount = rows.filter((r) => r.progress >= 95).length;
+
+  // Phân phối tiến độ
+  const progBuckets = [
+    { range: "0%", min: 0, max: 0, count: 0 },
+    { range: "1-39%", min: 1, max: 39, count: 0 },
+    { range: "40-69%", min: 40, max: 69, count: 0 },
+    { range: "70-94%", min: 70, max: 94, count: 0 },
+    { range: "≥95%", min: 95, max: 100, count: 0 },
+  ];
+  for (const r of rows) {
+    const b = progBuckets.find((b) => r.progress >= b.min && r.progress <= b.max);
+    if (b) b.count++;
+  }
+
+  // Hoàn thành theo từng unit (số HV đã làm xong unit)
+  const unitCompletion = course.units.map((u, idx) => ({
+    name: `U${u.index}`,
+    fullTitle: u.title,
+    completed: rows.filter((r) => r.doneUnits > idx).length,
+  }));
+
+  const topRows = [...rows]
+    .filter((r) => r.avgScore !== null)
+    .sort((a, b) => (b.avgScore as number) - (a.avgScore as number))
+    .slice(0, 3);
+  const atRiskRows = [...rows]
+    .sort((a, b) => a.progress - b.progress)
+    .slice(0, 3);
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] max-w-4xl overflow-y-auto">
+        <DialogHeader>
+          <div className="flex items-center gap-2">
+            <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">
+              {course.level}
+            </span>
+            <span className="text-[11px] text-muted-foreground">{course.hours} giờ • {course.units.length} units</span>
+          </div>
+          <DialogTitle className="font-display text-xl">{course.title}</DialogTitle>
+          <DialogDescription>{course.subtitle}</DialogDescription>
+        </DialogHeader>
+
+        {/* KPIs */}
+        <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          <KPI label="Tiến độ TB lớp" value={`${avgProgress}%`} />
+          <KPI label="Điểm TB" value={scored.length ? avgScore : "—"} />
+          <KPI label="Đã bắt đầu" value={`${startedCount}/${members.length}`} />
+          <KPI label="Hoàn thành" value={`${completedCount}/${members.length}`} />
+        </div>
+
+        {/* Charts */}
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <div className="rounded-2xl border border-border bg-surface p-4">
+            <div className="mb-2 text-sm font-semibold">Phân phối tiến độ học viên</div>
+            <div className="h-52">
+              <ResponsiveContainer>
+                <BarChart data={progBuckets}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                  <XAxis dataKey="range" fontSize={11} />
+                  <YAxis fontSize={11} allowDecimals={false} />
+                  <Tooltip formatter={(v: number) => `${v} HV`} />
+                  <Bar dataKey="count" radius={[6, 6, 0, 0]} fill="oklch(0.55 0.18 260)" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          <div className="rounded-2xl border border-border bg-surface p-4">
+            <div className="mb-2 text-sm font-semibold">Số HV hoàn thành từng unit</div>
+            <div className="h-52">
+              <ResponsiveContainer>
+                <BarChart data={unitCompletion}>
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                  <XAxis dataKey="name" fontSize={11} />
+                  <YAxis fontSize={11} allowDecimals={false} domain={[0, members.length]} />
+                  <Tooltip
+                    formatter={(v: number) => `${v}/${members.length} HV`}
+                    labelFormatter={(l, p) => p?.[0]?.payload?.fullTitle ?? l}
+                  />
+                  <Bar dataKey="completed" radius={[6, 6, 0, 0]} fill="oklch(0.65 0.18 150)" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Top & At-risk */}
+        <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl border border-border bg-surface p-4">
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Học viên xuất sắc
+            </div>
+            <ul className="space-y-1.5">
+              {topRows.length === 0 && (
+                <li className="text-xs text-muted-foreground">Chưa có dữ liệu điểm.</li>
+              )}
+              {topRows.map((r) => (
+                <li key={r.student.id} className="flex items-center justify-between text-sm">
+                  <button
+                    className="font-medium hover:text-primary hover:underline"
+                    onClick={() => onPickStudent(r.student)}
+                  >
+                    {r.student.name}
+                  </button>
+                  <span className="text-xs font-bold text-emerald-700">{r.avgScore}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-2xl border border-border bg-surface p-4">
+            <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Cần hỗ trợ (tiến độ thấp)
+            </div>
+            <ul className="space-y-1.5">
+              {atRiskRows.map((r) => (
+                <li key={r.student.id} className="flex items-center justify-between text-sm">
+                  <button
+                    className="font-medium hover:text-primary hover:underline"
+                    onClick={() => onPickStudent(r.student)}
+                  >
+                    {r.student.name}
+                  </button>
+                  <span className="text-xs font-bold text-rose-700">{r.progress}%</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Bảng học viên trong khóa */}
+        <div className="mt-4 rounded-2xl border border-border bg-surface p-4">
+          <div className="mb-2 flex items-center justify-between">
+            <div className="text-sm font-semibold">Tình trạng học viên trong khóa</div>
+            <span className="text-[11px] text-muted-foreground">Nhấn để xem chi tiết HV</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-[11px] uppercase text-muted-foreground">
+                  <th className="px-2 py-2">Học viên</th>
+                  <th className="px-2 py-2">Tiến độ</th>
+                  <th className="px-2 py-2 text-center">Units</th>
+                  <th className="px-2 py-2 text-center">Điểm TB</th>
+                  <th className="px-2 py-2 text-center">Trạng thái</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => {
+                  const status =
+                    r.progress >= 95
+                      ? { label: "Hoàn thành", cls: "bg-emerald-500/10 text-emerald-700" }
+                      : r.progress >= 40
+                        ? { label: "Đang học", cls: "bg-sky-500/10 text-sky-700" }
+                        : r.progress > 0
+                          ? { label: "Mới bắt đầu", cls: "bg-amber-500/10 text-amber-700" }
+                          : { label: "Chưa học", cls: "bg-muted text-muted-foreground" };
+                  return (
+                    <tr
+                      key={r.student.id}
+                      onClick={() => onPickStudent(r.student)}
+                      className="cursor-pointer border-b last:border-0 hover:bg-muted/40"
+                    >
+                      <td className="px-2 py-2 font-medium">{r.student.name}</td>
+                      <td className="px-2 py-2">
+                        <div className="flex items-center gap-2">
+                          <div className="h-1.5 w-32 overflow-hidden rounded-full bg-muted">
+                            <div
+                              className={cn(
+                                "h-full",
+                                r.progress >= 80
+                                  ? "bg-emerald-500"
+                                  : r.progress >= 60
+                                    ? "bg-sky-500"
+                                    : r.progress >= 40
+                                      ? "bg-amber-500"
+                                      : "bg-rose-500",
+                              )}
+                              style={{ width: `${r.progress}%` }}
+                            />
+                          </div>
+                          <span className="w-9 text-right text-xs font-semibold tabular-nums">
+                            {r.progress}%
+                          </span>
+                        </div>
+                      </td>
+                      <td className="px-2 py-2 text-center text-xs">
+                        {r.doneUnits}/{course.units.length}
+                      </td>
+                      <td className="px-2 py-2 text-center font-semibold">
+                        {r.avgScore ?? <span className="text-muted-foreground">—</span>}
+                      </td>
+                      <td className="px-2 py-2 text-center">
+                        <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", status.cls)}>
+                          {status.label}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="mt-3 flex justify-end">
+          <Link
+            to="/courses/$courseId"
+            params={{ courseId: course.id }}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-xs font-semibold text-background hover:bg-foreground/90"
+          >
+            Mở trang khóa học →
+          </Link>
+        </div>
       </DialogContent>
     </Dialog>
   );
