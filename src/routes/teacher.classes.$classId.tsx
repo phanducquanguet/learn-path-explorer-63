@@ -557,6 +557,23 @@ function ReportsTab({
     ];
   }, [members]);
 
+  // Phân bố trình độ (Yếu/TB/Khá/Giỏi) theo từng kỹ năng — thay cho biểu đồ trung bình trùng dữ liệu radar
+  const skillProficiency = useMemo(() => {
+    const keys: (keyof TeacherStudent["skills"])[] = ["listening", "reading", "writing", "speaking"];
+    const label: Record<string, string> = { listening: "Nghe", reading: "Đọc", writing: "Viết", speaking: "Nói" };
+    return keys.map((k) => {
+      const row = { skill: label[k], Yếu: 0, TB: 0, Khá: 0, Giỏi: 0 } as Record<string, number | string>;
+      for (const s of members) {
+        const v = s.skills[k];
+        const bucket = v < 60 ? "Yếu" : v < 75 ? "TB" : v < 90 ? "Khá" : "Giỏi";
+        (row[bucket] as number) = ((row[bucket] as number) ?? 0) + 1;
+      }
+      return row;
+    });
+  }, [members]);
+
+
+
   const distribution = useMemo(() => {
     const buckets = [
       { range: "<60", min: 0, max: 59, count: 0 },
@@ -656,15 +673,22 @@ function ReportsTab({
       </div>
 
       <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft">
-        <div className="mb-3 text-sm font-semibold">Tỉ lệ hoàn thành theo kỹ năng</div>
+        <div className="mb-1 text-sm font-semibold">Phân bố trình độ theo từng kỹ năng</div>
+        <div className="mb-3 text-[11px] text-muted-foreground">
+          Số học viên ở mỗi mức Yếu / TB / Khá / Giỏi — giúp xác định kỹ năng cần ưu tiên phụ đạo.
+        </div>
         <div className="h-64">
           <ResponsiveContainer>
-            <BarChart data={skillAvg}>
+            <BarChart data={skillProficiency} stackOffset="expand">
               <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
               <XAxis dataKey="skill" fontSize={11} />
-              <YAxis fontSize={11} domain={[0, 100]} unit="%" />
-              <Tooltip formatter={(v: number) => `${v}%`} />
-              <Bar dataKey="value" radius={[6, 6, 0, 0]} fill="oklch(0.65 0.18 150)" />
+              <YAxis fontSize={11} tickFormatter={(v: number) => `${Math.round(v * 100)}%`} />
+              <Tooltip formatter={(v: number) => `${v} HV`} />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <Bar dataKey="Yếu" stackId="a" fill="oklch(0.7 0.18 25)" />
+              <Bar dataKey="TB" stackId="a" fill="oklch(0.78 0.14 70)" />
+              <Bar dataKey="Khá" stackId="a" fill="oklch(0.72 0.14 220)" />
+              <Bar dataKey="Giỏi" stackId="a" fill="oklch(0.65 0.18 150)" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
