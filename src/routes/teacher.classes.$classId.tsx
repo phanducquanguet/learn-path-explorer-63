@@ -566,7 +566,7 @@ function ReportsTab({
       for (const s of members) {
         const v = s.skills[k];
         const bucket = v < 60 ? "Yếu" : v < 75 ? "TB" : v < 90 ? "Khá" : "Giỏi";
-        (row[bucket] as number)++;
+        (row[bucket] as number) = ((row[bucket] as number) ?? 0) + 1;
       }
       return row;
     });
