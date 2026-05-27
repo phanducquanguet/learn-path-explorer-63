@@ -19,10 +19,21 @@ export const Route = createFileRoute("/teacher/qa")({
 
 function QAPage() {
   const { role } = useRole();
-  const [list, setList] = useState<CourseQuestion[]>(courseQuestions);
+  const { courseId } = Route.useSearch();
+  const scoped = useMemo(
+    () => (courseId ? courseQuestions.filter((q) => q.courseId === courseId) : courseQuestions),
+    [courseId],
+  );
+  const [list, setList] = useState<CourseQuestion[]>(scoped);
   const [filter, setFilter] = useState<"all" | "open" | "answered">("all");
-  const [active, setActive] = useState<CourseQuestion | null>(courseQuestions[0]);
+  const [active, setActive] = useState<CourseQuestion | null>(scoped[0] ?? null);
   const [draft, setDraft] = useState("");
+
+  const allCourses = useMemo(
+    () => levels.flatMap((lv) => lv.courses.map((c) => ({ id: c.id, title: c.title, code: lv.code }))),
+    [],
+  );
+  const scopedCourse = courseId ? getCourse(courseId)?.course : null;
 
   const filtered = list.filter((q) =>
     filter === "all"
