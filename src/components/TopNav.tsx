@@ -31,7 +31,7 @@ const studentTabs = [
 const teacherTabs = [
   { to: "/teacher" as const, label: "Tổng quan", icon: LayoutDashboard },
   { to: "/teacher/classes" as const, label: "Lớp học", icon: Users },
-  { to: "/courses" as const, label: "Khóa học", icon: GraduationCap },
+  { to: "/teacher/courses" as const, label: "Khóa học", icon: GraduationCap },
   { to: "/teacher/tests" as const, label: "Thi cử", icon: ScrollText },
   { to: "/teacher/reports" as const, label: "Báo cáo", icon: BarChart3 },
 ];
