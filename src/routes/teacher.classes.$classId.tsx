@@ -442,7 +442,13 @@ function CourseMiniCard({
 }
 
 /* ----------------------------- Members tab ----------------------------- */
-function MembersTab({ members }: { members: TeacherStudent[] }) {
+function MembersTab({
+  members,
+  onPickStudent,
+}: {
+  members: TeacherStudent[];
+  onPickStudent: (s: TeacherStudent) => void;
+}) {
   const [q, setQ] = useState("");
   const filtered = members.filter((m) => m.name.toLowerCase().includes(q.toLowerCase()));
 
