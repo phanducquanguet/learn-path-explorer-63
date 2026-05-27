@@ -400,7 +400,7 @@ function OverviewTab({
 }
 
 /* ----------------------------- Courses tab ----------------------------- */
-function CoursesTab({ courses }: { courses: Course[] }) {
+function CoursesTab({ courses, onPickCourse }: { courses: Course[]; onPickCourse: (c: Course) => void }) {
   if (courses.length === 0) {
     return (
       <div className="rounded-3xl border border-dashed border-border bg-surface/40 p-12 text-center">
@@ -418,7 +418,7 @@ function CoursesTab({ courses }: { courses: Course[] }) {
   return (
     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {courses.map((c) => (
-        <CourseMiniCard key={c.id} course={c} />
+        <CourseMiniCard key={c.id} course={c} onPick={onPickCourse} />
       ))}
     </div>
   );
@@ -426,14 +426,16 @@ function CoursesTab({ courses }: { courses: Course[] }) {
 
 function CourseMiniCard({
   course,
+  onPick,
 }: {
   course: Course;
+  onPick: (c: Course) => void;
 }) {
   return (
-    <Link
-      to="/courses/$courseId"
-      params={{ courseId: course.id }}
-      className="group rounded-2xl border border-border bg-surface p-4 shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated"
+    <button
+      type="button"
+      onClick={() => onPick(course)}
+      className="group w-full rounded-2xl border border-border bg-surface p-4 text-left shadow-soft transition hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-elevated"
     >
       <div className="flex items-center gap-2">
         <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[10px] font-bold uppercase text-primary">
@@ -452,8 +454,11 @@ function CourseMiniCard({
           <div className="h-full bg-primary" style={{ width: `${course.progress}%` }} />
         </div>
       </div>
-      <div className="mt-3 text-[11px] text-muted-foreground">{course.units.length} units</div>
-    </Link>
+      <div className="mt-3 flex items-center justify-between text-[11px] text-muted-foreground">
+        <span>{course.units.length} units</span>
+        <span className="font-medium text-primary group-hover:underline">Xem thống kê →</span>
+      </div>
+    </button>
   );
 }
 
