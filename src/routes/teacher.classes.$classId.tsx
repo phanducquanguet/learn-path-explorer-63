@@ -238,13 +238,13 @@ function OverviewTab({
   members: TeacherStudent[];
   courses: Course[];
 }) {
-  // Phân loại học viên theo mức tiến độ trung bình của lớp
+  // Phân loại học viên theo mức độ hoạt động (dựa trên điểm TB)
   const engagement = useMemo(() => {
     const buckets = [
-      { label: "Tích cực", min: 80, count: 0, color: "oklch(0.65 0.18 150)" },
-      { label: "Ổn định", min: 60, count: 0, color: "oklch(0.7 0.16 90)" },
-      { label: "Cần nhắc nhở", min: 30, count: 0, color: "oklch(0.7 0.16 60)" },
-      { label: "Ít hoạt động", min: 0, count: 0, color: "oklch(0.65 0.18 25)" },
+      { label: "Tích cực", min: 80, count: 0 },
+      { label: "Ổn định", min: 60, count: 0 },
+      { label: "Cần nhắc nhở", min: 30, count: 0 },
+      { label: "Ít hoạt động", min: 0, count: 0 },
     ];
     for (const s of members) {
       const avg =
@@ -254,6 +254,7 @@ function OverviewTab({
     }
     return buckets;
   }, [members]);
+
 
   const top = [...members]
     .map((s) => ({
