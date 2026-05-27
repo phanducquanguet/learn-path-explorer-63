@@ -118,6 +118,8 @@ type TabId = (typeof TABS)[number]["id"];
 function ClassDetailPage() {
   const { cls } = Route.useLoaderData();
   const [tab, setTab] = useState<TabId>("overview");
+  const [picked, setPicked] = useState<TeacherStudent | null>(null);
+
 
   const members = useMemo(
     () => students.filter((s) => s.classId === cls.id),
