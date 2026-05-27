@@ -773,7 +773,8 @@ function StudentDetailDialog({
           {courses.length === 0 ? (
             <p className="text-xs text-muted-foreground">Chưa có khóa học.</p>
           ) : (
-            <ul className="space-y-2">
+            <div className="space-y-2">
+
               {courses.map((c) => {
                 const p = getStudentCourseProgress(student, c.id);
                 const doneUnits = Math.round((p / 100) * c.units.length);
