@@ -40,6 +40,7 @@ type UnitDraft = {
   title: string;
   desc: string;
   requirePrevious?: boolean;
+  teacherOnly?: boolean;
   nodes: AnyNode[];
 };
 
@@ -334,6 +335,29 @@ function UploadPage() {
                       </div>
                     </label>
                   )}
+                  <label className="mt-2 flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/5 px-3 py-2.5">
+                    <input
+                      type="checkbox"
+                      checked={u.teacherOnly ?? false}
+                      onChange={(e) =>
+                        setUnits((arr) =>
+                          arr.map((x) =>
+                            x.id === u.id ? { ...x, teacherOnly: e.target.checked } : x,
+                          ),
+                        )
+                      }
+                      className="mt-0.5 h-4 w-4 rounded border-border accent-amber-600"
+                    />
+                    <div className="flex-1">
+                      <div className="text-xs font-semibold text-amber-700">
+                        Chỉ dành cho giáo viên
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        Nội dung trong unit này (đáp án, hướng dẫn giảng dạy, tài liệu nội bộ…) chỉ
+                        giáo viên thấy được. Học viên sẽ không nhìn thấy unit này.
+                      </div>
+                    </div>
+                  </label>
                 </div>
               ))}
               <button
