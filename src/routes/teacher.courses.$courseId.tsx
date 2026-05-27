@@ -28,9 +28,10 @@ import {
   Users,
 } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
-import { getCourse, type Unit } from "@/lib/lms-data";
+import { getCourse } from "@/lib/lms-data";
 import { classes, students, type TeacherStudent } from "@/lib/teacher-data";
 import { cn } from "@/lib/utils";
+import { CourseContentViewer } from "@/components/CourseContentViewer";
 import {
   Dialog,
   DialogContent,
@@ -190,7 +191,7 @@ function TeacherCourseDetailPage() {
         </div>
 
         <div className="mt-6">
-          {tab === "content" && <ContentTab units={course.units} />}
+          {tab === "content" && <CourseContentViewer course={course} level={level} />}
           {tab === "students" && (
             <StudentsTab
               students={filteredStudents}
@@ -255,40 +256,6 @@ function Kpi({
   );
 }
 
-/* --------------- Content Tab --------------- */
-function ContentTab({ units }: { units: Unit[] }) {
-  return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
-      {units.map((u, i) => (
-        <div
-          key={u.id}
-          className={cn(
-            "flex items-start gap-3 p-4",
-            i !== units.length - 1 && "border-b border-border",
-          )}
-        >
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-sm font-semibold text-primary">
-            {u.index}
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold text-foreground">{u.title}</div>
-            <div className="text-xs text-muted-foreground">{u.description}</div>
-            <div className="mt-2 flex flex-wrap gap-2">
-              {u.activities.map((a) => (
-                <span
-                  key={a.id}
-                  className="inline-flex items-center gap-1 rounded-md bg-background px-2 py-0.5 text-[11px] font-medium text-muted-foreground ring-1 ring-border"
-                >
-                  <Clock className="h-3 w-3" /> {a.title} • {a.duration}'
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
 
 /* --------------- Students Tab --------------- */
 function StudentsTab({
