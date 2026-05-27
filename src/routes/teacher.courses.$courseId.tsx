@@ -26,6 +26,7 @@ import {
   TrendingUp,
   Trophy,
   Users,
+  MessageSquare,
 } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
 import { getCourse } from "@/lib/lms-data";
