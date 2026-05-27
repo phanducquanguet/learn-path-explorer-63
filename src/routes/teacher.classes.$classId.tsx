@@ -1,15 +1,11 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
   Legend,
-  Line,
-  LineChart,
   PolarAngleAxis,
   PolarGrid,
   Radar,
@@ -23,6 +19,13 @@ import { TopNav } from "@/components/TopNav";
 import { classes, students, type TeacherStudent } from "@/lib/teacher-data";
 import { levels, type Course } from "@/lib/lms-data";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
   ArrowLeft,
   BookOpen,
   Calendar,
@@ -35,6 +38,51 @@ import {
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+/* ---------- Sub-skill định nghĩa (đồng bộ màn năng lực học viên) ---------- */
+const SUB_SKILLS: Record<"listening" | "reading" | "writing" | "speaking", string[]> = {
+  listening: ["Listening for Gist", "Listening for Details", "Recognizing Attitude", "Connected Speech"],
+  reading: ["Skimming", "Scanning", "Inference", "Lexical Context"],
+  writing: ["Task Achievement", "Coherence", "Lexical Range", "Grammar Accuracy"],
+  speaking: ["Vocabulary", "Pronunciation", "Grammar", "Fluency"],
+};
+const SKILL_LABEL: Record<string, string> = {
+  listening: "Nghe",
+  reading: "Đọc",
+  writing: "Viết",
+  speaking: "Nói",
+};
+
+function hashSeed(...parts: string[]) {
+  let h = 2166136261;
+  for (const p of parts) {
+    for (let i = 0; i < p.length; i++) {
+      h ^= p.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+  }
+  return Math.abs(h);
+}
+function jitter(seed: number, base: number, spread = 14) {
+  return Math.max(0, Math.min(100, Math.round(base + ((seed % 1000) / 1000 - 0.5) * spread * 2)));
+}
+function getStudentCourseProgress(student: TeacherStudent, courseId: string) {
+  const base =
+    student.scoresByUnit.reduce((a, x) => a + x.score, 0) /
+    Math.max(1, student.scoresByUnit.length);
+  return jitter(hashSeed(student.id, courseId), base - 8, 24);
+}
+function getSubSkills(student: TeacherStudent) {
+  return (Object.keys(SUB_SKILLS) as (keyof typeof SUB_SKILLS)[]).map((k) => ({
+    key: k,
+    label: SKILL_LABEL[k],
+    score: student.skills[k],
+    subs: SUB_SKILLS[k].map((name) => ({
+      name,
+      score: jitter(hashSeed(student.id, k, name), student.skills[k], 16),
+    })),
+  }));
+}
 
 export const Route = createFileRoute("/teacher/classes/$classId")({
   head: ({ params }) => ({
