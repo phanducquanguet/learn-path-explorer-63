@@ -557,6 +557,20 @@ function ReportsTab({
     ];
   }, [members]);
 
+  // Phân bố trình độ (Yếu/TB/Khá/Giỏi) theo từng kỹ năng — thay cho biểu đồ trung bình trùng dữ liệu radar
+  const skillProficiency = useMemo(() => {
+    const keys: (keyof TeacherStudent["skills"])[] = ["listening", "reading", "writing", "speaking"];
+    const label: Record<string, string> = { listening: "Nghe", reading: "Đọc", writing: "Viết", speaking: "Nói" };
+    return keys.map((k) => {
+      const row = { skill: label[k], Yếu: 0, TB: 0, Khá: 0, Giỏi: 0 } as Record<string, number | string>;
+      for (const s of members) {
+        const v = s.skills[k];
+        const bucket = v < 60 ? "Yếu" : v < 75 ? "TB" : v < 90 ? "Khá" : "Giỏi";
+        (row[bucket] as number)++;
+      }
+      return row;
+    });
+
   const distribution = useMemo(() => {
     const buckets = [
       { range: "<60", min: 0, max: 59, count: 0 },
