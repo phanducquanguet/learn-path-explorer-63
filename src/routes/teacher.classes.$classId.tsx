@@ -1147,7 +1147,7 @@ function CourseDetailDialog({
         <div className="mt-4 rounded-2xl border border-border bg-surface p-4">
           <div className="mb-2 flex items-center justify-between">
             <div className="text-sm font-semibold">Tình trạng học viên trong khóa</div>
-            <span className="text-[11px] text-muted-foreground">Nhấn để xem chi tiết HV</span>
+            <span className="text-[11px] text-muted-foreground">Nhấn tên HV để xem điểm từng unit</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -1158,6 +1158,7 @@ function CourseDetailDialog({
                   <th className="px-2 py-2 text-center">Units</th>
                   <th className="px-2 py-2 text-center">Điểm TB</th>
                   <th className="px-2 py-2 text-center">Trạng thái</th>
+                  <th className="px-2 py-2 text-center">Chi tiết</th>
                 </tr>
               </thead>
               <tbody>
@@ -1171,12 +1172,60 @@ function CourseDetailDialog({
                           ? { label: "Mới bắt đầu", cls: "bg-amber-500/10 text-amber-700" }
                           : { label: "Chưa học", cls: "bg-muted text-muted-foreground" };
                   return (
-                    <tr
-                      key={r.student.id}
-                      onClick={() => onPickStudent(r.student)}
-                      className="cursor-pointer border-b last:border-0 hover:bg-muted/40"
-                    >
-                      <td className="px-2 py-2 font-medium">{r.student.name}</td>
+                    <tr key={r.student.id} className="border-b last:border-0 hover:bg-muted/40">
+                      <td className="px-2 py-2 font-medium">
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <button className="text-left hover:text-primary hover:underline">
+                              {r.student.name}
+                            </button>
+                          </PopoverTrigger>
+                          <PopoverContent align="start" className="w-80 p-0">
+                            <div className="border-b px-4 py-2.5">
+                              <div className="text-sm font-semibold">{r.student.name}</div>
+                              <div className="text-[11px] text-muted-foreground">
+                                {course.title} • {r.doneUnits}/{course.units.length} units • TB {r.avgScore ?? "—"}
+                              </div>
+                            </div>
+                            <ul className="max-h-64 divide-y overflow-y-auto">
+                              {course.units.map((u, i) => {
+                                const sc = r.unitScores[i];
+                                const tone =
+                                  sc === null
+                                    ? "bg-muted text-muted-foreground"
+                                    : sc >= 90
+                                      ? "bg-emerald-500/10 text-emerald-700"
+                                      : sc >= 75
+                                        ? "bg-sky-500/10 text-sky-700"
+                                        : sc >= 60
+                                          ? "bg-amber-500/10 text-amber-700"
+                                          : "bg-rose-500/10 text-rose-700";
+                                return (
+                                  <li key={u.id} className="flex items-center justify-between px-4 py-2 text-xs">
+                                    <div className="min-w-0">
+                                      <div className="font-medium">Unit {u.index}</div>
+                                      <div className="truncate text-[11px] text-muted-foreground">
+                                        {u.title.replace(/^Unit \d+:\s*/, "")}
+                                      </div>
+                                    </div>
+                                    <span className={cn("ml-2 shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold tabular-nums", tone)}>
+                                      {sc === null ? "Chưa làm" : sc}
+                                    </span>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                            <div className="border-t p-2">
+                              <button
+                                onClick={() => onPickStudent(r.student)}
+                                className="w-full rounded-lg bg-foreground px-3 py-1.5 text-[11px] font-semibold text-background hover:bg-foreground/90"
+                              >
+                                Xem hồ sơ năng lực →
+                              </button>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </td>
                       <td className="px-2 py-2">
                         <div className="flex items-center gap-2">
                           <div className="h-1.5 w-32 overflow-hidden rounded-full bg-muted">
@@ -1209,6 +1258,14 @@ function CourseDetailDialog({
                         <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold", status.cls)}>
                           {status.label}
                         </span>
+                      </td>
+                      <td className="px-2 py-2 text-center">
+                        <button
+                          onClick={() => onPickStudent(r.student)}
+                          className="rounded-md border border-border px-2 py-1 text-[11px] font-medium hover:bg-muted"
+                        >
+                          Hồ sơ
+                        </button>
                       </td>
                     </tr>
                   );
