@@ -484,7 +484,11 @@ function MembersTab({
                   Math.max(1, s.scoresByUnit.length),
               );
               return (
-                <tr key={s.id} className="border-b last:border-0 hover:bg-muted/40">
+                <tr
+                  key={s.id}
+                  onClick={() => onPickStudent(s)}
+                  className="cursor-pointer border-b last:border-0 hover:bg-muted/40"
+                >
                   <td className="px-2 py-2.5">
                     <div className="flex items-center gap-2">
                       <div className="grid h-8 w-8 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">
