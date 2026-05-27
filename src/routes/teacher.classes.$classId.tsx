@@ -570,6 +570,9 @@ function ReportsTab({
       }
       return row;
     });
+  }, [members]);
+
+
 
   const distribution = useMemo(() => {
     const buckets = [
