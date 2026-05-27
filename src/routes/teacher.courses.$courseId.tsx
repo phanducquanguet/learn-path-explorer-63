@@ -26,6 +26,7 @@ import {
   TrendingUp,
   Trophy,
   Users,
+  MessageSquare,
 } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
 import { getCourse } from "@/lib/lms-data";
@@ -145,13 +146,22 @@ function TeacherCourseDetailPage() {
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">{course.subtitle}</p>
           </div>
-          <Link
-            to="/courses/$courseId"
-            params={{ courseId: course.id }}
-            className="inline-flex h-9 items-center gap-1.5 self-start rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-foreground hover:bg-muted"
-          >
-            <ExternalLink className="h-3.5 w-3.5" /> Mở trình học
-          </Link>
+          <div className="flex flex-wrap items-center gap-2 self-start">
+            <Link
+              to="/teacher/qa"
+              search={{ courseId: course.id }}
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-foreground hover:bg-muted"
+            >
+              <MessageSquare className="h-3.5 w-3.5" /> Hỏi đáp học viên
+            </Link>
+            <Link
+              to="/courses/$courseId"
+              params={{ courseId: course.id }}
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-foreground hover:bg-muted"
+            >
+              <ExternalLink className="h-3.5 w-3.5" /> Mở trình học
+            </Link>
+          </div>
         </div>
 
         {/* KPIs */}

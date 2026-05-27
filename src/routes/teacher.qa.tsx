@@ -1,22 +1,39 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { useRole } from "@/contexts/RoleContext";
 import { courseQuestions, type CourseQuestion, type QAAnswer } from "@/lib/qa-data";
+import { levels, getCourse } from "@/lib/lms-data";
 import { ArrowLeft, MessageSquare, Send, CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+type QASearch = { courseId?: string };
+
 export const Route = createFileRoute("/teacher/qa")({
   head: () => ({ meta: [{ title: "Hỏi đáp học viên — UNICOM LMS" }] }),
+  validateSearch: (s: Record<string, unknown>): QASearch => ({
+    courseId: typeof s.courseId === "string" ? s.courseId : undefined,
+  }),
   component: QAPage,
 });
 
 function QAPage() {
   const { role } = useRole();
-  const [list, setList] = useState<CourseQuestion[]>(courseQuestions);
+  const { courseId } = Route.useSearch();
+  const scoped = useMemo(
+    () => (courseId ? courseQuestions.filter((q) => q.courseId === courseId) : courseQuestions),
+    [courseId],
+  );
+  const [list, setList] = useState<CourseQuestion[]>(scoped);
   const [filter, setFilter] = useState<"all" | "open" | "answered">("all");
-  const [active, setActive] = useState<CourseQuestion | null>(courseQuestions[0]);
+  const [active, setActive] = useState<CourseQuestion | null>(scoped[0] ?? null);
   const [draft, setDraft] = useState("");
+
+  const allCourses = useMemo(
+    () => levels.flatMap((lv) => lv.courses.map((c) => ({ id: c.id, title: c.title, code: lv.code }))),
+    [],
+  );
+  const scopedCourse = courseId ? getCourse(courseId)?.course : null;
 
   const filtered = list.filter((q) =>
     filter === "all"
@@ -54,13 +71,41 @@ function QAPage() {
           <ArrowLeft className="h-4 w-4" /> Trở lại Tổng quan
         </Link>
 
-        <div className="mt-4">
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            Hỏi đáp học viên
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Trả lời câu hỏi của học viên trong các khóa học bạn phụ trách.
-          </p>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            {scopedCourse && (
+              <div className="mb-1 inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-primary">
+                Khóa: {scopedCourse.title}
+              </div>
+            )}
+            <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Hỏi đáp học viên
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {scopedCourse
+                ? `Câu hỏi của học viên trong khóa "${scopedCourse.title}".`
+                : "Tổng hợp câu hỏi từ tất cả khóa học bạn phụ trách."}
+            </p>
+          </div>
+          <select
+            value={courseId ?? ""}
+            onChange={(e) => {
+              const v = e.target.value;
+              const url = new URL(window.location.href);
+              if (v) url.searchParams.set("courseId", v);
+              else url.searchParams.delete("courseId");
+              window.history.pushState({}, "", url);
+              window.location.reload();
+            }}
+            className="h-9 rounded-xl border border-border bg-surface px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="">Tất cả khóa học</option>
+            {allCourses.map((c) => (
+              <option key={c.id} value={c.id}>
+                [{c.code}] {c.title}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[380px_1fr]">
