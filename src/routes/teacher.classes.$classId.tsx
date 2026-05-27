@@ -120,6 +120,7 @@ function ClassDetailPage() {
   const { cls } = Route.useLoaderData();
   const [tab, setTab] = useState<TabId>("overview");
   const [picked, setPicked] = useState<TeacherStudent | null>(null);
+  const [pickedCourse, setPickedCourse] = useState<Course | null>(null);
 
 
   const members = useMemo(
@@ -209,8 +210,10 @@ function ClassDetailPage() {
         </div>
 
         <div className="mt-6">
-          {tab === "overview" && <OverviewTab cls={cls} members={members} courses={courses} />}
-          {tab === "courses" && <CoursesTab courses={courses} />}
+          {tab === "overview" && (
+            <OverviewTab cls={cls} members={members} courses={courses} onPickCourse={setPickedCourse} />
+          )}
+          {tab === "courses" && <CoursesTab courses={courses} onPickCourse={setPickedCourse} />}
           {tab === "members" && <MembersTab members={members} onPickStudent={setPicked} />}
           {tab === "reports" && (
             <ReportsTab members={members} courses={courses} onPickStudent={setPicked} />
@@ -222,6 +225,16 @@ function ClassDetailPage() {
         courses={courses}
         open={picked !== null}
         onOpenChange={(v) => !v && setPicked(null)}
+      />
+      <CourseDetailDialog
+        course={pickedCourse}
+        members={members}
+        open={pickedCourse !== null}
+        onOpenChange={(v) => !v && setPickedCourse(null)}
+        onPickStudent={(s) => {
+          setPickedCourse(null);
+          setPicked(s);
+        }}
       />
 
     </div>
