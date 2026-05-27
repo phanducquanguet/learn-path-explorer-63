@@ -1,15 +1,11 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
   Cell,
   Legend,
-  Line,
-  LineChart,
   PolarAngleAxis,
   PolarGrid,
   Radar,
@@ -23,6 +19,13 @@ import { TopNav } from "@/components/TopNav";
 import { classes, students, type TeacherStudent } from "@/lib/teacher-data";
 import { levels, type Course } from "@/lib/lms-data";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import {
   ArrowLeft,
   BookOpen,
   Calendar,
@@ -35,6 +38,51 @@ import {
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+/* ---------- Sub-skill định nghĩa (đồng bộ màn năng lực học viên) ---------- */
+const SUB_SKILLS: Record<"listening" | "reading" | "writing" | "speaking", string[]> = {
+  listening: ["Listening for Gist", "Listening for Details", "Recognizing Attitude", "Connected Speech"],
+  reading: ["Skimming", "Scanning", "Inference", "Lexical Context"],
+  writing: ["Task Achievement", "Coherence", "Lexical Range", "Grammar Accuracy"],
+  speaking: ["Vocabulary", "Pronunciation", "Grammar", "Fluency"],
+};
+const SKILL_LABEL: Record<string, string> = {
+  listening: "Nghe",
+  reading: "Đọc",
+  writing: "Viết",
+  speaking: "Nói",
+};
+
+function hashSeed(...parts: string[]) {
+  let h = 2166136261;
+  for (const p of parts) {
+    for (let i = 0; i < p.length; i++) {
+      h ^= p.charCodeAt(i);
+      h = Math.imul(h, 16777619);
+    }
+  }
+  return Math.abs(h);
+}
+function jitter(seed: number, base: number, spread = 14) {
+  return Math.max(0, Math.min(100, Math.round(base + ((seed % 1000) / 1000 - 0.5) * spread * 2)));
+}
+function getStudentCourseProgress(student: TeacherStudent, courseId: string) {
+  const base =
+    student.scoresByUnit.reduce((a, x) => a + x.score, 0) /
+    Math.max(1, student.scoresByUnit.length);
+  return jitter(hashSeed(student.id, courseId), base - 8, 24);
+}
+function getSubSkills(student: TeacherStudent) {
+  return (Object.keys(SUB_SKILLS) as (keyof typeof SUB_SKILLS)[]).map((k) => ({
+    key: k,
+    label: SKILL_LABEL[k],
+    score: student.skills[k],
+    subs: SUB_SKILLS[k].map((name) => ({
+      name,
+      score: jitter(hashSeed(student.id, k, name), student.skills[k], 16),
+    })),
+  }));
+}
 
 export const Route = createFileRoute("/teacher/classes/$classId")({
   head: ({ params }) => ({
@@ -70,6 +118,8 @@ type TabId = (typeof TABS)[number]["id"];
 function ClassDetailPage() {
   const { cls } = Route.useLoaderData();
   const [tab, setTab] = useState<TabId>("overview");
+  const [picked, setPicked] = useState<TeacherStudent | null>(null);
+
 
   const members = useMemo(
     () => students.filter((s) => s.classId === cls.id),
@@ -160,10 +210,19 @@ function ClassDetailPage() {
         <div className="mt-6">
           {tab === "overview" && <OverviewTab cls={cls} members={members} courses={courses} />}
           {tab === "courses" && <CoursesTab courses={courses} />}
-          {tab === "members" && <MembersTab members={members} />}
-          {tab === "reports" && <ReportsTab cls={cls} members={members} />}
+          {tab === "members" && <MembersTab members={members} onPickStudent={setPicked} />}
+          {tab === "reports" && (
+            <ReportsTab members={members} courses={courses} onPickStudent={setPicked} />
+          )}
         </div>
       </div>
+      <StudentDetailDialog
+        student={picked}
+        courses={courses}
+        open={picked !== null}
+        onOpenChange={(v) => !v && setPicked(null)}
+      />
+
     </div>
   );
 }
@@ -190,8 +249,23 @@ function OverviewTab({
   members: TeacherStudent[];
   courses: Course[];
 }) {
-  const days = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
-  const weekly = cls.weeklyMinutes.map((m, i) => ({ day: days[i], minutes: m }));
+  // Phân loại học viên theo mức độ hoạt động (dựa trên điểm TB)
+  const engagement = useMemo(() => {
+    const buckets = [
+      { label: "Tích cực", min: 80, count: 0 },
+      { label: "Ổn định", min: 60, count: 0 },
+      { label: "Cần nhắc nhở", min: 30, count: 0 },
+      { label: "Ít hoạt động", min: 0, count: 0 },
+    ];
+    for (const s of members) {
+      const avg =
+        s.scoresByUnit.reduce((a, x) => a + x.score, 0) / Math.max(1, s.scoresByUnit.length);
+      const b = buckets.find((b) => avg >= b.min)!;
+      b.count++;
+    }
+    return buckets;
+  }, [members]);
+
 
   const top = [...members]
     .map((s) => ({
@@ -203,28 +277,44 @@ function OverviewTab({
     .sort((a, b) => b.avg - a.avg)
     .slice(0, 5);
 
+  // Tiến độ TB lớp theo từng khóa học
+  const courseProgress = useMemo(
+    () =>
+      courses.map((c) => {
+        const avg =
+          members.reduce((a, s) => a + getStudentCourseProgress(s, c.id), 0) /
+          Math.max(1, members.length);
+        return { name: c.title, progress: Math.round(avg) };
+      }),
+    [courses, members],
+  );
+
   return (
     <div className="grid gap-4 lg:grid-cols-3">
       <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft lg:col-span-2">
-        <div className="mb-3 text-sm font-semibold">Số phút học theo ngày trong tuần</div>
+        <div className="mb-3 flex items-center justify-between">
+          <div className="text-sm font-semibold">Tiến độ trung bình của lớp theo khóa học</div>
+          <span className="text-[11px] text-muted-foreground">{courses.length} khóa</span>
+        </div>
         <div className="h-64 w-full">
-          <ResponsiveContainer>
-            <AreaChart data={weekly}>
-              <defs>
-                <linearGradient id="cm" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="oklch(0.55 0.18 260)" stopOpacity={0.5} />
-                  <stop offset="100%" stopColor="oklch(0.55 0.18 260)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-              <XAxis dataKey="day" fontSize={11} />
-              <YAxis fontSize={11} />
-              <Tooltip />
-              <Area dataKey="minutes" stroke="oklch(0.55 0.18 260)" fill="url(#cm)" strokeWidth={2} />
-            </AreaChart>
-          </ResponsiveContainer>
+          {courseProgress.length === 0 ? (
+            <div className="grid h-full place-items-center text-sm text-muted-foreground">
+              Chưa có khóa học gắn với lớp.
+            </div>
+          ) : (
+            <ResponsiveContainer>
+              <BarChart data={courseProgress} layout="vertical" margin={{ left: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.2} horizontal={false} />
+                <XAxis type="number" domain={[0, 100]} fontSize={11} unit="%" />
+                <YAxis type="category" dataKey="name" fontSize={11} width={150} />
+                <Tooltip formatter={(v: number) => `${v}%`} />
+                <Bar dataKey="progress" radius={[0, 6, 6, 0]} fill="oklch(0.55 0.18 260)" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
+
 
       <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft">
         <div className="mb-3 text-sm font-semibold">Top học viên</div>
@@ -244,7 +334,35 @@ function OverviewTab({
             </li>
           ))}
         </ul>
+        <div className="mt-4 border-t border-border pt-3">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Mức độ hoạt động
+          </div>
+          <ul className="space-y-1.5">
+            {engagement.map((b) => {
+              const pct = members.length ? Math.round((b.count / members.length) * 100) : 0;
+              const color =
+                b.label === "Tích cực"
+                  ? "bg-emerald-500"
+                  : b.label === "Ổn định"
+                    ? "bg-sky-500"
+                    : b.label === "Cần nhắc nhở"
+                      ? "bg-amber-500"
+                      : "bg-rose-500";
+              return (
+                <li key={b.label} className="flex items-center gap-2 text-xs">
+                  <span className="w-24 text-muted-foreground">{b.label}</span>
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                    <div className={cn("h-full", color)} style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="w-8 text-right font-semibold">{b.count}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </div>
+
 
       <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft lg:col-span-3">
         <div className="mb-3 flex items-center justify-between">
@@ -324,7 +442,13 @@ function CourseMiniCard({
 }
 
 /* ----------------------------- Members tab ----------------------------- */
-function MembersTab({ members }: { members: TeacherStudent[] }) {
+function MembersTab({
+  members,
+  onPickStudent,
+}: {
+  members: TeacherStudent[];
+  onPickStudent: (s: TeacherStudent) => void;
+}) {
   const [q, setQ] = useState("");
   const filtered = members.filter((m) => m.name.toLowerCase().includes(q.toLowerCase()));
 
@@ -360,7 +484,11 @@ function MembersTab({ members }: { members: TeacherStudent[] }) {
                   Math.max(1, s.scoresByUnit.length),
               );
               return (
-                <tr key={s.id} className="border-b last:border-0 hover:bg-muted/40">
+                <tr
+                  key={s.id}
+                  onClick={() => onPickStudent(s)}
+                  className="cursor-pointer border-b last:border-0 hover:bg-muted/40"
+                >
                   <td className="px-2 py-2.5">
                     <div className="flex items-center gap-2">
                       <div className="grid h-8 w-8 place-items-center rounded-full bg-primary/10 text-xs font-bold text-primary">
@@ -403,27 +531,14 @@ function MembersTab({ members }: { members: TeacherStudent[] }) {
 
 /* ----------------------------- Reports tab ----------------------------- */
 function ReportsTab({
-  cls,
   members,
+  courses,
+  onPickStudent,
 }: {
-  cls: (typeof classes)[number];
   members: TeacherStudent[];
+  courses: Course[];
+  onPickStudent: (s: TeacherStudent) => void;
 }) {
-  const unitAverages = useMemo(() => {
-    const acc: Record<string, { unit: string; total: number; count: number }> = {};
-    for (const s of members) {
-      for (const u of s.scoresByUnit) {
-        if (!acc[u.unit]) acc[u.unit] = { unit: u.unit, total: 0, count: 0 };
-        acc[u.unit].total += u.score;
-        acc[u.unit].count++;
-      }
-    }
-    return Object.values(acc).map((x) => ({
-      unit: x.unit,
-      score: Math.round(x.total / Math.max(1, x.count)),
-    }));
-  }, [members]);
-
   const skillAvg = useMemo(() => {
     const sum = { listening: 0, reading: 0, writing: 0, speaking: 0 };
     for (const s of members) {
@@ -458,12 +573,17 @@ function ReportsTab({
     return buckets;
   }, [members]);
 
-  const days = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
-  const weekly = cls.weeklyMinutes.map((m, i) => ({
-    day: days[i],
-    "Số phút": m,
-    "Tham gia (%)": Math.min(100, Math.round((m / 60) * cls.attendance)),
-  }));
+  // Tiến độ trung bình của lớp theo từng khóa học
+  const courseProgress = useMemo(
+    () =>
+      courses.map((c) => {
+        const avg =
+          members.reduce((a, s) => a + getStudentCourseProgress(s, c.id), 0) /
+          Math.max(1, members.length);
+        return { name: c.title.length > 22 ? c.title.slice(0, 22) + "…" : c.title, progress: Math.round(avg) };
+      }),
+    [courses, members],
+  );
 
   const COLORS = [
     "oklch(0.65 0.15 25)",
@@ -476,17 +596,23 @@ function ReportsTab({
   return (
     <div className="grid gap-4 lg:grid-cols-2">
       <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft">
-        <div className="mb-3 text-sm font-semibold">Điểm TB theo Unit</div>
+        <div className="mb-3 text-sm font-semibold">Tiến độ TB theo khóa học</div>
         <div className="h-64">
-          <ResponsiveContainer>
-            <BarChart data={unitAverages}>
-              <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-              <XAxis dataKey="unit" fontSize={11} />
-              <YAxis fontSize={11} domain={[0, 100]} />
-              <Tooltip />
-              <Bar dataKey="score" radius={[6, 6, 0, 0]} fill="oklch(0.55 0.18 260)" />
-            </BarChart>
-          </ResponsiveContainer>
+          {courseProgress.length === 0 ? (
+            <div className="grid h-full place-items-center text-sm text-muted-foreground">
+              Chưa có khóa học.
+            </div>
+          ) : (
+            <ResponsiveContainer>
+              <BarChart data={courseProgress} layout="vertical" margin={{ left: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" opacity={0.2} horizontal={false} />
+                <XAxis type="number" domain={[0, 100]} fontSize={11} unit="%" />
+                <YAxis type="category" dataKey="name" fontSize={11} width={140} />
+                <Tooltip formatter={(v: number) => `${v}%`} />
+                <Bar dataKey="progress" radius={[0, 6, 6, 0]} fill="oklch(0.55 0.18 260)" />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 
@@ -529,77 +655,220 @@ function ReportsTab({
       </div>
 
       <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft">
-        <div className="mb-3 text-sm font-semibold">Thời lượng học vs. tham gia (tuần)</div>
+        <div className="mb-3 text-sm font-semibold">Tỉ lệ hoàn thành theo kỹ năng</div>
         <div className="h-64">
           <ResponsiveContainer>
-            <LineChart data={weekly}>
+            <BarChart data={skillAvg}>
               <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-              <XAxis dataKey="day" fontSize={11} />
-              <YAxis fontSize={11} />
-              <Tooltip />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Line type="monotone" dataKey="Số phút" stroke="oklch(0.55 0.18 260)" strokeWidth={2} />
-              <Line
-                type="monotone"
-                dataKey="Tham gia (%)"
-                stroke="oklch(0.65 0.18 150)"
-                strokeWidth={2}
-              />
-            </LineChart>
+              <XAxis dataKey="skill" fontSize={11} />
+              <YAxis fontSize={11} domain={[0, 100]} unit="%" />
+              <Tooltip formatter={(v: number) => `${v}%`} />
+              <Bar dataKey="value" radius={[6, 6, 0, 0]} fill="oklch(0.65 0.18 150)" />
+            </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
       <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft lg:col-span-2">
-        <div className="mb-3 text-sm font-semibold">Bảng tiến độ chi tiết theo học viên</div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b text-left text-[11px] uppercase text-muted-foreground">
-                <th className="px-2 py-2">Học viên</th>
-                {members[0]?.scoresByUnit.map((u) => (
-                  <th key={u.unit} className="px-2 py-2 text-center">
-                    {u.unit}
-                  </th>
-                ))}
-                <th className="px-2 py-2 text-center">TB</th>
-              </tr>
-            </thead>
-            <tbody>
-              {members.map((s) => {
-                const avg = Math.round(
-                  s.scoresByUnit.reduce((a, x) => a + x.score, 0) /
-                    Math.max(1, s.scoresByUnit.length),
-                );
-                return (
-                  <tr key={s.id} className="border-b last:border-0 hover:bg-muted/40">
-                    <td className="px-2 py-2 font-medium">{s.name}</td>
-                    {s.scoresByUnit.map((u) => (
-                      <td key={u.unit} className="px-2 py-2 text-center">
-                        <span
-                          className={cn(
-                            "inline-block min-w-[2.25rem] rounded-md px-1.5 py-0.5 text-xs font-semibold",
-                            u.score >= 90
-                              ? "bg-emerald-500/10 text-emerald-700"
-                              : u.score >= 75
-                                ? "bg-sky-500/10 text-sky-700"
-                                : u.score >= 60
-                                  ? "bg-amber-500/10 text-amber-700"
-                                  : "bg-rose-500/10 text-rose-700",
-                          )}
-                        >
-                          {u.score}
-                        </span>
-                      </td>
-                    ))}
-                    <td className="px-2 py-2 text-center font-bold text-primary">{avg}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="mb-3 flex items-center justify-between">
+          <div className="text-sm font-semibold">Tiến độ học viên theo khóa học</div>
+          <span className="text-[11px] text-muted-foreground">Nhấn vào hàng để xem chi tiết</span>
         </div>
+        {courses.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Chưa có khóa học gắn với lớp.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b text-left text-[11px] uppercase text-muted-foreground">
+                  <th className="px-2 py-2">Học viên</th>
+                  {courses.map((c) => (
+                    <th key={c.id} className="px-2 py-2 text-center">
+                      {c.title}
+                    </th>
+                  ))}
+                  <th className="px-2 py-2 text-center">TB</th>
+                </tr>
+              </thead>
+              <tbody>
+                {members.map((s) => {
+                  const rowVals = courses.map((c) => getStudentCourseProgress(s, c.id));
+                  const avg = Math.round(
+                    rowVals.reduce((a, b) => a + b, 0) / Math.max(1, rowVals.length),
+                  );
+                  return (
+                    <tr
+                      key={s.id}
+                      className="cursor-pointer border-b last:border-0 hover:bg-muted/40"
+                      onClick={() => onPickStudent(s)}
+                    >
+                      <td className="px-2 py-2 font-medium">{s.name}</td>
+                      {rowVals.map((v, i) => (
+                        <td key={courses[i].id} className="px-2 py-2">
+                          <div className="flex items-center gap-2">
+                            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                              <div
+                                className={cn(
+                                  "h-full",
+                                  v >= 80
+                                    ? "bg-emerald-500"
+                                    : v >= 60
+                                      ? "bg-sky-500"
+                                      : v >= 40
+                                        ? "bg-amber-500"
+                                        : "bg-rose-500",
+                                )}
+                                style={{ width: `${v}%` }}
+                              />
+                            </div>
+                            <span className="w-9 text-right text-xs font-semibold tabular-nums">
+                              {v}%
+                            </span>
+                          </div>
+                        </td>
+                      ))}
+                      <td className="px-2 py-2 text-center font-bold text-primary">{avg}%</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
     </div>
+  );
+}
+
+/* ----------------------------- Student Detail Dialog ----------------------------- */
+function StudentDetailDialog({
+  student,
+  courses,
+  open,
+  onOpenChange,
+}: {
+  student: TeacherStudent | null;
+  courses: Course[];
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+}) {
+  if (!student) return null;
+  const skills = getSubSkills(student);
+  const radarData = skills.map((s) => ({ skill: s.label, value: s.score }));
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="font-display text-xl">{student.name}</DialogTitle>
+          <DialogDescription>
+            {student.email} • Truy cập gần nhất: {student.lastActive}
+          </DialogDescription>
+        </DialogHeader>
+
+        {/* Tiến độ theo khóa */}
+        <section className="mt-2">
+          <div className="mb-2 text-sm font-semibold">Tiến độ theo khóa học</div>
+          {courses.length === 0 ? (
+            <p className="text-xs text-muted-foreground">Chưa có khóa học.</p>
+          ) : (
+            <ul className="space-y-2">
+              {courses.map((c) => {
+                const p = getStudentCourseProgress(student, c.id);
+                const doneUnits = Math.round((p / 100) * c.units.length);
+                return (
+                  <li
+                    key={c.id}
+                    className="rounded-xl border border-border bg-muted/30 p-3"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <div className="text-sm font-semibold">{c.title}</div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {c.level} • {doneUnits}/{c.units.length} units hoàn thành
+                        </div>
+                      </div>
+                      <div className="text-sm font-bold text-primary">{p}%</div>
+                    </div>
+                    <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted">
+                      <div
+                        className={cn(
+                          "h-full",
+                          p >= 80
+                            ? "bg-emerald-500"
+                            : p >= 60
+                              ? "bg-sky-500"
+                              : p >= 40
+                                ? "bg-amber-500"
+                                : "bg-rose-500",
+                        )}
+                        style={{ width: `${p}%` }}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </section>
+
+        {/* Năng lực */}
+        <section className="mt-5">
+          <div className="mb-2 text-sm font-semibold">Năng lực 4 kỹ năng</div>
+          <div className="grid gap-4 sm:grid-cols-[220px_1fr]">
+            <div className="h-48">
+              <ResponsiveContainer>
+                <RadarChart data={radarData}>
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="skill" fontSize={11} />
+                  <Radar
+                    dataKey="value"
+                    stroke="oklch(0.55 0.18 260)"
+                    fill="oklch(0.55 0.18 260)"
+                    fillOpacity={0.4}
+                  />
+                  <Tooltip />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+            <div className="space-y-3">
+              {skills.map((s) => (
+                <div key={s.key} className="rounded-xl border border-border bg-muted/30 p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm font-semibold">{s.label}</div>
+                    <div className="text-xs font-bold text-primary">{s.score}</div>
+                  </div>
+                  <ul className="mt-2 grid gap-1.5 sm:grid-cols-2">
+                    {s.subs.map((sub) => (
+                      <li key={sub.name} className="flex items-center gap-2 text-[11px]">
+                        <span className="flex-1 truncate text-muted-foreground">{sub.name}</span>
+                        <div className="h-1 w-16 overflow-hidden rounded-full bg-muted">
+                          <div
+                            className={cn(
+                              "h-full",
+                              sub.score >= 75
+                                ? "bg-emerald-500"
+                                : sub.score >= 60
+                                  ? "bg-sky-500"
+                                  : sub.score >= 45
+                                    ? "bg-amber-500"
+                                    : "bg-rose-500",
+                            )}
+                            style={{ width: `${sub.score}%` }}
+                          />
+                        </div>
+                        <span className="w-7 text-right tabular-nums font-semibold">
+                          {sub.score}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </DialogContent>
+    </Dialog>
   );
 }
