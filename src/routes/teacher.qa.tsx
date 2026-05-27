@@ -71,13 +71,41 @@ function QAPage() {
           <ArrowLeft className="h-4 w-4" /> Trở lại Tổng quan
         </Link>
 
-        <div className="mt-4">
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            Hỏi đáp học viên
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Trả lời câu hỏi của học viên trong các khóa học bạn phụ trách.
-          </p>
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            {scopedCourse && (
+              <div className="mb-1 inline-flex items-center gap-1.5 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wider text-primary">
+                Khóa: {scopedCourse.title}
+              </div>
+            )}
+            <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Hỏi đáp học viên
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {scopedCourse
+                ? `Câu hỏi của học viên trong khóa "${scopedCourse.title}".`
+                : "Tổng hợp câu hỏi từ tất cả khóa học bạn phụ trách."}
+            </p>
+          </div>
+          <select
+            value={courseId ?? ""}
+            onChange={(e) => {
+              const v = e.target.value;
+              const url = new URL(window.location.href);
+              if (v) url.searchParams.set("courseId", v);
+              else url.searchParams.delete("courseId");
+              window.history.pushState({}, "", url);
+              window.location.reload();
+            }}
+            className="h-9 rounded-xl border border-border bg-surface px-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+          >
+            <option value="">Tất cả khóa học</option>
+            {allCourses.map((c) => (
+              <option key={c.id} value={c.id}>
+                [{c.code}] {c.title}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-[380px_1fr]">
