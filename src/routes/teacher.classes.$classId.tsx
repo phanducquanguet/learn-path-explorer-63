@@ -993,14 +993,16 @@ function CourseDetailDialog({
   const rows = members.map((s) => {
     const progress = getStudentCourseProgress(s, course.id);
     const doneUnits = Math.round((progress / 100) * course.units.length);
-    const unitScores: number[] = [];
-    for (let i = 0; i < doneUnits; i++) {
-      unitScores.push(jitter(hashSeed(s.id, course.id, course.units[i].id), s.skills.reading, 18));
-    }
-    const avgScore = unitScores.length
-      ? Math.round(unitScores.reduce((a, b) => a + b, 0) / unitScores.length)
+    const unitScores = course.units.map((u, i) =>
+      i < doneUnits
+        ? jitter(hashSeed(s.id, course.id, u.id), s.skills.reading, 18)
+        : null,
+    );
+    const done = unitScores.filter((x): x is number => x !== null);
+    const avgScore = done.length
+      ? Math.round(done.reduce((a, b) => a + b, 0) / done.length)
       : null;
-    return { student: s, progress, doneUnits, avgScore };
+    return { student: s, progress, doneUnits, avgScore, unitScores };
   });
 
   const avgProgress = rows.length
