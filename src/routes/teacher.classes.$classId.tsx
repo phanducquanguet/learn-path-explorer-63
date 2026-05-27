@@ -323,7 +323,35 @@ function OverviewTab({
             </li>
           ))}
         </ul>
+        <div className="mt-4 border-t border-border pt-3">
+          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Mức độ hoạt động
+          </div>
+          <ul className="space-y-1.5">
+            {engagement.map((b) => {
+              const pct = members.length ? Math.round((b.count / members.length) * 100) : 0;
+              const color =
+                b.label === "Tích cực"
+                  ? "bg-emerald-500"
+                  : b.label === "Ổn định"
+                    ? "bg-sky-500"
+                    : b.label === "Cần nhắc nhở"
+                      ? "bg-amber-500"
+                      : "bg-rose-500";
+              return (
+                <li key={b.label} className="flex items-center gap-2 text-xs">
+                  <span className="w-24 text-muted-foreground">{b.label}</span>
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
+                    <div className={cn("h-full", color)} style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="w-8 text-right font-semibold">{b.count}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       </div>
+
 
       <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft lg:col-span-3">
         <div className="mb-3 flex items-center justify-between">
