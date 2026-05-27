@@ -23,9 +23,11 @@ import { Route as LevelsLevelRouteImport } from './routes/levels.$level'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
 import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-bank'
 import { Route as TeacherTestsIndexRouteImport } from './routes/teacher.tests.index'
+import { Route as TeacherCoursesIndexRouteImport } from './routes/teacher.courses.index'
 import { Route as TeacherClassesIndexRouteImport } from './routes/teacher.classes.index'
 import { Route as AdminExamsIndexRouteImport } from './routes/admin.exams.index'
 import { Route as TeacherTestsTestIdRouteImport } from './routes/teacher.tests.$testId'
+import { Route as TeacherCoursesCourseIdRouteImport } from './routes/teacher.courses.$courseId'
 import { Route as TeacherClassesClassIdRouteImport } from './routes/teacher.classes.$classId'
 import { Route as AdminTestsNewRouteImport } from './routes/admin.tests.new'
 import { Route as AdminExamsNewRouteImport } from './routes/admin.exams.new'
@@ -102,6 +104,11 @@ const TeacherTestsIndexRoute = TeacherTestsIndexRouteImport.update({
   path: '/teacher/tests/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TeacherCoursesIndexRoute = TeacherCoursesIndexRouteImport.update({
+  id: '/teacher/courses/',
+  path: '/teacher/courses/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TeacherClassesIndexRoute = TeacherClassesIndexRouteImport.update({
   id: '/teacher/classes/',
   path: '/teacher/classes/',
@@ -115,6 +122,11 @@ const AdminExamsIndexRoute = AdminExamsIndexRouteImport.update({
 const TeacherTestsTestIdRoute = TeacherTestsTestIdRouteImport.update({
   id: '/teacher/tests/$testId',
   path: '/teacher/tests/$testId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeacherCoursesCourseIdRoute = TeacherCoursesCourseIdRouteImport.update({
+  id: '/teacher/courses/$courseId',
+  path: '/teacher/courses/$courseId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TeacherClassesClassIdRoute = TeacherClassesClassIdRouteImport.update({
@@ -162,9 +174,11 @@ export interface FileRoutesByFullPath {
   '/admin/exams/new': typeof AdminExamsNewRoute
   '/admin/tests/new': typeof AdminTestsNewRoute
   '/teacher/classes/$classId': typeof TeacherClassesClassIdRoute
+  '/teacher/courses/$courseId': typeof TeacherCoursesCourseIdRoute
   '/teacher/tests/$testId': typeof TeacherTestsTestIdRoute
   '/admin/exams/': typeof AdminExamsIndexRoute
   '/teacher/classes/': typeof TeacherClassesIndexRoute
+  '/teacher/courses/': typeof TeacherCoursesIndexRoute
   '/teacher/tests/': typeof TeacherTestsIndexRoute
   '/admin/exams/$examId/submissions': typeof AdminExamsExamIdSubmissionsRoute
 }
@@ -186,9 +200,11 @@ export interface FileRoutesByTo {
   '/admin/exams/new': typeof AdminExamsNewRoute
   '/admin/tests/new': typeof AdminTestsNewRoute
   '/teacher/classes/$classId': typeof TeacherClassesClassIdRoute
+  '/teacher/courses/$courseId': typeof TeacherCoursesCourseIdRoute
   '/teacher/tests/$testId': typeof TeacherTestsTestIdRoute
   '/admin/exams': typeof AdminExamsIndexRoute
   '/teacher/classes': typeof TeacherClassesIndexRoute
+  '/teacher/courses': typeof TeacherCoursesIndexRoute
   '/teacher/tests': typeof TeacherTestsIndexRoute
   '/admin/exams/$examId/submissions': typeof AdminExamsExamIdSubmissionsRoute
 }
@@ -211,9 +227,11 @@ export interface FileRoutesById {
   '/admin/exams/new': typeof AdminExamsNewRoute
   '/admin/tests/new': typeof AdminTestsNewRoute
   '/teacher/classes/$classId': typeof TeacherClassesClassIdRoute
+  '/teacher/courses/$courseId': typeof TeacherCoursesCourseIdRoute
   '/teacher/tests/$testId': typeof TeacherTestsTestIdRoute
   '/admin/exams/': typeof AdminExamsIndexRoute
   '/teacher/classes/': typeof TeacherClassesIndexRoute
+  '/teacher/courses/': typeof TeacherCoursesIndexRoute
   '/teacher/tests/': typeof TeacherTestsIndexRoute
   '/admin/exams/$examId/submissions': typeof AdminExamsExamIdSubmissionsRoute
 }
@@ -237,9 +255,11 @@ export interface FileRouteTypes {
     | '/admin/exams/new'
     | '/admin/tests/new'
     | '/teacher/classes/$classId'
+    | '/teacher/courses/$courseId'
     | '/teacher/tests/$testId'
     | '/admin/exams/'
     | '/teacher/classes/'
+    | '/teacher/courses/'
     | '/teacher/tests/'
     | '/admin/exams/$examId/submissions'
   fileRoutesByTo: FileRoutesByTo
@@ -261,9 +281,11 @@ export interface FileRouteTypes {
     | '/admin/exams/new'
     | '/admin/tests/new'
     | '/teacher/classes/$classId'
+    | '/teacher/courses/$courseId'
     | '/teacher/tests/$testId'
     | '/admin/exams'
     | '/teacher/classes'
+    | '/teacher/courses'
     | '/teacher/tests'
     | '/admin/exams/$examId/submissions'
   id:
@@ -285,9 +307,11 @@ export interface FileRouteTypes {
     | '/admin/exams/new'
     | '/admin/tests/new'
     | '/teacher/classes/$classId'
+    | '/teacher/courses/$courseId'
     | '/teacher/tests/$testId'
     | '/admin/exams/'
     | '/teacher/classes/'
+    | '/teacher/courses/'
     | '/teacher/tests/'
     | '/admin/exams/$examId/submissions'
   fileRoutesById: FileRoutesById
@@ -310,9 +334,11 @@ export interface RootRouteChildren {
   AdminExamsNewRoute: typeof AdminExamsNewRoute
   AdminTestsNewRoute: typeof AdminTestsNewRoute
   TeacherClassesClassIdRoute: typeof TeacherClassesClassIdRoute
+  TeacherCoursesCourseIdRoute: typeof TeacherCoursesCourseIdRoute
   TeacherTestsTestIdRoute: typeof TeacherTestsTestIdRoute
   AdminExamsIndexRoute: typeof AdminExamsIndexRoute
   TeacherClassesIndexRoute: typeof TeacherClassesIndexRoute
+  TeacherCoursesIndexRoute: typeof TeacherCoursesIndexRoute
   TeacherTestsIndexRoute: typeof TeacherTestsIndexRoute
 }
 
@@ -416,6 +442,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeacherTestsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/teacher/courses/': {
+      id: '/teacher/courses/'
+      path: '/teacher/courses'
+      fullPath: '/teacher/courses/'
+      preLoaderRoute: typeof TeacherCoursesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teacher/classes/': {
       id: '/teacher/classes/'
       path: '/teacher/classes'
@@ -435,6 +468,13 @@ declare module '@tanstack/react-router' {
       path: '/teacher/tests/$testId'
       fullPath: '/teacher/tests/$testId'
       preLoaderRoute: typeof TeacherTestsTestIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher/courses/$courseId': {
+      id: '/teacher/courses/$courseId'
+      path: '/teacher/courses/$courseId'
+      fullPath: '/teacher/courses/$courseId'
+      preLoaderRoute: typeof TeacherCoursesCourseIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teacher/classes/$classId': {
@@ -504,9 +544,11 @@ const rootRouteChildren: RootRouteChildren = {
   AdminExamsNewRoute: AdminExamsNewRoute,
   AdminTestsNewRoute: AdminTestsNewRoute,
   TeacherClassesClassIdRoute: TeacherClassesClassIdRoute,
+  TeacherCoursesCourseIdRoute: TeacherCoursesCourseIdRoute,
   TeacherTestsTestIdRoute: TeacherTestsTestIdRoute,
   AdminExamsIndexRoute: AdminExamsIndexRoute,
   TeacherClassesIndexRoute: TeacherClassesIndexRoute,
+  TeacherCoursesIndexRoute: TeacherCoursesIndexRoute,
   TeacherTestsIndexRoute: TeacherTestsIndexRoute,
 }
 export const routeTree = rootRouteImport
