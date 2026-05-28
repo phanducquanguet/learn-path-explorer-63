@@ -11,6 +11,7 @@ import {
 import appCss from "../styles.css?url";
 import { RoleProvider } from "@/contexts/RoleContext";
 import { Toaster } from "sonner";
+import { ExamCountdownFloater } from "@/components/ExamCountdownFloater";
 
 function NotFoundComponent() {
   return (
@@ -121,6 +122,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <RoleProvider>
         <Outlet />
+        <ExamCountdownFloater />
         <Toaster position="top-right" richColors closeButton />
       </RoleProvider>
     </QueryClientProvider>
