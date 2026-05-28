@@ -122,6 +122,7 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <RoleProvider>
         <Outlet />
+        <ExamCountdownFloater />
         <Toaster position="top-right" richColors closeButton />
       </RoleProvider>
     </QueryClientProvider>
