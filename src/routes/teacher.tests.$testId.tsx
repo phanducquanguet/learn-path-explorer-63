@@ -107,6 +107,16 @@ function TestDetail() {
         </div>
 
         {tab === "overview" && (
+          <ProctorOverview
+            subs={subs}
+            onOpenSubmission={(s) => {
+              setTab("results");
+              setGrading(s);
+            }}
+          />
+        )}
+
+        {tab === "overview" && (
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
             <div className="rounded-3xl border border-border bg-surface p-6 shadow-soft">
               <h2 className="font-semibold text-foreground">Lớp được giao</h2>
