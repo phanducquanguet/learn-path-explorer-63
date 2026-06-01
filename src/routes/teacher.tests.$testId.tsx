@@ -114,8 +114,8 @@ function TestDetail() {
               <div className="mt-5 space-y-2 text-sm">
                 <Row label="Chế độ đề" value={test.mode === "random" ? "Bốc ngẫu nhiên từ ngân hàng" : "Cố định"} />
                 <Row label="Tổng câu" value={String(test.structure.reduce((s, x) => s + x.count, 0))} />
-                <Row label="Mở lúc" value={new Date(test.openAt).toLocaleString("vi-VN")} />
-                <Row label="Đóng lúc" value={new Date(test.closeAt).toLocaleString("vi-VN")} />
+                <Row label="Mở lúc" value={new Date(test.openAt).toLocaleString("vi-VN")} suppressHydration />
+                <Row label="Đóng lúc" value={new Date(test.closeAt).toLocaleString("vi-VN")} suppressHydration />
               </div>
               {st === "upcoming" && (
                 <div className="mt-4 rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
