@@ -154,13 +154,6 @@ function TeacherCourseDetailPage() {
             >
               <MessageSquare className="h-3.5 w-3.5" /> Hỏi đáp học viên
             </Link>
-            <Link
-              to="/courses/$courseId"
-              params={{ courseId: course.id }}
-              className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-foreground hover:bg-muted"
-            >
-              <ExternalLink className="h-3.5 w-3.5" /> Mở trình học
-            </Link>
           </div>
         </div>
 
