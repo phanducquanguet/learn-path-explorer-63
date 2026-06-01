@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useState } from "react";
 import { TopNav } from "@/components/TopNav";
-import { getTest, getTestSubmissions, testStatus, type TestSubmission } from "@/lib/tests-data";
+import { getTest, getTestSubmissions, testStatus, type TestSubmission, type ProctorEvent, type ProctorEventType } from "@/lib/tests-data";
 import { SKILL_LABEL, TYPE_LABEL, questionBank, type BankQuestion, type QSkill } from "@/lib/question-bank";
 import { classes } from "@/lib/teacher-data";
 import {
@@ -10,7 +10,6 @@ import {
   Clock,
   Users,
   CheckCircle2,
-  
   Hourglass,
   X,
   Send,
@@ -20,6 +19,16 @@ import {
   HelpCircle,
   ChevronDown,
   ChevronUp,
+  ShieldAlert,
+  Eye,
+  EyeOff,
+  Users2,
+  UserX,
+  Monitor,
+  Wifi,
+  Clipboard,
+  LogOut,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -181,13 +190,14 @@ function TestDetail() {
                   <th className="px-4 py-3 text-center">Tay</th>
                   <th className="px-4 py-3 text-center">Tổng</th>
                   <th className="px-4 py-3 text-center">Trạng thái</th>
+                  <th className="px-4 py-3 text-center">Giám sát</th>
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
               <tbody>
                 {subs.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">
+                    <td colSpan={9} className="px-4 py-10 text-center text-muted-foreground">
                       Chưa có học viên nào nộp bài.
                     </td>
                   </tr>
@@ -206,6 +216,9 @@ function TestDetail() {
                       </td>
                       <td className="px-4 py-3 text-center">
                         <StatusPill status={s.status} />
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <ProctorBadge events={s.proctorEvents} />
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button
@@ -418,6 +431,8 @@ function GradingDrawer({
         </div>
 
         <div className="space-y-6 px-8 py-6">
+          <ProctorPanel events={submission.proctorEvents} startedAt={submission.startedAt} />
+
           {manualIdx.length === 0 && (
             <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-10 text-center text-sm text-muted-foreground">
               Bài làm này không có câu Nói hoặc Viết cần chấm tay.
@@ -781,6 +796,126 @@ function QuestionsTab({ test }: { test: ReturnType<typeof getTest> & object }) {
           </section>
         );
       })}
+    </div>
+  );
+}
+
+const EVENT_META: Record<ProctorEventType, { label: string; icon: React.ComponentType<{ className?: string }> }> = {
+  "tab-switch": { label: "Chuyển tab", icon: Monitor },
+  "window-blur": { label: "Mất focus cửa sổ", icon: EyeOff },
+  "leave-seat": { label: "Rời khỏi vị trí", icon: LogOut },
+  "multiple-faces": { label: "Nhiều khuôn mặt", icon: Users2 },
+  "no-face": { label: "Không có khuôn mặt", icon: UserX },
+  "different-face": { label: "Khuôn mặt khác", icon: UserX },
+  "copy-paste": { label: "Sao chép / dán", icon: Clipboard },
+  "fullscreen-exit": { label: "Thoát toàn màn hình", icon: Eye },
+  "network-drop": { label: "Mất kết nối", icon: Wifi },
+};
+
+const SEV_COLOR = {
+  low: "bg-amber-50 text-amber-700 ring-amber-200",
+  medium: "bg-orange-50 text-orange-700 ring-orange-200",
+  high: "bg-red-50 text-red-700 ring-red-200",
+} as const;
+
+function ProctorBadge({ events }: { events?: ProctorEvent[] }) {
+  if (!events || events.length === 0)
+    return (
+      <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700">
+        <CheckCircle2 className="h-3.5 w-3.5" /> Sạch
+      </span>
+    );
+  const high = events.filter((e) => e.severity === "high").length;
+  const tone = high > 0 ? "bg-red-100 text-red-700" : "bg-amber-100 text-amber-700";
+  return (
+    <span className={cn("inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold", tone)}>
+      <ShieldAlert className="h-3.5 w-3.5" /> {events.length} cảnh báo
+      {high > 0 && <span className="ml-0.5">• {high} nghiêm trọng</span>}
+    </span>
+  );
+}
+
+function ProctorPanel({ events, startedAt }: { events?: ProctorEvent[]; startedAt: string }) {
+  const [open, setOpen] = useState(true);
+  const list = events ?? [];
+  const high = list.filter((e) => e.severity === "high").length;
+  const med = list.filter((e) => e.severity === "medium").length;
+  const low = list.filter((e) => e.severity === "low").length;
+  const startMs = new Date(startedAt).getTime();
+
+  if (list.length === 0)
+    return (
+      <div className="flex items-center gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/60 px-5 py-3 text-sm text-emerald-800">
+        <CheckCircle2 className="h-5 w-5" />
+        <div>
+          <div className="font-semibold">Không phát hiện bất thường</div>
+          <div className="text-xs text-emerald-700/80">Hệ thống giám sát không ghi nhận sự kiện đáng chú ý trong suốt bài thi.</div>
+        </div>
+      </div>
+    );
+
+  return (
+    <div className="overflow-hidden rounded-3xl border border-red-200 bg-red-50/40 shadow-soft">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 px-6 py-4 text-left hover:bg-red-50/60"
+      >
+        <div className="flex items-center gap-3">
+          <div className="rounded-xl bg-red-100 p-2 text-red-700">
+            <ShieldAlert className="h-5 w-5" />
+          </div>
+          <div>
+            <div className="font-display text-base font-semibold text-red-800">
+              Cảnh báo giám sát thi ({list.length})
+            </div>
+            <div className="mt-0.5 flex flex-wrap items-center gap-2 text-[11px]">
+              {high > 0 && <span className="rounded-full bg-red-100 px-2 py-0.5 font-semibold text-red-700">{high} nghiêm trọng</span>}
+              {med > 0 && <span className="rounded-full bg-orange-100 px-2 py-0.5 font-semibold text-orange-700">{med} trung bình</span>}
+              {low > 0 && <span className="rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-700">{low} nhẹ</span>}
+            </div>
+          </div>
+        </div>
+        {open ? <ChevronUp className="h-5 w-5 text-red-700" /> : <ChevronDown className="h-5 w-5 text-red-700" />}
+      </button>
+      {open && (
+        <div className="border-t border-red-200 bg-background">
+          <ol className="divide-y divide-border">
+            {list.map((e, idx) => {
+              const meta = EVENT_META[e.type];
+              const I = meta.icon;
+              const at = new Date(e.at);
+              const offsetSec = Math.max(0, Math.round((at.getTime() - startMs) / 1000));
+              const mm = String(Math.floor(offsetSec / 60)).padStart(2, "0");
+              const ss = String(offsetSec % 60).padStart(2, "0");
+              return (
+                <li key={idx} className="flex items-start gap-3 px-6 py-3">
+                  <div className={cn("mt-0.5 rounded-lg p-1.5 ring-1", SEV_COLOR[e.severity])}>
+                    <I className="h-4 w-4" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex flex-wrap items-center gap-2 text-sm">
+                      <span className="font-semibold text-foreground">{meta.label}</span>
+                      <span className={cn("rounded-full px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider", SEV_COLOR[e.severity])}>
+                        {e.severity === "high" ? "Nghiêm trọng" : e.severity === "medium" ? "Trung bình" : "Nhẹ"}
+                      </span>
+                    </div>
+                    {e.detail && <p className="mt-0.5 text-xs text-muted-foreground">{e.detail}</p>}
+                  </div>
+                  <div className="text-right text-xs text-muted-foreground" suppressHydrationWarning>
+                    <div className="font-mono font-semibold text-foreground">{mm}:{ss}</div>
+                    <div>{at.toLocaleTimeString("vi-VN")}</div>
+                    <div>{at.toLocaleDateString("vi-VN")}</div>
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+          <div className="flex items-center gap-2 border-t border-border bg-muted/30 px-6 py-2.5 text-[11px] text-muted-foreground">
+            <AlertTriangle className="h-3.5 w-3.5" />
+            Mốc thời gian tính từ lúc học viên bắt đầu bài thi.
+          </div>
+        </div>
+      )}
     </div>
   );
 }
