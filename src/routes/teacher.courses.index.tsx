@@ -6,7 +6,7 @@ import {
   ChevronDown,
   GraduationCap,
   Users,
-  
+  TrendingUp,
   Trophy,
   Layers,
   Sparkles,
@@ -188,7 +188,7 @@ function TeacherCoursesPage() {
         </div>
 
         {/* Rows */}
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((row) => (
             <TeacherCourseCard key={row.course.id} {...row} />
           ))}
@@ -286,6 +286,24 @@ function TeacherCourseCard({
         <div className="grid grid-cols-2 gap-2 text-center">
           <Stat label="Lớp" value={classCount} />
           <Stat label="Học viên" value={studentCount} />
+        </div>
+
+        <div className="mt-auto">
+          <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
+            <span className="inline-flex items-center gap-1">
+              <TrendingUp className="h-3 w-3" /> Tiến độ trung bình các lớp
+            </span>
+            <span>{avgProgress}%</span>
+          </div>
+          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${avgProgress}%`,
+                background: `linear-gradient(90deg, oklch(0.55 0.2 ${level.hue}), oklch(0.7 0.18 ${(level.hue + 40) % 360}))`,
+              }}
+            />
+          </div>
         </div>
       </div>
     </Link>
