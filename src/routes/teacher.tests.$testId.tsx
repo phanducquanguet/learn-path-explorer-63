@@ -197,7 +197,7 @@ function TestDetail() {
               <tbody>
                 {subs.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-10 text-center text-muted-foreground">
+                    <td colSpan={9} className="px-4 py-10 text-center text-muted-foreground">
                       Chưa có học viên nào nộp bài.
                     </td>
                   </tr>
