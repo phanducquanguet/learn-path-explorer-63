@@ -53,6 +53,24 @@ export type Test = {
   copiedFromId?: string;
 };
 
+export type ProctorEventType =
+  | "tab-switch"
+  | "window-blur"
+  | "leave-seat"
+  | "multiple-faces"
+  | "no-face"
+  | "different-face"
+  | "copy-paste"
+  | "fullscreen-exit"
+  | "network-drop";
+
+export type ProctorEvent = {
+  at: string; // ISO timestamp
+  type: ProctorEventType;
+  severity: "low" | "medium" | "high";
+  detail?: string;
+};
+
 export type TestSubmission = {
   id: string;
   testId: string;
@@ -65,7 +83,9 @@ export type TestSubmission = {
   manualScore?: number;
   finalScore?: number;
   status: "in-progress" | "auto-graded" | "needs-grading" | "graded";
+  proctorEvents?: ProctorEvent[];
   answers: {
+
     questionId: string;
     question: string;
     type: "mcq" | "essay" | "short" | "tf";
