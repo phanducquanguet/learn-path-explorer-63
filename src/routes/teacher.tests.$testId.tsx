@@ -431,6 +431,8 @@ function GradingDrawer({
         </div>
 
         <div className="space-y-6 px-8 py-6">
+          <ProctorPanel events={submission.proctorEvents} startedAt={submission.startedAt} />
+
           {manualIdx.length === 0 && (
             <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-10 text-center text-sm text-muted-foreground">
               Bài làm này không có câu Nói hoặc Viết cần chấm tay.
