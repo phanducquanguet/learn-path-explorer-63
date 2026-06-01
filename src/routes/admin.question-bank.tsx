@@ -52,6 +52,7 @@ import {
   Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { QuestionStudentPreview } from "@/components/QuestionStudentPreview";
 
 const TYPE_ICON: Record<QType, typeof Plus> = {
   mcq: CircleDot,
