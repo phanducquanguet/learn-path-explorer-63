@@ -450,7 +450,7 @@ function GradingDrawer({
                   </div>
                 </div>
 
-                <div className="grid gap-6 p-6 lg:grid-cols-[1.4fr_1fr]">
+                <div className="grid gap-6 p-6 lg:grid-cols-[1.6fr_1fr]">
                   {/* Cột trái: đề + bài làm */}
                   <div className="space-y-4">
                     <div>
@@ -481,85 +481,105 @@ function GradingDrawer({
                         </div>
                       )}
                     </div>
+                  </div>
 
-                    <div>
+                  {/* Cột phải: nhập điểm + nhận xét + nút mở rubric */}
+                  <div className="space-y-4">
+                    <div className="rounded-2xl border border-border bg-background p-4">
+                      <label className="text-xs font-semibold text-muted-foreground">
+                        Điểm chấm (0 – {a.points})
+                      </label>
+                      <div className="mt-2 flex items-center gap-3">
+                        <input
+                          type="number"
+                          min={0}
+                          max={a.points}
+                          step={0.25}
+                          value={a.awarded ?? ""}
+                          onChange={(e) =>
+                            update(i, {
+                              awarded:
+                                e.target.value === "" ? undefined : Number(e.target.value),
+                            })
+                          }
+                          className="w-24 rounded-lg border border-border bg-background px-3 py-2 text-center text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30"
+                        />
+                        <span className="text-sm text-muted-foreground">/ {a.points} đ</span>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-border bg-background p-4">
                       <label className="text-xs font-semibold text-muted-foreground">
                         Nhận xét cho học viên
                       </label>
                       <textarea
                         value={a.feedback ?? ""}
                         onChange={(e) => update(i, { feedback: e.target.value })}
-                        rows={4}
+                        rows={5}
                         placeholder="Góp ý cụ thể về điểm mạnh, điểm cần cải thiện..."
                         className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
                       />
                     </div>
-                  </div>
 
-                  {/* Cột phải: rubric */}
-                  <div className="rounded-2xl border border-border bg-background p-4">
-                    <div className="mb-3 flex items-center justify-between">
-                      <div>
-                        <div className="text-sm font-semibold text-foreground">
-                          Rubric chấm điểm
+                    <button
+                      type="button"
+                      onClick={() => toggleRubric(i)}
+                      className="flex w-full items-center justify-between rounded-xl border border-dashed border-border bg-muted/30 px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+                    >
+                      <span>
+                        {openRubric.has(i) ? "Ẩn" : "Xem"} rubric tham khảo (
+                        {isSpeaking ? "Speaking" : "Writing"})
+                      </span>
+                      {openRubric.has(i) ? (
+                        <ChevronUp className="h-3.5 w-3.5" />
+                      ) : (
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      )}
+                    </button>
+
+                    {openRubric.has(i) && (
+                      <div className="space-y-3 rounded-2xl border border-border bg-muted/20 p-4">
+                        <div>
+                          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            Tiêu chí / Keyword
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {RUBRIC_DESCRIPTORS[isSpeaking ? "speaking" : "writing"].keywords.map(
+                              (k) => (
+                                <span
+                                  key={k}
+                                  className="rounded-full bg-background px-2.5 py-0.5 text-[11px] font-medium text-foreground ring-1 ring-border"
+                                >
+                                  {k}
+                                </span>
+                              ),
+                            )}
+                          </div>
                         </div>
-                        <div className="text-[11px] text-muted-foreground">
-                          {isSpeaking
-                            ? "Đánh giá theo 4 tiêu chí Speaking"
-                            : "Đánh giá theo 4 tiêu chí Writing"}
+
+                        <div>
+                          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                            Thang điểm gợi ý
+                          </div>
+                          <div className="overflow-hidden rounded-lg ring-1 ring-border">
+                            <table className="w-full text-xs">
+                              <tbody>
+                                {RUBRIC_DESCRIPTORS[isSpeaking ? "speaking" : "writing"].bands.map(
+                                  (b) => (
+                                    <tr key={b.range} className="border-b border-border/60 last:border-0 bg-background">
+                                      <td className="px-3 py-2 align-top font-semibold text-foreground whitespace-nowrap">
+                                        {b.range}
+                                      </td>
+                                      <td className="px-3 py-2 text-muted-foreground">{b.desc}</td>
+                                    </tr>
+                                  ),
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
                       </div>
-                      <span className="rounded-lg bg-primary/10 px-2 py-1 text-xs font-bold text-primary">
-                        {(a.rubric ?? []).reduce((s, r) => s + (r.awarded ?? 0), 0).toFixed(2)}/
-                        {a.points}
-                      </span>
-                    </div>
-
-                    <div className="space-y-3">
-                      {(a.rubric ?? []).map((r, ri) => (
-                        <div key={ri} className="rounded-xl border border-border/70 p-3">
-                          <div className="flex items-start justify-between gap-2">
-                            <div className="text-xs font-medium text-foreground">
-                              {r.criterion}
-                            </div>
-                            <span className="shrink-0 text-[11px] text-muted-foreground">
-                              /{r.max}
-                            </span>
-                          </div>
-                          <div className="mt-2 flex items-center gap-2">
-                            <input
-                              type="range"
-                              min={0}
-                              max={r.max}
-                              step={0.25}
-                              value={r.awarded ?? 0}
-                              onChange={(e) =>
-                                updateRubric(i, ri, Number(e.target.value))
-                              }
-                              className="flex-1 accent-primary"
-                            />
-                            <input
-                              type="number"
-                              min={0}
-                              max={r.max}
-                              step={0.25}
-                              value={r.awarded ?? 0}
-                              onChange={(e) =>
-                                updateRubric(i, ri, Number(e.target.value))
-                              }
-                              className="w-16 rounded-lg border border-border bg-background px-2 py-1 text-center text-xs font-semibold"
-                            />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-
-                    <div className="mt-4 rounded-xl bg-muted/40 p-3 text-[11px] leading-relaxed text-muted-foreground">
-                      <strong className="text-foreground">Gợi ý chấm:</strong>{" "}
-                      {isSpeaking
-                        ? "Mỗi tiêu chí 0–1.25đ. ≥1.0 thành thạo, 0.5–0.75 trung bình, ≤0.25 yếu. Lắng nghe lại đoạn ghi âm để đánh giá phát âm & ngữ điệu."
-                        : "Mỗi tiêu chí 1.0–1.5đ. Đối chiếu yêu cầu đề (số từ, chủ đề), tính mạch lạc, độ phong phú từ vựng và chính xác ngữ pháp."}
-                    </div>
+                    )}
                   </div>
                 </div>
               </div>
