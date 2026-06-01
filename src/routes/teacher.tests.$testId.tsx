@@ -365,15 +365,6 @@ function GradingDrawer({
   const update = (i: number, patch: Partial<(typeof answers)[number]>) =>
     setAnswers((p) => p.map((a, idx) => (idx === i ? { ...a, ...patch } : a)));
 
-  const updateRubric = (i: number, ri: number, awarded: number) =>
-    setAnswers((p) =>
-      p.map((a, idx) => {
-        if (idx !== i || !a.rubric) return a;
-        const newR = a.rubric.map((r, j) => (j === ri ? { ...r, awarded } : r));
-        const sum = newR.reduce((s, r) => s + (r.awarded ?? 0), 0);
-        return { ...a, rubric: newR, awarded: Math.min(a.points, Number(sum.toFixed(2))) };
-      }),
-    );
 
   // Chỉ chấm tay: writing & speaking. Các dạng khác đã chấm tự động.
   const manualIdx = answers
