@@ -323,6 +323,27 @@ function Stat({
   );
 }
 
+const RUBRIC_DESCRIPTORS: Record<string, { keywords: string[]; bands: { range: string; desc: string }[] }> = {
+  writing: {
+    keywords: ["Task achievement", "Coherence & Cohesion", "Lexical resource", "Grammar accuracy", "Số từ", "Liên kết câu", "Đa dạng cấu trúc"],
+    bands: [
+      { range: "Tốt (80–100%)", desc: "Đủ ý, mạch lạc, từ vựng phong phú, ít lỗi ngữ pháp." },
+      { range: "Khá (60–79%)", desc: "Đủ ý chính, mạch lạc nhưng còn rườm rà, có lỗi nhỏ." },
+      { range: "Trung bình (40–59%)", desc: "Thiếu ý phụ, lặp từ, có lỗi ngữ pháp ảnh hưởng nghĩa." },
+      { range: "Yếu (<40%)", desc: "Lạc đề/thiếu ý, lỗi nhiều, khó hiểu." },
+    ],
+  },
+  speaking: {
+    keywords: ["Pronunciation", "Fluency", "Vocabulary", "Grammar", "Ngữ điệu", "Tốc độ nói", "Tự nhiên"],
+    bands: [
+      { range: "Tốt (80–100%)", desc: "Phát âm rõ, nói trôi chảy, từ vựng đa dạng, ngữ pháp chính xác." },
+      { range: "Khá (60–79%)", desc: "Hiểu được, có ngập ngừng nhẹ, vài lỗi nhỏ." },
+      { range: "Trung bình (40–59%)", desc: "Ngập ngừng nhiều, phát âm sai một số âm, lỗi ngữ pháp." },
+      { range: "Yếu (<40%)", desc: "Khó hiểu, ngắt quãng, vốn từ hạn chế." },
+    ],
+  },
+};
+
 function GradingDrawer({
   submission,
   onClose,
@@ -333,6 +354,14 @@ function GradingDrawer({
   onSave: (s: TestSubmission) => void;
 }) {
   const [answers, setAnswers] = useState(submission.answers);
+  const [openRubric, setOpenRubric] = useState<Set<number>>(new Set());
+  const toggleRubric = (i: number) =>
+    setOpenRubric((prev) => {
+      const n = new Set(prev);
+      if (n.has(i)) n.delete(i);
+      else n.add(i);
+      return n;
+    });
   const update = (i: number, patch: Partial<(typeof answers)[number]>) =>
     setAnswers((p) => p.map((a, idx) => (idx === i ? { ...a, ...patch } : a)));
 
