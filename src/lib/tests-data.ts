@@ -273,6 +273,15 @@ export const testSubmissions: TestSubmission[] = [
     durationMinutes: 88,
     autoScore: 16,
     status: "needs-grading",
+    proctorEvents: [
+      { at: new Date(now - 3 * 86400000 + 5 * 60000).toISOString(), type: "fullscreen-exit", severity: "high", detail: "Thoát chế độ toàn màn hình" },
+      { at: new Date(now - 3 * 86400000 + 6 * 60000).toISOString(), type: "tab-switch", severity: "high", detail: "Chuyển tab 22 giây" },
+      { at: new Date(now - 3 * 86400000 + 14 * 60000).toISOString(), type: "multiple-faces", severity: "high", detail: "Phát hiện 2 khuôn mặt trong khung hình" },
+      { at: new Date(now - 3 * 86400000 + 30 * 60000).toISOString(), type: "different-face", severity: "high", detail: "Khuôn mặt khác với ảnh đăng ký" },
+      { at: new Date(now - 3 * 86400000 + 41 * 60000).toISOString(), type: "leave-seat", severity: "medium", detail: "Rời khỏi vị trí 45 giây" },
+      { at: new Date(now - 3 * 86400000 + 62 * 60000).toISOString(), type: "copy-paste", severity: "medium", detail: "Dán nội dung dài (320 ký tự) vào ô trả lời" },
+      { at: new Date(now - 3 * 86400000 + 70 * 60000).toISOString(), type: "tab-switch", severity: "medium", detail: "Chuyển tab 10 giây" },
+    ],
     answers: [
       {
         questionId: "Q0001",
