@@ -290,11 +290,11 @@ function Mini({
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value, suppressHydration }: { label: string; value: string; suppressHydration?: boolean }) {
   return (
     <div className="flex justify-between border-b border-border/60 py-2 last:border-0">
       <span className="text-muted-foreground">{label}</span>
-      <span className="font-medium text-foreground">{value}</span>
+      <span className="font-medium text-foreground" suppressHydrationWarning={suppressHydration}>{value}</span>
     </div>
   );
 }
