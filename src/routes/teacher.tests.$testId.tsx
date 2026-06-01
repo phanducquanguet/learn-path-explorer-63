@@ -190,6 +190,7 @@ function TestDetail() {
                   <th className="px-4 py-3 text-center">Tay</th>
                   <th className="px-4 py-3 text-center">Tổng</th>
                   <th className="px-4 py-3 text-center">Trạng thái</th>
+                  <th className="px-4 py-3 text-center">Giám sát</th>
                   <th className="px-4 py-3"></th>
                 </tr>
               </thead>
