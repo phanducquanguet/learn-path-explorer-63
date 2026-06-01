@@ -217,6 +217,9 @@ function TestDetail() {
                       <td className="px-4 py-3 text-center">
                         <StatusPill status={s.status} />
                       </td>
+                      <td className="px-4 py-3 text-center">
+                        <ProctorBadge events={s.proctorEvents} />
+                      </td>
                       <td className="px-4 py-3 text-right">
                         <button
                           onClick={() => setGrading(s)}
