@@ -354,7 +354,9 @@ function GradingDrawer({
   onSave: (s: TestSubmission) => void;
 }) {
   const [answers, setAnswers] = useState(submission.answers);
+  const initialAwarded = useState(() => submission.answers.map((a) => a.awarded))[0];
   const [openRubric, setOpenRubric] = useState<Set<number>>(new Set());
+  const [matched, setMatched] = useState<Record<string, Set<string>>>({});
   const toggleRubric = (i: number) =>
     setOpenRubric((prev) => {
       const n = new Set(prev);
@@ -362,6 +364,18 @@ function GradingDrawer({
       else n.add(i);
       return n;
     });
+  const toggleMatch = (qid: string, k: string) =>
+    setMatched((prev) => {
+      const n = new Set(prev[qid] ?? []);
+      if (n.has(k)) n.delete(k);
+      else n.add(k);
+      return { ...prev, [qid]: n };
+    });
+  const suggestedScore = (a: (typeof answers)[number]) => {
+    const kws = RUBRIC_DESCRIPTORS[a.skill === "speaking" ? "speaking" : "writing"].keywords;
+    const m = matched[a.questionId]?.size ?? 0;
+    return Math.round(((m / kws.length) * a.points) / 0.25) * 0.25;
+  };
   const update = (i: number, patch: Partial<(typeof answers)[number]>) =>
     setAnswers((p) => p.map((a, idx) => (idx === i ? { ...a, ...patch } : a)));
 
@@ -433,11 +447,19 @@ function GradingDrawer({
                       Câu {i + 1} • Tối đa {a.points}đ
                     </span>
                   </div>
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Điểm hiện tại: </span>
-                    <span className="font-semibold text-primary">
-                      {a.awarded ?? 0}/{a.points}
-                    </span>
+                  <div className="text-right text-xs">
+                    <div className="text-muted-foreground">
+                      Đã chấm trước:{" "}
+                      <span className="font-semibold text-foreground">
+                        {initialAwarded[i] ?? "—"}
+                      </span>
+                    </div>
+                    <div className="text-muted-foreground">
+                      Hiện tại:{" "}
+                      <span className="font-semibold text-primary">
+                        {a.awarded ?? 0}/{a.points}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -474,103 +496,148 @@ function GradingDrawer({
                     </div>
                   </div>
 
-                  {/* Cột phải: nhập điểm + nhận xét + nút mở rubric */}
+                  {/* Cột phải: rubric keyword + nhập điểm + nhận xét */}
                   <div className="space-y-4">
-                    <div className="rounded-2xl border border-border bg-background p-4">
-                      <label className="text-xs font-semibold text-muted-foreground">
-                        Điểm chấm (0 – {a.points})
-                      </label>
-                      <div className="mt-2 flex items-center gap-3">
-                        <input
-                          type="number"
-                          min={0}
-                          max={a.points}
-                          step={0.25}
-                          value={a.awarded ?? ""}
-                          onChange={(e) =>
-                            update(i, {
-                              awarded:
-                                e.target.value === "" ? undefined : Number(e.target.value),
-                            })
-                          }
-                          className="w-24 rounded-lg border border-border bg-background px-3 py-2 text-center text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30"
-                        />
-                        <span className="text-sm text-muted-foreground">/ {a.points} đ</span>
-                      </div>
-                    </div>
-
-                    <div className="rounded-2xl border border-border bg-background p-4">
-                      <label className="text-xs font-semibold text-muted-foreground">
-                        Nhận xét cho học viên
-                      </label>
-                      <textarea
-                        value={a.feedback ?? ""}
-                        onChange={(e) => update(i, { feedback: e.target.value })}
-                        rows={5}
-                        placeholder="Góp ý cụ thể về điểm mạnh, điểm cần cải thiện..."
-                        className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
-                      />
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => toggleRubric(i)}
-                      className="flex w-full items-center justify-between rounded-xl border border-dashed border-border bg-muted/30 px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
-                    >
-                      <span>
-                        {openRubric.has(i) ? "Ẩn" : "Xem"} rubric tham khảo (
-                        {isSpeaking ? "Speaking" : "Writing"})
-                      </span>
-                      {openRubric.has(i) ? (
-                        <ChevronUp className="h-3.5 w-3.5" />
-                      ) : (
-                        <ChevronDown className="h-3.5 w-3.5" />
-                      )}
-                    </button>
-
-                    {openRubric.has(i) && (
-                      <div className="space-y-3 rounded-2xl border border-border bg-muted/20 p-4">
-                        <div>
-                          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                            Tiêu chí / Keyword
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {RUBRIC_DESCRIPTORS[isSpeaking ? "speaking" : "writing"].keywords.map(
-                              (k) => (
-                                <span
-                                  key={k}
-                                  className="rounded-full bg-background px-2.5 py-0.5 text-[11px] font-medium text-foreground ring-1 ring-border"
-                                >
-                                  {k}
-                                </span>
-                              ),
+                    {(() => {
+                      const kws =
+                        RUBRIC_DESCRIPTORS[isSpeaking ? "speaking" : "writing"].keywords;
+                      const matchedSet = matched[a.questionId] ?? new Set<string>();
+                      const sug = suggestedScore(a);
+                      const prev = initialAwarded[i];
+                      const current = a.awarded;
+                      const overridden = current !== undefined && current !== sug;
+                      return (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => toggleRubric(i)}
+                            className="flex w-full items-center justify-between rounded-xl border border-dashed border-border bg-muted/30 px-4 py-2.5 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+                          >
+                            <span>
+                              {openRubric.has(i) ? "Ẩn" : "Xem"} keyword tham khảo (
+                              {isSpeaking ? "Speaking" : "Writing"}) • Đã match{" "}
+                              <strong className="text-foreground">
+                                {matchedSet.size}/{kws.length}
+                              </strong>
+                            </span>
+                            {openRubric.has(i) ? (
+                              <ChevronUp className="h-3.5 w-3.5" />
+                            ) : (
+                              <ChevronDown className="h-3.5 w-3.5" />
                             )}
-                          </div>
-                        </div>
+                          </button>
 
-                        <div>
-                          <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                            Thang điểm gợi ý
+                          {openRubric.has(i) && (
+                            <div className="space-y-3 rounded-2xl border border-border bg-muted/20 p-4">
+                              <div className="text-[11px] text-muted-foreground">
+                                Bấm vào keyword học viên đã thể hiện trong bài để hệ thống tự gợi
+                                ý điểm.
+                              </div>
+                              <div className="flex flex-wrap gap-1.5">
+                                {kws.map((k) => {
+                                  const on = matchedSet.has(k);
+                                  return (
+                                    <button
+                                      key={k}
+                                      type="button"
+                                      onClick={() => toggleMatch(a.questionId, k)}
+                                      className={cn(
+                                        "rounded-full px-2.5 py-1 text-[11px] font-medium ring-1 transition",
+                                        on
+                                          ? "bg-emerald-500 text-white ring-emerald-500"
+                                          : "bg-background text-foreground ring-border hover:ring-foreground/40",
+                                      )}
+                                    >
+                                      {on ? "✓ " : ""}
+                                      {k}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              <div className="flex items-center justify-between rounded-xl bg-background p-3 ring-1 ring-border">
+                                <div className="text-xs">
+                                  <div className="text-muted-foreground">
+                                    Điểm gợi ý theo keyword
+                                  </div>
+                                  <div className="font-display text-xl font-semibold text-emerald-600">
+                                    {sug.toFixed(2)}
+                                    <span className="ml-1 text-xs text-muted-foreground">
+                                      / {a.points}
+                                    </span>
+                                  </div>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => update(i, { awarded: sug })}
+                                  className="rounded-lg bg-foreground px-3 py-1.5 text-xs font-semibold text-background hover:opacity-90"
+                                >
+                                  Áp dụng vào ô điểm
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="rounded-2xl border border-border bg-background p-4">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-semibold text-muted-foreground">
+                                Điểm giáo viên chấm (0 – {a.points})
+                              </label>
+                              {overridden && (
+                                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                                  Đã chỉnh tay
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-2 flex items-center gap-3">
+                              <input
+                                type="number"
+                                min={0}
+                                max={a.points}
+                                step={0.25}
+                                value={current ?? ""}
+                                onChange={(e) =>
+                                  update(i, {
+                                    awarded:
+                                      e.target.value === ""
+                                        ? undefined
+                                        : Number(e.target.value),
+                                  })
+                                }
+                                className="w-24 rounded-lg border border-border bg-background px-3 py-2 text-center text-lg font-semibold focus:outline-none focus:ring-2 focus:ring-primary/30"
+                              />
+                              <span className="text-sm text-muted-foreground">
+                                / {a.points} đ
+                              </span>
+                            </div>
+                            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                              {prev !== undefined && (
+                                <span>
+                                  Đã chấm trước:{" "}
+                                  <strong className="text-foreground">{prev}</strong>
+                                </span>
+                              )}
+                              <span>
+                                Theo keyword:{" "}
+                                <strong className="text-emerald-600">{sug.toFixed(2)}</strong>
+                              </span>
+                            </div>
                           </div>
-                          <div className="overflow-hidden rounded-lg ring-1 ring-border">
-                            <table className="w-full text-xs">
-                              <tbody>
-                                {RUBRIC_DESCRIPTORS[isSpeaking ? "speaking" : "writing"].bands.map(
-                                  (b) => (
-                                    <tr key={b.range} className="border-b border-border/60 last:border-0 bg-background">
-                                      <td className="px-3 py-2 align-top font-semibold text-foreground whitespace-nowrap">
-                                        {b.range}
-                                      </td>
-                                      <td className="px-3 py-2 text-muted-foreground">{b.desc}</td>
-                                    </tr>
-                                  ),
-                                )}
-                              </tbody>
-                            </table>
+
+                          <div className="rounded-2xl border border-border bg-background p-4">
+                            <label className="text-xs font-semibold text-muted-foreground">
+                              Nhận xét cho học viên
+                            </label>
+                            <textarea
+                              value={a.feedback ?? ""}
+                              onChange={(e) => update(i, { feedback: e.target.value })}
+                              rows={4}
+                              placeholder="Góp ý cụ thể về điểm mạnh, điểm cần cải thiện..."
+                              className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            />
                           </div>
-                        </div>
-                      </div>
-                    )}
+                        </>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
