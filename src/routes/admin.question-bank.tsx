@@ -52,6 +52,7 @@ import {
   Layers,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { QuestionStudentPreview } from "@/components/QuestionStudentPreview";
 
 const TYPE_ICON: Record<QType, typeof Plus> = {
   mcq: CircleDot,
@@ -747,10 +748,11 @@ function PreviewDialog({
   onClose: () => void;
   onEdit: () => void;
 }) {
+  const [mode, setMode] = useState<"admin" | "student">("student");
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <button onClick={onClose} className="absolute inset-0" aria-label="Close" />
-      <div className="relative w-full max-w-2xl rounded-3xl bg-background p-6 shadow-elevated">
+      <div className="relative max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-3xl bg-background p-6 shadow-elevated">
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="flex flex-wrap items-center gap-1.5">
@@ -779,68 +781,40 @@ function PreviewDialog({
               </span>
               <span className="text-[10px] text-muted-foreground">• {question.points} điểm</span>
             </div>
-            <h2 className="mt-2 font-display text-lg font-semibold leading-snug">
-              {question.content}
-            </h2>
           </div>
           <button onClick={onClose} className="rounded-lg p-2 hover:bg-muted">
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        {question.options && question.options.length > 0 && (
-          <div className="mt-4 space-y-1.5">
-            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Đáp án
-            </div>
-            {question.options.map((o, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "rounded-xl border px-3 py-2 text-sm",
-                  question.correctAnswer && o.startsWith(question.correctAnswer)
-                    ? "border-emerald-500/40 bg-emerald-500/5"
-                    : "border-border",
-                )}
-              >
-                {o}
-              </div>
-            ))}
-          </div>
-        )}
-
-
-        {question.type === "essay" && (
-          <div className="mt-4 space-y-3">
-            {question.solution && (
-              <div className="rounded-xl border border-violet-500/30 bg-violet-500/5 p-3">
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">
-                  Solution (bài mẫu)
-                </div>
-                <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground">
-                  {question.solution}
-                </pre>
-              </div>
+        <div className="mt-4 inline-flex rounded-lg border border-border bg-muted/40 p-0.5 text-xs font-semibold">
+          <button
+            onClick={() => setMode("student")}
+            className={cn(
+              "rounded-md px-3 py-1.5 transition",
+              mode === "student" ? "bg-background shadow-sm" : "text-muted-foreground",
             )}
-            {question.feedback && question.feedback.length > 0 && (
-              <div className="rounded-xl border border-border bg-surface">
-                <div className="border-b border-border px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Feedback / Rubric ({question.feedback.length} tiêu chí)
-                </div>
-                <div className="divide-y divide-border">
-                  {question.feedback.map((c, i) => (
-                    <div key={i} className="grid grid-cols-[140px_1fr] gap-3 px-3 py-2 text-sm">
-                      <span className="font-mono text-xs font-semibold text-violet-600 dark:text-violet-400">
-                        {c.keyword || "—"}
-                      </span>
-                      <span className="text-foreground">{c.comment}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+          >
+            <Eye className="mr-1 inline h-3 w-3" /> Góc nhìn học viên
+          </button>
+          <button
+            onClick={() => setMode("admin")}
+            className={cn(
+              "rounded-md px-3 py-1.5 transition",
+              mode === "admin" ? "bg-background shadow-sm" : "text-muted-foreground",
             )}
-          </div>
-        )}
+          >
+            Tóm tắt admin
+          </button>
+        </div>
+
+        <div className="mt-4">
+          {mode === "student" ? (
+            <QuestionStudentPreview question={question} />
+          ) : (
+            <AdminSummary question={question} />
+          )}
+        </div>
 
         {question.tags.length > 0 && (
           <div className="mt-4 flex flex-wrap items-center gap-1.5">
@@ -869,6 +843,69 @@ function PreviewDialog({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+function AdminSummary({ question }: { question: BankQuestion }) {
+  return (
+    <div>
+      <h2 className="font-display text-lg font-semibold leading-snug">{question.content}</h2>
+      {question.options && question.options.length > 0 && (
+        <div className="mt-4 space-y-1.5">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Đáp án
+          </div>
+          {question.options.map((o, i) => {
+            const letter = String.fromCharCode(65 + i);
+            const correct = (question.correctAnswer ?? "").split(",").map((s) => s.trim());
+            const isCorrect = correct.includes(letter) || o.startsWith(question.correctAnswer ?? "");
+            return (
+              <div
+                key={i}
+                className={cn(
+                  "rounded-xl border px-3 py-2 text-sm",
+                  isCorrect ? "border-emerald-500/40 bg-emerald-500/5" : "border-border",
+                )}
+              >
+                <span className="mr-2 font-mono text-xs font-bold">{letter}.</span>
+                {o}
+              </div>
+            );
+          })}
+        </div>
+      )}
+      {question.type === "essay" && (
+        <div className="mt-4 space-y-3">
+          {question.solution && (
+            <div className="rounded-xl border border-violet-500/30 bg-violet-500/5 p-3">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">
+                Solution (bài mẫu)
+              </div>
+              <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed text-foreground">
+                {question.solution}
+              </pre>
+            </div>
+          )}
+          {question.feedback && question.feedback.length > 0 && (
+            <div className="rounded-xl border border-border bg-surface">
+              <div className="border-b border-border px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Feedback / Rubric ({question.feedback.length} tiêu chí)
+              </div>
+              <div className="divide-y divide-border">
+                {question.feedback.map((c, i) => (
+                  <div key={i} className="grid grid-cols-[140px_1fr] gap-3 px-3 py-2 text-sm">
+                    <span className="font-mono text-xs font-semibold text-violet-600 dark:text-violet-400">
+                      {c.keyword || "—"}
+                    </span>
+                    <span className="text-foreground">{c.comment}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
