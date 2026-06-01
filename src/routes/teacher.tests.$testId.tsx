@@ -447,11 +447,19 @@ function GradingDrawer({
                       Câu {i + 1} • Tối đa {a.points}đ
                     </span>
                   </div>
-                  <div className="text-sm">
-                    <span className="text-muted-foreground">Điểm hiện tại: </span>
-                    <span className="font-semibold text-primary">
-                      {a.awarded ?? 0}/{a.points}
-                    </span>
+                  <div className="text-right text-xs">
+                    <div className="text-muted-foreground">
+                      Đã chấm trước:{" "}
+                      <span className="font-semibold text-foreground">
+                        {initialAwarded[i] ?? "—"}
+                      </span>
+                    </div>
+                    <div className="text-muted-foreground">
+                      Hiện tại:{" "}
+                      <span className="font-semibold text-primary">
+                        {a.awarded ?? 0}/{a.points}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
