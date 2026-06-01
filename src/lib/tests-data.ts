@@ -319,6 +319,9 @@ export const testSubmissions: TestSubmission[] = [
     durationMinutes: 90,
     autoScore: 22,
     status: "needs-grading",
+    proctorEvents: [
+      { at: new Date(now - 3 * 86400000 + 18 * 60000).toISOString(), type: "network-drop", severity: "low", detail: "Mất kết nối 4 giây rồi kết nối lại" },
+    ],
     answers: [
       {
         questionId: "Q0001",
