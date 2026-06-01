@@ -334,13 +334,29 @@ function GradingDrawer({
   const update = (i: number, patch: Partial<(typeof answers)[number]>) =>
     setAnswers((p) => p.map((a, idx) => (idx === i ? { ...a, ...patch } : a)));
 
+  const updateRubric = (i: number, ri: number, awarded: number) =>
+    setAnswers((p) =>
+      p.map((a, idx) => {
+        if (idx !== i || !a.rubric) return a;
+        const newR = a.rubric.map((r, j) => (j === ri ? { ...r, awarded } : r));
+        const sum = newR.reduce((s, r) => s + (r.awarded ?? 0), 0);
+        return { ...a, rubric: newR, awarded: Math.min(a.points, Number(sum.toFixed(2))) };
+      }),
+    );
+
+  // Chỉ chấm tay: writing & speaking. Các dạng khác đã chấm tự động.
+  const manualIdx = answers
+    .map((a, i) => ({ a, i }))
+    .filter(({ a }) => a.skill === "writing" || a.skill === "speaking" || a.type === "essay");
+  const autoCount = answers.length - manualIdx.length;
+
   const finish = () => {
-    const manual = answers.reduce((s, a) => s + (a.awarded ?? 0), 0);
+    const manualSum = manualIdx.reduce((s, { a }) => s + (a.awarded ?? 0), 0);
     onSave({
       ...submission,
       answers,
-      manualScore: manual - submission.autoScore > 0 ? manual - submission.autoScore : manual,
-      finalScore: manual,
+      manualScore: Number(manualSum.toFixed(2)),
+      finalScore: Number((submission.autoScore + manualSum).toFixed(2)),
       status: "graded",
     });
     onClose();
@@ -349,77 +365,206 @@ function GradingDrawer({
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
       <button onClick={onClose} className="absolute inset-0" aria-label="Close" />
-      <div className="relative h-full w-full max-w-3xl overflow-y-auto bg-background p-6 shadow-elevated">
-        <div className="flex items-center justify-between">
+      <div className="relative h-full w-full max-w-6xl overflow-y-auto bg-background shadow-elevated">
+        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/95 px-8 py-5 backdrop-blur">
           <div>
-            <h2 className="font-display text-xl font-semibold">
-              Chấm bài — {submission.studentName}
+            <h2 className="font-display text-2xl font-semibold">
+              Chấm bài Nói & Viết — {submission.studentName}
             </h2>
-            <p className="text-xs text-muted-foreground">{submission.studentClass}</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              {submission.studentClass} • {manualIdx.length} câu cần chấm tay • {autoCount} câu đã
+              tự động chấm ({submission.autoScore} điểm)
+            </p>
           </div>
           <button onClick={onClose} className="rounded-lg p-2 hover:bg-muted">
-            <X className="h-4 w-4" />
+            <X className="h-5 w-5" />
           </button>
         </div>
 
-        <div className="mt-6 space-y-4">
-          {answers.map((a, i) => (
-            <div key={a.questionId} className="rounded-2xl border border-border p-4">
-              <div className="flex items-center justify-between text-xs">
-                <span className="font-semibold uppercase tracking-wider text-muted-foreground">
-                  Câu {i + 1} • {a.type.toUpperCase()} • {a.points}đ
-                </span>
-                {a.correctAnswer && (
-                  <span className="text-emerald-700">Đáp án mẫu: {a.correctAnswer}</span>
-                )}
-              </div>
-              <p className="mt-2 text-sm font-medium">{a.question}</p>
-              <div className="mt-3 rounded-xl bg-muted/60 p-3 text-sm">
-                <div className="text-[11px] font-semibold uppercase text-muted-foreground">
-                  Bài làm của học viên
-                </div>
-                <p className="mt-1">{a.studentAnswer}</p>
-              </div>
-              <div className="mt-3 grid gap-3 sm:grid-cols-[120px_1fr]">
-                <div>
-                  <label className="text-xs text-muted-foreground">Điểm (0-{a.points})</label>
-                  <input
-                    type="number"
-                    min={0}
-                    max={a.points}
-                    value={a.awarded ?? ""}
-                    onChange={(e) => update(i, { awarded: Number(e.target.value) })}
-                    className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground">Giải đáp / Nhận xét</label>
-                  <textarea
-                    value={a.feedback ?? ""}
-                    onChange={(e) => update(i, { feedback: e.target.value })}
-                    rows={2}
-                    className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                  />
-                </div>
-              </div>
+        <div className="space-y-6 px-8 py-6">
+          {manualIdx.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-10 text-center text-sm text-muted-foreground">
+              Bài làm này không có câu Nói hoặc Viết cần chấm tay.
             </div>
-          ))}
+          )}
+
+          {manualIdx.map(({ a, i }) => {
+            const isSpeaking = a.skill === "speaking";
+            return (
+              <div
+                key={a.questionId}
+                className="overflow-hidden rounded-3xl border border-border bg-surface shadow-soft"
+              >
+                <div className="flex items-center justify-between border-b border-border bg-muted/30 px-6 py-3">
+                  <div className="flex items-center gap-2 text-xs">
+                    <span
+                      className={cn(
+                        "rounded-full px-2.5 py-0.5 font-semibold uppercase tracking-wider",
+                        isSpeaking
+                          ? "bg-violet-100 text-violet-700"
+                          : "bg-sky-100 text-sky-700",
+                      )}
+                    >
+                      {isSpeaking ? "Speaking" : "Writing"}
+                    </span>
+                    <span className="text-muted-foreground">
+                      Câu {i + 1} • Tối đa {a.points}đ
+                    </span>
+                  </div>
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Điểm hiện tại: </span>
+                    <span className="font-semibold text-primary">
+                      {a.awarded ?? 0}/{a.points}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="grid gap-6 p-6 lg:grid-cols-[1.4fr_1fr]">
+                  {/* Cột trái: đề + bài làm */}
+                  <div className="space-y-4">
+                    <div>
+                      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Đề bài
+                      </div>
+                      <p className="mt-1 text-sm font-medium text-foreground">{a.question}</p>
+                    </div>
+
+                    <div className="rounded-2xl border border-border bg-background p-4">
+                      <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                        Bài làm của học viên
+                      </div>
+                      {isSpeaking && a.studentAudioUrl && (
+                        <audio controls className="mb-3 w-full">
+                          <source src={a.studentAudioUrl} />
+                        </audio>
+                      )}
+                      <p className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                        {a.studentAnswer || (
+                          <span className="italic text-muted-foreground">(Trống)</span>
+                        )}
+                      </p>
+                      {!isSpeaking && a.studentAnswer && (
+                        <div className="mt-2 text-[11px] text-muted-foreground">
+                          {a.studentAnswer.trim().split(/\s+/).length} từ •{" "}
+                          {a.studentAnswer.length} ký tự
+                        </div>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground">
+                        Nhận xét cho học viên
+                      </label>
+                      <textarea
+                        value={a.feedback ?? ""}
+                        onChange={(e) => update(i, { feedback: e.target.value })}
+                        rows={4}
+                        placeholder="Góp ý cụ thể về điểm mạnh, điểm cần cải thiện..."
+                        className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Cột phải: rubric */}
+                  <div className="rounded-2xl border border-border bg-background p-4">
+                    <div className="mb-3 flex items-center justify-between">
+                      <div>
+                        <div className="text-sm font-semibold text-foreground">
+                          Rubric chấm điểm
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {isSpeaking
+                            ? "Đánh giá theo 4 tiêu chí Speaking"
+                            : "Đánh giá theo 4 tiêu chí Writing"}
+                        </div>
+                      </div>
+                      <span className="rounded-lg bg-primary/10 px-2 py-1 text-xs font-bold text-primary">
+                        {(a.rubric ?? []).reduce((s, r) => s + (r.awarded ?? 0), 0).toFixed(2)}/
+                        {a.points}
+                      </span>
+                    </div>
+
+                    <div className="space-y-3">
+                      {(a.rubric ?? []).map((r, ri) => (
+                        <div key={ri} className="rounded-xl border border-border/70 p-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="text-xs font-medium text-foreground">
+                              {r.criterion}
+                            </div>
+                            <span className="shrink-0 text-[11px] text-muted-foreground">
+                              /{r.max}
+                            </span>
+                          </div>
+                          <div className="mt-2 flex items-center gap-2">
+                            <input
+                              type="range"
+                              min={0}
+                              max={r.max}
+                              step={0.25}
+                              value={r.awarded ?? 0}
+                              onChange={(e) =>
+                                updateRubric(i, ri, Number(e.target.value))
+                              }
+                              className="flex-1 accent-primary"
+                            />
+                            <input
+                              type="number"
+                              min={0}
+                              max={r.max}
+                              step={0.25}
+                              value={r.awarded ?? 0}
+                              onChange={(e) =>
+                                updateRubric(i, ri, Number(e.target.value))
+                              }
+                              className="w-16 rounded-lg border border-border bg-background px-2 py-1 text-center text-xs font-semibold"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-4 rounded-xl bg-muted/40 p-3 text-[11px] leading-relaxed text-muted-foreground">
+                      <strong className="text-foreground">Gợi ý chấm:</strong>{" "}
+                      {isSpeaking
+                        ? "Mỗi tiêu chí 0–1.25đ. ≥1.0 thành thạo, 0.5–0.75 trung bình, ≤0.25 yếu. Lắng nghe lại đoạn ghi âm để đánh giá phát âm & ngữ điệu."
+                        : "Mỗi tiêu chí 1.0–1.5đ. Đối chiếu yêu cầu đề (số từ, chủ đề), tính mạch lạc, độ phong phú từ vựng và chính xác ngữ pháp."}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        <div className="sticky bottom-0 mt-6 flex justify-end gap-2 border-t border-border bg-background pt-4">
-          <button
-            onClick={onClose}
-            className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted"
-          >
-            Hủy
-          </button>
-          <button
-            onClick={finish}
-            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft"
-            style={{ background: "var(--gradient-brand)" }}
-          >
-            <Send className="h-4 w-4" /> Hoàn tất
-          </button>
+        <div className="sticky bottom-0 flex items-center justify-between gap-3 border-t border-border bg-background/95 px-8 py-4 backdrop-blur">
+          <div className="text-sm">
+            <span className="text-muted-foreground">Tổng điểm dự kiến: </span>
+            <span className="font-display text-lg font-semibold text-primary">
+              {(
+                submission.autoScore +
+                manualIdx.reduce((s, { a }) => s + (a.awarded ?? 0), 0)
+              ).toFixed(2)}
+            </span>
+            <span className="ml-1 text-xs text-muted-foreground">
+              (Tự động {submission.autoScore} + Chấm tay{" "}
+              {manualIdx.reduce((s, { a }) => s + (a.awarded ?? 0), 0).toFixed(2)})
+            </span>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted"
+            >
+              Hủy
+            </button>
+            <button
+              onClick={finish}
+              className="inline-flex items-center gap-1.5 rounded-xl px-5 py-2 text-sm font-semibold text-primary-foreground shadow-soft"
+              style={{ background: "var(--gradient-brand)" }}
+            >
+              <Send className="h-4 w-4" /> Hoàn tất chấm bài
+            </button>
+          </div>
         </div>
       </div>
     </div>

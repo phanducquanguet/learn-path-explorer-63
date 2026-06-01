@@ -69,11 +69,14 @@ export type TestSubmission = {
     questionId: string;
     question: string;
     type: "mcq" | "essay" | "short" | "tf";
+    skill?: "reading" | "listening" | "writing" | "speaking" | "vocabulary" | "grammar";
     studentAnswer: string;
+    studentAudioUrl?: string;
     correctAnswer?: string;
     points: number;
     awarded?: number;
     feedback?: string;
+    rubric?: { criterion: string; max: number; awarded?: number; note?: string }[];
   }[];
 };
 
@@ -198,11 +201,33 @@ export const testSubmissions: TestSubmission[] = [
         questionId: "Q0050",
         question: "[B1] Write a short paragraph (80-100 words) about your hobbies.",
         type: "essay",
+        skill: "writing",
         studentAnswer:
           "I really enjoy playing guitar. I started learning when I was 12 and now I play in a small band. We practice every Saturday and sometimes perform at school events. Music helps me relax and express myself.",
         points: 5,
         awarded: 4,
         feedback: "Tốt, ý mạch lạc. Cần đa dạng cấu trúc câu hơn.",
+        rubric: [
+          { criterion: "Nội dung & ý tưởng (Task achievement)", max: 1.5, awarded: 1.25 },
+          { criterion: "Tổ chức & mạch lạc (Coherence)", max: 1.0, awarded: 0.75 },
+          { criterion: "Từ vựng (Lexical resource)", max: 1.0, awarded: 1.0 },
+          { criterion: "Ngữ pháp & độ chính xác", max: 1.5, awarded: 1.0 },
+        ],
+      },
+      {
+        questionId: "Q0080",
+        question: "[B1] Speaking: Describe your most memorable trip in 1-2 minutes.",
+        type: "short",
+        skill: "speaking",
+        studentAnswer: "(Bản ghi âm 1'45) — học viên kể về chuyến đi Đà Nẵng cùng gia đình.",
+        studentAudioUrl: "/audio/sample-speaking.mp3",
+        points: 5,
+        rubric: [
+          { criterion: "Phát âm (Pronunciation)", max: 1.25 },
+          { criterion: "Lưu loát (Fluency)", max: 1.25 },
+          { criterion: "Từ vựng (Vocabulary)", max: 1.25 },
+          { criterion: "Ngữ pháp (Grammar)", max: 1.25 },
+        ],
       },
     ],
   },
@@ -230,9 +255,16 @@ export const testSubmissions: TestSubmission[] = [
         questionId: "Q0050",
         question: "[B1] Write a short paragraph (80-100 words) about your hobbies.",
         type: "essay",
+        skill: "writing",
         studentAnswer:
           "My hobby is cooking. I learn from YouTube and cook for my family every weekend. My favorite dish is phở bò.",
         points: 5,
+        rubric: [
+          { criterion: "Nội dung & ý tưởng (Task achievement)", max: 1.5 },
+          { criterion: "Tổ chức & mạch lạc (Coherence)", max: 1.0 },
+          { criterion: "Từ vựng (Lexical resource)", max: 1.0 },
+          { criterion: "Ngữ pháp & độ chính xác", max: 1.5 },
+        ],
       },
     ],
   },
@@ -260,9 +292,31 @@ export const testSubmissions: TestSubmission[] = [
         questionId: "Q0050",
         question: "[B1] Write a short paragraph (80-100 words) about your hobbies.",
         type: "essay",
+        skill: "writing",
         studentAnswer:
           "I love reading books, especially historical novels. Reading takes me to different worlds and times. I read at least one book per month.",
         points: 5,
+        rubric: [
+          { criterion: "Nội dung & ý tưởng (Task achievement)", max: 1.5 },
+          { criterion: "Tổ chức & mạch lạc (Coherence)", max: 1.0 },
+          { criterion: "Từ vựng (Lexical resource)", max: 1.0 },
+          { criterion: "Ngữ pháp & độ chính xác", max: 1.5 },
+        ],
+      },
+      {
+        questionId: "Q0081",
+        question: "[B1] Speaking: Talk about a person who has influenced you.",
+        type: "short",
+        skill: "speaking",
+        studentAnswer: "(Bản ghi âm 1'30) — học viên kể về người thầy chủ nhiệm cấp 3.",
+        studentAudioUrl: "/audio/sample-speaking-2.mp3",
+        points: 5,
+        rubric: [
+          { criterion: "Phát âm (Pronunciation)", max: 1.25 },
+          { criterion: "Lưu loát (Fluency)", max: 1.25 },
+          { criterion: "Từ vựng (Vocabulary)", max: 1.25 },
+          { criterion: "Ngữ pháp (Grammar)", max: 1.25 },
+        ],
       },
     ],
   },
