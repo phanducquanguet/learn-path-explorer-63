@@ -6,7 +6,7 @@ import {
   ChevronDown,
   GraduationCap,
   Users,
-  TrendingUp as _TrendingUp,
+  
   Trophy,
   Layers,
   Sparkles,
