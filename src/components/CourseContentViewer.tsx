@@ -40,7 +40,7 @@ export function CourseContentViewer({ course, level }: Props) {
     type: Activity["type"];
     activity: Activity;
   } | null>(null);
-  const [tab, setTab] = useState<"overview" | "activities">("overview");
+  
 
   const totalActivities = course.units.reduce((a, u) => a + u.activities.length, 0);
   const doneActivities = course.units.reduce(
