@@ -207,6 +207,11 @@ export const testSubmissions: TestSubmission[] = [
     manualScore: 4,
     finalScore: 22,
     status: "graded",
+    proctorEvents: [
+      { at: new Date(now - 3 * 86400000 + 12 * 60000).toISOString(), type: "tab-switch", severity: "medium", detail: "Chuyển sang tab khác trong 8 giây" },
+      { at: new Date(now - 3 * 86400000 + 27 * 60000).toISOString(), type: "window-blur", severity: "low", detail: "Cửa sổ thi mất focus 3 giây" },
+      { at: new Date(now - 3 * 86400000 + 55 * 60000).toISOString(), type: "no-face", severity: "medium", detail: "Không phát hiện khuôn mặt trong 12 giây" },
+    ],
     answers: [
       {
         questionId: "Q0001",
