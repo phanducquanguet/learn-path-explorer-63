@@ -354,7 +354,9 @@ function GradingDrawer({
   onSave: (s: TestSubmission) => void;
 }) {
   const [answers, setAnswers] = useState(submission.answers);
+  const initialAwarded = useState(() => submission.answers.map((a) => a.awarded))[0];
   const [openRubric, setOpenRubric] = useState<Set<number>>(new Set());
+  const [matched, setMatched] = useState<Record<string, Set<string>>>({});
   const toggleRubric = (i: number) =>
     setOpenRubric((prev) => {
       const n = new Set(prev);
@@ -362,6 +364,18 @@ function GradingDrawer({
       else n.add(i);
       return n;
     });
+  const toggleMatch = (qid: string, k: string) =>
+    setMatched((prev) => {
+      const n = new Set(prev[qid] ?? []);
+      if (n.has(k)) n.delete(k);
+      else n.add(k);
+      return { ...prev, [qid]: n };
+    });
+  const suggestedScore = (a: (typeof answers)[number]) => {
+    const kws = RUBRIC_DESCRIPTORS[a.skill === "speaking" ? "speaking" : "writing"].keywords;
+    const m = matched[a.questionId]?.size ?? 0;
+    return Math.round(((m / kws.length) * a.points) / 0.25) * 0.25;
+  };
   const update = (i: number, patch: Partial<(typeof answers)[number]>) =>
     setAnswers((p) => p.map((a, idx) => (idx === i ? { ...a, ...patch } : a)));
 
