@@ -188,7 +188,7 @@ function TeacherCoursesPage() {
         </div>
 
         {/* Rows */}
-        <div className="mt-6 grid gap-4 lg:grid-cols-2">
+        <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((row) => (
             <TeacherCourseCard key={row.course.id} {...row} />
           ))}
