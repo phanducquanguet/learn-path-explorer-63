@@ -216,18 +216,25 @@ export const testSubmissions: TestSubmission[] = [
       },
       {
         questionId: "Q0080",
-        question: "[B1] Speaking: Describe your most memorable trip in 1-2 minutes.",
+        question: "[B1] Speaking Part 1: Describe your most memorable trip in 1-2 minutes.",
         type: "short",
         skill: "speaking",
         studentAnswer: "(Bản ghi âm 1'45) — học viên kể về chuyến đi Đà Nẵng cùng gia đình.",
         studentAudioUrl: "/audio/sample-speaking.mp3",
         points: 5,
-        rubric: [
-          { criterion: "Phát âm (Pronunciation)", max: 1.25 },
-          { criterion: "Lưu loát (Fluency)", max: 1.25 },
-          { criterion: "Từ vựng (Vocabulary)", max: 1.25 },
-          { criterion: "Ngữ pháp (Grammar)", max: 1.25 },
-        ],
+        awarded: 4,
+        feedback: "Phát âm rõ, ý mạch lạc. Chú ý nhấn trọng âm 'family', 'memorable'.",
+      },
+      {
+        questionId: "Q0082",
+        question:
+          "[B1] Speaking Part 2 (Picture description): Look at the picture of a busy market and describe what you see in 60-90 seconds.",
+        type: "short",
+        skill: "speaking",
+        studentAnswer:
+          "(Bản ghi âm 1'05) — học viên miêu tả khu chợ truyền thống: gian hàng rau củ, người mua kẻ bán, không khí nhộn nhịp.",
+        studentAudioUrl: "/audio/sample-speaking-picture.mp3",
+        points: 5,
       },
     ],
   },
