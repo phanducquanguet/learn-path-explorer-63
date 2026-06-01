@@ -18,6 +18,8 @@ import {
   FileText,
   BarChart3,
   HelpCircle,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
