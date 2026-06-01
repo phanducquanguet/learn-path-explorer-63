@@ -102,7 +102,7 @@ export function CourseContentViewer({ course, level }: Props) {
                 onClick={() => {
                   setActiveUnitId("__guide");
                   setActiveActivity(null);
-                  setTab("overview");
+                  
                 }}
               />
             </SidebarGroup>
