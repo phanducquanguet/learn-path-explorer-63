@@ -107,6 +107,16 @@ function TestDetail() {
         </div>
 
         {tab === "overview" && (
+          <ProctorOverview
+            subs={subs}
+            onOpenSubmission={(s) => {
+              setTab("results");
+              setGrading(s);
+            }}
+          />
+        )}
+
+        {tab === "overview" && (
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
             <div className="rounded-3xl border border-border bg-surface p-6 shadow-soft">
               <h2 className="font-semibold text-foreground">Lớp được giao</h2>
@@ -917,5 +927,145 @@ function ProctorPanel({ events, startedAt }: { events?: ProctorEvent[]; startedA
         </div>
       )}
     </div>
+  );
+}
+
+function ProctorOverview({
+  subs,
+  onOpenSubmission,
+}: {
+  subs: TestSubmission[];
+  onOpenSubmission: (s: TestSubmission) => void;
+}) {
+  const all = subs.flatMap((s) => (s.proctorEvents ?? []).map((e) => ({ e, s })));
+  const high = all.filter((x) => x.e.severity === "high").length;
+  const med = all.filter((x) => x.e.severity === "medium").length;
+  const low = all.filter((x) => x.e.severity === "low").length;
+  const flagged = subs.filter((s) => (s.proctorEvents?.length ?? 0) > 0);
+  const ranked = [...flagged].sort((a, b) => {
+    const sev = (s: TestSubmission) =>
+      (s.proctorEvents ?? []).reduce(
+        (acc, e) => acc + (e.severity === "high" ? 5 : e.severity === "medium" ? 2 : 1),
+        0,
+      );
+    return sev(b) - sev(a);
+  });
+
+  if (all.length === 0) {
+    return (
+      <div className="mt-6 flex items-center gap-3 rounded-3xl border border-emerald-200 bg-emerald-50/60 px-6 py-4 text-sm text-emerald-800">
+        <CheckCircle2 className="h-5 w-5" />
+        <div>
+          <div className="font-semibold">Không có cảnh báo giám sát</div>
+          <div className="text-xs text-emerald-700/80">
+            Tất cả học viên đều làm bài bình thường, không phát hiện bất thường.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const tone =
+    high > 0
+      ? "border-red-300 bg-gradient-to-br from-red-50 to-orange-50"
+      : "border-amber-300 bg-gradient-to-br from-amber-50 to-yellow-50";
+  const accent = high > 0 ? "text-red-700" : "text-amber-800";
+
+  return (
+    <div className={cn("mt-6 overflow-hidden rounded-3xl border shadow-elevated", tone)}>
+      <div className="flex flex-wrap items-start justify-between gap-4 px-6 py-5">
+        <div className="flex items-center gap-4">
+          <div
+            className={cn(
+              "rounded-2xl p-3 ring-1",
+              high > 0 ? "bg-red-100 text-red-700 ring-red-200" : "bg-amber-100 text-amber-700 ring-amber-200",
+            )}
+          >
+            <ShieldAlert className="h-6 w-6" />
+          </div>
+          <div>
+            <div className={cn("font-display text-2xl font-semibold", accent)}>
+              {all.length} cảnh báo giám sát
+            </div>
+            <div className="mt-0.5 text-xs text-muted-foreground">
+              Ghi nhận từ {flagged.length}/{subs.length} học viên đã có dữ liệu giám sát.
+            </div>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <SevPill tone="red" count={high} label="Nghiêm trọng" />
+          <SevPill tone="orange" count={med} label="Trung bình" />
+          <SevPill tone="amber" count={low} label="Nhẹ" />
+        </div>
+      </div>
+
+      <div className="border-t border-white/60 bg-background/70 px-6 py-4 backdrop-blur">
+        <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+          Học viên cần chú ý
+        </div>
+        <ul className="divide-y divide-border">
+          {ranked.slice(0, 5).map((s) => {
+            const evs = s.proctorEvents ?? [];
+            const h = evs.filter((e) => e.severity === "high").length;
+            const m = evs.filter((e) => e.severity === "medium").length;
+            const l = evs.filter((e) => e.severity === "low").length;
+            return (
+              <li
+                key={s.id}
+                className="flex flex-wrap items-center justify-between gap-3 py-2.5"
+              >
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold text-foreground">
+                    {s.studentName}
+                  </div>
+                  <div className="text-xs text-muted-foreground">{s.studentClass}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {h > 0 && <SevPill tone="red" count={h} compact />}
+                  {m > 0 && <SevPill tone="orange" count={m} compact />}
+                  {l > 0 && <SevPill tone="amber" count={l} compact />}
+                  <button
+                    onClick={() => onOpenSubmission(s)}
+                    className="rounded-lg bg-foreground px-2.5 py-1 text-[11px] font-semibold text-background hover:opacity-90"
+                  >
+                    Xem chi tiết
+                  </button>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </div>
+  );
+}
+
+function SevPill({
+  tone,
+  count,
+  label,
+  compact,
+}: {
+  tone: "red" | "orange" | "amber";
+  count: number;
+  label?: string;
+  compact?: boolean;
+}) {
+  const map = {
+    red: "bg-red-100 text-red-700 ring-red-200",
+    orange: "bg-orange-100 text-orange-700 ring-orange-200",
+    amber: "bg-amber-100 text-amber-800 ring-amber-200",
+  } as const;
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold ring-1",
+        map[tone],
+        compact && "px-2 py-0.5 text-[11px]",
+      )}
+    >
+      <span className="font-display text-sm font-bold leading-none">{count}</span>
+      {label && <span className="text-[11px] font-medium opacity-80">{label}</span>}
+    </span>
   );
 }
