@@ -17,6 +17,17 @@ import { TopNav } from "@/components/TopNav";
 import { levels, type Course, type Level } from "@/lib/lms-data";
 import { classes, students } from "@/lib/teacher-data";
 import { cn } from "@/lib/utils";
+import empowerA1Asset from "@/assets/empower-a1.png.asset.json";
+
+const COURSE_COVERS: Record<string, string> = {};
+const LEVEL_COVERS: Record<string, string> = {
+  A1: empowerA1Asset.url,
+  A2: empowerA1Asset.url,
+  B1: empowerA1Asset.url,
+  B2: empowerA1Asset.url,
+  C1: empowerA1Asset.url,
+  C2: empowerA1Asset.url,
+};
 
 export const Route = createFileRoute("/teacher/courses/")({
   head: () => ({
