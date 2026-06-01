@@ -804,7 +804,7 @@ function PreviewDialog({
               mode === "admin" ? "bg-background shadow-sm" : "text-muted-foreground",
             )}
           >
-            Tóm tắt admin
+            Đáp án
           </button>
         </div>
 
