@@ -69,11 +69,14 @@ export type TestSubmission = {
     questionId: string;
     question: string;
     type: "mcq" | "essay" | "short" | "tf";
+    skill?: "reading" | "listening" | "writing" | "speaking" | "vocabulary" | "grammar";
     studentAnswer: string;
+    studentAudioUrl?: string;
     correctAnswer?: string;
     points: number;
     awarded?: number;
     feedback?: string;
+    rubric?: { criterion: string; max: number; awarded?: number; note?: string }[];
   }[];
 };
 
