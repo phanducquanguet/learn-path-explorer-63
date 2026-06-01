@@ -255,9 +255,16 @@ export const testSubmissions: TestSubmission[] = [
         questionId: "Q0050",
         question: "[B1] Write a short paragraph (80-100 words) about your hobbies.",
         type: "essay",
+        skill: "writing",
         studentAnswer:
           "My hobby is cooking. I learn from YouTube and cook for my family every weekend. My favorite dish is phở bò.",
         points: 5,
+        rubric: [
+          { criterion: "Nội dung & ý tưởng (Task achievement)", max: 1.5 },
+          { criterion: "Tổ chức & mạch lạc (Coherence)", max: 1.0 },
+          { criterion: "Từ vựng (Lexical resource)", max: 1.0 },
+          { criterion: "Ngữ pháp & độ chính xác", max: 1.5 },
+        ],
       },
     ],
   },
