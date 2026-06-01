@@ -238,55 +238,54 @@ function TeacherCourseCard({
   avgProgress,
   avgScore,
 }: CourseRow) {
+  const cover = COURSE_COVERS[course.id] ?? LEVEL_COVERS[level.code];
   return (
     <Link
       to="/teacher/courses/$courseId"
       params={{ courseId: course.id }}
-      className="group flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5 shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated"
+      className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-            <span
-              className="inline-flex h-5 items-center rounded-md px-2 text-white"
-              style={{
-                background: `linear-gradient(135deg, oklch(0.55 0.2 ${level.hue}), oklch(0.7 0.18 ${(level.hue + 40) % 360}))`,
-              }}
-            >
-              {level.code}
-            </span>
-            <span>{course.units.length} units • {course.hours}h</span>
-          </div>
-          <h3 className="mt-1.5 truncate text-base font-semibold text-foreground group-hover:text-primary">
-            {course.title}
-          </h3>
-          <p className="line-clamp-1 text-xs text-muted-foreground">{course.subtitle}</p>
-        </div>
-        <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
-      </div>
-
-      <div className="grid grid-cols-4 gap-2 text-center">
-        <Stat label="Lớp" value={classCount} />
-        <Stat label="Học viên" value={studentCount} />
-        <Stat label="Tiến độ" value={`${avgProgress}%`} tone="primary" />
-        <Stat label="Điểm TB" value={avgScore || "—"} tone="emerald" />
-      </div>
-
-      <div>
-        <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <TrendingUp className="h-3 w-3" /> Tiến độ trung bình các lớp
-          </span>
-          <span>{avgProgress}%</span>
-        </div>
-        <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            className="h-full rounded-full"
-            style={{
-              width: `${avgProgress}%`,
-              background: `linear-gradient(90deg, oklch(0.55 0.2 ${level.hue}), oklch(0.7 0.18 ${(level.hue + 40) % 360}))`,
-            }}
+      <div
+        className="relative h-44 w-full overflow-hidden"
+        style={{
+          background: `linear-gradient(135deg, oklch(0.55 0.2 ${level.hue} / 0.18), oklch(0.7 0.18 ${(level.hue + 40) % 360} / 0.18))`,
+        }}
+      >
+        {cover ? (
+          <img
+            src={cover}
+            alt={`Bìa khoá học ${course.title}`}
+            loading="lazy"
+            className="h-full w-full object-contain p-3 transition duration-500 group-hover:scale-[1.03]"
           />
+        ) : null}
+        <span
+          className="absolute left-3 top-3 inline-flex h-6 items-center rounded-md px-2 text-[11px] font-semibold uppercase tracking-wider text-white shadow-soft"
+          style={{
+            background: `linear-gradient(135deg, oklch(0.55 0.2 ${level.hue}), oklch(0.7 0.18 ${(level.hue + 40) % 360}))`,
+          }}
+        >
+          {level.code}
+        </span>
+      </div>
+
+      <div className="flex flex-1 flex-col gap-4 p-5">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              {course.units.length} units • {course.hours}h
+            </div>
+            <h3 className="mt-1.5 truncate text-base font-semibold text-foreground group-hover:text-primary">
+              {course.title}
+            </h3>
+            <p className="line-clamp-1 text-xs text-muted-foreground">{course.subtitle}</p>
+          </div>
+          <ArrowRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5 group-hover:text-primary" />
+        </div>
+
+        <div className="grid grid-cols-2 gap-2 text-center">
+          <Stat label="Lớp" value={classCount} />
+          <Stat label="Học viên" value={studentCount} />
         </div>
       </div>
     </Link>
