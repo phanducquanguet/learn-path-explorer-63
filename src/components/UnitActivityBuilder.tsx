@@ -77,6 +77,19 @@ export type QuestionNode = {
   kind: "question";
   bank: BankQuestion;
 };
+export type ScormNode = Common & {
+  kind: "scorm";
+  fileName?: string;
+  version?: "1.2" | "2004";
+  trackCompletion?: boolean;
+  trackScore?: boolean;
+};
+export type H5pNode = Common & {
+  kind: "h5p";
+  fileName?: string;
+  contentType?: string;
+  trackCompletion?: boolean;
+};
 export type GroupNode = Common & {
   kind: "group";
   children: AnyNode[];
@@ -87,6 +100,8 @@ export type AnyNode =
   | PdfNode
   | PdfAudioNode
   | PracticeNode
+  | ScormNode
+  | H5pNode
   | QuestionNode
   | GroupNode;
 
