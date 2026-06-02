@@ -25,6 +25,8 @@ import {
   MousePointerSquareDashed,
   Move,
   Music as MusicIcon,
+  Package,
+  Boxes,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
