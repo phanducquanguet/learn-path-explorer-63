@@ -730,6 +730,8 @@ function NodeEditor({
           onPickQuestionType={(t) => onPickQuestionType(node.id, t)}
         />
       )}
+      {node.kind === "scorm" && <ScormEditor node={node} onChange={onChange as (p: Partial<ScormNode>) => void} />}
+      {node.kind === "h5p" && <H5pEditor node={node} onChange={onChange as (p: Partial<H5pNode>) => void} />}
 
       <style>{`
         .ui-input {
