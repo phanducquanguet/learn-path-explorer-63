@@ -1,6 +1,18 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { ArrowLeft, ArrowUpRight, BookOpen, Clock, Layers, Users } from "lucide-react";
-import { getLevel } from "@/lib/lms-data";
+import { ArrowLeft, ArrowUpRight, BookOpen, CheckCircle2, Clock, Layers, Play } from "lucide-react";
+import { getLevel, type Course, type Level } from "@/lib/lms-data";
+import { categoryOf } from "@/lib/course-categories";
+import { cn } from "@/lib/utils";
+import empowerA1Asset from "@/assets/empower-a1.png.asset.json";
+
+const LEVEL_COVERS: Record<string, string> = {
+  A1: empowerA1Asset.url,
+  A2: empowerA1Asset.url,
+  B1: empowerA1Asset.url,
+  B2: empowerA1Asset.url,
+  C1: empowerA1Asset.url,
+  C2: empowerA1Asset.url,
+};
 
 export const Route = createFileRoute("/levels/$level")({
   head: ({ params }) => ({
