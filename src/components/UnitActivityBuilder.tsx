@@ -974,3 +974,142 @@ function PracticeEditor({
     </div>
   );
 }
+
+/* ============================== SCORM / H5P editors ============================== */
+
+function PackageInfoBanner({
+  kind,
+}: {
+  kind: "scorm" | "h5p";
+}) {
+  const isScorm = kind === "scorm";
+  return (
+    <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 text-[11px] leading-relaxed text-muted-foreground">
+      <div className="mb-1 text-xs font-semibold text-foreground">
+        {isScorm ? "Về gói SCORM" : "Về gói H5P"}
+      </div>
+      {isScorm ? (
+        <>
+          Tải lên file <span className="font-mono text-foreground">.zip</span> đóng gói chuẩn
+          SCORM 1.2 hoặc SCORM 2004 (có chứa <span className="font-mono">imsmanifest.xml</span>).
+          Hệ thống sẽ chạy nội dung trong iframe và đồng bộ tiến độ / điểm số qua chuẩn SCORM API.
+        </>
+      ) : (
+        <>
+          Tải lên file <span className="font-mono text-foreground">.h5p</span> xuất ra từ trình
+          soạn H5P (Interactive Video, Course Presentation, Quiz, Drag & Drop…). Hệ thống sẽ hiển
+          thị tương tác và ghi nhận kết quả qua xAPI.
+        </>
+      )}
+    </div>
+  );
+}
+
+function TrackingToggle({
+  label,
+  desc,
+  checked,
+  onChange,
+}: {
+  label: string;
+  desc: string;
+  checked: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <label className="flex items-start gap-3 rounded-xl border border-border bg-muted/30 px-3 py-2.5">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+      />
+      <div className="flex-1">
+        <div className="text-xs font-semibold text-foreground">{label}</div>
+        <div className="text-[11px] text-muted-foreground">{desc}</div>
+      </div>
+    </label>
+  );
+}
+
+function ScormEditor({ node, onChange }: { node: ScormNode; onChange: (p: Partial<ScormNode>) => void }) {
+  return (
+    <div className="space-y-4">
+      <PackageInfoBanner kind="scorm" />
+      <Row label="Tệp gói SCORM (.zip)">
+        <FileBox
+          icon={Package}
+          label="Tải lên gói SCORM (.zip)"
+          fileName={node.fileName}
+          onChange={(fileName) => onChange({ fileName })}
+          accept=".zip,application/zip"
+        />
+      </Row>
+      <Row label="Phiên bản SCORM">
+        <div className="flex gap-2">
+          {(["1.2", "2004"] as const).map((v) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => onChange({ version: v })}
+              className={cn(
+                "rounded-lg border px-3 py-1.5 text-xs font-semibold transition",
+                node.version === v
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-background text-muted-foreground hover:border-primary/40",
+              )}
+            >
+              SCORM {v}
+            </button>
+          ))}
+        </div>
+      </Row>
+      <div className="grid gap-2 sm:grid-cols-2">
+        <TrackingToggle
+          label="Theo dõi hoàn thành"
+          desc="Đánh dấu hoàn thành khi gói báo cmi.completion_status = completed."
+          checked={!!node.trackCompletion}
+          onChange={(v) => onChange({ trackCompletion: v })}
+        />
+        <TrackingToggle
+          label="Ghi nhận điểm"
+          desc="Lưu cmi.score.raw từ gói vào sổ điểm của học viên."
+          checked={!!node.trackScore}
+          onChange={(v) => onChange({ trackScore: v })}
+        />
+      </div>
+    </div>
+  );
+}
+
+function H5pEditor({ node, onChange }: { node: H5pNode; onChange: (p: Partial<H5pNode>) => void }) {
+  return (
+    <div className="space-y-4">
+      <PackageInfoBanner kind="h5p" />
+      <Row label="Tệp gói H5P (.h5p)">
+        <FileBox
+          icon={Boxes}
+          label="Tải lên gói H5P (.h5p)"
+          fileName={node.fileName}
+          onChange={(fileName) => onChange({ fileName })}
+          accept=".h5p"
+        />
+      </Row>
+      <Row label="Loại nội dung (tuỳ chọn)">
+        <input
+          value={node.contentType ?? ""}
+          onChange={(e) => onChange({ contentType: e.target.value })}
+          placeholder="VD: Interactive Video, Course Presentation, Drag & Drop…"
+          className="ui-input"
+        />
+      </Row>
+      <TrackingToggle
+        label="Theo dõi hoàn thành qua xAPI"
+        desc="Ghi nhận khi học viên hoàn tất tương tác trong gói H5P."
+        checked={!!node.trackCompletion}
+        onChange={(v) => onChange({ trackCompletion: v })}
+      />
+    </div>
+  );
+}
+
