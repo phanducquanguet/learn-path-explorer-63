@@ -47,52 +47,55 @@ function LevelPage() {
         </Link>
       </div>
 
-      <div className="mx-auto max-w-7xl px-6 pt-5 sm:px-8">
+      <div className="mx-auto max-w-7xl px-6 pt-4 sm:px-8">
         {/* Banner */}
-        <div className="relative overflow-hidden rounded-3xl shadow-elevated ring-1 ring-border">
+        <div className="relative overflow-hidden rounded-2xl shadow-soft ring-1 ring-border">
           <img
             src={levelHero}
             alt={`Banner cấp độ ${lv.code}`}
             width={1920}
-            height={640}
-            className="h-[260px] w-full object-cover sm:h-[340px] lg:h-[400px]"
+            height={400}
+            className="h-[140px] w-full object-cover sm:h-[170px] lg:h-[190px]"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-r from-background/40 via-transparent to-background/10" />
+
+          {/* Overlay content inside banner */}
+          <div className="absolute inset-0 flex items-center justify-between gap-4 px-5 sm:px-7">
+            <div className="flex items-center gap-4">
+              <div
+                className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl text-xl font-bold text-white shadow-elevated ring-2 ring-background/80 sm:h-20 sm:w-20 sm:text-2xl"
+                style={{ background: avatarBg }}
+              >
+                {lv.code}
+              </div>
+              <div className="rounded-xl bg-surface/90 px-4 py-2 shadow-soft ring-1 ring-border backdrop-blur">
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Cấp độ {lv.code}
+                </div>
+                <div className="text-base font-semibold leading-tight text-foreground sm:text-lg">
+                  {lv.name}
+                </div>
+              </div>
+            </div>
+
+            <div className="hidden flex-wrap gap-2 sm:flex">
+              <Stat icon={<Layers className="h-3.5 w-3.5" />} label="Khoá học" value={`${lv.courses.length}`} />
+              <Stat icon={<Clock className="h-3.5 w-3.5" />} label="Giờ học" value={`${totalHours}h`} />
+              <Stat icon={<BookOpen className="h-3.5 w-3.5" />} label="Tiến độ" value={`${lv.progress}%`} />
+            </div>
+          </div>
         </div>
 
-        {/* Overlay row: avatar + breadcrumb on left, stats on right */}
-        <div className="relative z-10 -mt-14 flex flex-col gap-6 px-2 sm:px-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="flex items-end gap-5">
-            <div
-              className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full text-3xl font-bold text-white shadow-elevated ring-4 ring-background sm:h-32 sm:w-32 sm:text-4xl"
-              style={{ background: avatarBg }}
-            >
-              {lv.code}
-            </div>
-            <div className="mb-2 flex items-center gap-6 rounded-2xl bg-surface/90 px-5 py-3 shadow-soft ring-1 ring-border backdrop-blur">
-              <div>
-                <div className="text-sm font-semibold text-foreground">Level</div>
-                <div className="text-xs text-muted-foreground">{lv.code}</div>
-              </div>
-              <div className="h-8 w-px bg-border" />
-              <div>
-                <div className="text-sm font-semibold text-foreground">{lv.code}</div>
-                <div className="text-xs text-muted-foreground">{lv.name}</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="mb-2 flex flex-wrap gap-3">
-            <Stat icon={<Layers className="h-4 w-4" />} label="Khoá học" value={`${lv.courses.length}`} />
-            <Stat icon={<Clock className="h-4 w-4" />} label="Tổng giờ học" value={`${totalHours}h`} />
-            <Stat icon={<BookOpen className="h-4 w-4" />} label="Tiến độ" value={`${lv.progress}%`} />
-          </div>
+        {/* Mobile stats */}
+        <div className="mt-3 grid grid-cols-3 gap-2 sm:hidden">
+          <Stat icon={<Layers className="h-3.5 w-3.5" />} label="Khoá học" value={`${lv.courses.length}`} />
+          <Stat icon={<Clock className="h-3.5 w-3.5" />} label="Giờ học" value={`${totalHours}h`} />
+          <Stat icon={<BookOpen className="h-3.5 w-3.5" />} label="Tiến độ" value={`${lv.progress}%`} />
         </div>
       </div>
 
+      <div className="mx-auto max-w-7xl px-6 py-6 sm:px-8">
 
-
-      <div className="mx-auto max-w-7xl px-6 py-10 sm:px-8">
         <h2 className="text-lg font-semibold tracking-tight text-foreground">Các khoá học trong cấp độ</h2>
         <p className="mt-1 text-sm text-muted-foreground">Chọn khoá phù hợp để tiếp tục lộ trình.</p>
         <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
@@ -205,11 +208,11 @@ function LevelCourseCard({ course, level }: { course: Course; level: Level }) {
 
 function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="min-w-[120px] rounded-2xl bg-surface px-4 py-3 shadow-soft ring-1 ring-border">
-      <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+    <div className="rounded-lg bg-surface/95 px-3 py-1.5 shadow-soft ring-1 ring-border backdrop-blur">
+      <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
         {icon} {label}
       </div>
-      <div className="mt-1 text-lg font-semibold text-foreground">{value}</div>
+      <div className="text-sm font-semibold leading-tight text-foreground">{value}</div>
     </div>
   );
 }
