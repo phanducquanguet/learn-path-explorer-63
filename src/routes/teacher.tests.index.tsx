@@ -24,6 +24,10 @@ import {
   CheckSquare,
   Square,
   X,
+  ChevronDown,
+  ChevronRight,
+  CornerDownRight,
+  Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -107,6 +111,7 @@ function TestsList() {
   const [tests, setTests] = useState<Test[]>(seedTests);
   const [orgFilter, setOrgFilter] = useState<string>("all");
   const [selected, setSelected] = useState<string[]>([]);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [copyTarget, setCopyTarget] = useState<Test[] | null>(null);
   const simCounts = useMemo(() => {
     const m: Record<string, number> = {};
@@ -275,134 +280,233 @@ function TestsList() {
         </div>
 
         {view === "grid" ? (
-          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {filtered.map((t) => {
-              const st = testStatus(t);
-              const m = statusMeta(st);
-              const Icon = m.icon;
-              const org = getOrg(t.orgId);
-              const isSelected = selected.includes(t.id);
-              return (
-                <div
-                  key={t.id}
-                  className={cn(
-                    "group relative flex flex-col rounded-3xl border bg-surface p-5 shadow-soft transition hover:shadow-lg",
-                    isSelected ? "border-primary ring-2 ring-primary/30" : "border-border",
-                  )}
-                >
-                  <Link
-                    to="/teacher/tests/$testId"
-                    params={{ testId: t.id }}
-                    className="absolute inset-0 rounded-3xl"
-                    aria-label={t.name}
-                  />
-                  <div className="relative flex items-start justify-between gap-3">
-                    <span
+          (() => {
+            const parents = filtered.filter((t) => !t.id.includes("-sim-"));
+            const childMap: Record<string, Test[]> = {};
+            for (const t of filtered) {
+              if (t.id.includes("-sim-")) {
+                const base = t.id.split("-sim-")[0];
+                (childMap[base] ||= []).push(t);
+              }
+            }
+            const parentIds = new Set(parents.map((p) => p.id));
+            const orphans = filtered.filter(
+              (t) => t.id.includes("-sim-") && !parentIds.has(t.id.split("-sim-")[0]),
+            );
+            const cards = [...parents, ...orphans];
+            return (
+              <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+                {cards.map((t) => {
+                  const st = testStatus(t);
+                  const m = statusMeta(st);
+                  const Icon = m.icon;
+                  const org = getOrg(t.orgId);
+                  const isSelected = selected.includes(t.id);
+                  const children = childMap[t.id] ?? [];
+                  const hasChildren = children.length > 0;
+                  const isOpen = !!expanded[t.id];
+                  return (
+                    <div
+                      key={t.id}
                       className={cn(
-                        "inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold",
-                        m.cls,
+                        "group relative flex flex-col rounded-3xl border bg-surface p-5 shadow-soft transition hover:shadow-lg",
+                        isSelected ? "border-primary ring-2 ring-primary/30" : "border-border",
                       )}
                     >
-                      <Icon className="h-3 w-3" /> {m.label}
-                    </span>
-                    <div className="flex items-center gap-1.5">
-                      <span className="rounded-lg bg-primary/10 px-2 py-1 text-[11px] font-bold uppercase text-primary">
-                        {t.level}
-                      </span>
-                      {isAdmin && (
-                        <button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            toggleSelect(t.id);
-                          }}
-                          className="rounded-lg border border-border bg-background p-1 text-foreground hover:bg-muted"
-                          aria-label="Chọn để sao chép"
-                          title="Chọn để sao chép hàng loạt"
-                        >
-                          {isSelected ? (
-                            <CheckSquare className="h-3.5 w-3.5 text-primary" />
-                          ) : (
-                            <Square className="h-3.5 w-3.5" />
+                      <Link
+                        to="/teacher/tests/$testId"
+                        params={{ testId: t.id }}
+                        className="absolute inset-0 rounded-3xl"
+                        aria-label={t.name}
+                      />
+                      <div className="relative flex items-start justify-between gap-3">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          <span
+                            className={cn(
+                              "inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold",
+                              m.cls,
+                            )}
+                          >
+                            <Icon className="h-3 w-3" /> {m.label}
+                          </span>
+                          <span className="inline-flex items-center gap-1 rounded-md bg-foreground/5 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-foreground">
+                            {t.id}
+                          </span>
+                          {hasChildren && (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                              <Sparkles className="h-3 w-3" /> +{children.length} mã đề phụ
+                            </span>
                           )}
-                        </button>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="rounded-lg bg-primary/10 px-2 py-1 text-[11px] font-bold uppercase text-primary">
+                            {t.level}
+                          </span>
+                          {isAdmin && (
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleSelect(t.id);
+                              }}
+                              className="rounded-lg border border-border bg-background p-1 text-foreground hover:bg-muted"
+                              aria-label="Chọn để sao chép"
+                              title="Chọn để sao chép hàng loạt"
+                            >
+                              {isSelected ? (
+                                <CheckSquare className="h-3.5 w-3.5 text-primary" />
+                              ) : (
+                                <Square className="h-3.5 w-3.5" />
+                              )}
+                            </button>
+                          )}
+                        </div>
+                      </div>
+
+                      {org && (
+                        <div className="relative mt-2 inline-flex w-fit items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                          <Building2 className="h-3 w-3" /> {org.shortName}
+                        </div>
+                      )}
+
+                      <h3 className="relative mt-3 font-display text-lg font-semibold text-foreground line-clamp-1">
+                        {t.name}
+                      </h3>
+                      <p className="relative mt-1 text-xs text-muted-foreground line-clamp-2">
+                        {t.description}
+                      </p>
+
+                      <div className="relative mt-3 flex items-start gap-1.5">
+                        <GraduationCap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                        <div className="flex flex-wrap gap-1">
+                          {t.classIds.map((cid) => (
+                            <span
+                              key={cid}
+                              className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground"
+                            >
+                              {classNameById(cid)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="relative mt-4 grid grid-cols-2 gap-y-2 border-t border-border pt-3 text-xs text-muted-foreground">
+                        <span className="inline-flex items-center gap-1">
+                          <Calendar className="h-3.5 w-3.5" />{" "}
+                          {new Date(t.openAt).toLocaleDateString("vi-VN")}
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" /> {t.durationMinutes} phút
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <Users className="h-3.5 w-3.5" /> {t.submitted}/{t.registered} HS
+                        </span>
+                        <span className="text-right font-semibold text-foreground">
+                          {t.avgScore ? `TB ${t.avgScore}` : "—"}
+                        </span>
+                      </div>
+
+                      {hasChildren && (
+                        <div className="relative mt-3 border-t border-dashed border-border pt-3">
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setExpanded((s) => ({ ...s, [t.id]: !s[t.id] }));
+                            }}
+                            className="inline-flex w-full items-center justify-between gap-2 rounded-lg bg-muted/40 px-2.5 py-1.5 text-[11px] font-semibold text-foreground transition hover:bg-muted"
+                          >
+                            <span className="inline-flex items-center gap-1.5">
+                              {isOpen ? (
+                                <ChevronDown className="h-3.5 w-3.5" />
+                              ) : (
+                                <ChevronRight className="h-3.5 w-3.5" />
+                              )}
+                              {isOpen ? "Ẩn" : "Xem"} {children.length} mã đề phụ
+                            </span>
+                            <Sparkles className="h-3.5 w-3.5 text-primary" />
+                          </button>
+                          {isOpen && (
+                            <ul className="mt-2 space-y-1.5">
+                              {children.map((c) => {
+                                const cst = testStatus(c);
+                                const cm = statusMeta(cst);
+                                return (
+                                  <li
+                                    key={c.id}
+                                    className="relative flex items-center gap-2 rounded-lg border border-border bg-background px-2.5 py-2 text-xs"
+                                  >
+                                    <CornerDownRight className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                                    <div className="min-w-0 flex-1">
+                                      <div className="flex flex-wrap items-center gap-1.5">
+                                        <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                                          Mã đề phụ
+                                        </span>
+                                        <span
+                                          className={cn(
+                                            "rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
+                                            cm.cls,
+                                          )}
+                                        >
+                                          {cm.label}
+                                        </span>
+                                        <span className="text-[10px] text-muted-foreground">
+                                          {c.durationMinutes} phút · {c.submitted}/{c.registered} HS
+                                        </span>
+                                      </div>
+                                      <div className="mt-0.5 truncate font-medium text-foreground">
+                                        {c.name}
+                                      </div>
+                                    </div>
+                                    <Link
+                                      to="/teacher/tests/$testId"
+                                      params={{ testId: c.id }}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="relative inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 py-1 text-[10px] font-semibold text-foreground hover:border-primary hover:text-primary"
+                                    >
+                                      <Eye className="h-3 w-3" /> Chi tiết
+                                    </Link>
+                                  </li>
+                                );
+                              })}
+                            </ul>
+                          )}
+                        </div>
+                      )}
+
+                      {isAdmin && (
+                        <div className="relative mt-3 flex flex-wrap items-center justify-end gap-1.5">
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setCopyTarget([t]);
+                            }}
+                            title="Sao chép sang đơn vị khác"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
+                          >
+                            <Copy className="h-3.5 w-3.5" /> Sao chép
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              duplicate(t);
+                            }}
+                            title="Tạo đề tương tự cho cùng lớp (giữ nguyên dạng và độ khó, đổi nội dung câu hỏi)"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
+                          >
+                            <Sparkles className="h-3.5 w-3.5" /> Tạo đề tương tự
+                          </button>
+                        </div>
                       )}
                     </div>
-                  </div>
+                  );
+                })}
+              </div>
+            );
+          })()
 
-                  {org && (
-                    <div className="relative mt-2 inline-flex w-fit items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                      <Building2 className="h-3 w-3" /> {org.shortName}
-                    </div>
-                  )}
-
-                  <h3 className="relative mt-3 font-display text-lg font-semibold text-foreground line-clamp-1">
-                    {t.name}
-                  </h3>
-                  <p className="relative mt-1 text-xs text-muted-foreground line-clamp-2">
-                    {t.description}
-                  </p>
-
-                  <div className="relative mt-3 flex items-start gap-1.5">
-                    <GraduationCap className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                    <div className="flex flex-wrap gap-1">
-                      {t.classIds.map((cid) => (
-                        <span
-                          key={cid}
-                          className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-foreground"
-                        >
-                          {classNameById(cid)}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="relative mt-4 grid grid-cols-2 gap-y-2 border-t border-border pt-3 text-xs text-muted-foreground">
-                    <span className="inline-flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5" />{" "}
-                      {new Date(t.openAt).toLocaleDateString("vi-VN")}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <Clock className="h-3.5 w-3.5" /> {t.durationMinutes} phút
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <Users className="h-3.5 w-3.5" /> {t.submitted}/{t.registered} HS
-                    </span>
-                    <span className="text-right font-semibold text-foreground">
-                      {t.avgScore ? `TB ${t.avgScore}` : "—"}
-                    </span>
-                  </div>
-
-                  {isAdmin && (
-                    <div className="relative mt-3 flex flex-wrap items-center justify-end gap-1.5">
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setCopyTarget([t]);
-                        }}
-                        title="Sao chép sang đơn vị khác"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
-                      >
-                        <Copy className="h-3.5 w-3.5" /> Sao chép
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          duplicate(t);
-                        }}
-                        title="Tạo đề tương tự cho cùng lớp (giữ nguyên dạng và độ khó, đổi nội dung câu hỏi)"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
-                      >
-                        <Sparkles className="h-3.5 w-3.5" /> Tạo đề tương tự
-                      </button>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
 
         ) : (
           <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
