@@ -80,66 +80,112 @@ function LevelPage() {
 
       <div className="mx-auto max-w-7xl px-6 py-10 sm:px-8">
         <h2 className="text-lg font-semibold tracking-tight text-foreground">Các khoá học trong cấp độ</h2>
-        <div className="mt-5 grid gap-5 md:grid-cols-2">
+        <p className="mt-1 text-sm text-muted-foreground">Chọn khoá phù hợp để tiếp tục lộ trình.</p>
+        <div className="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {lv.courses.map((c) => (
-            <Link
-              key={c.id}
-              to="/courses/$courseId"
-              params={{ courseId: c.id }}
-              className="group relative overflow-hidden rounded-3xl bg-surface p-6 ring-1 ring-border shadow-soft transition hover:shadow-elevated hover:-translate-y-0.5"
-            >
-              <div
-                className="absolute -right-12 -top-12 h-40 w-40 rounded-full opacity-50 blur-2xl"
-                style={{ background: `oklch(0.85 0.12 ${lv.hue})` }}
-              />
-              <div className="relative flex items-start justify-between">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
-                  {c.level}
-                </span>
-                <span className="text-xs text-muted-foreground">{c.hours}h • {c.units.length} units</span>
-              </div>
-              <h3 className="mt-4 text-xl font-semibold tracking-tight text-foreground">{c.title}</h3>
-              <p className="mt-1 text-sm text-muted-foreground">{c.subtitle}</p>
-
-              <div className="mt-5">
-                <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-                  <span>Tiến độ</span>
-                  <span>{c.progress}%</span>
-                </div>
-                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                  <div
-                    className="h-full rounded-full"
-                    style={{
-                      width: `${c.progress}%`,
-                      background: `linear-gradient(90deg, oklch(0.6 0.18 ${lv.hue}), oklch(0.72 0.16 ${(lv.hue + 30) % 360}))`,
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div className="mt-5 flex items-center justify-between">
-                <div className="flex -space-x-2">
-                  {c.classmates.slice(0, 4).map((m, i) => (
-                    <div
-                      key={i}
-                      className="flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-primary/80 to-chart-5/80 text-[10px] font-semibold text-primary-foreground ring-2 ring-surface"
-                    >
-                      {m.name.split(" ").slice(-1)[0][0]}
-                    </div>
-                  ))}
-                  <div className="flex h-7 items-center rounded-full bg-muted px-2 text-[10px] font-medium text-muted-foreground ring-2 ring-surface">
-                    <Users className="mr-1 h-3 w-3" /> {c.classmates.length}
-                  </div>
-                </div>
-                <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
-                  Vào học <ArrowUpRight className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </span>
-              </div>
-            </Link>
+            <LevelCourseCard key={c.id} course={c} level={lv} />
           ))}
+          {lv.courses.length === 0 && (
+            <div className="col-span-full rounded-3xl border border-dashed border-border bg-surface/40 p-12 text-center text-sm text-muted-foreground">
+              Chưa có khoá học nào ở cấp độ này.
+            </div>
+          )}
         </div>
       </div>
     </div>
+  );
+}
+
+function LevelCourseCard({ course, level }: { course: Course; level: Level }) {
+  const cover = LEVEL_COVERS[level.code];
+  const category = categoryOf(course);
+  const done = course.progress >= 100;
+  const started = course.progress > 0;
+  return (
+    <Link
+      to="/courses/$courseId"
+      params={{ courseId: course.id }}
+      className="group relative flex flex-col overflow-hidden rounded-3xl bg-surface ring-1 ring-border shadow-soft transition hover:-translate-y-1 hover:shadow-elevated"
+    >
+      <div
+        className="relative aspect-[16/10] w-full overflow-hidden"
+        style={{
+          background: `linear-gradient(135deg, oklch(0.55 0.2 ${level.hue} / 0.18), oklch(0.7 0.18 ${(level.hue + 40) % 360} / 0.18))`,
+        }}
+      >
+        {cover ? (
+          <img
+            src={cover}
+            alt={`Bìa khoá học ${course.title}`}
+            loading="lazy"
+            className="h-full w-full object-contain p-3 transition duration-500 group-hover:scale-[1.03]"
+          />
+        ) : null}
+        <div className="absolute left-3 top-3 flex items-center gap-1.5">
+          <span className="inline-flex items-center rounded-full bg-background/90 px-2 py-0.5 text-[10px] font-semibold text-foreground ring-1 ring-border backdrop-blur">
+            {category}
+          </span>
+          <span
+            className="inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow-soft"
+            style={{
+              background: `linear-gradient(135deg, oklch(0.55 0.2 ${level.hue}), oklch(0.7 0.18 ${(level.hue + 40) % 360}))`,
+            }}
+          >
+            {level.code}
+          </span>
+        </div>
+        <div className="absolute right-3 top-3">
+          {done ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100/95 px-2 py-1 text-[10px] font-semibold text-emerald-800 backdrop-blur">
+              <CheckCircle2 className="h-3 w-3" /> Đã hoàn thành
+            </span>
+          ) : started ? (
+            <span className="inline-flex items-center gap-1 rounded-full bg-primary/95 px-2 py-1 text-[10px] font-semibold text-primary-foreground backdrop-blur">
+              <Play className="h-3 w-3" /> Đang học
+            </span>
+          ) : (
+            <span className="inline-flex items-center rounded-full bg-background/90 px-2 py-1 text-[10px] font-semibold text-muted-foreground ring-1 ring-border backdrop-blur">
+              Chưa bắt đầu
+            </span>
+          )}
+        </div>
+      </div>
+
+      <div className="flex flex-1 flex-col p-5">
+        <h3 className="text-base font-semibold text-foreground group-hover:text-primary">
+          {course.title}
+        </h3>
+        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{course.subtitle}</p>
+
+        <div className="mt-4 flex items-center gap-3 text-[11px] font-medium text-muted-foreground">
+          <span className="inline-flex items-center gap-1">
+            <Clock className="h-3 w-3" /> {course.hours}h
+          </span>
+          <span>•</span>
+          <span>{course.units.length} units</span>
+        </div>
+
+        <div className="mt-4">
+          <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
+            <span>Tiến độ</span>
+            <span>{course.progress}%</span>
+          </div>
+          <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${course.progress}%`,
+                background: `linear-gradient(90deg, oklch(0.55 0.2 ${level.hue}), oklch(0.7 0.18 ${(level.hue + 40) % 360}))`,
+              }}
+            />
+          </div>
+        </div>
+
+        <div className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-primary">
+          Vào học <ArrowUpRight className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+        </div>
+      </div>
+    </Link>
   );
 }
 
@@ -152,4 +198,8 @@ function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; va
       <div className="mt-0.5 text-base font-semibold text-foreground">{value}</div>
     </div>
   );
+}
+
+function _unused() {
+  return <BookOpen /> as unknown as null;
 }
