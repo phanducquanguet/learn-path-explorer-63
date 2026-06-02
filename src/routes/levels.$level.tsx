@@ -2,7 +2,7 @@ import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { ArrowLeft, ArrowUpRight, BookOpen, CheckCircle2, Clock, Layers, Play } from "lucide-react";
 import { getLevel, type Course, type Level } from "@/lib/lms-data";
 import { categoryOf } from "@/lib/course-categories";
-import { cn } from "@/lib/utils";
+
 import empowerA1Asset from "@/assets/empower-a1.png.asset.json";
 
 const LEVEL_COVERS: Record<string, string> = {
