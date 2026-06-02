@@ -1005,32 +1005,6 @@ function PackageInfoBanner({
   );
 }
 
-function TrackingToggle({
-  label,
-  desc,
-  checked,
-  onChange,
-}: {
-  label: string;
-  desc: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <label className="flex items-start gap-3 rounded-xl border border-border bg-muted/30 px-3 py-2.5">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
-      />
-      <div className="flex-1">
-        <div className="text-xs font-semibold text-foreground">{label}</div>
-        <div className="text-[11px] text-muted-foreground">{desc}</div>
-      </div>
-    </label>
-  );
-}
 
 function ScormEditor({ node, onChange }: { node: ScormNode; onChange: (p: Partial<ScormNode>) => void }) {
   return (
