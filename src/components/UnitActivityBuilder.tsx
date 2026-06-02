@@ -112,6 +112,8 @@ const ACTIVITY_OPTIONS: { kind: LeafKind; label: string; icon: React.ElementType
   { kind: "pdf", label: "Tài liệu PDF", icon: FileText },
   { kind: "pdf-audio", label: "PDF kèm audio", icon: Headphones },
   { kind: "practice", label: "Bài thực hành", icon: ListChecks },
+  { kind: "scorm", label: "Gói SCORM (.zip)", icon: Package },
+  { kind: "h5p", label: "Gói H5P (.h5p)", icon: Boxes },
 ];
 
 const KIND_ICON: Record<Exclude<AnyNode["kind"], "question">, React.ElementType> = {
@@ -121,6 +123,8 @@ const KIND_ICON: Record<Exclude<AnyNode["kind"], "question">, React.ElementType>
   pdf: FileText,
   "pdf-audio": Headphones,
   practice: ListChecks,
+  scorm: Package,
+  h5p: Boxes,
 };
 
 const KIND_LABEL: Record<Exclude<AnyNode["kind"], "question">, string> = {
@@ -130,6 +134,8 @@ const KIND_LABEL: Record<Exclude<AnyNode["kind"], "question">, string> = {
   pdf: "PDF",
   "pdf-audio": "PDF + Audio",
   practice: "Thực hành",
+  scorm: "SCORM",
+  h5p: "H5P",
 };
 
 const Q_TYPE_ICON: Record<QType, React.ElementType> = {
