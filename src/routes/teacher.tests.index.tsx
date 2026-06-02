@@ -111,6 +111,7 @@ function TestsList() {
   const [tests, setTests] = useState<Test[]>(seedTests);
   const [orgFilter, setOrgFilter] = useState<string>("all");
   const [selected, setSelected] = useState<string[]>([]);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [copyTarget, setCopyTarget] = useState<Test[] | null>(null);
   const simCounts = useMemo(() => {
     const m: Record<string, number> = {};
