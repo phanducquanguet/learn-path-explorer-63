@@ -28,8 +28,15 @@ import {
   ChevronRight,
   CornerDownRight,
   Eye,
+  MoreVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/teacher/tests/")({
   head: () => ({ meta: [{ title: "Thi cử — UNICOM LMS" }] }),
