@@ -200,6 +200,3 @@ function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; va
   );
 }
 
-function _unused() {
-  return <BookOpen /> as unknown as null;
-}
