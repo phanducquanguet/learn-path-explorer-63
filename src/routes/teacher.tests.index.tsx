@@ -367,6 +367,40 @@ function TestsList() {
                               )}
                             </button>
                           )}
+                          {isAdmin && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                  }}
+                                  className="rounded-lg border border-border bg-background p-1 text-foreground hover:bg-muted"
+                                  aria-label="Tác vụ"
+                                >
+                                  <MoreVertical className="h-3.5 w-3.5" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenuItem
+                                  onSelect={(e) => {
+                                    e.preventDefault();
+                                    setCopyTarget([t]);
+                                  }}
+                                >
+                                  <Copy className="mr-2 h-3.5 w-3.5" /> Sao chép sang đơn vị khác
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onSelect={(e) => {
+                                    e.preventDefault();
+                                    duplicate(t);
+                                  }}
+                                >
+                                  <Sparkles className="mr-2 h-3.5 w-3.5" /> Tạo đề tương tự
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
                         </div>
                       </div>
 
