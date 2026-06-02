@@ -176,6 +176,10 @@ function makeNode(kind: Exclude<AnyNode["kind"], "question">): AnyNode {
       return { ...base, kind, title: "PDF kèm audio", description: "" };
     case "practice":
       return { ...base, kind, title: "Bài thực hành", description: "", instructions: "", questions: [] };
+    case "scorm":
+      return { ...base, kind, title: "Gói SCORM", description: "", version: "1.2", trackCompletion: true, trackScore: true };
+    case "h5p":
+      return { ...base, kind, title: "Gói H5P", description: "", trackCompletion: true };
   }
 }
 
