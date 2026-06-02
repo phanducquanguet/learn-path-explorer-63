@@ -4,6 +4,7 @@ import { getLevel, type Course, type Level } from "@/lib/lms-data";
 import { categoryOf } from "@/lib/course-categories";
 
 import empowerA1Asset from "@/assets/empower-a1.png.asset.json";
+import levelHero from "@/assets/level-hero.jpg";
 
 const LEVEL_COVERS: Record<string, string> = {
   A1: empowerA1Asset.url,
@@ -32,51 +33,64 @@ function LevelPage() {
   const lv = getLevel(level);
   if (!lv) throw notFound();
 
+  const totalHours = lv.courses.reduce((a, c) => a + c.hours, 0);
+  const avatarBg = `linear-gradient(135deg, oklch(0.55 0.18 ${lv.hue}), oklch(0.7 0.16 ${(lv.hue + 30) % 360}))`;
+
   return (
     <div className="min-h-screen bg-background">
-      <div
-        className="relative overflow-hidden"
-        style={{
-          background: `linear-gradient(135deg, oklch(0.95 0.05 ${lv.hue}) 0%, oklch(0.97 0.025 ${(lv.hue + 40) % 360}) 100%)`,
-        }}
-      >
-        <div className="mx-auto max-w-7xl px-6 pt-8 pb-16 sm:px-8">
-          <Link
-            to="/"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" /> Quay lại tổng quan
-          </Link>
+      <div className="mx-auto max-w-7xl px-6 pt-6 sm:px-8">
+        <Link
+          to="/"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+        >
+          <ArrowLeft className="h-4 w-4" /> Quay lại tổng quan
+        </Link>
+      </div>
 
-          <div className="mt-6 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-5">
-              <div
-                className="flex h-20 w-20 items-center justify-center rounded-3xl text-2xl font-bold text-white shadow-elevated"
-                style={{
-                  background: `linear-gradient(135deg, oklch(0.55 0.18 ${lv.hue}), oklch(0.7 0.16 ${(lv.hue + 30) % 360}))`,
-                }}
-              >
-                {lv.code}
-              </div>
+      <div className="mx-auto max-w-7xl px-6 pt-5 sm:px-8">
+        {/* Banner */}
+        <div className="relative overflow-hidden rounded-3xl shadow-elevated ring-1 ring-border">
+          <img
+            src={levelHero}
+            alt={`Banner cấp độ ${lv.code}`}
+            width={1920}
+            height={640}
+            className="h-[260px] w-full object-cover sm:h-[340px] lg:h-[400px]"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/10 via-transparent to-transparent" />
+        </div>
+
+        {/* Overlay row: avatar + breadcrumb on left, stats on right */}
+        <div className="relative z-10 -mt-14 flex flex-col gap-6 px-2 sm:px-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex items-end gap-5">
+            <div
+              className="flex h-28 w-28 shrink-0 items-center justify-center rounded-full text-3xl font-bold text-white shadow-elevated ring-4 ring-background sm:h-32 sm:w-32 sm:text-4xl"
+              style={{ background: avatarBg }}
+            >
+              {lv.code}
+            </div>
+            <div className="mb-2 flex items-center gap-6 rounded-2xl bg-surface/90 px-5 py-3 shadow-soft ring-1 ring-border backdrop-blur">
               <div>
-                <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Cấp độ {lv.code}
-                </div>
-                <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-                  {lv.name}
-                </h1>
-                <p className="mt-1 max-w-xl text-sm text-muted-foreground">{lv.description}</p>
+                <div className="text-sm font-semibold text-foreground">Level</div>
+                <div className="text-xs text-muted-foreground">{lv.code}</div>
+              </div>
+              <div className="h-8 w-px bg-border" />
+              <div>
+                <div className="text-sm font-semibold text-foreground">{lv.code}</div>
+                <div className="text-xs text-muted-foreground">{lv.name}</div>
               </div>
             </div>
+          </div>
 
-            <div className="flex flex-wrap gap-3">
-              <Stat icon={<Layers className="h-4 w-4" />} label="Khoá học" value={`${lv.courses.length}`} />
-              <Stat icon={<Clock className="h-4 w-4" />} label="Tổng giờ học" value={`${lv.courses.reduce((a, c) => a + c.hours, 0)}h`} />
-              <Stat icon={<BookOpen className="h-4 w-4" />} label="Tiến độ" value={`${lv.progress}%`} />
-            </div>
+          <div className="mb-2 flex flex-wrap gap-3">
+            <Stat icon={<Layers className="h-4 w-4" />} label="Khoá học" value={`${lv.courses.length}`} />
+            <Stat icon={<Clock className="h-4 w-4" />} label="Tổng giờ học" value={`${totalHours}h`} />
+            <Stat icon={<BookOpen className="h-4 w-4" />} label="Tiến độ" value={`${lv.progress}%`} />
           </div>
         </div>
       </div>
+
+
 
       <div className="mx-auto max-w-7xl px-6 py-10 sm:px-8">
         <h2 className="text-lg font-semibold tracking-tight text-foreground">Các khoá học trong cấp độ</h2>
