@@ -1005,32 +1005,6 @@ function PackageInfoBanner({
   );
 }
 
-function TrackingToggle({
-  label,
-  desc,
-  checked,
-  onChange,
-}: {
-  label: string;
-  desc: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <label className="flex items-start gap-3 rounded-xl border border-border bg-muted/30 px-3 py-2.5">
-      <input
-        type="checkbox"
-        checked={checked}
-        onChange={(e) => onChange(e.target.checked)}
-        className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
-      />
-      <div className="flex-1">
-        <div className="text-xs font-semibold text-foreground">{label}</div>
-        <div className="text-[11px] text-muted-foreground">{desc}</div>
-      </div>
-    </label>
-  );
-}
 
 function ScormEditor({ node, onChange }: { node: ScormNode; onChange: (p: Partial<ScormNode>) => void }) {
   return (
@@ -1045,39 +1019,6 @@ function ScormEditor({ node, onChange }: { node: ScormNode; onChange: (p: Partia
           accept=".zip,application/zip"
         />
       </Row>
-      <Row label="Phiên bản SCORM">
-        <div className="flex gap-2">
-          {(["1.2", "2004"] as const).map((v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => onChange({ version: v })}
-              className={cn(
-                "rounded-lg border px-3 py-1.5 text-xs font-semibold transition",
-                node.version === v
-                  ? "border-primary bg-primary/10 text-primary"
-                  : "border-border bg-background text-muted-foreground hover:border-primary/40",
-              )}
-            >
-              SCORM {v}
-            </button>
-          ))}
-        </div>
-      </Row>
-      <div className="grid gap-2 sm:grid-cols-2">
-        <TrackingToggle
-          label="Theo dõi hoàn thành"
-          desc="Đánh dấu hoàn thành khi gói báo cmi.completion_status = completed."
-          checked={!!node.trackCompletion}
-          onChange={(v) => onChange({ trackCompletion: v })}
-        />
-        <TrackingToggle
-          label="Ghi nhận điểm"
-          desc="Lưu cmi.score.raw từ gói vào sổ điểm của học viên."
-          checked={!!node.trackScore}
-          onChange={(v) => onChange({ trackScore: v })}
-        />
-      </div>
     </div>
   );
 }
@@ -1095,20 +1036,6 @@ function H5pEditor({ node, onChange }: { node: H5pNode; onChange: (p: Partial<H5
           accept=".h5p"
         />
       </Row>
-      <Row label="Loại nội dung (tuỳ chọn)">
-        <input
-          value={node.contentType ?? ""}
-          onChange={(e) => onChange({ contentType: e.target.value })}
-          placeholder="VD: Interactive Video, Course Presentation, Drag & Drop…"
-          className="ui-input"
-        />
-      </Row>
-      <TrackingToggle
-        label="Theo dõi hoàn thành qua xAPI"
-        desc="Ghi nhận khi học viên hoàn tất tương tác trong gói H5P."
-        checked={!!node.trackCompletion}
-        onChange={(v) => onChange({ trackCompletion: v })}
-      />
     </div>
   );
 }
