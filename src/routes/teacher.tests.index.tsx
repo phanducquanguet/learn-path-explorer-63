@@ -28,8 +28,15 @@ import {
   ChevronRight,
   CornerDownRight,
   Eye,
+  MoreVertical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/teacher/tests/")({
   head: () => ({ meta: [{ title: "Thi cử — UNICOM LMS" }] }),
@@ -360,6 +367,40 @@ function TestsList() {
                               )}
                             </button>
                           )}
+                          {isAdmin && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                  }}
+                                  className="rounded-lg border border-border bg-background p-1 text-foreground hover:bg-muted"
+                                  aria-label="Tác vụ"
+                                >
+                                  <MoreVertical className="h-3.5 w-3.5" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenuItem
+                                  onSelect={(e) => {
+                                    e.preventDefault();
+                                    setCopyTarget([t]);
+                                  }}
+                                >
+                                  <Copy className="mr-2 h-3.5 w-3.5" /> Sao chép sang đơn vị khác
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onSelect={(e) => {
+                                    e.preventDefault();
+                                    duplicate(t);
+                                  }}
+                                >
+                                  <Sparkles className="mr-2 h-3.5 w-3.5" /> Tạo đề tương tự
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
                         </div>
                       </div>
 
@@ -474,32 +515,6 @@ function TestsList() {
                         </div>
                       )}
 
-                      {isAdmin && (
-                        <div className="relative mt-3 flex flex-wrap items-center justify-end gap-1.5">
-                          <button
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              setCopyTarget([t]);
-                            }}
-                            title="Sao chép sang đơn vị khác"
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
-                          >
-                            <Copy className="h-3.5 w-3.5" /> Sao chép
-                          </button>
-                          <button
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              duplicate(t);
-                            }}
-                            title="Tạo đề tương tự cho cùng lớp (giữ nguyên dạng và độ khó, đổi nội dung câu hỏi)"
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
-                          >
-                            <Sparkles className="h-3.5 w-3.5" /> Tạo đề tương tự
-                          </button>
-                        </div>
-                      )}
                     </div>
                   );
                 })}
