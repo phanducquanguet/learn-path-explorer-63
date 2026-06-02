@@ -1065,37 +1065,4 @@ function H5pEditor({ node, onChange }: { node: H5pNode; onChange: (p: Partial<H5
     </div>
   );
 }
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function _UnusedTrackingRef(_: typeof TrackingToggle) { return null; }
-
-function H5pEditor({ node, onChange }: { node: H5pNode; onChange: (p: Partial<H5pNode>) => void }) {
-  return (
-    <div className="space-y-4">
-      <PackageInfoBanner kind="h5p" />
-      <Row label="Tệp gói H5P (.h5p)">
-        <FileBox
-          icon={Boxes}
-          label="Tải lên gói H5P (.h5p)"
-          fileName={node.fileName}
-          onChange={(fileName) => onChange({ fileName })}
-          accept=".h5p"
-        />
-      </Row>
-      <Row label="Loại nội dung (tuỳ chọn)">
-        <input
-          value={node.contentType ?? ""}
-          onChange={(e) => onChange({ contentType: e.target.value })}
-          placeholder="VD: Interactive Video, Course Presentation, Drag & Drop…"
-          className="ui-input"
-        />
-      </Row>
-      <TrackingToggle
-        label="Theo dõi hoàn thành qua xAPI"
-        desc="Ghi nhận khi học viên hoàn tất tương tác trong gói H5P."
-        checked={!!node.trackCompletion}
-        onChange={(v) => onChange({ trackCompletion: v })}
-      />
-    </div>
-  );
-}
 
