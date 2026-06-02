@@ -208,11 +208,11 @@ function LevelCourseCard({ course, level }: { course: Course; level: Level }) {
 
 function Stat({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
-    <div className="min-w-[120px] rounded-2xl bg-surface px-4 py-3 shadow-soft ring-1 ring-border">
-      <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+    <div className="rounded-lg bg-surface/95 px-3 py-1.5 shadow-soft ring-1 ring-border backdrop-blur">
+      <div className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground">
         {icon} {label}
       </div>
-      <div className="mt-1 text-lg font-semibold text-foreground">{value}</div>
+      <div className="text-sm font-semibold leading-tight text-foreground">{value}</div>
     </div>
   );
 }
