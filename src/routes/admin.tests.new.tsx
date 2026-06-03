@@ -45,6 +45,12 @@ export const Route = createFileRoute("/admin/tests/new")({
 const LEVELS: QLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
 const SKILLS: QSkill[] = ["listening", "reading", "writing", "speaking"];
 const DIFFICULTIES: (QDifficulty | "mixed")[] = ["mixed", "easy", "medium", "hard"];
+const TYPES_BY_SKILL: Record<QSkill, QType[]> = {
+  listening: ["mcq", "mcq-multi", "tf", "short", "fill", "matching", "sequence"],
+  reading: ["mcq", "mcq-multi", "tf", "short", "fill", "matching", "sequence", "select-lists", "drag-drop", "error-correction"],
+  writing: ["essay", "short", "error-correction"],
+  speaking: ["speaking", "short"],
+};
 
 const STEPS = [
   { id: 1, label: "Thông tin chung" },
