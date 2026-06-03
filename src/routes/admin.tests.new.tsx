@@ -519,10 +519,11 @@ function NewTestPage() {
                     ...p,
                     {
                       skill: "reading",
-                      type: "mcq",
+                      type: "mixed",
                       level,
                       difficulty: "mixed",
                       count: 5,
+                      sectionDurationMinutes: 10,
                       pickedIds: [],
                     },
                   ])
