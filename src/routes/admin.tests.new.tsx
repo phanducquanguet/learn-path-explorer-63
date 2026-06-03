@@ -459,6 +459,25 @@ function NewTestPage() {
                             />
                           </td>
                           <td className="px-3 py-2 text-center">
+                            <input
+                              type="number"
+                              min={0}
+                              placeholder="—"
+                              value={row.sectionDurationMinutes ?? ""}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                setStructure((p) =>
+                                  p.map((x, k) =>
+                                    k === idx
+                                      ? { ...x, sectionDurationMinutes: v === "" ? undefined : Math.max(0, Number(v)) }
+                                      : x,
+                                  ),
+                                );
+                              }}
+                              className="w-20 rounded-lg border border-border bg-background px-2 py-1 text-center text-xs"
+                            />
+                          </td>
+                          <td className="px-3 py-2 text-center">
                             <span
                               className={cn(
                                 "rounded-md px-2 py-0.5 text-[11px] font-semibold",
