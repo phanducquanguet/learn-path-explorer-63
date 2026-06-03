@@ -344,37 +344,65 @@ function CoursePage() {
                       setOpenGroups((g) => ({ ...g, [u.id]: !g[u.id] }))
                     }
                   >
-                    {u.activities.map((a) => (
-                      <SidebarLeaf
-                        key={a.id}
-                        icon={activityIcon(a.type)}
-                        label={a.title}
-                        meta={`${a.duration} phút`}
-                        done={a.done}
-                        active={activeUnitId === u.id + ":" + a.id}
-                        onClick={() => {
-                          setActiveUnitId(u.id);
-                          if (a.type === "quiz") {
-                            setQuizOpen(a);
-                            setReadingOpen(null);
-                            setVideoOpen(null);
-                          } else if (a.type === "reading") {
-                            setReadingOpen(a);
-                            setQuizOpen(null);
-                            setVideoOpen(null);
-                          } else if (a.type === "video") {
-                            setVideoOpen(a);
-                            setQuizOpen(null);
-                            setReadingOpen(null);
-                          } else {
-                            setQuizOpen(null);
-                            setReadingOpen(null);
-                            setVideoOpen(null);
-                            setTab("overview");
-                          }
-                        }}
-                      />
-                    ))}
+                    {(() => {
+                      const learning = u.activities.filter(
+                        (a) => a.type === "video" || a.type === "reading",
+                      );
+                      const practice = u.activities.filter(
+                        (a) => a.type !== "video" && a.type !== "reading",
+                      );
+                      const renderLeaf = (a: Activity) => (
+                        <SidebarLeaf
+                          key={a.id}
+                          icon={activityIcon(a.type)}
+                          label={a.title}
+                          meta={`${a.duration} phút`}
+                          done={a.done}
+                          active={activeUnitId === u.id + ":" + a.id}
+                          onClick={() => {
+                            setActiveUnitId(u.id);
+                            if (a.type === "quiz") {
+                              setQuizOpen(a);
+                              setReadingOpen(null);
+                              setVideoOpen(null);
+                            } else if (a.type === "reading") {
+                              setReadingOpen(a);
+                              setQuizOpen(null);
+                              setVideoOpen(null);
+                            } else if (a.type === "video") {
+                              setVideoOpen(a);
+                              setQuizOpen(null);
+                              setReadingOpen(null);
+                            } else {
+                              setQuizOpen(null);
+                              setReadingOpen(null);
+                              setVideoOpen(null);
+                              setTab("overview");
+                            }
+                          }}
+                        />
+                      );
+                      return (
+                        <>
+                          {learning.length > 0 && (
+                            <>
+                              <div className="px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                Học tập
+                              </div>
+                              {learning.map(renderLeaf)}
+                            </>
+                          )}
+                          {practice.length > 0 && (
+                            <>
+                              <div className="px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                                Luyện tập
+                              </div>
+                              {practice.map(renderLeaf)}
+                            </>
+                          )}
+                        </>
+                      );
+                    })()}
                   </SidebarGroup>
                 );
               })}
