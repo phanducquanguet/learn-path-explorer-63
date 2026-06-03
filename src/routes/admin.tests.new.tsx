@@ -532,17 +532,50 @@ function NewTestPage() {
               >
                 <Plus className="h-3.5 w-3.5" /> Thêm dòng
               </button>
-              <div className="rounded-xl bg-muted/40 p-3 text-sm">
-                Tổng cộng: <strong>{totalQuestions} câu</strong> qua{" "}
-                <strong>{structure.filter((s) => s.count > 0).length}</strong> dòng cấu trúc
+              <div className="space-y-2 rounded-xl bg-muted/40 p-3 text-sm">
+                <div>
+                  Tổng cộng: <strong>{totalQuestions} câu</strong> qua{" "}
+                  <strong>{structure.filter((s) => s.count > 0).length}</strong> dòng cấu trúc
+                  {(() => {
+                    const sec = structure.reduce((a, s) => a + (s.sectionDurationMinutes ?? 0), 0);
+                    if (sec === 0) return null;
+                    const over = sec > duration;
+                    return (
+                      <span className={cn("ml-2", over ? "text-rose-600" : "text-muted-foreground")}>
+                        • Tổng thời gian các phần: <strong>{sec} phút</strong> {over && `(vượt thời lượng ${duration} phút)`}
+                      </span>
+                    );
+                  })()}
+                </div>
                 {(() => {
-                  const sec = structure.reduce((a, s) => a + (s.sectionDurationMinutes ?? 0), 0);
-                  if (sec === 0) return null;
-                  const over = sec > duration;
+                  const bySkill = new Map<QSkill, { minutes: number; count: number; rows: number }>();
+                  structure.forEach((s) => {
+                    if (s.count <= 0) return;
+                    const cur = bySkill.get(s.skill) ?? { minutes: 0, count: 0, rows: 0 };
+                    cur.minutes += s.sectionDurationMinutes ?? 0;
+                    cur.count += s.count;
+                    cur.rows += 1;
+                    bySkill.set(s.skill, cur);
+                  });
+                  if (bySkill.size === 0) return null;
                   return (
-                    <span className={cn("ml-2", over ? "text-rose-600" : "text-muted-foreground")}>
-                      • Tổng thời gian các phần: <strong>{sec} phút</strong> {over && `(vượt thời lượng ${duration} phút)`}
-                    </span>
+                    <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                      <span className="text-xs text-muted-foreground">Thời gian theo kỹ năng:</span>
+                      {SKILLS.filter((sk) => bySkill.has(sk)).map((sk) => {
+                        const info = bySkill.get(sk)!;
+                        return (
+                          <span
+                            key={sk}
+                            className="inline-flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-[11px] font-semibold"
+                          >
+                            <span className="text-foreground">{SKILL_LABEL[sk]}</span>
+                            <span className="text-muted-foreground">·</span>
+                            <span className="text-primary">⏱ {info.minutes || "—"}{info.minutes ? "'" : ""}</span>
+                            <span className="text-muted-foreground">· {info.count} câu</span>
+                          </span>
+                        );
+                      })}
+                    </div>
                   );
                 })()}
               </div>
