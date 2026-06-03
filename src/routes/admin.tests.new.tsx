@@ -535,6 +535,16 @@ function NewTestPage() {
               <div className="rounded-xl bg-muted/40 p-3 text-sm">
                 Tổng cộng: <strong>{totalQuestions} câu</strong> qua{" "}
                 <strong>{structure.filter((s) => s.count > 0).length}</strong> dòng cấu trúc
+                {(() => {
+                  const sec = structure.reduce((a, s) => a + (s.sectionDurationMinutes ?? 0), 0);
+                  if (sec === 0) return null;
+                  const over = sec > duration;
+                  return (
+                    <span className={cn("ml-2", over ? "text-rose-600" : "text-muted-foreground")}>
+                      • Tổng thời gian các phần: <strong>{sec} phút</strong> {over && `(vượt thời lượng ${duration} phút)`}
+                    </span>
+                  );
+                })()}
               </div>
             </div>
           )}
