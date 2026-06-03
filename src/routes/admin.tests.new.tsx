@@ -644,6 +644,10 @@ function NewTestPage() {
                       </span>
                       <span className="text-muted-foreground">•</span>
                       <span>{r.item.level}</span>
+                      <span className="text-muted-foreground">•</span>
+                      <span className="rounded-md bg-background px-1.5 py-0.5 text-[10px] font-semibold">
+                        {r.item.type === "mixed" ? "Trộn dạng" : TYPE_LABEL[r.item.type]}
+                      </span>
                       {r.item.difficulty && r.item.difficulty !== "mixed" && (
                         <span
                           className={cn(
@@ -654,6 +658,11 @@ function NewTestPage() {
                           {DIFFICULTY_LABEL[r.item.difficulty]}
                         </span>
                       )}
+                      {r.item.sectionDurationMinutes ? (
+                        <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                          ⏱ {r.item.sectionDurationMinutes}'
+                        </span>
+                      ) : null}
                       <span className="ml-auto font-semibold text-foreground">
                         {r.questions.length}/{r.item.count} câu
                       </span>
