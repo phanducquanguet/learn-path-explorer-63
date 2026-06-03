@@ -505,7 +505,7 @@ function NewTestPage() {
                     })}
                     {structure.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="px-3 py-8 text-center text-xs text-muted-foreground">
+                        <td colSpan={9} className="px-3 py-8 text-center text-xs text-muted-foreground">
                           Chưa có dòng nào. Nhấn “Thêm dòng” bên dưới để bắt đầu.
                         </td>
                       </tr>
