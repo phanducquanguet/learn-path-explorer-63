@@ -394,12 +394,29 @@ function NewTestPage() {
                           <td className="px-3 py-2">
                             <select
                               value={row.skill}
-                              onChange={(e) => upsertAt({ skill: e.target.value as QSkill })}
+                              onChange={(e) => {
+                                const skill = e.target.value as QSkill;
+                                upsertAt({ skill, type: "mixed" });
+                              }}
                               className="rounded-lg border border-border bg-background px-2 py-1 text-xs font-semibold"
                             >
                               {SKILLS.map((sk) => (
                                 <option key={sk} value={sk}>
                                   {SKILL_LABEL[sk]}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-3 py-2">
+                            <select
+                              value={row.type}
+                              onChange={(e) => upsertAt({ type: e.target.value as QType | "mixed" })}
+                              className="rounded-lg border border-border bg-background px-2 py-1 text-xs"
+                            >
+                              <option value="mixed">Trộn nhiều dạng</option>
+                              {TYPES_BY_SKILL[row.skill].map((t) => (
+                                <option key={t} value={t}>
+                                  {TYPE_LABEL[t]}
                                 </option>
                               ))}
                             </select>
