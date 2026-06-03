@@ -893,8 +893,10 @@ function ActivitiesView({
               </button>
             )}
           </div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {u.activities.map((a) => {
+          {(() => {
+            const learning = u.activities.filter((a) => a.type === "video" || a.type === "reading");
+            const practice = u.activities.filter((a) => a.type !== "video" && a.type !== "reading");
+            const renderActivity = (a: Activity) => {
               const isQuiz = a.type === "quiz";
               const interactive = isQuiz && !editMode;
               const Wrapper: any = interactive ? "button" : "div";
@@ -965,22 +967,82 @@ function ActivitiesView({
                   )}
                 </Wrapper>
               );
-            })}
-          </div>
+            };
 
-          {editMode && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {(["video", "reading", "quiz", "writing"] as Activity["type"][]).map((t) => (
-                <button
-                  key={t}
-                  onClick={() => onAddActivity?.(u.id, t)}
-                  className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary hover:text-primary"
-                >
-                  <Plus className="h-3 w-3" /> {labelType(t)}
-                </button>
-              ))}
-            </div>
-          )}
+            const Group = ({
+              label,
+              icon,
+              tone,
+              items,
+              addTypes,
+            }: {
+              label: string;
+              icon: React.ReactNode;
+              tone: string;
+              items: Activity[];
+              addTypes: Activity["type"][];
+            }) => {
+              if (items.length === 0 && !editMode) return null;
+              const doneCount = items.filter((a) => a.done).length;
+              return (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between px-1">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={cn(
+                          "inline-flex h-6 w-6 items-center justify-center rounded-lg",
+                          tone,
+                        )}
+                      >
+                        {icon}
+                      </span>
+                      <span className="text-[12px] font-semibold uppercase tracking-wider text-foreground">
+                        {label}
+                      </span>
+                      <span className="text-[11px] text-muted-foreground">
+                        {doneCount}/{items.length}
+                      </span>
+                    </div>
+                  </div>
+                  {items.length > 0 && (
+                    <div className="grid gap-2 sm:grid-cols-2">{items.map(renderActivity)}</div>
+                  )}
+                  {editMode && (
+                    <div className="flex flex-wrap gap-2 pl-1">
+                      {addTypes.map((t) => (
+                        <button
+                          key={t}
+                          onClick={() => onAddActivity?.(u.id, t)}
+                          className="inline-flex items-center gap-1 rounded-lg border border-dashed border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground hover:border-primary hover:text-primary"
+                        >
+                          <Plus className="h-3 w-3" /> {labelType(t)}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            };
+
+            return (
+              <div className="space-y-4">
+                <Group
+                  label="Học tập"
+                  icon={<BookOpen className="h-3.5 w-3.5" />}
+                  tone="bg-primary/10 text-primary"
+                  items={learning}
+                  addTypes={["video", "reading"]}
+                />
+                <Group
+                  label="Luyện tập"
+                  icon={<Sparkles className="h-3.5 w-3.5" />}
+                  tone="bg-amber-500/15 text-amber-600"
+                  items={practice}
+                  addTypes={["quiz", "writing", "speaking"]}
+                />
+              </div>
+            );
+          })()}
         </div>
       ))}
 
