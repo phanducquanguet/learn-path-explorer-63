@@ -18,11 +18,14 @@ export type CustomQuestion = {
 
 export type TestStructureItem = {
   skill: QSkill;
-  type: QType;
+  /** Loại câu hỏi cụ thể, hoặc "mixed" để bốc trộn nhiều dạng. */
+  type: QType | "mixed";
   level: QLevel;
   count: number;
   /** "mixed" = không giới hạn độ khó (bốc trộn). */
   difficulty?: QDifficulty | "mixed";
+  /** Giới hạn thời gian làm phần này (phút). Bỏ trống = dùng chung tổng thời lượng. */
+  sectionDurationMinutes?: number;
   /** Câu hỏi đã chọn thủ công (mode fixed). */
   pickedIds?: string[];
   /** Câu hỏi do người dùng tự soạn (mode manual). */
