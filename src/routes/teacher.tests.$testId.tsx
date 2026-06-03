@@ -172,7 +172,7 @@ function TestDetail() {
                   <tr key={i} className="border-t border-border">
                     <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
                     <td className="px-4 py-3 font-medium">{SKILL_LABEL[s.skill]}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{TYPE_LABEL[s.type]}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{s.type === "mixed" ? "Trộn" : TYPE_LABEL[s.type]}</td>
                     <td className="px-4 py-3 text-center">
                       <span className="rounded bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">
                         {s.level}
