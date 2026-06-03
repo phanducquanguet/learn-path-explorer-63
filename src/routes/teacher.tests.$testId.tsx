@@ -719,7 +719,7 @@ function QuestionsTab({ test }: { test: ReturnType<typeof getTest> & object }) {
         .filter((q): q is BankQuestion => !!q);
     } else {
       qs = questionBank
-        .filter((q) => q.skill === item.skill && q.type === item.type && q.level === item.level)
+        .filter((q) => q.skill === item.skill && (item.type === "mixed" || q.type === item.type) && q.level === item.level)
         .slice(0, item.count);
     }
     const arr = groups.get(item.skill) ?? [];
