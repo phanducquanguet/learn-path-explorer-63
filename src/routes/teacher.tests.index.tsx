@@ -47,7 +47,7 @@ function pickSimilar(skill: string, type: string, level: string, difficulty: str
   const pool = questionBank.filter(
     (q) =>
       q.skill === (skill as never) &&
-      q.type === (type as never) &&
+      (!type || type === "mixed" || q.type === (type as never)) &&
       q.level === (level as never) &&
       (!difficulty || difficulty === "mixed" || q.difficulty === difficulty) &&
       !exclude.has(q.id),
