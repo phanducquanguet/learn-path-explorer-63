@@ -45,6 +45,12 @@ export const Route = createFileRoute("/admin/tests/new")({
 const LEVELS: QLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
 const SKILLS: QSkill[] = ["listening", "reading", "writing", "speaking"];
 const DIFFICULTIES: (QDifficulty | "mixed")[] = ["mixed", "easy", "medium", "hard"];
+const TYPES_BY_SKILL: Record<QSkill, QType[]> = {
+  listening: ["mcq", "mcq-multi", "tf", "short", "fill", "matching", "sequence"],
+  reading: ["mcq", "mcq-multi", "tf", "short", "fill", "matching", "sequence", "select-lists", "drag-drop", "error-correction"],
+  writing: ["essay", "short", "error-correction"],
+  speaking: ["speaking", "short"],
+};
 
 const STEPS = [
   { id: 1, label: "Thông tin chung" },
@@ -57,12 +63,12 @@ const STEPS = [
 type StructureItem = TestStructureItem;
 
 function matchBank(s: StructureItem): BankQuestion[] {
-  // Cấu trúc đề chỉ giới hạn theo Kỹ năng + Cấp độ + Độ khó.
-  // Loại câu hỏi (mcq, fill, essay...) được trộn ngẫu nhiên trong ngân hàng.
+  // Lọc theo Kỹ năng + Cấp độ + Loại + Độ khó.
   return questionBank.filter(
     (q) =>
       q.skill === s.skill &&
       q.level === s.level &&
+      (!s.type || s.type === "mixed" || q.type === s.type) &&
       (!s.difficulty || s.difficulty === "mixed" || q.difficulty === s.difficulty),
   );
 }
@@ -89,10 +95,10 @@ function NewTestPage() {
   const [openAt, setOpenAt] = useState("");
   const [closeAt, setCloseAt] = useState("");
   const [structure, setStructure] = useState<StructureItem[]>([
-    { skill: "listening", type: "mcq", level: "B1", difficulty: "mixed", count: 10, pickedIds: [] },
-    { skill: "reading", type: "mcq", level: "B1", difficulty: "mixed", count: 10, pickedIds: [] },
-    { skill: "speaking", type: "short", level: "B1", difficulty: "mixed", count: 3, pickedIds: [] },
-    { skill: "writing", type: "essay", level: "B1", difficulty: "mixed", count: 2, pickedIds: [] },
+    { skill: "listening", type: "mcq", level: "B1", difficulty: "mixed", count: 10, sectionDurationMinutes: 15, pickedIds: [] },
+    { skill: "reading", type: "mcq", level: "B1", difficulty: "mixed", count: 10, sectionDurationMinutes: 20, pickedIds: [] },
+    { skill: "speaking", type: "short", level: "B1", difficulty: "mixed", count: 3, sectionDurationMinutes: 10, pickedIds: [] },
+    { skill: "writing", type: "essay", level: "B1", difficulty: "mixed", count: 2, sectionDurationMinutes: 25, pickedIds: [] },
   ]);
   const [mode, setMode] = useState<"fixed" | "random" | "manual">("random");
   const [previewing, setPreviewing] = useState(false);
@@ -362,9 +368,11 @@ function NewTestPage() {
                     <tr>
                       <th className="px-3 py-2 text-left">#</th>
                       <th className="px-3 py-2 text-left">Kỹ năng</th>
+                      <th className="px-3 py-2 text-left">Loại câu hỏi</th>
                       <th className="px-3 py-2 text-center">Cấp độ</th>
                       <th className="px-3 py-2 text-center">Độ khó</th>
                       <th className="px-3 py-2 text-center">Số câu</th>
+                      <th className="px-3 py-2 text-center">Thời gian (phút)</th>
                       <th className="px-3 py-2 text-center">Có sẵn</th>
                       <th className="px-3 py-2"></th>
                     </tr>
@@ -386,12 +394,29 @@ function NewTestPage() {
                           <td className="px-3 py-2">
                             <select
                               value={row.skill}
-                              onChange={(e) => upsertAt({ skill: e.target.value as QSkill })}
+                              onChange={(e) => {
+                                const skill = e.target.value as QSkill;
+                                upsertAt({ skill, type: "mixed" });
+                              }}
                               className="rounded-lg border border-border bg-background px-2 py-1 text-xs font-semibold"
                             >
                               {SKILLS.map((sk) => (
                                 <option key={sk} value={sk}>
                                   {SKILL_LABEL[sk]}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-3 py-2">
+                            <select
+                              value={row.type}
+                              onChange={(e) => upsertAt({ type: e.target.value as QType | "mixed" })}
+                              className="rounded-lg border border-border bg-background px-2 py-1 text-xs"
+                            >
+                              <option value="mixed">Trộn nhiều dạng</option>
+                              {TYPES_BY_SKILL[row.skill].map((t) => (
+                                <option key={t} value={t}>
+                                  {TYPE_LABEL[t]}
                                 </option>
                               ))}
                             </select>
@@ -434,6 +459,25 @@ function NewTestPage() {
                             />
                           </td>
                           <td className="px-3 py-2 text-center">
+                            <input
+                              type="number"
+                              min={0}
+                              placeholder="—"
+                              value={row.sectionDurationMinutes ?? ""}
+                              onChange={(e) => {
+                                const v = e.target.value;
+                                setStructure((p) =>
+                                  p.map((x, k) =>
+                                    k === idx
+                                      ? { ...x, sectionDurationMinutes: v === "" ? undefined : Math.max(0, Number(v)) }
+                                      : x,
+                                  ),
+                                );
+                              }}
+                              className="w-20 rounded-lg border border-border bg-background px-2 py-1 text-center text-xs"
+                            />
+                          </td>
+                          <td className="px-3 py-2 text-center">
                             <span
                               className={cn(
                                 "rounded-md px-2 py-0.5 text-[11px] font-semibold",
@@ -461,7 +505,7 @@ function NewTestPage() {
                     })}
                     {structure.length === 0 && (
                       <tr>
-                        <td colSpan={7} className="px-3 py-8 text-center text-xs text-muted-foreground">
+                        <td colSpan={9} className="px-3 py-8 text-center text-xs text-muted-foreground">
                           Chưa có dòng nào. Nhấn “Thêm dòng” bên dưới để bắt đầu.
                         </td>
                       </tr>
@@ -475,10 +519,11 @@ function NewTestPage() {
                     ...p,
                     {
                       skill: "reading",
-                      type: "mcq",
+                      type: "mixed",
                       level,
                       difficulty: "mixed",
                       count: 5,
+                      sectionDurationMinutes: 10,
                       pickedIds: [],
                     },
                   ])
@@ -490,6 +535,16 @@ function NewTestPage() {
               <div className="rounded-xl bg-muted/40 p-3 text-sm">
                 Tổng cộng: <strong>{totalQuestions} câu</strong> qua{" "}
                 <strong>{structure.filter((s) => s.count > 0).length}</strong> dòng cấu trúc
+                {(() => {
+                  const sec = structure.reduce((a, s) => a + (s.sectionDurationMinutes ?? 0), 0);
+                  if (sec === 0) return null;
+                  const over = sec > duration;
+                  return (
+                    <span className={cn("ml-2", over ? "text-rose-600" : "text-muted-foreground")}>
+                      • Tổng thời gian các phần: <strong>{sec} phút</strong> {over && `(vượt thời lượng ${duration} phút)`}
+                    </span>
+                  );
+                })()}
               </div>
             </div>
           )}
@@ -589,6 +644,10 @@ function NewTestPage() {
                       </span>
                       <span className="text-muted-foreground">•</span>
                       <span>{r.item.level}</span>
+                      <span className="text-muted-foreground">•</span>
+                      <span className="rounded-md bg-background px-1.5 py-0.5 text-[10px] font-semibold">
+                        {r.item.type === "mixed" ? "Trộn dạng" : TYPE_LABEL[r.item.type]}
+                      </span>
                       {r.item.difficulty && r.item.difficulty !== "mixed" && (
                         <span
                           className={cn(
@@ -599,6 +658,11 @@ function NewTestPage() {
                           {DIFFICULTY_LABEL[r.item.difficulty]}
                         </span>
                       )}
+                      {r.item.sectionDurationMinutes ? (
+                        <span className="rounded-md bg-primary/10 px-1.5 py-0.5 text-[10px] font-semibold text-primary">
+                          ⏱ {r.item.sectionDurationMinutes}'
+                        </span>
+                      ) : null}
                       <span className="ml-auto font-semibold text-foreground">
                         {r.questions.length}/{r.item.count} câu
                       </span>
