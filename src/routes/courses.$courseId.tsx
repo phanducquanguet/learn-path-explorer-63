@@ -1886,11 +1886,12 @@ function CourseQAView({ course, role }: { course: CourseShape; role: "student" |
   };
 
   const askQuestion = () => {
-    if (!newQuestion.trim()) return;
+    if (!newQuestion.trim() || !newLessonKey) return;
+    const lesson = lessonOptions.find((l) => l.key === newLessonKey);
     const q: CourseQuestion = {
       id: `q-${Date.now()}`,
       courseId,
-      unitTitle: newUnit.trim() || "Câu hỏi chung",
+      unitTitle: lesson?.label ?? "Câu hỏi chung",
       studentName: myName,
       studentClass: myClass,
       askedAt: new Date().toISOString(),
@@ -1900,7 +1901,7 @@ function CourseQAView({ course, role }: { course: CourseShape; role: "student" |
     setList((prev) => [q, ...prev]);
     setActiveId(q.id);
     setNewQuestion("");
-    setNewUnit("");
+    setNewLessonKey("");
   };
 
 
