@@ -905,8 +905,8 @@ function hasAnswer(q: Question, v: AnswerState): boolean {
     case "rewrite":
       return Array.isArray(v) && (v as string[]).every((s) => s && s.trim());
     case "highlight": {
-      const arr = v as { wordIdx: number | null; correction: string }[];
-      return Array.isArray(arr) && arr.every((x) => x && x.wordIdx !== null && x.correction.trim());
+      const arr = v as { wordIdx: number | null; wordLen?: number; correction: string }[];
+      return Array.isArray(arr) && arr.every((x) => x && x.wordIdx !== null && (x.wordLen ?? 1) > 0 && x.correction.trim());
     }
     case "sequence":
       return Array.isArray(v) && (v as string[]).length === q.items.length;
@@ -987,16 +987,16 @@ function grade(q: Question, v: AnswerState): Result {
       return { status: s, earned: earn(s, q.maxScore) };
     }
     case "highlight": {
-      const arr = (v as { wordIdx: number | null; correction: string }[]) || [];
+      const arr = (v as { wordIdx: number | null; wordLen?: number; correction: string }[]) || [];
+      const norm = (s: string) => s.replace(/[.,!?;:]/g, "").trim().toLowerCase();
       const ok = q.items.map((it, i) => {
         const a = arr[i];
-        if (!a) return false;
+        if (!a || a.wordIdx === null) return false;
         const words = it.sentence.split(/\s+/);
-        const clickedWord = a.wordIdx !== null ? words[a.wordIdx]?.replace(/[.,!?]/g, "") : "";
-        const wordOk = clickedWord?.toLowerCase() === it.wrongWord.replace(/[.,!?]/g, "").toLowerCase();
-        const corrOk =
-          a.correction.trim().toLowerCase().replace(/[.,!?]/g, "") ===
-          it.correction.toLowerCase().replace(/[.,!?]/g, "");
+        const len = a.wordLen ?? 1;
+        const picked = words.slice(a.wordIdx, a.wordIdx + len).join(" ");
+        const wordOk = norm(picked) === norm(it.wrongWord);
+        const corrOk = norm(a.correction) === norm(it.correction);
         return wordOk && corrOk;
       });
       const s = ratio(ok.filter(Boolean).length, q.items.length);
@@ -1477,52 +1477,107 @@ function RewriteBody({
 }
 
 /* ---------------- Highlight ---------------- */
+type HighlightAnswer = { wordIdx: number | null; wordLen?: number; correction: string };
+
 function HighlightBody({
   q, value, onChange, locked, accent,
 }: {
   q: QHighlight;
-  value?: { wordIdx: number | null; correction: string }[];
-  onChange: (v: { wordIdx: number | null; correction: string }[]) => void;
+  value?: HighlightAnswer[];
+  onChange: (v: HighlightAnswer[]) => void;
   locked: boolean;
   accent: string;
 }) {
-  const arr = value ?? q.items.map(() => ({ wordIdx: null, correction: "" }));
-  const update = (i: number, patch: Partial<{ wordIdx: number | null; correction: string }>) => {
+  const arr: HighlightAnswer[] =
+    value ?? q.items.map(() => ({ wordIdx: null, wordLen: 0, correction: "" }));
+  const update = (i: number, patch: Partial<HighlightAnswer>) => {
     const next = [...arr];
     next[i] = { ...next[i], ...patch };
     onChange(next);
   };
+
+  const normalize = (s: string) => s.replace(/[.,!?;:]/g, "").trim().toLowerCase();
+
+  /** Tìm vị trí (start, len) khớp cụm `wrongWord` (1 hoặc nhiều từ) trong mảng `words`. */
+  const findRange = (words: string[], phrase: string): { start: number; len: number } | null => {
+    const target = normalize(phrase);
+    if (!target) return null;
+    const tokens = target.split(/\s+/);
+    for (let i = 0; i <= words.length - tokens.length; i++) {
+      let ok = true;
+      for (let k = 0; k < tokens.length; k++) {
+        if (normalize(words[i + k]) !== tokens[k]) { ok = false; break; }
+      }
+      if (ok) return { start: i, len: tokens.length };
+    }
+    return null;
+  };
+
+  const handleClick = (i: number, j: number) => {
+    const cur = arr[i] ?? { wordIdx: null, wordLen: 0, correction: "" };
+    const start = cur.wordIdx;
+    const len = cur.wordLen ?? (start !== null ? 1 : 0);
+    if (start === null || len === 0) {
+      update(i, { wordIdx: j, wordLen: 1 });
+      return;
+    }
+    const end = start + len - 1;
+    // Click trong vùng đã chọn
+    if (j >= start && j <= end) {
+      if (len === 1) update(i, { wordIdx: null, wordLen: 0 }); // bỏ chọn
+      else update(i, { wordIdx: j, wordLen: 1 }); // thu về 1 từ
+      return;
+    }
+    // Click ngoài → mở rộng vùng bao phủ
+    const newStart = Math.min(start, j);
+    const newEnd = Math.max(end, j);
+    update(i, { wordIdx: newStart, wordLen: newEnd - newStart + 1 });
+  };
+
   return (
     <div className="space-y-5">
+      <div className="rounded-lg border border-dashed border-border bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground">
+        Mẹo: click 1 từ để chọn. Nếu chỗ sai gồm nhiều từ, click tiếp từ cuối của cụm để mở rộng vùng chọn. Click lại từ đã chọn để bỏ.
+      </div>
       {q.items.map((it, i) => {
         const words = it.sentence.split(/\s+/);
-        const a = arr[i] ?? { wordIdx: null, correction: "" };
-        const correctIdx = words.findIndex(
-          (w) => w.replace(/[.,!?]/g, "").toLowerCase() === it.wrongWord.replace(/[.,!?]/g, "").toLowerCase(),
-        );
-        const wordOk = a.wordIdx === correctIdx;
+        const a = arr[i] ?? { wordIdx: null, wordLen: 0, correction: "" };
+        const selStart = a.wordIdx;
+        const selLen = a.wordLen ?? (selStart !== null ? 1 : 0);
+        const selEnd = selStart !== null ? selStart + selLen - 1 : -1;
+
+        const correctRange = findRange(words, it.wrongWord);
+        const correctStart = correctRange?.start ?? -1;
+        const correctEnd = correctRange ? correctStart + correctRange.len - 1 : -1;
+
+        const rangeOk =
+          selStart !== null &&
+          correctRange !== null &&
+          selStart === correctStart &&
+          selLen === correctRange.len;
         const corrOk =
-          a.correction.trim().toLowerCase().replace(/[.,!?]/g, "") ===
-          it.correction.toLowerCase().replace(/[.,!?]/g, "");
+          normalize(a.correction) === normalize(it.correction);
+
         return (
           <div key={i} className="rounded-2xl border border-border bg-muted/20 p-4">
             <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Sentence {i + 1} — click the wrong word
+              Sentence {i + 1} — click vào cụm sai (có thể nhiều từ)
             </div>
             <div className="mt-2 flex flex-wrap gap-1.5 text-base leading-relaxed">
               {words.map((w, j) => {
-                const selected = a.wordIdx === j;
-                const showCorrect = locked && j === correctIdx;
-                const showWrongPick = locked && selected && j !== correctIdx;
+                const inSel = selStart !== null && j >= selStart && j <= selEnd;
+                const inCorrect = correctRange !== null && j >= correctStart && j <= correctEnd;
+                const showCorrect = locked && inCorrect;
+                const showWrongPick = locked && inSel && !inCorrect;
                 return (
                   <button
                     key={j}
                     disabled={locked}
-                    onClick={() => update(i, { wordIdx: j })}
+                    onClick={() => handleClick(i, j)}
                     className={cn(
                       "rounded-md px-1.5 py-0.5 transition",
-                      !locked && !selected && "hover:bg-warning/20",
-                      selected && !locked && "bg-warning/40 ring-2 ring-warning",
+                      !locked && !inSel && "hover:bg-warning/20",
+                      inSel && !locked && "bg-warning/40 ring-2 ring-warning",
                       showCorrect && "bg-success/30 ring-2 ring-success text-success-foreground",
                       showWrongPick && "bg-destructive/20 ring-2 ring-destructive text-destructive line-through",
                     )}
@@ -1533,17 +1588,17 @@ function HighlightBody({
               })}
             </div>
 
-            {(a.wordIdx !== null || locked) && (
+            {(selStart !== null || locked) && (
               <div className="mt-3 flex items-center gap-2">
                 <span className="text-xs font-semibold text-muted-foreground">Correction:</span>
                 <input
                   disabled={locked}
                   value={a.correction}
                   onChange={(e) => update(i, { correction: e.target.value })}
-                  placeholder="Type the correct word..."
+                  placeholder="Gõ cụm đúng (có thể nhiều từ)..."
                   className={cn(
                     "flex-1 rounded-lg border bg-surface px-3 py-1.5 text-sm outline-none focus:ring-2",
-                    locked && (corrOk && wordOk
+                    locked && (corrOk && rangeOk
                       ? "border-success bg-success/10"
                       : "border-destructive bg-destructive/10"),
                     !locked && "border-border",
@@ -1552,7 +1607,7 @@ function HighlightBody({
                 />
               </div>
             )}
-            {locked && (!wordOk || !corrOk) && (
+            {locked && (!rangeOk || !corrOk) && (
               <div className="mt-2 text-[11px] text-success-foreground">
                 Correct: <span className="font-semibold">{it.wrongWord}</span> →{" "}
                 <span className="font-semibold">{it.correction}</span>
