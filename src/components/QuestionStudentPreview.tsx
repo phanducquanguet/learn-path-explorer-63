@@ -606,16 +606,27 @@ function renderErrorCorrection(
     if (!m) return <span key={i}>{part}</span>;
     const idx = Number(m[1]);
     const err = errors.find((e) => e.index === idx);
+    const wrongText = err?.wrong ?? "";
+    const correctText = err?.correct ?? "";
+    // Chiều rộng input ước theo độ dài từ sai / đáp án (hỗ trợ nhiều từ)
+    const ch = Math.max(8, wrongText.length, correctText.length) + 2;
     return (
-      <span key={i} className="mx-1 inline-flex items-center gap-1">
-        <span className="rounded bg-rose-500/10 px-1 text-xs text-rose-600 line-through">
-          {err?.wrong}
+      <span
+        key={i}
+        className="mx-1 inline-flex flex-col items-center align-middle gap-0.5"
+      >
+        <span
+          className="rounded bg-rose-500/10 px-1.5 py-0.5 text-xs text-rose-600 line-through whitespace-nowrap"
+          title="Cụm sai cần sửa"
+        >
+          {wrongText || "—"}
         </span>
         <input
           value={values[idx] ?? ""}
           onChange={(e) => onChange(idx, e.target.value)}
-          placeholder="sửa..."
-          className="inline-block w-24 rounded-md border border-border bg-background px-1.5 py-0.5 text-sm"
+          placeholder="viết lại cho đúng..."
+          style={{ width: `${ch}ch` }}
+          className="inline-block min-w-[6rem] max-w-full rounded-md border border-emerald-500/40 bg-background px-1.5 py-0.5 text-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-emerald-500"
         />
       </span>
     );
