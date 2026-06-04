@@ -85,10 +85,7 @@ export function VideoPanel({
 
   const accent = useMemo(() => `oklch(0.55 0.18 ${hue})`, [hue]);
 
-  const current = useMemo(
-    () => lecture.chapters.find((c) => c.id === activeChapter) ?? lecture.chapters[0],
-    [activeChapter],
-  );
+
 
   const addNote = () => {
     const text = draft.trim();
