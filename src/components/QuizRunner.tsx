@@ -905,8 +905,8 @@ function hasAnswer(q: Question, v: AnswerState): boolean {
     case "rewrite":
       return Array.isArray(v) && (v as string[]).every((s) => s && s.trim());
     case "highlight": {
-      const arr = v as { wordIdx: number | null; correction: string }[];
-      return Array.isArray(arr) && arr.every((x) => x && x.wordIdx !== null && x.correction.trim());
+      const arr = v as { wordIdx: number | null; wordLen?: number; correction: string }[];
+      return Array.isArray(arr) && arr.every((x) => x && x.wordIdx !== null && (x.wordLen ?? 1) > 0 && x.correction.trim());
     }
     case "sequence":
       return Array.isArray(v) && (v as string[]).length === q.items.length;
