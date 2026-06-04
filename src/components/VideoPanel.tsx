@@ -19,15 +19,6 @@ import { cn } from "@/lib/utils";
 
 /* ---------- Types ---------- */
 
-type Chapter = {
-  id: string;
-  index: number;
-  title: string;
-  startLabel: string; // "00:00"
-  durationLabel: string; // "3:24"
-  summary: string;
-};
-
 type Note = { id: string; text: string; scope: string; scopeLabel: string; ts: number };
 type TeacherQ = {
   id: string;
@@ -48,58 +39,8 @@ const lecture = {
   subtitle: "Video bài giảng — ngữ pháp & cách dùng trong giao tiếp hằng ngày",
   totalDuration: "12:48",
   posterEmoji: "🎬",
-  chapters: [
-    {
-      id: "c1",
-      index: 1,
-      title: "Giới thiệu bài học",
-      startLabel: "00:00",
-      durationLabel: "1:42",
-      summary:
-        "Tổng quan về thì hiện tại đơn với chủ ngữ I/you/we/they và mục tiêu cần đạt sau bài giảng.",
-    },
-    {
-      id: "c2",
-      index: 2,
-      title: "Cấu trúc khẳng định",
-      startLabel: "01:42",
-      durationLabel: "2:35",
-      summary: "Công thức S + V (nguyên thể) và ví dụ với các động từ thường gặp: like, eat, work…",
-    },
-    {
-      id: "c3",
-      index: 3,
-      title: "Cấu trúc phủ định",
-      startLabel: "04:17",
-      durationLabel: "2:18",
-      summary: "Sử dụng don't + V và các lỗi sai phổ biến của học viên Việt Nam.",
-    },
-    {
-      id: "c4",
-      index: 4,
-      title: "Câu hỏi Yes/No",
-      startLabel: "06:35",
-      durationLabel: "2:05",
-      summary: "Đảo trợ động từ Do để tạo câu hỏi và cách trả lời ngắn gọn tự nhiên.",
-    },
-    {
-      id: "c5",
-      index: 5,
-      title: "Luyện phản xạ qua hội thoại",
-      startLabel: "08:40",
-      durationLabel: "2:48",
-      summary: "Mô phỏng tình huống thực tế: hỏi về sở thích ăn uống và thói quen hằng ngày.",
-    },
-    {
-      id: "c6",
-      index: 6,
-      title: "Tổng kết & bài tập về nhà",
-      startLabel: "11:28",
-      durationLabel: "1:20",
-      summary: "Checklist kiến thức trọng tâm và gợi ý bài tập ứng dụng trong tuần.",
-    },
-  ] satisfies Chapter[],
 };
+
 
 /* ---------- Main panel ---------- */
 
