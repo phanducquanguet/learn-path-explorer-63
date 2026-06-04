@@ -64,7 +64,7 @@ const activityIcon = (t: Activity["type"]) => {
 const labelType = (t: Activity["type"]) =>
   ({ video: "Video", reading: "Đọc", quiz: "Quiz", speaking: "Nói", writing: "Viết" })[t];
 
-type TabKey = "overview" | "members" | "scores" | "activities" | "competence" | "qa";
+type TabKey = "overview" | "members" | "scores" | "activities" | "competence" | "notes" | "qa";
 
 function CoursePage() {
   const { courseId } = Route.useParams();
