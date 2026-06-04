@@ -387,7 +387,10 @@ function AnswerArea({
     const values: Record<number, string> = answer ?? {};
     return (
       <div className="space-y-3">
-        <div className="rounded-xl border border-border bg-background p-3 text-sm leading-7">
+        <div className="rounded-lg border border-dashed border-border bg-muted/30 px-3 py-2 text-[11px] text-muted-foreground">
+          Hướng dẫn: với mỗi cụm <span className="line-through text-rose-600">gạch ngang đỏ</span> trong đoạn văn, hãy gõ lại từ/cụm đúng vào ô bên dưới (có thể là một hoặc nhiều từ).
+        </div>
+        <div className="rounded-xl border border-border bg-background p-4 text-sm leading-[2.6]">
           {renderErrorCorrection(question.passage ?? "", errors, values, (idx, v) =>
             setAnswer({ ...values, [idx]: v }),
           )}
