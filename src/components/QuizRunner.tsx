@@ -987,17 +987,13 @@ function grade(q: Question, v: AnswerState): Result {
       return { status: s, earned: earn(s, q.maxScore) };
     }
     case "highlight": {
-      const arr = (v as { wordIdx: number | null; wordLen?: number; correction: string }[]) || [];
+      const arr = (v as { pairs: { wrong: string; correct: string }[] }[]) || [];
       const norm = (s: string) => s.replace(/[.,!?;:]/g, "").trim().toLowerCase();
       const ok = q.items.map((it, i) => {
-        const a = arr[i];
-        if (!a || a.wordIdx === null) return false;
-        const words = it.sentence.split(/\s+/);
-        const len = a.wordLen ?? 1;
-        const picked = words.slice(a.wordIdx, a.wordIdx + len).join(" ");
-        const wordOk = norm(picked) === norm(it.wrongWord);
-        const corrOk = norm(a.correction) === norm(it.correction);
-        return wordOk && corrOk;
+        const pairs = arr[i]?.pairs ?? [];
+        return pairs.some(
+          (p) => norm(p.wrong) === norm(it.wrongWord) && norm(p.correct) === norm(it.correction),
+        );
       });
       const s = ratio(ok.filter(Boolean).length, q.items.length);
       return { status: s, earned: earn(s, q.maxScore) };
