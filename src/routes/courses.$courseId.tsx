@@ -2077,3 +2077,108 @@ function CourseQAView({ course, role }: { course: CourseShape; role: "student" |
     </div>
   );
 }
+
+/* =========== Course Notes (aggregate) =========== */
+
+function CourseNotesView({ course, hue }: { course: CourseShape; hue: number }) {
+  const allNotes = lessonNotes.filter((n) => n.courseId === course.id);
+  const unitIds = ["all", ...Array.from(new Set(allNotes.map((n) => n.unitId)))];
+  const [unitFilter, setUnitFilter] = useState<string>("all");
+  const [query, setQuery] = useState("");
+
+  const filtered = allNotes.filter((n) => {
+    if (unitFilter !== "all" && n.unitId !== unitFilter) return false;
+    if (query.trim() && !n.content.toLowerCase().includes(query.trim().toLowerCase())) return false;
+    return true;
+  });
+
+  const typeBadge = (t: LessonNote["activityType"]) =>
+    ({ video: "Video", reading: "Đọc", quiz: "Quiz", speaking: "Nói", writing: "Viết" })[t];
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-3xl border border-border bg-surface p-5 shadow-soft">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="font-display text-lg font-semibold text-foreground">
+              Tổng hợp ghi chú
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Tất cả ghi chú bạn đã lưu trong từng bài học của khoá này.
+            </p>
+          </div>
+          <span
+            className="rounded-full px-3 py-1 text-xs font-semibold text-white"
+            style={{ background: `oklch(0.55 0.18 ${hue})` }}
+          >
+            {allNotes.length} ghi chú
+          </span>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Tìm trong nội dung ghi chú..."
+            className="min-w-[220px] flex-1 rounded-xl border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+          <div className="flex flex-wrap gap-1.5">
+            {unitIds.map((uid) => {
+              const label =
+                uid === "all"
+                  ? "Tất cả bài"
+                  : allNotes.find((n) => n.unitId === uid)?.unitTitle ?? uid;
+              return (
+                <button
+                  key={uid}
+                  onClick={() => setUnitFilter(uid)}
+                  className={cn(
+                    "rounded-full px-3 py-1 text-xs font-semibold transition",
+                    unitFilter === uid
+                      ? "bg-foreground text-background"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80",
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="rounded-3xl border border-dashed border-border bg-surface p-10 text-center">
+          <StickyNote className="mx-auto h-8 w-8 text-muted-foreground" />
+          <p className="mt-3 text-sm font-semibold text-foreground">Chưa có ghi chú nào</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Mở một bài học bất kỳ và lưu ghi chú để xem tổng hợp tại đây.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2">
+          {filtered.map((n) => (
+            <div
+              key={n.id}
+              className="rounded-2xl border border-border bg-surface p-4 shadow-soft transition hover:shadow-elevated"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
+                  {typeBadge(n.activityType)}
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  {new Date(n.createdAt).toLocaleDateString("vi-VN")}
+                </span>
+              </div>
+              <div className="mt-2 text-sm font-semibold text-foreground">{n.activityTitle}</div>
+              <div className="text-[11px] text-muted-foreground">
+                {n.unitTitle} • {n.scopeLabel}
+              </div>
+              <p className="mt-2 whitespace-pre-wrap text-sm text-foreground/90">{n.content}</p>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
