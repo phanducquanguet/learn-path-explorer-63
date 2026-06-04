@@ -1050,7 +1050,7 @@ function QuestionBody({
     case "rewrite":
       return <RewriteBody q={q} value={(value as string[]) || []} onChange={onChange} locked={locked} accent={accent} />;
     case "highlight":
-      return <HighlightBody q={q} value={value as { wordIdx: number | null; correction: string }[] | undefined} onChange={onChange} locked={locked} accent={accent} />;
+      return <HighlightBody q={q} value={value as { pairs: { wrong: string; correct: string }[] }[] | undefined} onChange={onChange} locked={locked} accent={accent} />;
     case "sequence":
       return <SequenceBody q={q} value={value as string[] | undefined} onChange={onChange} locked={locked} />;
     case "audio":
