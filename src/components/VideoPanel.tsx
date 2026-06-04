@@ -212,10 +212,10 @@ export function VideoPanel({
               <div className="absolute inset-0 flex flex-col justify-between p-6 text-white">
                 <div className="flex items-start justify-between">
                   <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold backdrop-blur ring-1 ring-white/20">
-                    {lecture.badge} • Chương {current.index}
+                    {lecture.badge} • Video bài giảng
                   </span>
                   <span className="rounded-full bg-black/30 px-2.5 py-1 text-[10px] font-mono backdrop-blur">
-                    {current.startLabel} / {lecture.totalDuration}
+                    {lecture.totalDuration}
                   </span>
                 </div>
                 <div className="flex items-center justify-center">
@@ -230,17 +230,12 @@ export function VideoPanel({
                 <div>
                   <div className="text-[11px] uppercase tracking-[0.2em] opacity-80">Đang phát</div>
                   <div className="mt-0.5 font-display text-2xl font-semibold leading-tight">
-                    {current.title}
-                  </div>
-                  <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/15">
-                    <div
-                      className="h-full rounded-full bg-white"
-                      style={{ width: `${(current.index / lecture.chapters.length) * 100}%` }}
-                    />
+                    {lecture.title}
                   </div>
                 </div>
               </div>
             </div>
+
 
             {/* Lecture meta */}
             <div className="rounded-2xl bg-surface ring-1 ring-border p-5 space-y-3">
