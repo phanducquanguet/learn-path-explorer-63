@@ -55,8 +55,8 @@ export function VideoPanel({
 }) {
   const [sideTab, setSideTab] = useState<SidebarTab>("notes");
   const [sideOpen, setSideOpen] = useState(true);
-  const [activeChapter, setActiveChapter] = useState<string>(lecture.chapters[0].id);
   const [playing, setPlaying] = useState(false);
+
 
   const [notes, setNotes] = useState<Note[]>([]);
   const [draft, setDraft] = useState("");
