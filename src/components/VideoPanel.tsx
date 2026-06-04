@@ -19,15 +19,6 @@ import { cn } from "@/lib/utils";
 
 /* ---------- Types ---------- */
 
-type Chapter = {
-  id: string;
-  index: number;
-  title: string;
-  startLabel: string; // "00:00"
-  durationLabel: string; // "3:24"
-  summary: string;
-};
-
 type Note = { id: string; text: string; scope: string; scopeLabel: string; ts: number };
 type TeacherQ = {
   id: string;
@@ -48,58 +39,8 @@ const lecture = {
   subtitle: "Video bài giảng — ngữ pháp & cách dùng trong giao tiếp hằng ngày",
   totalDuration: "12:48",
   posterEmoji: "🎬",
-  chapters: [
-    {
-      id: "c1",
-      index: 1,
-      title: "Giới thiệu bài học",
-      startLabel: "00:00",
-      durationLabel: "1:42",
-      summary:
-        "Tổng quan về thì hiện tại đơn với chủ ngữ I/you/we/they và mục tiêu cần đạt sau bài giảng.",
-    },
-    {
-      id: "c2",
-      index: 2,
-      title: "Cấu trúc khẳng định",
-      startLabel: "01:42",
-      durationLabel: "2:35",
-      summary: "Công thức S + V (nguyên thể) và ví dụ với các động từ thường gặp: like, eat, work…",
-    },
-    {
-      id: "c3",
-      index: 3,
-      title: "Cấu trúc phủ định",
-      startLabel: "04:17",
-      durationLabel: "2:18",
-      summary: "Sử dụng don't + V và các lỗi sai phổ biến của học viên Việt Nam.",
-    },
-    {
-      id: "c4",
-      index: 4,
-      title: "Câu hỏi Yes/No",
-      startLabel: "06:35",
-      durationLabel: "2:05",
-      summary: "Đảo trợ động từ Do để tạo câu hỏi và cách trả lời ngắn gọn tự nhiên.",
-    },
-    {
-      id: "c5",
-      index: 5,
-      title: "Luyện phản xạ qua hội thoại",
-      startLabel: "08:40",
-      durationLabel: "2:48",
-      summary: "Mô phỏng tình huống thực tế: hỏi về sở thích ăn uống và thói quen hằng ngày.",
-    },
-    {
-      id: "c6",
-      index: 6,
-      title: "Tổng kết & bài tập về nhà",
-      startLabel: "11:28",
-      durationLabel: "1:20",
-      summary: "Checklist kiến thức trọng tâm và gợi ý bài tập ứng dụng trong tuần.",
-    },
-  ] satisfies Chapter[],
 };
+
 
 /* ---------- Main panel ---------- */
 
@@ -114,8 +55,8 @@ export function VideoPanel({
 }) {
   const [sideTab, setSideTab] = useState<SidebarTab>("notes");
   const [sideOpen, setSideOpen] = useState(true);
-  const [activeChapter, setActiveChapter] = useState<string>(lecture.chapters[0].id);
   const [playing, setPlaying] = useState(false);
+
 
   const [notes, setNotes] = useState<Note[]>([]);
   const [draft, setDraft] = useState("");
@@ -144,10 +85,7 @@ export function VideoPanel({
 
   const accent = useMemo(() => `oklch(0.55 0.18 ${hue})`, [hue]);
 
-  const current = useMemo(
-    () => lecture.chapters.find((c) => c.id === activeChapter) ?? lecture.chapters[0],
-    [activeChapter],
-  );
+
 
   const addNote = () => {
     const text = draft.trim();
@@ -187,7 +125,7 @@ export function VideoPanel({
         {
           id: crypto.randomUUID(),
           role: "ai",
-          text: `Câu hỏi hay! Liên quan đến "${text.slice(0, 40)}${text.length > 40 ? "…" : ""}". Trong bài giảng phần "${current.title}", thầy có nhắc tới cấu trúc S + V cho I/you/we/they. Bạn thử đặt 2 câu khẳng định và 2 câu phủ định theo sở thích cá nhân nhé!`,
+          text: `Câu hỏi hay! Liên quan đến "${text.slice(0, 40)}${text.length > 40 ? "…" : ""}". Trong bài giảng "${lecture.title}", thầy có nhắc tới cấu trúc S + V cho I/you/we/they. Bạn thử đặt 2 câu khẳng định và 2 câu phủ định theo sở thích cá nhân nhé!`,
           ts: Date.now(),
         },
       ]);
@@ -206,8 +144,8 @@ export function VideoPanel({
 
   const scopeChips = [
     { id: "lecture", label: "Toàn bài giảng" },
-    ...lecture.chapters.map((c) => ({ id: c.id, label: `Chương ${c.index} · ${c.title}` })),
   ];
+
 
   return (
     <div className="rounded-3xl bg-surface ring-1 ring-border shadow-soft overflow-hidden">
@@ -241,7 +179,7 @@ export function VideoPanel({
         </div>
         <div className="flex items-center gap-2">
           <span className="hidden md:inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-xs text-muted-foreground ring-1 ring-border">
-            <ListVideo className="h-3.5 w-3.5" /> {lecture.chapters.length} chương · {lecture.totalDuration}
+            <ListVideo className="h-3.5 w-3.5" /> Thời lượng · {lecture.totalDuration}
           </span>
           <button
             onClick={() => setSideOpen((v) => !v)}
@@ -274,10 +212,10 @@ export function VideoPanel({
               <div className="absolute inset-0 flex flex-col justify-between p-6 text-white">
                 <div className="flex items-start justify-between">
                   <span className="rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold backdrop-blur ring-1 ring-white/20">
-                    {lecture.badge} • Chương {current.index}
+                    {lecture.badge} • Video bài giảng
                   </span>
                   <span className="rounded-full bg-black/30 px-2.5 py-1 text-[10px] font-mono backdrop-blur">
-                    {current.startLabel} / {lecture.totalDuration}
+                    {lecture.totalDuration}
                   </span>
                 </div>
                 <div className="flex items-center justify-center">
@@ -292,17 +230,12 @@ export function VideoPanel({
                 <div>
                   <div className="text-[11px] uppercase tracking-[0.2em] opacity-80">Đang phát</div>
                   <div className="mt-0.5 font-display text-2xl font-semibold leading-tight">
-                    {current.title}
-                  </div>
-                  <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-white/15">
-                    <div
-                      className="h-full rounded-full bg-white"
-                      style={{ width: `${(current.index / lecture.chapters.length) * 100}%` }}
-                    />
+                    {lecture.title}
                   </div>
                 </div>
               </div>
             </div>
+
 
             {/* Lecture meta */}
             <div className="rounded-2xl bg-surface ring-1 ring-border p-5 space-y-3">
@@ -327,75 +260,8 @@ export function VideoPanel({
                   <StickyNote className="h-3.5 w-3.5" /> Ghi chú
                 </button>
               </div>
-              <div className="rounded-xl bg-surface-2/60 ring-1 ring-border/60 p-3">
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Tóm tắt chương đang phát
-                </div>
-                <p className="mt-1 text-[13px] text-foreground">{current.summary}</p>
-              </div>
             </div>
 
-            {/* Chapter list */}
-            <div className="rounded-2xl bg-surface ring-1 ring-border overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3 border-b border-border/70 bg-surface-2/40">
-                <div className="flex items-center gap-2">
-                  <ListVideo className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-semibold text-foreground">
-                    Danh sách chương
-                  </span>
-                </div>
-                <span className="text-[11px] text-muted-foreground">
-                  {lecture.chapters.length} chương
-                </span>
-              </div>
-              <ul className="divide-y divide-border/60">
-                {lecture.chapters.map((c) => {
-                  const isActive = c.id === activeChapter;
-                  const isDone = c.index < current.index;
-                  return (
-                    <li key={c.id}>
-                      <button
-                        onClick={() => {
-                          setActiveChapter(c.id);
-                          setPlaying(true);
-                        }}
-                        className={cn(
-                          "w-full flex items-start gap-3 px-5 py-3 text-left transition",
-                          isActive ? "bg-surface-2" : "hover:bg-surface-2/50",
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-[12px] font-bold",
-                            isActive
-                              ? "text-white shadow-sm"
-                              : isDone
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-surface-2 text-muted-foreground ring-1 ring-border",
-                          )}
-                          style={isActive ? { background: accent } : undefined}
-                        >
-                          {isDone && !isActive ? <CheckCircle2 className="h-4 w-4" /> : c.index}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className={cn("text-sm font-semibold truncate", isActive ? "text-foreground" : "text-foreground/90")}>
-                              {c.title}
-                            </span>
-                            <span className="font-mono text-[11px] text-muted-foreground shrink-0">
-                              {c.startLabel} · {c.durationLabel}
-                            </span>
-                          </div>
-                          <p className="mt-0.5 text-[12px] text-muted-foreground line-clamp-2">
-                            {c.summary}
-                          </p>
-                        </div>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
           </div>
         </div>
 
