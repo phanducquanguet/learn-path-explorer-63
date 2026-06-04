@@ -260,75 +260,8 @@ export function VideoPanel({
                   <StickyNote className="h-3.5 w-3.5" /> Ghi chú
                 </button>
               </div>
-              <div className="rounded-xl bg-surface-2/60 ring-1 ring-border/60 p-3">
-                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Tóm tắt chương đang phát
-                </div>
-                <p className="mt-1 text-[13px] text-foreground">{current.summary}</p>
-              </div>
             </div>
 
-            {/* Chapter list */}
-            <div className="rounded-2xl bg-surface ring-1 ring-border overflow-hidden">
-              <div className="flex items-center justify-between px-5 py-3 border-b border-border/70 bg-surface-2/40">
-                <div className="flex items-center gap-2">
-                  <ListVideo className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-semibold text-foreground">
-                    Danh sách chương
-                  </span>
-                </div>
-                <span className="text-[11px] text-muted-foreground">
-                  {lecture.chapters.length} chương
-                </span>
-              </div>
-              <ul className="divide-y divide-border/60">
-                {lecture.chapters.map((c) => {
-                  const isActive = c.id === activeChapter;
-                  const isDone = c.index < current.index;
-                  return (
-                    <li key={c.id}>
-                      <button
-                        onClick={() => {
-                          setActiveChapter(c.id);
-                          setPlaying(true);
-                        }}
-                        className={cn(
-                          "w-full flex items-start gap-3 px-5 py-3 text-left transition",
-                          isActive ? "bg-surface-2" : "hover:bg-surface-2/50",
-                        )}
-                      >
-                        <div
-                          className={cn(
-                            "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-[12px] font-bold",
-                            isActive
-                              ? "text-white shadow-sm"
-                              : isDone
-                                ? "bg-emerald-100 text-emerald-700"
-                                : "bg-surface-2 text-muted-foreground ring-1 ring-border",
-                          )}
-                          style={isActive ? { background: accent } : undefined}
-                        >
-                          {isDone && !isActive ? <CheckCircle2 className="h-4 w-4" /> : c.index}
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className={cn("text-sm font-semibold truncate", isActive ? "text-foreground" : "text-foreground/90")}>
-                              {c.title}
-                            </span>
-                            <span className="font-mono text-[11px] text-muted-foreground shrink-0">
-                              {c.startLabel} · {c.durationLabel}
-                            </span>
-                          </div>
-                          <p className="mt-0.5 text-[12px] text-muted-foreground line-clamp-2">
-                            {c.summary}
-                          </p>
-                        </div>
-                      </button>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
           </div>
         </div>
 
