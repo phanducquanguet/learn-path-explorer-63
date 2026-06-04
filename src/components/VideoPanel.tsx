@@ -179,7 +179,7 @@ export function VideoPanel({
         </div>
         <div className="flex items-center gap-2">
           <span className="hidden md:inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-xs text-muted-foreground ring-1 ring-border">
-            <ListVideo className="h-3.5 w-3.5" /> {lecture.chapters.length} chương · {lecture.totalDuration}
+            <ListVideo className="h-3.5 w-3.5" /> Thời lượng · {lecture.totalDuration}
           </span>
           <button
             onClick={() => setSideOpen((v) => !v)}
