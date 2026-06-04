@@ -144,8 +144,8 @@ export function VideoPanel({
 
   const scopeChips = [
     { id: "lecture", label: "Toàn bài giảng" },
-    ...lecture.chapters.map((c) => ({ id: c.id, label: `Chương ${c.index} · ${c.title}` })),
   ];
+
 
   return (
     <div className="rounded-3xl bg-surface ring-1 ring-border shadow-soft overflow-hidden">
