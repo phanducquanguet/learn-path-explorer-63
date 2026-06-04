@@ -1919,12 +1919,18 @@ function CourseQAView({ course, role }: { course: CourseShape; role: "student" |
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Đặt câu hỏi mới
             </div>
-            <input
-              value={newUnit}
-              onChange={(e) => setNewUnit(e.target.value)}
-              placeholder="Bài học liên quan (vd: Unit 3)"
+            <select
+              value={newLessonKey}
+              onChange={(e) => setNewLessonKey(e.target.value)}
               className="mt-2 w-full rounded-xl border border-border bg-surface px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40"
-            />
+            >
+              <option value="">— Chọn bài học liên quan —</option>
+              {lessonOptions.map((l) => (
+                <option key={l.key} value={l.key}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
             <textarea
               value={newQuestion}
               onChange={(e) => setNewQuestion(e.target.value)}
