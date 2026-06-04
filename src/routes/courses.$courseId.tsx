@@ -1829,8 +1829,16 @@ function SummaryStat({
 /* =========== Course Q&A View =========== */
 
 import { courseQuestions as _courseQuestions, type CourseQuestion, type QAAnswer } from "@/lib/qa-data";
+import { lessonNotes, type LessonNote } from "@/lib/notes-data";
 
-function CourseQAView({ courseId, role }: { courseId: string; role: "student" | "teacher" | "admin" }) {
+type CourseShape = ReturnType<typeof getCourse> extends infer T
+  ? T extends { course: infer C }
+    ? C
+    : never
+  : never;
+
+function CourseQAView({ course, role }: { course: CourseShape; role: "student" | "teacher" | "admin" }) {
+  const courseId = course.id;
   const isStudent = role === "student";
   const initial = _courseQuestions.filter((q) => q.courseId === courseId);
   const [list, setList] = useState<CourseQuestion[]>(initial);
@@ -1838,7 +1846,15 @@ function CourseQAView({ courseId, role }: { courseId: string; role: "student" | 
   const [activeId, setActiveId] = useState<string | null>(initial[0]?.id ?? null);
   const [draft, setDraft] = useState("");
   const [newQuestion, setNewQuestion] = useState("");
-  const [newUnit, setNewUnit] = useState("");
+  const [newLessonKey, setNewLessonKey] = useState("");
+
+  const lessonOptions = course.units.flatMap((u) =>
+    u.activities.map((a) => ({
+      key: `${u.id}::${a.id}`,
+      label: `Unit ${u.index} — ${a.title}`,
+      unitTitle: u.title,
+    })),
+  );
 
   const myName = "Bảo Châu";
   const myClass = "B1 — Fastrack";
