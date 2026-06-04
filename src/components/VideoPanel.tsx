@@ -125,7 +125,7 @@ export function VideoPanel({
         {
           id: crypto.randomUUID(),
           role: "ai",
-          text: `Câu hỏi hay! Liên quan đến "${text.slice(0, 40)}${text.length > 40 ? "…" : ""}". Trong bài giảng phần "${current.title}", thầy có nhắc tới cấu trúc S + V cho I/you/we/they. Bạn thử đặt 2 câu khẳng định và 2 câu phủ định theo sở thích cá nhân nhé!`,
+          text: `Câu hỏi hay! Liên quan đến "${text.slice(0, 40)}${text.length > 40 ? "…" : ""}". Trong bài giảng "${lecture.title}", thầy có nhắc tới cấu trúc S + V cho I/you/we/they. Bạn thử đặt 2 câu khẳng định và 2 câu phủ định theo sở thích cá nhân nhé!`,
           ts: Date.now(),
         },
       ]);
