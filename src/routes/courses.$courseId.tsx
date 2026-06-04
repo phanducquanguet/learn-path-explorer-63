@@ -1941,7 +1941,7 @@ function CourseQAView({ course, role }: { course: CourseShape; role: "student" |
             <div className="mt-2 flex justify-end">
               <button
                 onClick={askQuestion}
-                disabled={!newQuestion.trim()}
+                disabled={!newQuestion.trim() || !newLessonKey}
                 className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-soft disabled:opacity-50"
                 style={{ background: "var(--gradient-brand)" }}
               >
