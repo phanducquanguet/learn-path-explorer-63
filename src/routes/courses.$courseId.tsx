@@ -546,6 +546,9 @@ function CoursePage() {
                   <Tab active={tab === "competence"} onClick={() => setTab("competence")} icon={<Sparkles className="h-4 w-4" />}>
                     Năng lực
                   </Tab>
+                  <Tab active={tab === "notes"} onClick={() => setTab("notes")} icon={<StickyNote className="h-4 w-4" />}>
+                    Ghi chú
+                  </Tab>
                   <Tab active={tab === "qa"} onClick={() => setTab("qa")} icon={<MessageSquare className="h-4 w-4" />}>
                     Hỏi đáp
                   </Tab>
@@ -572,7 +575,8 @@ function CoursePage() {
                 />
               )}
               {tab === "competence" && <CompetenceView />}
-              {tab === "qa" && <CourseQAView courseId={course.id} role={role} />}
+              {tab === "notes" && <CourseNotesView course={course} hue={level.hue} />}
+              {tab === "qa" && <CourseQAView course={course} role={role} />}
             </>
           )}
         </main>
