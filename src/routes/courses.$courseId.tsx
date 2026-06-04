@@ -30,6 +30,7 @@ import {
   Lightbulb,
   ArrowRight,
   TrendingUp,
+  StickyNote,
 } from "lucide-react";
 import { getCourse, type Activity, type Unit } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
@@ -63,7 +64,7 @@ const activityIcon = (t: Activity["type"]) => {
 const labelType = (t: Activity["type"]) =>
   ({ video: "Video", reading: "Đọc", quiz: "Quiz", speaking: "Nói", writing: "Viết" })[t];
 
-type TabKey = "overview" | "members" | "scores" | "activities" | "competence" | "qa";
+type TabKey = "overview" | "members" | "scores" | "activities" | "competence" | "notes" | "qa";
 
 function CoursePage() {
   const { courseId } = Route.useParams();
@@ -545,6 +546,9 @@ function CoursePage() {
                   <Tab active={tab === "competence"} onClick={() => setTab("competence")} icon={<Sparkles className="h-4 w-4" />}>
                     Năng lực
                   </Tab>
+                  <Tab active={tab === "notes"} onClick={() => setTab("notes")} icon={<StickyNote className="h-4 w-4" />}>
+                    Ghi chú
+                  </Tab>
                   <Tab active={tab === "qa"} onClick={() => setTab("qa")} icon={<MessageSquare className="h-4 w-4" />}>
                     Hỏi đáp
                   </Tab>
@@ -571,7 +575,8 @@ function CoursePage() {
                 />
               )}
               {tab === "competence" && <CompetenceView />}
-              {tab === "qa" && <CourseQAView courseId={course.id} role={role} />}
+              {tab === "notes" && <CourseNotesView course={course} hue={level.hue} />}
+              {tab === "qa" && <CourseQAView course={course} role={role} />}
             </>
           )}
         </main>
@@ -1824,8 +1829,16 @@ function SummaryStat({
 /* =========== Course Q&A View =========== */
 
 import { courseQuestions as _courseQuestions, type CourseQuestion, type QAAnswer } from "@/lib/qa-data";
+import { lessonNotes, type LessonNote } from "@/lib/notes-data";
 
-function CourseQAView({ courseId, role }: { courseId: string; role: "student" | "teacher" | "admin" }) {
+type CourseShape = ReturnType<typeof getCourse> extends infer T
+  ? T extends { course: infer C }
+    ? C
+    : never
+  : never;
+
+function CourseQAView({ course, role }: { course: CourseShape; role: "student" | "teacher" | "admin" }) {
+  const courseId = course.id;
   const isStudent = role === "student";
   const initial = _courseQuestions.filter((q) => q.courseId === courseId);
   const [list, setList] = useState<CourseQuestion[]>(initial);
@@ -1833,7 +1846,15 @@ function CourseQAView({ courseId, role }: { courseId: string; role: "student" | 
   const [activeId, setActiveId] = useState<string | null>(initial[0]?.id ?? null);
   const [draft, setDraft] = useState("");
   const [newQuestion, setNewQuestion] = useState("");
-  const [newUnit, setNewUnit] = useState("");
+  const [newLessonKey, setNewLessonKey] = useState("");
+
+  const lessonOptions = course.units.flatMap((u) =>
+    u.activities.map((a) => ({
+      key: `${u.id}::${a.id}`,
+      label: `Unit ${u.index} — ${a.title}`,
+      unitTitle: u.title,
+    })),
+  );
 
   const myName = "Bảo Châu";
   const myClass = "B1 — Fastrack";
@@ -1865,11 +1886,12 @@ function CourseQAView({ courseId, role }: { courseId: string; role: "student" | 
   };
 
   const askQuestion = () => {
-    if (!newQuestion.trim()) return;
+    if (!newQuestion.trim() || !newLessonKey) return;
+    const lesson = lessonOptions.find((l) => l.key === newLessonKey);
     const q: CourseQuestion = {
       id: `q-${Date.now()}`,
       courseId,
-      unitTitle: newUnit.trim() || "Câu hỏi chung",
+      unitTitle: lesson?.label ?? "Câu hỏi chung",
       studentName: myName,
       studentClass: myClass,
       askedAt: new Date().toISOString(),
@@ -1879,7 +1901,7 @@ function CourseQAView({ courseId, role }: { courseId: string; role: "student" | 
     setList((prev) => [q, ...prev]);
     setActiveId(q.id);
     setNewQuestion("");
-    setNewUnit("");
+    setNewLessonKey("");
   };
 
 
@@ -1897,12 +1919,18 @@ function CourseQAView({ courseId, role }: { courseId: string; role: "student" | 
             <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               Đặt câu hỏi mới
             </div>
-            <input
-              value={newUnit}
-              onChange={(e) => setNewUnit(e.target.value)}
-              placeholder="Bài học liên quan (vd: Unit 3)"
+            <select
+              value={newLessonKey}
+              onChange={(e) => setNewLessonKey(e.target.value)}
               className="mt-2 w-full rounded-xl border border-border bg-surface px-3 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary/40"
-            />
+            >
+              <option value="">— Chọn bài học liên quan —</option>
+              {lessonOptions.map((l) => (
+                <option key={l.key} value={l.key}>
+                  {l.label}
+                </option>
+              ))}
+            </select>
             <textarea
               value={newQuestion}
               onChange={(e) => setNewQuestion(e.target.value)}
@@ -1913,7 +1941,7 @@ function CourseQAView({ courseId, role }: { courseId: string; role: "student" | 
             <div className="mt-2 flex justify-end">
               <button
                 onClick={askQuestion}
-                disabled={!newQuestion.trim()}
+                disabled={!newQuestion.trim() || !newLessonKey}
                 className="inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-xs font-semibold text-primary-foreground shadow-soft disabled:opacity-50"
                 style={{ background: "var(--gradient-brand)" }}
               >
@@ -2046,6 +2074,111 @@ function CourseQAView({ courseId, role }: { courseId: string; role: "student" | 
           </>
         )}
       </div>
+    </div>
+  );
+}
+
+/* =========== Course Notes (aggregate) =========== */
+
+function CourseNotesView({ course, hue }: { course: CourseShape; hue: number }) {
+  const allNotes = lessonNotes.filter((n) => n.courseId === course.id);
+  const unitIds = ["all", ...Array.from(new Set(allNotes.map((n) => n.unitId)))];
+  const [unitFilter, setUnitFilter] = useState<string>("all");
+  const [query, setQuery] = useState("");
+
+  const filtered = allNotes.filter((n) => {
+    if (unitFilter !== "all" && n.unitId !== unitFilter) return false;
+    if (query.trim() && !n.content.toLowerCase().includes(query.trim().toLowerCase())) return false;
+    return true;
+  });
+
+  const typeBadge = (t: LessonNote["activityType"]) =>
+    ({ video: "Video", reading: "Đọc", quiz: "Quiz", speaking: "Nói", writing: "Viết" })[t];
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-3xl border border-border bg-surface p-5 shadow-soft">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="font-display text-lg font-semibold text-foreground">
+              Tổng hợp ghi chú
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Tất cả ghi chú bạn đã lưu trong từng bài học của khoá này.
+            </p>
+          </div>
+          <span
+            className="rounded-full px-3 py-1 text-xs font-semibold text-white"
+            style={{ background: `oklch(0.55 0.18 ${hue})` }}
+          >
+            {allNotes.length} ghi chú
+          </span>
+        </div>
+
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Tìm trong nội dung ghi chú..."
+            className="min-w-[220px] flex-1 rounded-xl border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40"
+          />
+          <div className="flex flex-wrap gap-1.5">
+            {unitIds.map((uid) => {
+              const label =
+                uid === "all"
+                  ? "Tất cả bài"
+                  : allNotes.find((n) => n.unitId === uid)?.unitTitle ?? uid;
+              return (
+                <button
+                  key={uid}
+                  onClick={() => setUnitFilter(uid)}
+                  className={cn(
+                    "rounded-full px-3 py-1 text-xs font-semibold transition",
+                    unitFilter === uid
+                      ? "bg-foreground text-background"
+                      : "bg-muted text-muted-foreground hover:bg-muted/80",
+                  )}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="rounded-3xl border border-dashed border-border bg-surface p-10 text-center">
+          <StickyNote className="mx-auto h-8 w-8 text-muted-foreground" />
+          <p className="mt-3 text-sm font-semibold text-foreground">Chưa có ghi chú nào</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Mở một bài học bất kỳ và lưu ghi chú để xem tổng hợp tại đây.
+          </p>
+        </div>
+      ) : (
+        <div className="grid gap-3 md:grid-cols-2">
+          {filtered.map((n) => (
+            <div
+              key={n.id}
+              className="rounded-2xl border border-border bg-surface p-4 shadow-soft transition hover:shadow-elevated"
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
+                  {typeBadge(n.activityType)}
+                </span>
+                <span className="text-[11px] text-muted-foreground">
+                  {new Date(n.createdAt).toLocaleDateString("vi-VN")}
+                </span>
+              </div>
+              <div className="mt-2 text-sm font-semibold text-foreground">{n.activityTitle}</div>
+              <div className="text-[11px] text-muted-foreground">
+                {n.unitTitle} • {n.scopeLabel}
+              </div>
+              <p className="mt-2 whitespace-pre-wrap text-sm text-foreground/90">{n.content}</p>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
