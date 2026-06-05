@@ -29,9 +29,11 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import {
+  appendConsentLog,
   BIOMETRIC_KEY,
   CURRENT_POLICY_VERSION_ID,
   getPolicyVersion,
+  readConsentLog,
   type BiometricRegistration,
   type PolicySection,
 } from "@/lib/policy";
@@ -95,23 +97,57 @@ function ExamsPage() {
       }
     }
     setLoaded(true);
+    // Seed the consent log demo data on first visit if empty.
+    readConsentLog();
   }, []);
 
   const isRegistered = !!registration;
 
   const handleComplete = (data: BiometricRegistration) => {
+    const previous = registration;
     window.localStorage.setItem(BIOMETRIC_KEY, JSON.stringify(data));
     setRegistration(data);
     setOpenDialog(false);
+    const policy = getPolicyVersion(data.policyVersionId);
+    const action: "consent.accepted" | "consent.reconfirmed" | "consent.updated" = !previous
+      ? "consent.accepted"
+      : previous.policyVersionId !== data.policyVersionId
+        ? "consent.reconfirmed"
+        : "consent.updated";
+    appendConsentLog({
+      action,
+      policyVersionId: data.policyVersionId,
+      policyTitle: policy?.title ?? data.policyVersionId,
+      occurredAt: data.registeredAt,
+      userAgent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 80) : undefined,
+      note:
+        action === "consent.accepted"
+          ? "Đăng ký eKYC lần đầu trên thiết bị này."
+          : action === "consent.reconfirmed"
+            ? "Đồng ý lại do phiên bản điều khoản đã được cập nhật."
+            : "Cập nhật ảnh khuôn mặt/CCCD và đồng ý lại điều khoản hiện hành.",
+    });
     toast.success("Đăng ký xác thực sinh trắc học thành công");
   };
 
   const handleRevoke = () => {
     if (!confirm("Hủy đăng ký sẽ khiến bạn không thể tham gia thi cho đến khi đăng ký lại. Tiếp tục?")) return;
+    const previous = registration;
     window.localStorage.removeItem(BIOMETRIC_KEY);
     setRegistration(null);
+    if (previous) {
+      const policy = getPolicyVersion(previous.policyVersionId);
+      appendConsentLog({
+        action: "consent.revoked",
+        policyVersionId: previous.policyVersionId,
+        policyTitle: policy?.title ?? previous.policyVersionId,
+        userAgent: typeof navigator !== "undefined" ? navigator.userAgent.slice(0, 80) : undefined,
+        note: "Người dùng chủ động hủy đăng ký sinh trắc học.",
+      });
+    }
     toast("Đã hủy đăng ký sinh trắc học");
   };
+
 
   return (
     <div className="min-h-screen bg-background">
