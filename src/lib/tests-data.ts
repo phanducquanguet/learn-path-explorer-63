@@ -24,8 +24,11 @@ export type TestStructureItem = {
   count: number;
   /** "mixed" = không giới hạn độ khó (bốc trộn). */
   difficulty?: QDifficulty | "mixed";
+  /** Lọc theo tag (any-match): câu hỏi cần có ít nhất 1 tag trong danh sách. */
+  tags?: string[];
   /** Giới hạn thời gian làm phần này (phút). Bỏ trống = dùng chung tổng thời lượng. */
   sectionDurationMinutes?: number;
+
   /** Câu hỏi đã chọn thủ công (mode fixed). */
   pickedIds?: string[];
   /** Câu hỏi do người dùng tự soạn (mode manual). */
