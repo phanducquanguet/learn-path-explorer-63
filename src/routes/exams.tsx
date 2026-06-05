@@ -317,9 +317,11 @@ function ExamsPage() {
         existing={registration}
         onComplete={handleComplete}
       />
+      <PublicPolicyDialog open={openPolicy} onOpenChange={setOpenPolicy} />
     </div>
   );
 }
+
 
 function BiometricBanner({
   registration,
