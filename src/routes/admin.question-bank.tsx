@@ -283,7 +283,9 @@ function BankPage() {
     setType("all");
     setDifficulty("all");
     setQ("");
+    setTagFilter([]);
     setPage(1);
+
   };
 
   const toggleSelect = (id: string) =>
