@@ -1855,7 +1855,61 @@ export function EditDialog({
               </div>
             </div>
           )}
+
+          {/* ===== Tags ===== */}
+          <div>
+            <label className="mb-1 block text-xs font-semibold text-muted-foreground">
+              Tags <span className="font-normal text-muted-foreground/70">(phân tách bằng dấu phẩy — dùng để lọc trong cấu trúc đề)</span>
+            </label>
+            <div className="flex flex-wrap items-center gap-1.5 rounded-lg border border-border bg-background px-2 py-1.5">
+              {(form.tags ?? []).map((t, i) => (
+                <span
+                  key={`${t}-${i}`}
+                  className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary"
+                >
+                  {t}
+                  <button
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        tags: (form.tags ?? []).filter((_, k) => k !== i),
+                      })
+                    }
+                    className="text-primary/70 hover:text-primary"
+                    aria-label={`Xóa tag ${t}`}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+              <input
+                type="text"
+                placeholder="Nhập tag rồi Enter hoặc dấu phẩy..."
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === ",") {
+                    e.preventDefault();
+                    const v = (e.currentTarget.value || "").trim().replace(/,$/, "");
+                    if (!v) return;
+                    const next = Array.from(new Set([...(form.tags ?? []), v]));
+                    setForm({ ...form, tags: next });
+                    e.currentTarget.value = "";
+                  } else if (e.key === "Backspace" && !(e.currentTarget as HTMLInputElement).value) {
+                    setForm({ ...form, tags: (form.tags ?? []).slice(0, -1) });
+                  }
+                }}
+                onBlur={(e) => {
+                  const v = e.currentTarget.value.trim();
+                  if (!v) return;
+                  const next = Array.from(new Set([...(form.tags ?? []), v]));
+                  setForm({ ...form, tags: next });
+                  e.currentTarget.value = "";
+                }}
+                className="min-w-[160px] flex-1 bg-transparent text-sm outline-none"
+              />
+            </div>
+          </div>
         </div>
+
 
         {!autoSave && (
           <div className="mt-6 flex justify-end gap-2">
