@@ -193,7 +193,13 @@ function BankPage() {
   const [pickedType, setPickedType] = useState<QType>("mcq");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
-  
+  const [tagFilter, setTagFilter] = useState<string[]>([]);
+
+  const allTags = useMemo(() => {
+    const s = new Set<string>();
+    items.forEach((it) => it.tags.forEach((t) => s.add(t)));
+    return Array.from(s).sort((a, b) => a.localeCompare(b));
+  }, [items]);
 
   const filtered = useMemo(() => {
     const list = items.filter(
@@ -202,6 +208,7 @@ function BankPage() {
         (level === "all" || it.level === level) &&
         (type === "all" || it.type === type) &&
         (difficulty === "all" || it.difficulty === difficulty) &&
+        (tagFilter.length === 0 || it.tags.some((t) => tagFilter.includes(t))) &&
         (!q.trim() ||
           it.content.toLowerCase().includes(q.toLowerCase()) ||
           it.id.toLowerCase().includes(q.toLowerCase()) ||
@@ -222,7 +229,8 @@ function BankPage() {
       }
     });
     return sorted;
-  }, [items, skill, level, type, difficulty, q, sort]);
+  }, [items, skill, level, type, difficulty, tagFilter, q, sort]);
+
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
