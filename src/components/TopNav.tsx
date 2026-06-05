@@ -30,8 +30,12 @@ import {
 } from "@/components/ui/dialog";
 import {
   BIOMETRIC_KEY,
+  CONSENT_ACTION_LABEL,
   getPolicyVersion,
+  readConsentLog,
   type BiometricRegistration,
+  type ConsentLogAction,
+  type ConsentLogEntry,
   type PolicyVersion,
 } from "@/lib/policy";
 
