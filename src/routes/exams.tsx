@@ -59,27 +59,6 @@ type SavedExam = {
 };
 
 const TEST_PORTAL_BASE = "https://exam-portal.ubos.vn";
-  id?: string;
-  name: string;
-  levelCode: string;
-  duration: number;
-  description?: string;
-  skills: string[];
-  totalQuestions?: number;
-  groups?: Record<string, { questions: unknown[] }>;
-  savedAt: string;
-};
-
-type BiometricRegistration = {
-  cccdFront: string; // data url
-  cccdBack: string;
-  faceImage: string;
-  termsAcceptedAt: string;
-  registeredAt: string;
-};
-
-const TEST_PORTAL_BASE = "https://exam-portal.ubos.vn";
-const BIOMETRIC_KEY = "unicom.biometric-registration";
 
 function hueFor(id: string) {
   let h = 0;
