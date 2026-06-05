@@ -28,6 +28,13 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import {
+  BIOMETRIC_KEY,
+  CURRENT_POLICY_VERSION_ID,
+  getPolicyVersion,
+  type BiometricRegistration,
+  type PolicySection,
+} from "@/lib/policy";
 
 export const Route = createFileRoute("/exams")({
   head: () => ({
