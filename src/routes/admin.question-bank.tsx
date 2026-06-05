@@ -395,7 +395,27 @@ function BankPage() {
                 <Chip key={t} on={type === t} onClick={() => { setType(t); setPage(1); }}>{TYPE_LABEL[t]}</Chip>
               ))}
             </FilterSection>
+            {allTags.length > 0 && (
+              <FilterSection label="Tags">
+                <Chip on={tagFilter.length === 0} onClick={() => { setTagFilter([]); setPage(1); }}>Tất cả</Chip>
+                {allTags.map((t) => (
+                  <Chip
+                    key={t}
+                    on={tagFilter.includes(t)}
+                    onClick={() => {
+                      setTagFilter((p) =>
+                        p.includes(t) ? p.filter((x) => x !== t) : [...p, t],
+                      );
+                      setPage(1);
+                    }}
+                  >
+                    {t}
+                  </Chip>
+                ))}
+              </FilterSection>
+            )}
           </aside>
+
 
           <main>
             <div className="flex flex-wrap items-center gap-2">
