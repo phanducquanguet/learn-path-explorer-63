@@ -63,15 +63,19 @@ const STEPS = [
 type StructureItem = TestStructureItem;
 
 function matchBank(s: StructureItem): BankQuestion[] {
-  // Lọc theo Kỹ năng + Cấp độ + Loại + Độ khó.
+  // Lọc theo Kỹ năng + Cấp độ + Loại + Độ khó + Tags (any-match).
+  const wanted = (s.tags ?? []).map((t) => t.trim().toLowerCase()).filter(Boolean);
   return questionBank.filter(
     (q) =>
       q.skill === s.skill &&
       q.level === s.level &&
       (!s.type || s.type === "mixed" || q.type === s.type) &&
-      (!s.difficulty || s.difficulty === "mixed" || q.difficulty === s.difficulty),
+      (!s.difficulty || s.difficulty === "mixed" || q.difficulty === s.difficulty) &&
+      (wanted.length === 0 ||
+        q.tags.some((t) => wanted.includes(t.toLowerCase()))),
   );
 }
+
 
 function rollRandom(s: StructureItem, seed = 0): BankQuestion[] {
   const pool = matchBank(s);
