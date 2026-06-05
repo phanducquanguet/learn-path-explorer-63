@@ -77,6 +77,8 @@ function ExamsPage() {
   const [loaded, setLoaded] = useState(false);
   const [registration, setRegistration] = useState<BiometricRegistration | null>(null);
   const [openDialog, setOpenDialog] = useState(false);
+  const [openPolicy, setOpenPolicy] = useState(false);
+
 
   useEffect(() => {
     if (typeof window === "undefined") return;
