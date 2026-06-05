@@ -18,6 +18,12 @@ import {
   Shield,
   ShieldCheck,
   FileText,
+  History,
+  CheckCircle2,
+  RefreshCw,
+  XCircle,
+  Upload,
+  Eye,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRole, type Role } from "@/contexts/RoleContext";
