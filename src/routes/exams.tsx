@@ -28,6 +28,13 @@ import {
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import {
+  BIOMETRIC_KEY,
+  CURRENT_POLICY_VERSION_ID,
+  getPolicyVersion,
+  type BiometricRegistration,
+  type PolicySection,
+} from "@/lib/policy";
 
 export const Route = createFileRoute("/exams")({
   head: () => ({
@@ -51,16 +58,7 @@ type SavedExam = {
   savedAt: string;
 };
 
-type BiometricRegistration = {
-  cccdFront: string; // data url
-  cccdBack: string;
-  faceImage: string;
-  termsAcceptedAt: string;
-  registeredAt: string;
-};
-
 const TEST_PORTAL_BASE = "https://exam-portal.ubos.vn";
-const BIOMETRIC_KEY = "unicom.biometric-registration";
 
 function hueFor(id: string) {
   let h = 0;
@@ -394,6 +392,7 @@ function BiometricDialog({
       faceImage,
       termsAcceptedAt: existing?.termsAcceptedAt ?? new Date().toISOString(),
       registeredAt: new Date().toISOString(),
+      policyVersionId: existing?.policyVersionId ?? CURRENT_POLICY_VERSION_ID,
     });
   };
 
@@ -498,87 +497,24 @@ function BiometricDialog({
   );
 }
 
-const POLICY_SECTIONS: { title: string; body: string[] }[] = [
-  {
-    title: "Điều 1. Định nghĩa và Phạm vi thu thập",
-    body: [
-      "Khi bạn chọn tham gia các bài thi có tính năng giám thị ảo (Proctored Test), hệ thống của chúng tôi sẽ tiến hành thu thập các loại dữ liệu sau:",
-      "• Ảnh chụp Căn cước công dân (CCCD): Hình ảnh mặt trước và mặt sau của giấy tờ tùy thân hợp pháp, còn hiệu lực.",
-      "• Ảnh khuôn mặt thực tế (Live Face Image): Hình ảnh tĩnh được chụp từ camera tại thời điểm bạn làm thủ tục vào phòng thi.",
-      "• Dữ liệu video/khung hình (Frame Captures): Các đoạn video hoặc hình ảnh chụp ngắt quãng khuôn mặt và biểu cảm của bạn trong suốt thời gian đếm ngược của bài thi.",
-      "• Dữ liệu kỹ thuật kèm theo: Thông tin về góc chiếu sáng, chuyển động mắt, và sự hiện diện của khuôn mặt thứ hai trong khung hình để phục vụ thuật toán chống gian lận.",
-    ],
-  },
-  {
-    title: "Điều 2. Mục đích xử lý dữ liệu (Tuyệt đối và Duy nhất)",
-    body: [
-      "1. Trích xuất thông tin cá nhân: Nhận diện và tự động trích xuất các thông tin văn bản trên thẻ CCCD (Họ tên, Ngày sinh, Số CCCD...) để hoàn thiện hồ sơ dự thi Linguaskill.",
-      "2. Xác thực định danh (eKYC): Đối chiếu ảnh khuôn mặt thực tế với ảnh chân dung in trên thẻ CCCD để đảm bảo người ngồi trước màn hình chính là chủ sở hữu hợp pháp của giấy tờ tùy thân.",
-      "3. Giám sát phòng thi: AI sẽ phân tích dữ liệu video theo thời gian thực để phát hiện các dấu hiệu gian lận (thi hộ, dùng tài liệu, có người trợ giúp).",
-      "4. Giải quyết khiếu nại: Làm bằng chứng đối chiếu trong trường hợp bạn có khiếu nại về điểm số hoặc quyết định hủy kết quả thi của hệ thống.",
-      "Cam kết loại trừ: Dữ liệu khuôn mặt của bạn tuyệt đối không được sử dụng để bán cho bên thứ ba, không dùng để quảng cáo, và không dùng để huấn luyện (train) các mô hình AI.",
-    ],
-  },
-  {
-    title: "Điều 3. Thời gian lưu trữ và Quy tắc tự hủy",
-    body: [
-      "1. Thi bình thường: Dữ liệu ảnh gốc và video giám thị sẽ tự động xóa vĩnh viễn trong vòng 30 ngày kể từ khi có kết quả chính thức.",
-      "2. Phát hiện gian lận: Dữ liệu bằng chứng được lưu trữ tối đa 90 ngày để phục vụ thanh tra, sau đó bị xóa.",
-      "3. Xóa tài khoản: Mọi dữ liệu khuôn mặt liên kết với tài khoản sẽ được lập tức hủy bỏ.",
-    ],
-  },
-  {
-    title: "Điều 4. Nguyên tắc chia sẻ dữ liệu",
-    body: [
-      "Dữ liệu khuôn mặt được mã hóa an toàn và chỉ có hai nhóm được tiếp cận:",
-      "1. Hệ thống thuật toán AI giám thị nội bộ.",
-      "2. Nhân sự QA / CSKH có thẩm quyền – chỉ giải mã khi có yêu cầu rà soát khiếu nại từ chính bạn.",
-      "Dữ liệu có thể được lưu trên máy chủ đám mây đạt chuẩn ISO 27001; nhà cung cấp hạ tầng không có chìa khóa giải mã.",
-    ],
-  },
-  {
-    title: "Điều 5. Hậu quả của việc từ chối hoặc rút lại sự đồng ý",
-    body: [
-      "1. Từ chối ngay từ đầu: Bạn sẽ không thể tham gia tính năng Thi cử. Bạn vẫn có thể dùng các tính năng e-learning.",
-      "2. Rút lại khi đang thi: Bài thi sẽ bị đóng cưỡng chế và kết quả không được công nhận.",
-      "3. Rút lại sau khi thi xong: Dữ liệu sẽ bị xóa, đồng nghĩa với việc bạn từ bỏ quyền khiếu nại về kết quả bài thi.",
-    ],
-  },
-  {
-    title: "Điều 6. Sự cố kỹ thuật và Miễn trừ trách nhiệm",
-    body: [
-      "1. Hệ thống không chịu trách nhiệm nếu bài thi bị hủy do yếu tố khách quan (camera hỏng, thiếu ánh sáng, mạng gián đoạn).",
-      "2. Trong trường hợp Data Breach do nguyên nhân bất khả kháng, chúng tôi sẽ thông báo trong 72 giờ và áp dụng biện pháp khắc phục, nhưng được miễn trừ bồi thường thiệt hại gián tiếp.",
-    ],
-  },
-  {
-    title: "Điều 7. Quy trình xử lý yêu cầu (SLA)",
-    body: [
-      "Yêu cầu trích xuất bản sao dữ liệu: tối đa 10 ngày.",
-      "Yêu cầu hạn chế/ngừng xử lý: trong vòng 72 giờ.",
-      "Yêu cầu xóa vĩnh viễn dữ liệu: tối đa 20 ngày.",
-      "Liên hệ Bộ phận Bảo vệ Dữ liệu (DPO) qua tính năng LIÊN HỆ trên hệ thống.",
-    ],
-  },
-];
-
 function TermsStep({ agreed, setAgreed }: { agreed: boolean; setAgreed: (v: boolean) => void }) {
+  const policy = getPolicyVersion(CURRENT_POLICY_VERSION_ID);
+  const sections: PolicySection[] = policy?.sections ?? [];
   return (
     <div className="space-y-4 px-1 py-4">
       <div className="rounded-xl border bg-muted/30 p-4">
-        <div className="mb-2 text-xs font-semibold uppercase tracking-wider text-primary">
-          Phụ lục
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <div className="text-xs font-semibold uppercase tracking-wider text-primary">Phụ lục</div>
+          <div className="rounded-full bg-background px-2 py-0.5 text-[10px] font-mono text-muted-foreground ring-1 ring-border">
+            {CURRENT_POLICY_VERSION_ID}
+          </div>
         </div>
-        <h3 className="font-display text-base font-semibold text-foreground">
-          Chính sách thu thập và xử lý dữ liệu khuôn mặt và Căn cước công dân
-        </h3>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Áp dụng riêng cho tính năng Thi đánh giá nội bộ / Linguaskill Mock Test trên hệ thống REAP English
-        </p>
+        <h3 className="font-display text-base font-semibold text-foreground">{policy?.title}</h3>
+        <p className="mt-1 text-xs text-muted-foreground">{policy?.scope}</p>
       </div>
 
       <div className="max-h-72 space-y-4 overflow-y-auto rounded-xl border p-4 text-sm leading-relaxed">
-        {POLICY_SECTIONS.map((sec) => (
+        {sections.map((sec) => (
           <div key={sec.title}>
             <div className="font-semibold text-foreground">{sec.title}</div>
             <div className="mt-1 space-y-1.5 text-muted-foreground">
@@ -589,6 +525,8 @@ function TermsStep({ agreed, setAgreed }: { agreed: boolean; setAgreed: (v: bool
           </div>
         ))}
       </div>
+
+
 
       <label className="flex items-start gap-3 rounded-xl border bg-surface p-3 cursor-pointer">
         <Checkbox
