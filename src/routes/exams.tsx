@@ -392,6 +392,7 @@ function BiometricDialog({
       faceImage,
       termsAcceptedAt: existing?.termsAcceptedAt ?? new Date().toISOString(),
       registeredAt: new Date().toISOString(),
+      policyVersionId: existing?.policyVersionId ?? CURRENT_POLICY_VERSION_ID,
     });
   };
 
