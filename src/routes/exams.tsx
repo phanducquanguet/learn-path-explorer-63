@@ -165,6 +165,12 @@ function ExamsPage() {
           <p className="text-sm text-muted-foreground">
             Danh sách các bài thi đã được Admin thiết lập. Bạn cần hoàn tất đăng ký khuôn mặt &amp; CCCD trước khi tham gia thi.
           </p>
+          <div className="mt-1">
+            <Button variant="outline" size="sm" className="gap-2" onClick={() => setOpenPolicy(true)}>
+              <ShieldCheck className="h-4 w-4" />
+              Xem chính sách bảo vệ dữ liệu
+            </Button>
+          </div>
         </div>
 
         {/* Biometric registration banner */}
@@ -173,6 +179,7 @@ function ExamsPage() {
           onOpen={() => setOpenDialog(true)}
           onRevoke={handleRevoke}
         />
+
 
         {loaded && exams.length === 0 ? (
           <div className="mt-10 rounded-3xl border border-dashed border-border bg-surface/40 p-12 text-center">
