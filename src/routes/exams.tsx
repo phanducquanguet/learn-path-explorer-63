@@ -58,6 +58,18 @@ type SavedExam = {
   savedAt: string;
 };
 
+const TEST_PORTAL_BASE = "https://exam-portal.ubos.vn";
+  id?: string;
+  name: string;
+  levelCode: string;
+  duration: number;
+  description?: string;
+  skills: string[];
+  totalQuestions?: number;
+  groups?: Record<string, { questions: unknown[] }>;
+  savedAt: string;
+};
+
 type BiometricRegistration = {
   cccdFront: string; // data url
   cccdBack: string;
