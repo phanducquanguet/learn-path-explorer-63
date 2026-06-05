@@ -29,9 +29,11 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import {
+  appendConsentLog,
   BIOMETRIC_KEY,
   CURRENT_POLICY_VERSION_ID,
   getPolicyVersion,
+  readConsentLog,
   type BiometricRegistration,
   type PolicySection,
 } from "@/lib/policy";
