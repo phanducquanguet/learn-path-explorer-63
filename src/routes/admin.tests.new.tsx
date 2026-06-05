@@ -63,15 +63,19 @@ const STEPS = [
 type StructureItem = TestStructureItem;
 
 function matchBank(s: StructureItem): BankQuestion[] {
-  // Lọc theo Kỹ năng + Cấp độ + Loại + Độ khó.
+  // Lọc theo Kỹ năng + Cấp độ + Loại + Độ khó + Tags (any-match).
+  const wanted = (s.tags ?? []).map((t) => t.trim().toLowerCase()).filter(Boolean);
   return questionBank.filter(
     (q) =>
       q.skill === s.skill &&
       q.level === s.level &&
       (!s.type || s.type === "mixed" || q.type === s.type) &&
-      (!s.difficulty || s.difficulty === "mixed" || q.difficulty === s.difficulty),
+      (!s.difficulty || s.difficulty === "mixed" || q.difficulty === s.difficulty) &&
+      (wanted.length === 0 ||
+        q.tags.some((t) => wanted.includes(t.toLowerCase()))),
   );
 }
+
 
 function rollRandom(s: StructureItem, seed = 0): BankQuestion[] {
   const pool = matchBank(s);
@@ -371,11 +375,13 @@ function NewTestPage() {
                       <th className="px-3 py-2 text-left">Loại câu hỏi</th>
                       <th className="px-3 py-2 text-center">Cấp độ</th>
                       <th className="px-3 py-2 text-center">Độ khó</th>
+                      <th className="px-3 py-2 text-left">Tags</th>
                       <th className="px-3 py-2 text-center">Số câu</th>
                       <th className="px-3 py-2 text-center">Thời gian (phút)</th>
                       <th className="px-3 py-2 text-center">Có sẵn</th>
                       <th className="px-3 py-2"></th>
                     </tr>
+
                   </thead>
                   <tbody>
                     {structure.map((row, idx) => {
@@ -447,6 +453,21 @@ function NewTestPage() {
                               ))}
                             </select>
                           </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="text"
+                              value={(row.tags ?? []).join(", ")}
+                              onChange={(e) => {
+                                const tags = e.target.value
+                                  .split(",")
+                                  .map((t) => t.trim())
+                                  .filter(Boolean);
+                                upsertAt({ tags });
+                              }}
+                              placeholder="grammar, unit-3"
+                              className="w-44 rounded-lg border border-border bg-background px-2 py-1 text-xs"
+                            />
+                          </td>
                           <td className="px-3 py-2 text-center">
                             <input
                               type="number"
@@ -458,6 +479,7 @@ function NewTestPage() {
                               className="w-20 rounded-lg border border-border bg-background px-2 py-1 text-center text-xs"
                             />
                           </td>
+
                           <td className="px-3 py-2 text-center">
                             <input
                               type="number"
@@ -505,7 +527,7 @@ function NewTestPage() {
                     })}
                     {structure.length === 0 && (
                       <tr>
-                        <td colSpan={9} className="px-3 py-8 text-center text-xs text-muted-foreground">
+                        <td colSpan={10} className="px-3 py-8 text-center text-xs text-muted-foreground">
                           Chưa có dòng nào. Nhấn “Thêm dòng” bên dưới để bắt đầu.
                         </td>
                       </tr>
