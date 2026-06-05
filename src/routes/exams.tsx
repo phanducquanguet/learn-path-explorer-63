@@ -547,6 +547,22 @@ function BiometricDialog({
 function TermsStep({ agreed, setAgreed }: { agreed: boolean; setAgreed: (v: boolean) => void }) {
   const policy = getPolicyVersion(CURRENT_POLICY_VERSION_ID);
   const sections: PolicySection[] = policy?.sections ?? [];
+  const [checked, setChecked] = useState<Record<number, boolean>>({});
+
+  useEffect(() => {
+    if (!agreed) setChecked({});
+  }, [agreed]);
+
+  const total = sections.length;
+  const doneCount = sections.reduce((s, _, i) => s + (checked[i] ? 1 : 0), 0);
+
+  useEffect(() => {
+    const all = total > 0 && doneCount === total;
+    if (all !== agreed) setAgreed(all);
+  }, [doneCount, total, agreed, setAgreed]);
+
+  const toggle = (i: number, v: boolean) => setChecked((p) => ({ ...p, [i]: v }));
+
   return (
     <div className="space-y-4 px-1 py-4">
       <div className="rounded-xl border bg-muted/30 p-4">
@@ -558,37 +574,112 @@ function TermsStep({ agreed, setAgreed }: { agreed: boolean; setAgreed: (v: bool
         </div>
         <h3 className="font-display text-base font-semibold text-foreground">{policy?.title}</h3>
         <p className="mt-1 text-xs text-muted-foreground">{policy?.scope}</p>
+        <div className="mt-2 text-[11px] font-medium text-muted-foreground">
+          Tiến độ xác nhận: <span className="text-foreground">{doneCount}/{total}</span> điều khoản
+        </div>
       </div>
 
-      <div className="max-h-72 space-y-4 overflow-y-auto rounded-xl border p-4 text-sm leading-relaxed">
-        {sections.map((sec) => (
-          <div key={sec.title}>
+      <div className="max-h-80 space-y-3 overflow-y-auto rounded-xl border p-3 text-sm leading-relaxed">
+        {sections.map((sec, i) => (
+          <div
+            key={sec.title}
+            className={`rounded-lg border p-3 transition ${
+              checked[i] ? "border-emerald-500/40 bg-emerald-500/5" : "bg-background"
+            }`}
+          >
             <div className="font-semibold text-foreground">{sec.title}</div>
             <div className="mt-1 space-y-1.5 text-muted-foreground">
-              {sec.body.map((p, i) => (
-                <p key={i}>{p}</p>
+              {sec.body.map((p, j) => (
+                <p key={j}>{p}</p>
               ))}
             </div>
+            <label className="mt-2 flex cursor-pointer items-start gap-2 rounded-md bg-surface p-2 ring-1 ring-border">
+              <Checkbox
+                checked={!!checked[i]}
+                onCheckedChange={(v) => toggle(i, v === true)}
+                className="mt-0.5"
+              />
+              <span className="text-xs text-foreground">
+                Tôi đã đọc và <strong>hiểu rõ</strong> nội dung của {sec.title}.
+              </span>
+            </label>
           </div>
         ))}
       </div>
 
-
-
-      <label className="flex items-start gap-3 rounded-xl border bg-surface p-3 cursor-pointer">
-        <Checkbox
-          checked={agreed}
-          onCheckedChange={(v) => setAgreed(v === true)}
-          className="mt-0.5"
-        />
-        <span className="text-sm text-foreground">
-          Tôi đã đọc, hiểu rõ và <strong>đồng ý</strong> với toàn bộ các điều khoản về thu thập, xử lý
-          và lưu trữ dữ liệu khuôn mặt &amp; CCCD nêu trên.
-        </span>
-      </label>
+      <div
+        className={`rounded-xl border p-3 text-sm ${
+          agreed
+            ? "border-emerald-500/40 bg-emerald-500/5 text-foreground"
+            : "border-amber-500/40 bg-amber-500/5 text-muted-foreground"
+        }`}
+      >
+        {agreed ? (
+          <span className="inline-flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+            Bạn đã xác nhận hiểu toàn bộ {total} điều khoản. Có thể tiếp tục đăng ký.
+          </span>
+        ) : (
+          <>Vui lòng tích chọn xác nhận đã đọc từng điều khoản ở trên trước khi tiếp tục.</>
+        )}
+      </div>
     </div>
   );
 }
+
+function PublicPolicyDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+}) {
+  const policy = getPolicyVersion(CURRENT_POLICY_VERSION_ID);
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-primary" />
+            Chính sách bảo vệ dữ liệu (công khai)
+          </DialogTitle>
+          <DialogDescription>
+            Phiên bản hiện hành áp dụng cho mọi học viên tham gia thi đánh giá năng lực.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex items-center justify-between gap-2 rounded-lg border bg-muted/30 p-3 text-xs">
+          <div>
+            <div className="font-semibold text-foreground">{policy?.title}</div>
+            <div className="text-muted-foreground">
+              Hiệu lực từ {policy?.effectiveDate} · {policy?.scope}
+            </div>
+          </div>
+          <span className="rounded-full bg-background px-2 py-0.5 font-mono text-[10px] text-muted-foreground ring-1 ring-border">
+            {CURRENT_POLICY_VERSION_ID}
+          </span>
+        </div>
+        <div className="flex-1 space-y-4 overflow-y-auto rounded-xl border p-4 text-sm leading-relaxed">
+          {(policy?.sections ?? []).map((sec) => (
+            <div key={sec.title}>
+              <div className="font-semibold text-foreground">{sec.title}</div>
+              <div className="mt-1 space-y-1.5 text-muted-foreground">
+                {sec.body.map((p, i) => (
+                  <p key={i}>{p}</p>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+        <DialogFooter className="border-t pt-4">
+          <Button variant="outline" onClick={() => onOpenChange(false)}>
+            Đóng
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 function ImageUploader({
   label,
