@@ -453,6 +453,21 @@ function NewTestPage() {
                               ))}
                             </select>
                           </td>
+                          <td className="px-3 py-2">
+                            <input
+                              type="text"
+                              value={(row.tags ?? []).join(", ")}
+                              onChange={(e) => {
+                                const tags = e.target.value
+                                  .split(",")
+                                  .map((t) => t.trim())
+                                  .filter(Boolean);
+                                upsertAt({ tags });
+                              }}
+                              placeholder="grammar, unit-3"
+                              className="w-44 rounded-lg border border-border bg-background px-2 py-1 text-xs"
+                            />
+                          </td>
                           <td className="px-3 py-2 text-center">
                             <input
                               type="number"
@@ -464,6 +479,7 @@ function NewTestPage() {
                               className="w-20 rounded-lg border border-border bg-background px-2 py-1 text-center text-xs"
                             />
                           </td>
+
                           <td className="px-3 py-2 text-center">
                             <input
                               type="number"
