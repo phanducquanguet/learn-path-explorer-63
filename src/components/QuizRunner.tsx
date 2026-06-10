@@ -1080,6 +1080,8 @@ function QuestionBody({
       return <GapMultiBody q={q} value={value as (number | null)[] | undefined} onChange={onChange} locked={locked} />;
     case "listening":
       return <ListeningBody q={q} value={value as (number | null)[] | undefined} onChange={onChange} locked={locked} accent={accent} />;
+    case "reading":
+      return <ReadingBody q={q} value={value as (number | null)[] | undefined} onChange={onChange} locked={locked} accent={accent} />;
     case "essay":
       return <EssayBody q={q} value={(value as string) || ""} onChange={onChange} locked={locked} accent={accent} />;
   }
