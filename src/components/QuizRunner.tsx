@@ -883,6 +883,7 @@ function kindLabel(k: Question["kind"]) {
     audio: "Audio record",
     gapmulti: "Multi choice gap fill",
     listening: "Listening + multi questions",
+    reading: "Reading set + multi questions",
   }[k];
 }
 function renderPromptHead(p: string) {
