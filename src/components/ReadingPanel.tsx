@@ -451,6 +451,14 @@ export function ReadingPanel({
         {/* PDF viewer */}
         <div className="bg-[oklch(0.97_0.005_260)] p-4 sm:p-6 lg:p-8 max-h-[calc(100vh-12rem)] overflow-y-auto">
           <div className="mx-auto max-w-3xl space-y-6">
+            <LessonIntro
+              title={activity.title}
+              description={
+                activity.description ??
+                `Trong bài học này, học viên sẽ:\n• Học từ vựng chủ đề Food (thịt, cá, rau củ, trái cây, trứng, cơm, bánh mì).\n• Luyện phát âm 3 âm /iː/, /ɪ/, /aɪ/ và xác định trọng âm.\n• Đọc – nghe 3 đoạn ngắn về thói quen ăn uống của các gia đình.\n• Áp dụng Present simple (I/you/we/they) để nói về sở thích ăn uống của bản thân.\n• Hoàn thành phần Listening practice với 5 câu hỏi trắc nghiệm.`
+              }
+              accent={accent}
+            />
             {samplePages.map((page) => (
               <PdfPage
                 key={page.id}
@@ -466,6 +474,7 @@ export function ReadingPanel({
             ))}
           </div>
         </div>
+
 
         {/* Right tabbed panel */}
         {sideOpen && (
@@ -970,7 +979,68 @@ const ACCENTS: Record<Section["accent"], { bg: string; text: string; ring: strin
   orange: { bg: "bg-orange-500", text: "text-orange-700", ring: "ring-orange-200", soft: "bg-orange-50" },
 };
 
+function LessonIntro({
+  title,
+  description,
+  accent,
+}: {
+  title: string;
+  description: string;
+  accent: string;
+}) {
+  const [open, setOpen] = useState(true);
+  const lines = description.split("\n").filter((l) => l.trim().length > 0);
+  return (
+    <section
+      className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border shadow-soft"
+      style={{
+        background: `linear-gradient(135deg, color-mix(in oklab, ${accent} 8%, var(--surface, #fff)), var(--surface, #fff))`,
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="flex w-full items-center justify-between gap-3 px-5 py-3.5 text-left"
+      >
+        <div className="flex items-center gap-2.5 min-w-0">
+          <span
+            className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-white"
+            style={{ background: accent }}
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+          </span>
+          <div className="min-w-0">
+            <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>
+              Giới thiệu nội dung
+            </div>
+            <div className="truncate text-sm font-semibold text-foreground">{title}</div>
+          </div>
+        </div>
+        <span className="text-[11px] font-semibold text-muted-foreground">
+          {open ? "Thu gọn" : "Mở rộng"}
+        </span>
+      </button>
+      {open && (
+        <div className="border-t border-border/70 bg-background/60 px-5 py-4 backdrop-blur">
+          <ul className="space-y-1.5 text-sm leading-relaxed text-foreground/90">
+            {lines.map((l, i) => {
+              const clean = l.replace(/^[-•]\s*/, "").trim();
+              return (
+                <li key={i} className="flex gap-2">
+                  <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full" style={{ background: accent }} />
+                  <span>{clean}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function PdfPage({
+
   page,
   playingId,
   onTogglePlay,

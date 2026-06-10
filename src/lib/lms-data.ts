@@ -6,7 +6,10 @@ export type Activity = {
   type: "video" | "reading" | "quiz" | "speaking" | "writing";
   duration: number; // minutes
   done?: boolean;
+  /** Giới thiệu nội dung — hiển thị cho học viên trước/khi vào bài. */
+  description?: string;
 };
+
 
 export type Unit = {
   id: string;
