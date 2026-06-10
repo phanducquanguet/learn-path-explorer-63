@@ -116,7 +116,7 @@ function shuffle<T>(arr: T[], seed: number): T[] {
 }
 
 export function buildQuiz(quizId: string): Question[] {
-  return [
+  const base: Question[] = [
     {
       id: "q1",
       index: 1,
