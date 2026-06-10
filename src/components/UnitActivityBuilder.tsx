@@ -822,14 +822,205 @@ function VideoEditor({ node, onChange }: { node: VideoNode; onChange: (p: Partia
 }
 
 function VideoSpeakingEditor({ node, onChange }: { node: VideoSpeakingNode; onChange: (p: Partial<VideoSpeakingNode>) => void }) {
+  const attachments = node.attachments ?? [];
+  const mode: SpeakingMode = node.speakingMode ?? "question";
+  const words = node.words ?? [];
+
+  const addAttachment = (kind: VideoSpeakingAttachment["kind"]) => {
+    const item: VideoSpeakingAttachment = { id: uid(), kind };
+    onChange({ attachments: [...attachments, item] });
+  };
+  const updateAttachment = (id: string, patch: Partial<VideoSpeakingAttachment>) => {
+    onChange({ attachments: attachments.map((a) => (a.id === id ? { ...a, ...patch } : a)) });
+  };
+  const removeAttachment = (id: string) => {
+    onChange({ attachments: attachments.filter((a) => a.id !== id) });
+  };
+
+  const updateWord = (idx: number, value: string) => {
+    const next = [...words];
+    next[idx] = value;
+    onChange({ words: next });
+  };
+  const addWord = () => onChange({ words: [...words, ""] });
+  const removeWord = (idx: number) => onChange({ words: words.filter((_, i) => i !== idx) });
+  const importWords = (text: string) => {
+    const parts = text
+      .split(/[\n,;]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (parts.length) onChange({ words: [...words, ...parts] });
+  };
+
+  const ATTACH_META: Record<
+    VideoSpeakingAttachment["kind"],
+    { label: string; icon: React.ElementType; accept?: string }
+  > = {
+    audio: { label: "Audio", icon: Music2, accept: "audio/*" },
+    image: { label: "Hình ảnh", icon: ImageIcon, accept: "image/*" },
+    pdf: { label: "PDF", icon: FileText, accept: ".pdf" },
+    brief: { label: "Yêu cầu đề bài", icon: FileText, accept: ".pdf,.doc,.docx,.txt" },
+  };
+
   return (
-    <div className="grid gap-4">
+    <div className="grid gap-5">
       <Row label="Tệp video">
         <FileBox icon={FileVideo} label="Tải lên video" fileName={node.fileName} onChange={(fileName) => onChange({ fileName })} accept="video/*" />
       </Row>
-      <Row label="Câu hỏi / chủ đề luyện nói">
-        <textarea rows={3} value={node.prompt ?? ""} onChange={(e) => onChange({ prompt: e.target.value })} placeholder="VD: Sau khi xem video, mô tả thói quen ăn uống của bạn..." className="ui-input" />
-      </Row>
+
+      <div>
+        <div className="mb-2 flex items-center justify-between">
+          <div className="text-xs font-semibold text-foreground">Tài liệu đi kèm</div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {(Object.keys(ATTACH_META) as VideoSpeakingAttachment["kind"][]).map((k) => {
+              const I = ATTACH_META[k].icon;
+              return (
+                <button
+                  key={k}
+                  onClick={() => addAttachment(k)}
+                  className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary hover:bg-primary/20"
+                >
+                  <Plus className="h-3 w-3" /> <I className="h-3 w-3" /> {ATTACH_META[k].label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+        {attachments.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+            Có thể thêm audio, hình ảnh, PDF hoặc yêu cầu đề bài để hỗ trợ học viên luyện nói.
+          </div>
+        ) : (
+          <ul className="space-y-2">
+            {attachments.map((a) => {
+              const meta = ATTACH_META[a.kind];
+              const I = meta.icon;
+              return (
+                <li key={a.id} className="rounded-xl border border-border bg-background p-3">
+                  <div className="mb-2 flex items-center gap-2">
+                    <I className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                      {meta.label}
+                    </span>
+                    <button
+                      onClick={() => removeAttachment(a.id)}
+                      className="ml-auto rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <FileBox
+                    icon={I}
+                    label={`Tải lên ${meta.label.toLowerCase()}`}
+                    fileName={a.fileName}
+                    onChange={(fileName) => updateAttachment(a.id, { fileName })}
+                    accept={meta.accept}
+                  />
+                  <input
+                    value={a.note ?? ""}
+                    onChange={(e) => updateAttachment(a.id, { note: e.target.value })}
+                    placeholder="Ghi chú (tuỳ chọn)"
+                    className="ui-input mt-2"
+                  />
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
+
+      <div>
+        <div className="mb-2 text-xs font-semibold text-foreground">Hình thức luyện nói</div>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {[
+            { v: "question" as const, title: "Theo câu hỏi", desc: "Học viên trả lời / nói liên tục một đoạn dài." },
+            { v: "words" as const, title: "Luyện phát âm từ", desc: "Hệ thống đưa từng từ, học viên đọc và Next." },
+          ].map((opt) => (
+            <button
+              key={opt.v}
+              onClick={() => onChange({ speakingMode: opt.v })}
+              className={cn(
+                "rounded-xl border px-3 py-2.5 text-left text-xs transition",
+                mode === opt.v
+                  ? "border-primary bg-primary/10 text-primary"
+                  : "border-border bg-background hover:border-primary/40",
+              )}
+            >
+              <div className="text-sm font-semibold">{opt.title}</div>
+              <div className="mt-0.5 text-[11px] text-muted-foreground">{opt.desc}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {mode === "question" ? (
+        <Row label="Câu hỏi / chủ đề luyện nói">
+          <textarea
+            rows={3}
+            value={node.prompt ?? ""}
+            onChange={(e) => onChange({ prompt: e.target.value })}
+            placeholder="VD: Sau khi xem video, mô tả thói quen ăn uống của bạn..."
+            className="ui-input"
+          />
+        </Row>
+      ) : (
+        <div>
+          <div className="mb-2 flex items-center justify-between">
+            <div className="text-xs font-semibold text-foreground">
+              Danh sách từ ({words.length})
+            </div>
+            <button
+              onClick={addWord}
+              className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary hover:bg-primary/20"
+            >
+              <Plus className="h-3 w-3" /> Thêm từ
+            </button>
+          </div>
+          {words.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+              Chưa có từ nào. Bấm “Thêm từ” hoặc dán danh sách bên dưới.
+            </div>
+          ) : (
+            <ul className="space-y-1.5">
+              {words.map((w, idx) => (
+                <li key={idx} className="flex items-center gap-2">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded bg-muted text-[10px] font-bold text-muted-foreground">
+                    {idx + 1}
+                  </span>
+                  <input
+                    value={w}
+                    onChange={(e) => updateWord(idx, e.target.value)}
+                    placeholder="VD: pronunciation"
+                    className="ui-input flex-1"
+                  />
+                  <button
+                    onClick={() => removeWord(idx)}
+                    className="rounded p-1.5 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+          <div className="mt-3">
+            <div className="mb-1 text-[11px] font-semibold text-foreground">
+              Nhập nhanh nhiều từ (mỗi dòng / dấu phẩy / chấm phẩy)
+            </div>
+            <textarea
+              rows={2}
+              placeholder={"apple, banana, orange\npronunciation; vocabulary"}
+              className="ui-input"
+              onBlur={(e) => {
+                if (e.target.value.trim()) {
+                  importWords(e.target.value);
+                  e.target.value = "";
+                }
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
