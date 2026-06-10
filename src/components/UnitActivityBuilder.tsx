@@ -179,7 +179,17 @@ function makeNode(kind: Exclude<AnyNode["kind"], "question">): AnyNode {
     case "video":
       return { ...base, kind, title: "Video bài giảng", description: "", duration: 10 };
     case "video-speaking":
-      return { ...base, kind, title: "Video luyện nói", description: "", duration: 5, prompt: "" };
+      return {
+        ...base,
+        kind,
+        title: "Video luyện nói",
+        description: "",
+        duration: 5,
+        prompt: "",
+        attachments: [],
+        speakingMode: "question",
+        words: [],
+      };
     case "pdf":
       return { ...base, kind, title: "Tài liệu PDF", description: "" };
     case "pdf-audio":
