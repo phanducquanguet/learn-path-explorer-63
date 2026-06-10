@@ -2131,41 +2131,74 @@ function ReadingBody({
     onChange(next);
   };
   const doneCount = answers.filter((x) => x !== null && x !== undefined).length;
+  const [layout, setLayout] = useState<"cols" | "rows">("cols");
+
+  const isCols = layout === "cols";
 
   return (
-    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-      {/* Bài đọc — cột trái, sticky */}
-      <div className="lg:sticky lg:top-4 lg:self-start">
-        <div
-          className="overflow-hidden rounded-2xl ring-1 ring-border"
-          style={{ background: `linear-gradient(135deg, color-mix(in oklab, ${accent} 6%, transparent), transparent)` }}
-        >
-          <div className="flex items-center justify-between border-b border-border bg-background/40 px-4 py-2.5 backdrop-blur">
-            <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>
-              Reading passage
-            </div>
-            {q.title && (
-              <div className="truncate text-xs font-medium text-foreground">{q.title}</div>
+    <div className="space-y-3">
+      {/* Switch layout */}
+      <div className="flex items-center justify-end">
+        <div className="inline-flex items-center gap-1 rounded-lg bg-muted p-1 ring-1 ring-border">
+          <button
+            type="button"
+            onClick={() => setLayout("cols")}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition",
+              isCols ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
             )}
-          </div>
-          <div className="max-h-[68vh] overflow-y-auto p-4">
-            <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
-              {q.passage}
-            </div>
-          </div>
+            title="Hiển thị 2 cột: bài đọc & câu hỏi cạnh nhau"
+          >
+            <Columns2 className="h-3.5 w-3.5" /> 2 cột
+          </button>
+          <button
+            type="button"
+            onClick={() => setLayout("rows")}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 text-xs font-medium transition",
+              !isCols ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+            )}
+            title="Hiển thị theo hàng: bài đọc ở trên, câu hỏi ở dưới"
+          >
+            <Rows2 className="h-3.5 w-3.5" /> Hàng ngang
+          </button>
         </div>
       </div>
 
-      {/* Câu hỏi — cột phải, cuộn độc lập */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span className="font-semibold uppercase tracking-wider" style={{ color: accent }}>
-            Questions ({q.subQuestions.length})
-          </span>
-          <span>
-            {doneCount}/{q.subQuestions.length} đã trả lời
-          </span>
+      <div className={cn("grid gap-4", isCols ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1")}>
+        {/* Bài đọc */}
+        <div className={cn(isCols && "lg:sticky lg:top-4 lg:self-start")}>
+          <div
+            className="overflow-hidden rounded-2xl ring-1 ring-border"
+            style={{ background: `linear-gradient(135deg, color-mix(in oklab, ${accent} 6%, transparent), transparent)` }}
+          >
+            <div className="flex items-center justify-between border-b border-border bg-background/40 px-4 py-2.5 backdrop-blur">
+              <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>
+                Reading passage
+              </div>
+              {q.title && (
+                <div className="truncate text-xs font-medium text-foreground">{q.title}</div>
+              )}
+            </div>
+            <div className={cn("overflow-y-auto p-4", isCols ? "max-h-[68vh]" : "max-h-[50vh]")}>
+              <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+                {q.passage}
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Câu hỏi */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span className="font-semibold uppercase tracking-wider" style={{ color: accent }}>
+              Questions ({q.subQuestions.length})
+            </span>
+            <span>
+              {doneCount}/{q.subQuestions.length} đã trả lời
+            </span>
+          </div>
+
         <ol className="space-y-4">
           {q.subQuestions.map((sq, qi) => {
             const picked = answers[qi];
