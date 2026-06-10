@@ -10,6 +10,8 @@ import {
   Columns2,
   Rows2,
   Mic,
+  Pin,
+
   RotateCcw,
   Sparkles,
   Trophy,
@@ -2132,13 +2134,28 @@ function ReadingBody({
   };
   const doneCount = answers.filter((x) => x !== null && x !== undefined).length;
   const [layout, setLayout] = useState<"cols" | "rows">("cols");
+  const [pinned, setPinned] = useState(false);
 
   const isCols = layout === "cols";
 
   return (
     <div className="space-y-3">
-      {/* Switch layout */}
-      <div className="flex items-center justify-end">
+      {/* Toolbar */}
+      <div className="flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={() => setPinned((p) => !p)}
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-xs font-medium ring-1 transition",
+            pinned
+              ? "bg-foreground text-background ring-foreground"
+              : "bg-background text-muted-foreground ring-border hover:text-foreground",
+          )}
+          title={pinned ? "Bỏ ghim bài đọc" : "Ghim bài đọc — luôn hiển thị khi cuộn"}
+        >
+          <Pin className={cn("h-3.5 w-3.5", pinned && "rotate-45")} />
+          {pinned ? "Đã ghim" : "Ghim bài đọc"}
+        </button>
         <div className="inline-flex items-center gap-1 rounded-lg bg-muted p-1 ring-1 ring-border">
           <button
             type="button"
@@ -2167,26 +2184,41 @@ function ReadingBody({
 
       <div className={cn("grid gap-4", isCols ? "grid-cols-1 lg:grid-cols-2" : "grid-cols-1")}>
         {/* Bài đọc */}
-        <div className={cn(isCols && "lg:sticky lg:top-4 lg:self-start")}>
+        <div
+          className={cn(
+            (isCols || pinned) && "self-start",
+            isCols && !pinned && "lg:sticky lg:top-4",
+            pinned && "sticky top-2 z-20",
+          )}
+        >
           <div
-            className="overflow-hidden rounded-2xl ring-1 ring-border"
-            style={{ background: `linear-gradient(135deg, color-mix(in oklab, ${accent} 6%, transparent), transparent)` }}
+            className="overflow-hidden rounded-2xl bg-background ring-1 ring-border shadow-soft"
+            style={{ background: `linear-gradient(135deg, color-mix(in oklab, ${accent} 6%, var(--background)), var(--background))` }}
           >
-            <div className="flex items-center justify-between border-b border-border bg-background/40 px-4 py-2.5 backdrop-blur">
-              <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>
-                Reading passage
+            <div className="flex items-center justify-between border-b border-border bg-background/60 px-4 py-2.5 backdrop-blur">
+              <div className="flex items-center gap-2">
+                {pinned && <Pin className="h-3 w-3 rotate-45" style={{ color: accent }} />}
+                <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>
+                  Reading passage
+                </div>
               </div>
               {q.title && (
                 <div className="truncate text-xs font-medium text-foreground">{q.title}</div>
               )}
             </div>
-            <div className={cn("overflow-y-auto p-4", isCols ? "max-h-[68vh]" : "max-h-[50vh]")}>
+            <div
+              className={cn(
+                "overflow-y-auto p-4",
+                pinned ? "max-h-[38vh]" : isCols ? "max-h-[68vh]" : "max-h-[50vh]",
+              )}
+            >
               <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
                 {q.passage}
               </div>
             </div>
           </div>
         </div>
+
 
         {/* Câu hỏi */}
         <div className="space-y-4">
