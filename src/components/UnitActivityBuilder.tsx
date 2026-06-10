@@ -140,7 +140,7 @@ const KIND_ICON: Record<Exclude<AnyNode["kind"], "question">, React.ElementType>
 const KIND_LABEL: Record<Exclude<AnyNode["kind"], "question">, string> = {
   group: "Group",
   video: "Video",
-  "video-speaking": "Video + Nói",
+  "video-speaking": "Luyện nói",
   pdf: "PDF",
   "pdf-audio": "PDF + Audio",
   practice: "Thực hành",
