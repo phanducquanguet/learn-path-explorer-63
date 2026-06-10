@@ -10,6 +10,8 @@ import {
   Columns2,
   Rows2,
   Mic,
+  Pin,
+
   RotateCcw,
   Sparkles,
   Trophy,
