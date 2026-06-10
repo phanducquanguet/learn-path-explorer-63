@@ -49,7 +49,7 @@ export type VideoNode = Common & {
 export type SpeakingMode = "question" | "words";
 export type VideoSpeakingAttachment = {
   id: string;
-  kind: "audio" | "image" | "pdf" | "brief";
+  kind: "video" | "audio" | "image" | "pdf" | "brief";
   fileName?: string;
   note?: string;
 };
@@ -118,7 +118,7 @@ export type AnyNode =
 type LeafKind = Exclude<AnyNode["kind"], "question">;
 const ACTIVITY_OPTIONS: { kind: LeafKind; label: string; icon: React.ElementType }[] = [
   { kind: "video", label: "Video bài giảng", icon: FileVideo },
-  { kind: "video-speaking", label: "Video + luyện nói", icon: Mic },
+  { kind: "video-speaking", label: "Luyện nói", icon: Mic },
   { kind: "pdf", label: "Tài liệu PDF", icon: FileText },
   { kind: "pdf-audio", label: "PDF kèm audio", icon: Headphones },
   { kind: "practice", label: "Bài thực hành", icon: ListChecks },
@@ -140,7 +140,7 @@ const KIND_ICON: Record<Exclude<AnyNode["kind"], "question">, React.ElementType>
 const KIND_LABEL: Record<Exclude<AnyNode["kind"], "question">, string> = {
   group: "Group",
   video: "Video",
-  "video-speaking": "Video + Nói",
+  "video-speaking": "Luyện nói",
   pdf: "PDF",
   "pdf-audio": "PDF + Audio",
   practice: "Thực hành",
@@ -182,7 +182,7 @@ function makeNode(kind: Exclude<AnyNode["kind"], "question">): AnyNode {
       return {
         ...base,
         kind,
-        title: "Video luyện nói",
+        title: "Luyện nói",
         description: "",
         duration: 5,
         prompt: "",
@@ -856,6 +856,7 @@ function VideoSpeakingEditor({ node, onChange }: { node: VideoSpeakingNode; onCh
     VideoSpeakingAttachment["kind"],
     { label: string; icon: React.ElementType; accept?: string }
   > = {
+    video: { label: "Video", icon: FileVideo, accept: "video/*" },
     audio: { label: "Audio", icon: Music2, accept: "audio/*" },
     image: { label: "Hình ảnh", icon: ImageIcon, accept: "image/*" },
     pdf: { label: "PDF", icon: FileText, accept: ".pdf" },
@@ -864,9 +865,7 @@ function VideoSpeakingEditor({ node, onChange }: { node: VideoSpeakingNode; onCh
 
   return (
     <div className="grid gap-5">
-      <Row label="Tệp video">
-        <FileBox icon={FileVideo} label="Tải lên video" fileName={node.fileName} onChange={(fileName) => onChange({ fileName })} accept="video/*" />
-      </Row>
+
 
       <div>
         <div className="mb-2 flex items-center justify-between">
