@@ -71,6 +71,15 @@ type QListening = BaseQ & {
   audio: { code: string; label: string; durationLabel: string };
   subQuestions: { id: string; prompt: string; options: string[]; answer: number }[];
 };
+type QReading = BaseQ & {
+  kind: "reading";
+  /** Tiêu đề bài đọc (hiển thị trên cột passage). */
+  title?: string;
+  /** Nội dung bài đọc nhiều đoạn, giữ \n. */
+  passage: string;
+  /** Các câu hỏi khai thác bài đọc — MCQ 4 lựa chọn. */
+  subQuestions: { id: string; prompt: string; options: string[]; answer: number }[];
+};
 
 export type Question =
   | QSingle
@@ -83,7 +92,8 @@ export type Question =
   | QSequence
   | QAudio
   | QGapMulti
-  | QListening;
+  | QListening
+  | QReading;
 
 /* ============================================================
  * Sample bank (English)
@@ -106,7 +116,7 @@ function shuffle<T>(arr: T[], seed: number): T[] {
 }
 
 export function buildQuiz(quizId: string): Question[] {
-  return [
+  const base: Question[] = [
     {
       id: "q1",
       index: 1,
@@ -317,6 +327,91 @@ export function buildQuiz(quizId: string): Question[] {
       ],
     },
   ];
+
+  // Question Set — Reading: chỉ thêm vào quiz cuối bài của các unit B1
+  if (/^b1/i.test(quizId)) {
+    base.push({
+      id: "qset-reading-b1",
+      index: base.length + 1,
+      kind: "reading",
+      maxScore: 6,
+      prompt:
+        "Đọc bài viết bên trái rồi trả lời 6 câu hỏi bên phải. Bài đọc sẽ luôn hiển thị khi bạn cuộn câu hỏi.",
+      title: "The Rise of Remote Work",
+      passage:
+        "Over the past decade, remote work has transformed from a rare perk into a mainstream way of working. Improvements in video conferencing, cloud storage and project-management tools have made it possible for employees to collaborate from almost anywhere in the world. The COVID-19 pandemic accelerated this shift dramatically: in 2020, millions of office workers were suddenly required to work from home, and many companies discovered that productivity did not fall as they had feared.\n\nFor employees, the benefits are clear. Without a daily commute, workers gain extra hours for family, exercise or rest. Many also report better focus because they can avoid the constant interruptions of an open-plan office. However, remote work is not without its challenges. Some people struggle with loneliness, while others find it difficult to separate work from personal life and end up working longer hours than before.\n\nCompanies, meanwhile, are still experimenting. A few large firms have ordered all staff back to the office, arguing that face-to-face contact is essential for creativity. Others have embraced a permanent hybrid model, allowing employees to choose where they work two or three days a week. Most experts agree that the future of work will not be fully remote nor fully in-office, but a flexible mix designed around the needs of each team.",
+      subQuestions: [
+        {
+          id: "qset-r1",
+          prompt: "What is the main idea of the passage?",
+          options: [
+            "Remote work is a passing trend that will soon disappear.",
+            "Remote work has become common and is reshaping how companies operate.",
+            "Open-plan offices are more productive than working from home.",
+            "The COVID-19 pandemic ended remote work for most companies.",
+          ],
+          answer: 1,
+        },
+        {
+          id: "qset-r2",
+          prompt: "According to the passage, what helped make remote work possible?",
+          options: [
+            "Government regulations",
+            "Cheaper housing in rural areas",
+            "Better video conferencing and collaboration tools",
+            "A reduction in working hours",
+          ],
+          answer: 2,
+        },
+        {
+          id: "qset-r3",
+          prompt: "Which statement about productivity in 2020 is TRUE?",
+          options: [
+            "Productivity fell sharply when employees worked from home.",
+            "Many companies found that productivity did not drop as expected.",
+            "Productivity was impossible to measure remotely.",
+            "Only managers were able to stay productive.",
+          ],
+          answer: 1,
+        },
+        {
+          id: "qset-r4",
+          prompt: "Which benefit of remote work for employees is mentioned?",
+          options: [
+            "Higher salaries",
+            "Free office equipment",
+            "Extra time for family, exercise or rest",
+            "Guaranteed promotion",
+          ],
+          answer: 2,
+        },
+        {
+          id: "qset-r5",
+          prompt: "Which is mentioned as a challenge of remote work?",
+          options: [
+            "Slower internet at home",
+            "Loneliness and difficulty separating work from personal life",
+            "Lack of meetings",
+            "Higher office rental costs",
+          ],
+          answer: 1,
+        },
+        {
+          id: "qset-r6",
+          prompt: "What do most experts predict about the future of work?",
+          options: [
+            "Everyone will work fully remotely.",
+            "Everyone will return to the office full-time.",
+            "A flexible mix of remote and office work will dominate.",
+            "Companies will stop hiring new employees.",
+          ],
+          answer: 2,
+        },
+      ],
+    });
+  }
+
+  return base;
 }
 
 /* ============================================================
@@ -873,6 +968,7 @@ function kindLabel(k: Question["kind"]) {
     audio: "Audio record",
     gapmulti: "Multi choice gap fill",
     listening: "Listening + multi questions",
+    reading: "Reading set + multi questions",
   }[k];
 }
 function renderPromptHead(p: string) {
@@ -915,6 +1011,10 @@ function hasAnswer(q: Question, v: AnswerState): boolean {
     case "gapmulti":
       return Array.isArray(v) && (v as (number | null)[]).every((x) => x !== null && x !== undefined);
     case "listening": {
+      const arr = v as (number | null)[] | undefined;
+      return Array.isArray(arr) && arr.length === q.subQuestions.length && arr.every((x) => x !== null && x !== undefined);
+    }
+    case "reading": {
       const arr = v as (number | null)[] | undefined;
       return Array.isArray(arr) && arr.length === q.subQuestions.length && arr.every((x) => x !== null && x !== undefined);
     }
@@ -1018,6 +1118,12 @@ function grade(q: Question, v: AnswerState): Result {
       const s = ratio(ok.filter(Boolean).length, q.subQuestions.length);
       return { status: s, earned: earn(s, q.maxScore) };
     }
+    case "reading": {
+      const arr = (v as (number | null)[]) || [];
+      const ok = q.subQuestions.map((sq, i) => arr[i] === sq.answer);
+      const s = ratio(ok.filter(Boolean).length, q.subQuestions.length);
+      return { status: s, earned: earn(s, q.maxScore) };
+    }
   }
 }
 
@@ -1059,6 +1165,8 @@ function QuestionBody({
       return <GapMultiBody q={q} value={value as (number | null)[] | undefined} onChange={onChange} locked={locked} />;
     case "listening":
       return <ListeningBody q={q} value={value as (number | null)[] | undefined} onChange={onChange} locked={locked} accent={accent} />;
+    case "reading":
+      return <ReadingBody q={q} value={value as (number | null)[] | undefined} onChange={onChange} locked={locked} accent={accent} />;
     case "essay":
       return <EssayBody q={q} value={(value as string) || ""} onChange={onChange} locked={locked} accent={accent} />;
   }
@@ -1873,6 +1981,15 @@ function CorrectAnswerHint({ q }: { q: Question }) {
             .join(" • ")}
         </span>
       );
+    case "reading":
+      return (
+        <span>
+          Correct answers:{" "}
+          {q.subQuestions
+            .map((sq, i) => `${i + 1}→${String.fromCharCode(65 + sq.answer)}`)
+            .join(" • ")}
+        </span>
+      );
   }
 }
 
@@ -1985,6 +2102,112 @@ function ListeningBody({
           );
         })}
       </ol>
+    </div>
+  );
+}
+
+/* ---------------- Reading (passage + multi sub-questions, split layout) ---------------- */
+function ReadingBody({
+  q,
+  value,
+  onChange,
+  locked,
+  accent,
+}: {
+  q: QReading;
+  value?: (number | null)[];
+  onChange: (v: (number | null)[]) => void;
+  locked: boolean;
+  accent: string;
+}) {
+  const answers = value ?? q.subQuestions.map(() => null);
+  const pick = (qi: number, oi: number) => {
+    if (locked) return;
+    const next = [...answers];
+    next[qi] = oi;
+    onChange(next);
+  };
+  const doneCount = answers.filter((x) => x !== null && x !== undefined).length;
+
+  return (
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      {/* Bài đọc — cột trái, sticky */}
+      <div className="lg:sticky lg:top-4 lg:self-start">
+        <div
+          className="overflow-hidden rounded-2xl ring-1 ring-border"
+          style={{ background: `linear-gradient(135deg, color-mix(in oklab, ${accent} 6%, transparent), transparent)` }}
+        >
+          <div className="flex items-center justify-between border-b border-border bg-background/40 px-4 py-2.5 backdrop-blur">
+            <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>
+              Reading passage
+            </div>
+            {q.title && (
+              <div className="truncate text-xs font-medium text-foreground">{q.title}</div>
+            )}
+          </div>
+          <div className="max-h-[68vh] overflow-y-auto p-4">
+            <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+              {q.passage}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Câu hỏi — cột phải, cuộn độc lập */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span className="font-semibold uppercase tracking-wider" style={{ color: accent }}>
+            Questions ({q.subQuestions.length})
+          </span>
+          <span>
+            {doneCount}/{q.subQuestions.length} đã trả lời
+          </span>
+        </div>
+        <ol className="space-y-4">
+          {q.subQuestions.map((sq, qi) => {
+            const picked = answers[qi];
+            return (
+              <li key={sq.id} className="space-y-2">
+                <div className="text-sm font-semibold text-foreground">
+                  {qi + 1}. {sq.prompt}
+                </div>
+                <div className="grid gap-2">
+                  {sq.options.map((opt, oi) => {
+                    const selected = picked === oi;
+                    const isAnswer = locked && oi === sq.answer;
+                    const wrongPick = locked && selected && oi !== sq.answer;
+                    return (
+                      <button
+                        key={oi}
+                        type="button"
+                        disabled={locked}
+                        onClick={() => pick(qi, oi)}
+                        className={cn(
+                          "flex items-start gap-2 rounded-xl border-2 px-3 py-2.5 text-left text-sm transition",
+                          selected ? "border-foreground bg-foreground/5" : "border-border hover:border-foreground/40 hover:bg-muted/40",
+                          isAnswer && "border-success bg-success/10",
+                          wrongPick && "border-destructive bg-destructive/10",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 text-[10px] font-bold",
+                            selected ? "border-foreground" : "border-border",
+                            isAnswer && "border-success",
+                          )}
+                        >
+                          {String.fromCharCode(65 + oi)}
+                        </span>
+                        <span className="leading-snug">{opt}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
     </div>
   );
 }
