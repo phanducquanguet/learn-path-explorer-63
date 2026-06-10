@@ -46,11 +46,21 @@ export type VideoNode = Common & {
   fileName?: string;
   thumbnail?: string;
 };
+export type SpeakingMode = "question" | "words";
+export type VideoSpeakingAttachment = {
+  id: string;
+  kind: "audio" | "image" | "pdf" | "brief";
+  fileName?: string;
+  note?: string;
+};
 export type VideoSpeakingNode = Common & {
   kind: "video-speaking";
   duration?: number;
   fileName?: string;
   prompt?: string;
+  attachments?: VideoSpeakingAttachment[];
+  speakingMode?: SpeakingMode;
+  words?: string[];
 };
 export type PdfNode = Common & {
   kind: "pdf";
