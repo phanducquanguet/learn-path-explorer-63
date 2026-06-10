@@ -856,6 +856,7 @@ function VideoSpeakingEditor({ node, onChange }: { node: VideoSpeakingNode; onCh
     VideoSpeakingAttachment["kind"],
     { label: string; icon: React.ElementType; accept?: string }
   > = {
+    video: { label: "Video", icon: FileVideo, accept: "video/*" },
     audio: { label: "Audio", icon: Music2, accept: "audio/*" },
     image: { label: "Hình ảnh", icon: ImageIcon, accept: "image/*" },
     pdf: { label: "PDF", icon: FileText, accept: ".pdf" },
@@ -864,9 +865,7 @@ function VideoSpeakingEditor({ node, onChange }: { node: VideoSpeakingNode; onCh
 
   return (
     <div className="grid gap-5">
-      <Row label="Tệp video">
-        <FileBox icon={FileVideo} label="Tải lên video" fileName={node.fileName} onChange={(fileName) => onChange({ fileName })} accept="video/*" />
-      </Row>
+
 
       <div>
         <div className="mb-2 flex items-center justify-between">
