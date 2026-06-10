@@ -1896,6 +1896,15 @@ function CorrectAnswerHint({ q }: { q: Question }) {
             .join(" • ")}
         </span>
       );
+    case "reading":
+      return (
+        <span>
+          Correct answers:{" "}
+          {q.subQuestions
+            .map((sq, i) => `${i + 1}→${String.fromCharCode(65 + sq.answer)}`)
+            .join(" • ")}
+        </span>
+      );
   }
 }
 
