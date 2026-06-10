@@ -182,7 +182,7 @@ function makeNode(kind: Exclude<AnyNode["kind"], "question">): AnyNode {
       return {
         ...base,
         kind,
-        title: "Video luyện nói",
+        title: "Luyện nói",
         description: "",
         duration: 5,
         prompt: "",
