@@ -2243,10 +2243,12 @@ function ReadingBody({
             );
           })}
         </ol>
+        </div>
       </div>
     </div>
   );
 }
+
 
 /* ---------------- Essay (writing with word count) ---------------- */
 function EssayBody({
