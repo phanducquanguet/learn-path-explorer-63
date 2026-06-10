@@ -327,6 +327,91 @@ export function buildQuiz(quizId: string): Question[] {
       ],
     },
   ];
+
+  // Question Set — Reading: chỉ thêm vào quiz cuối bài của các unit B1
+  if (/^b1/i.test(quizId)) {
+    base.push({
+      id: "qset-reading-b1",
+      index: base.length + 1,
+      kind: "reading",
+      maxScore: 6,
+      prompt:
+        "Đọc bài viết bên trái rồi trả lời 6 câu hỏi bên phải. Bài đọc sẽ luôn hiển thị khi bạn cuộn câu hỏi.",
+      title: "The Rise of Remote Work",
+      passage:
+        "Over the past decade, remote work has transformed from a rare perk into a mainstream way of working. Improvements in video conferencing, cloud storage and project-management tools have made it possible for employees to collaborate from almost anywhere in the world. The COVID-19 pandemic accelerated this shift dramatically: in 2020, millions of office workers were suddenly required to work from home, and many companies discovered that productivity did not fall as they had feared.\n\nFor employees, the benefits are clear. Without a daily commute, workers gain extra hours for family, exercise or rest. Many also report better focus because they can avoid the constant interruptions of an open-plan office. However, remote work is not without its challenges. Some people struggle with loneliness, while others find it difficult to separate work from personal life and end up working longer hours than before.\n\nCompanies, meanwhile, are still experimenting. A few large firms have ordered all staff back to the office, arguing that face-to-face contact is essential for creativity. Others have embraced a permanent hybrid model, allowing employees to choose where they work two or three days a week. Most experts agree that the future of work will not be fully remote nor fully in-office, but a flexible mix designed around the needs of each team.",
+      subQuestions: [
+        {
+          id: "qset-r1",
+          prompt: "What is the main idea of the passage?",
+          options: [
+            "Remote work is a passing trend that will soon disappear.",
+            "Remote work has become common and is reshaping how companies operate.",
+            "Open-plan offices are more productive than working from home.",
+            "The COVID-19 pandemic ended remote work for most companies.",
+          ],
+          answer: 1,
+        },
+        {
+          id: "qset-r2",
+          prompt: "According to the passage, what helped make remote work possible?",
+          options: [
+            "Government regulations",
+            "Cheaper housing in rural areas",
+            "Better video conferencing and collaboration tools",
+            "A reduction in working hours",
+          ],
+          answer: 2,
+        },
+        {
+          id: "qset-r3",
+          prompt: "Which statement about productivity in 2020 is TRUE?",
+          options: [
+            "Productivity fell sharply when employees worked from home.",
+            "Many companies found that productivity did not drop as expected.",
+            "Productivity was impossible to measure remotely.",
+            "Only managers were able to stay productive.",
+          ],
+          answer: 1,
+        },
+        {
+          id: "qset-r4",
+          prompt: "Which benefit of remote work for employees is mentioned?",
+          options: [
+            "Higher salaries",
+            "Free office equipment",
+            "Extra time for family, exercise or rest",
+            "Guaranteed promotion",
+          ],
+          answer: 2,
+        },
+        {
+          id: "qset-r5",
+          prompt: "Which is mentioned as a challenge of remote work?",
+          options: [
+            "Slower internet at home",
+            "Loneliness and difficulty separating work from personal life",
+            "Lack of meetings",
+            "Higher office rental costs",
+          ],
+          answer: 1,
+        },
+        {
+          id: "qset-r6",
+          prompt: "What do most experts predict about the future of work?",
+          options: [
+            "Everyone will work fully remotely.",
+            "Everyone will return to the office full-time.",
+            "A flexible mix of remote and office work will dominate.",
+            "Companies will stop hiring new employees.",
+          ],
+          answer: 2,
+        },
+      ],
+    });
+  }
+
+  return base;
 }
 
 /* ============================================================
