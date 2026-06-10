@@ -217,5 +217,83 @@ export const questionBank: BankQuestion[] = (() => {
       }
     }
   }
+
+  // Sample Question Set: bài đọc + nhiều câu hỏi khai thác
+  out.push({
+    id: "QSET-READING-001",
+    content: "Reading Set: The Rise of Remote Work",
+    skill: "reading",
+    type: "group",
+    level: "B1",
+    difficulty: "medium",
+    points: 6,
+    tags: ["reading", "b1", "question-set", "remote-work"],
+    createdAt: new Date(2025, 1, 15).toISOString(),
+    passage:
+      "The Rise of Remote Work\n\nOver the past decade, remote work has transformed from a rare perk into a mainstream way of working. Improvements in video conferencing, cloud storage and project-management tools have made it possible for employees to collaborate from almost anywhere in the world. The COVID-19 pandemic accelerated this shift dramatically: in 2020, millions of office workers were suddenly required to work from home, and many companies discovered that productivity did not fall as they had feared.\n\nFor employees, the benefits are clear. Without a daily commute, workers gain extra hours for family, exercise or rest. Many also report better focus because they can avoid the constant interruptions of an open-plan office. However, remote work is not without its challenges. Some people struggle with loneliness, while others find it difficult to separate work from personal life and end up working longer hours than before.\n\nCompanies, meanwhile, are still experimenting. A few large firms have ordered all staff back to the office, arguing that face-to-face contact is essential for creativity. Others have embraced a permanent hybrid model, allowing employees to choose where they work two or three days a week. Most experts agree that the future of work will not be fully remote nor fully in-office, but a flexible mix designed around the needs of each team.",
+    subQuestions: [
+      {
+        id: "qset-r1-s1",
+        type: "mcq",
+        content: "What is the main idea of the passage?",
+        options: [
+          "A. Remote work is a passing trend that will soon disappear.",
+          "B. Remote work has become common and is reshaping how companies operate.",
+          "C. Open-plan offices are more productive than working from home.",
+          "D. The COVID-19 pandemic ended remote work for most companies.",
+        ],
+        correctAnswer: "B",
+      },
+      {
+        id: "qset-r1-s2",
+        type: "mcq",
+        content: "According to the passage, what helped make remote work possible?",
+        options: [
+          "A. Government regulations",
+          "B. Cheaper housing in rural areas",
+          "C. Better video conferencing and collaboration tools",
+          "D. A reduction in working hours",
+        ],
+        correctAnswer: "C",
+      },
+      {
+        id: "qset-r1-s3",
+        type: "tf",
+        content: "The passage states that productivity fell sharply when employees started working from home in 2020.",
+        correctAnswer: "False",
+      },
+      {
+        id: "qset-r1-s4",
+        type: "mcq-multi",
+        content: "Which TWO benefits of remote work are mentioned for employees?",
+        options: [
+          "A. More time for family or rest",
+          "B. Higher salaries",
+          "C. Better focus without office interruptions",
+          "D. Free office equipment",
+        ],
+        correctAnswer: "A,C",
+      },
+      {
+        id: "qset-r1-s5",
+        type: "short",
+        content: "Name ONE challenge of remote work mentioned in the passage.",
+        correctAnswer: "loneliness",
+      },
+      {
+        id: "qset-r1-s6",
+        type: "mcq",
+        content: "What do most experts predict about the future of work?",
+        options: [
+          "A. Everyone will work fully remotely.",
+          "B. Everyone will return to the office full-time.",
+          "C. A flexible mix of remote and office work will dominate.",
+          "D. Companies will stop hiring new employees.",
+        ],
+        correctAnswer: "C",
+      },
+    ],
+  });
+
   return out;
 })();
