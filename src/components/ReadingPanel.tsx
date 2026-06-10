@@ -451,6 +451,14 @@ export function ReadingPanel({
         {/* PDF viewer */}
         <div className="bg-[oklch(0.97_0.005_260)] p-4 sm:p-6 lg:p-8 max-h-[calc(100vh-12rem)] overflow-y-auto">
           <div className="mx-auto max-w-3xl space-y-6">
+            <LessonIntro
+              title={activity.title}
+              description={
+                activity.description ??
+                `Trong bài học này, học viên sẽ:\n• Học từ vựng chủ đề Food (thịt, cá, rau củ, trái cây, trứng, cơm, bánh mì).\n• Luyện phát âm 3 âm /iː/, /ɪ/, /aɪ/ và xác định trọng âm.\n• Đọc – nghe 3 đoạn ngắn về thói quen ăn uống của các gia đình.\n• Áp dụng Present simple (I/you/we/they) để nói về sở thích ăn uống của bản thân.\n• Hoàn thành phần Listening practice với 5 câu hỏi trắc nghiệm.`
+              }
+              accent={accent}
+            />
             {samplePages.map((page) => (
               <PdfPage
                 key={page.id}
@@ -466,6 +474,7 @@ export function ReadingPanel({
             ))}
           </div>
         </div>
+
 
         {/* Right tabbed panel */}
         {sideOpen && (
