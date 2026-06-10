@@ -929,6 +929,10 @@ function hasAnswer(q: Question, v: AnswerState): boolean {
       const arr = v as (number | null)[] | undefined;
       return Array.isArray(arr) && arr.length === q.subQuestions.length && arr.every((x) => x !== null && x !== undefined);
     }
+    case "reading": {
+      const arr = v as (number | null)[] | undefined;
+      return Array.isArray(arr) && arr.length === q.subQuestions.length && arr.every((x) => x !== null && x !== undefined);
+    }
   }
 }
 
