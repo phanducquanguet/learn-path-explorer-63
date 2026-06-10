@@ -71,6 +71,15 @@ type QListening = BaseQ & {
   audio: { code: string; label: string; durationLabel: string };
   subQuestions: { id: string; prompt: string; options: string[]; answer: number }[];
 };
+type QReading = BaseQ & {
+  kind: "reading";
+  /** Tiêu đề bài đọc (hiển thị trên cột passage). */
+  title?: string;
+  /** Nội dung bài đọc nhiều đoạn, giữ \n. */
+  passage: string;
+  /** Các câu hỏi khai thác bài đọc — MCQ 4 lựa chọn. */
+  subQuestions: { id: string; prompt: string; options: string[]; answer: number }[];
+};
 
 export type Question =
   | QSingle
@@ -83,7 +92,8 @@ export type Question =
   | QSequence
   | QAudio
   | QGapMulti
-  | QListening;
+  | QListening
+  | QReading;
 
 /* ============================================================
  * Sample bank (English)
