@@ -118,7 +118,7 @@ export type AnyNode =
 type LeafKind = Exclude<AnyNode["kind"], "question">;
 const ACTIVITY_OPTIONS: { kind: LeafKind; label: string; icon: React.ElementType }[] = [
   { kind: "video", label: "Video bài giảng", icon: FileVideo },
-  { kind: "video-speaking", label: "Video + luyện nói", icon: Mic },
+  { kind: "video-speaking", label: "Luyện nói", icon: Mic },
   { kind: "pdf", label: "Tài liệu PDF", icon: FileText },
   { kind: "pdf-audio", label: "PDF kèm audio", icon: Headphones },
   { kind: "practice", label: "Bài thực hành", icon: ListChecks },
