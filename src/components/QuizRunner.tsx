@@ -7,11 +7,14 @@ import {
   ChevronDown,
   CircleDashed,
   GripVertical,
+  Columns2,
+  Rows2,
   Mic,
   RotateCcw,
   Sparkles,
   Trophy,
   X,
+
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
