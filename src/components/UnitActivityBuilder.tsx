@@ -3,6 +3,8 @@ import {
   ChevronDown,
   ChevronRight,
   FileText,
+  Eye,
+
   FileVideo,
   FolderPlus,
   Headphones,
@@ -1030,6 +1032,7 @@ function PdfEditor({ node, onChange }: { node: PdfNode; onChange: (p: Partial<Pd
       <Row label="Tệp PDF">
         <FileBox icon={FileText} label="Tải lên PDF" fileName={node.fileName} onChange={(fileName) => onChange({ fileName })} accept=".pdf" />
       </Row>
+      <PdfStudentPreview title={node.title} description={node.description} fileName={node.fileName} />
       <HiddenFromStudentsToggle checked={!!node.hiddenFromStudents} onChange={(v) => onChange({ hiddenFromStudents: v })} />
     </div>
   );
@@ -1046,10 +1049,75 @@ function PdfAudioEditor({ node, onChange }: { node: PdfAudioNode; onChange: (p: 
           <FileBox icon={Music2} label="Tải lên audio" fileName={node.audioFileName} onChange={(audioFileName) => onChange({ audioFileName })} accept="audio/*" />
         </Row>
       </div>
+      <PdfStudentPreview title={node.title} description={node.description} fileName={node.fileName} audioFileName={node.audioFileName} />
       <HiddenFromStudentsToggle checked={!!node.hiddenFromStudents} onChange={(v) => onChange({ hiddenFromStudents: v })} />
     </div>
   );
 }
+
+function PdfStudentPreview({
+  title,
+  description,
+  fileName,
+  audioFileName,
+}: {
+  title?: string;
+  description?: string;
+  fileName?: string;
+  audioFileName?: string;
+}) {
+  const hasDesc = !!(description && description.trim().length > 0);
+  return (
+    <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/[0.03] p-4">
+      <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-primary">
+        <Eye className="h-3.5 w-3.5" />
+        Học viên sẽ thấy
+      </div>
+      <div className="rounded-xl bg-background p-4 ring-1 ring-border">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <FileText className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Tài liệu PDF{audioFileName ? " + Audio" : ""}
+            </div>
+            <div className="truncate text-base font-semibold text-foreground">
+              {title || "Tài liệu PDF"}
+            </div>
+          </div>
+        </div>
+
+        {hasDesc ? (
+          <div className="mt-3 rounded-xl bg-muted/40 p-3">
+            <div className="mb-1 text-xs font-semibold text-foreground">Giới thiệu nội dung</div>
+            <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">
+              {description}
+            </div>
+          </div>
+        ) : (
+          <div className="mt-3 rounded-xl border border-dashed border-border bg-muted/20 p-3 text-xs text-muted-foreground">
+            Chưa có giới thiệu — học viên sẽ chỉ thấy tiêu đề và tệp PDF. Thêm nội dung vào ô <span className="font-semibold text-foreground">"Giới thiệu nội dung"</span> ở trên để hiển thị cho học viên.
+          </div>
+        )}
+
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+          <span className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-2.5 py-1 text-muted-foreground">
+            <FileText className="h-3.5 w-3.5" />
+            {fileName || "Chưa tải tệp PDF"}
+          </span>
+          {audioFileName && (
+            <span className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-2.5 py-1 text-muted-foreground">
+              <Music2 className="h-3.5 w-3.5" />
+              {audioFileName}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 
 function HiddenFromStudentsToggle({ checked, onChange }: { checked: boolean; onChange: (v: boolean) => void }) {
   return (
