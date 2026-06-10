@@ -2021,6 +2021,112 @@ function ListeningBody({
   );
 }
 
+/* ---------------- Reading (passage + multi sub-questions, split layout) ---------------- */
+function ReadingBody({
+  q,
+  value,
+  onChange,
+  locked,
+  accent,
+}: {
+  q: QReading;
+  value?: (number | null)[];
+  onChange: (v: (number | null)[]) => void;
+  locked: boolean;
+  accent: string;
+}) {
+  const answers = value ?? q.subQuestions.map(() => null);
+  const pick = (qi: number, oi: number) => {
+    if (locked) return;
+    const next = [...answers];
+    next[qi] = oi;
+    onChange(next);
+  };
+  const doneCount = answers.filter((x) => x !== null && x !== undefined).length;
+
+  return (
+    <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      {/* Bài đọc — cột trái, sticky */}
+      <div className="lg:sticky lg:top-4 lg:self-start">
+        <div
+          className="overflow-hidden rounded-2xl ring-1 ring-border"
+          style={{ background: `linear-gradient(135deg, color-mix(in oklab, ${accent} 6%, transparent), transparent)` }}
+        >
+          <div className="flex items-center justify-between border-b border-border bg-background/40 px-4 py-2.5 backdrop-blur">
+            <div className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: accent }}>
+              Reading passage
+            </div>
+            {q.title && (
+              <div className="truncate text-xs font-medium text-foreground">{q.title}</div>
+            )}
+          </div>
+          <div className="max-h-[68vh] overflow-y-auto p-4">
+            <div className="whitespace-pre-wrap text-sm leading-relaxed text-foreground">
+              {q.passage}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Câu hỏi — cột phải, cuộn độc lập */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span className="font-semibold uppercase tracking-wider" style={{ color: accent }}>
+            Questions ({q.subQuestions.length})
+          </span>
+          <span>
+            {doneCount}/{q.subQuestions.length} đã trả lời
+          </span>
+        </div>
+        <ol className="space-y-4">
+          {q.subQuestions.map((sq, qi) => {
+            const picked = answers[qi];
+            return (
+              <li key={sq.id} className="space-y-2">
+                <div className="text-sm font-semibold text-foreground">
+                  {qi + 1}. {sq.prompt}
+                </div>
+                <div className="grid gap-2">
+                  {sq.options.map((opt, oi) => {
+                    const selected = picked === oi;
+                    const isAnswer = locked && oi === sq.answer;
+                    const wrongPick = locked && selected && oi !== sq.answer;
+                    return (
+                      <button
+                        key={oi}
+                        type="button"
+                        disabled={locked}
+                        onClick={() => pick(qi, oi)}
+                        className={cn(
+                          "flex items-start gap-2 rounded-xl border-2 px-3 py-2.5 text-left text-sm transition",
+                          selected ? "border-foreground bg-foreground/5" : "border-border hover:border-foreground/40 hover:bg-muted/40",
+                          isAnswer && "border-success bg-success/10",
+                          wrongPick && "border-destructive bg-destructive/10",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 text-[10px] font-bold",
+                            selected ? "border-foreground" : "border-border",
+                            isAnswer && "border-success",
+                          )}
+                        >
+                          {String.fromCharCode(65 + oi)}
+                        </span>
+                        <span className="leading-snug">{opt}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </div>
+  );
+}
+
 /* ---------------- Essay (writing with word count) ---------------- */
 function EssayBody({
   q, value, onChange, locked, accent,
