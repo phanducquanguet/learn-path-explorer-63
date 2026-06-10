@@ -451,20 +451,63 @@ function AnswerArea({
     const subs = question.subQuestions ?? [];
     const values: Record<string, any> = answer ?? {};
     return (
-      <div className="space-y-3">
-        {subs.map((sub, i) => (
-          <div key={sub.id} className="rounded-xl border border-border bg-surface p-3">
-            <div className="mb-2 text-xs font-semibold text-muted-foreground">
-              Câu {i + 1}: {sub.content}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        {/* Bài đọc — cột trái, sticky để học viên đọc song song khi cuộn câu hỏi */}
+        <div className="lg:sticky lg:top-4 lg:self-start">
+          <div className="rounded-2xl border border-border bg-surface">
+            <div className="flex items-center justify-between border-b border-border px-4 py-2.5">
+              <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                Bài đọc
+              </div>
+              {question.content && (
+                <div className="truncate text-xs text-muted-foreground">{question.content}</div>
+              )}
             </div>
-            <SubAnswerArea
-              sub={sub}
-              value={values[sub.id]}
-              onChange={(v) => setAnswer({ ...values, [sub.id]: v })}
-              checked={checked}
-            />
+            <div className="max-h-[70vh] overflow-y-auto p-4">
+              {question.imageUrl && (
+                <img
+                  src={question.imageUrl}
+                  alt=""
+                  className="mb-3 max-h-60 rounded-lg object-contain"
+                />
+              )}
+              {question.audioUrl && (
+                <audio controls src={question.audioUrl} className="mb-3 w-full" />
+              )}
+              {question.videoUrl && (
+                <video controls src={question.videoUrl} className="mb-3 w-full rounded-lg" />
+              )}
+              <div className="whitespace-pre-wrap text-sm leading-relaxed">
+                {question.passage || question.content}
+              </div>
+            </div>
           </div>
-        ))}
+        </div>
+
+        {/* Câu hỏi — cột phải, cuộn độc lập */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              Câu hỏi ({subs.length})
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Đọc bài bên trái, trả lời câu hỏi bên phải.
+            </div>
+          </div>
+          {subs.map((sub, i) => (
+            <div key={sub.id} className="rounded-xl border border-border bg-surface p-3">
+              <div className="mb-2 text-xs font-semibold text-muted-foreground">
+                Câu {i + 1}: {sub.content}
+              </div>
+              <SubAnswerArea
+                sub={sub}
+                value={values[sub.id]}
+                onChange={(v) => setAnswer({ ...values, [sub.id]: v })}
+                checked={checked}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
