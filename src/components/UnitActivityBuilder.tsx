@@ -3,6 +3,8 @@ import {
   ChevronDown,
   ChevronRight,
   FileText,
+  Eye,
+
   FileVideo,
   FolderPlus,
   Headphones,
