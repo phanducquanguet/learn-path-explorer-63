@@ -22,31 +22,35 @@ export function QuestionStudentPreview({ question }: { question: BankQuestion })
     setChecked(false);
   };
 
+  const isGroup = question.type === "group";
+
   return (
     <div className="space-y-4">
-      {/* Đề bài */}
-      <div className="rounded-2xl border border-border bg-surface p-4">
-        {question.imageUrl && (
-          <img
-            src={question.imageUrl}
-            alt=""
-            className="mb-3 max-h-60 rounded-lg object-contain"
-          />
-        )}
-        {question.audioUrl && (
-          <audio controls src={question.audioUrl} className="mb-3 w-full" />
-        )}
-        {question.videoUrl && (
-          <video controls src={question.videoUrl} className="mb-3 w-full rounded-lg" />
-        )}
-        <div className="text-sm leading-relaxed">
-          {question.passage ? (
-            <PassageView passage={question.passage} />
-          ) : (
-            <span>{question.content}</span>
+      {/* Đề bài — ẩn header passage khi là Question Set (sẽ render split-view bên dưới) */}
+      {!isGroup && (
+        <div className="rounded-2xl border border-border bg-surface p-4">
+          {question.imageUrl && (
+            <img
+              src={question.imageUrl}
+              alt=""
+              className="mb-3 max-h-60 rounded-lg object-contain"
+            />
           )}
+          {question.audioUrl && (
+            <audio controls src={question.audioUrl} className="mb-3 w-full" />
+          )}
+          {question.videoUrl && (
+            <video controls src={question.videoUrl} className="mb-3 w-full rounded-lg" />
+          )}
+          <div className="text-sm leading-relaxed">
+            {question.passage ? (
+              <PassageView passage={question.passage} />
+            ) : (
+              <span>{question.content}</span>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Vùng trả lời */}
       <AnswerArea
