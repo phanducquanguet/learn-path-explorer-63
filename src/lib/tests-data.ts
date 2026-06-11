@@ -335,7 +335,10 @@ export const testSubmissions: TestSubmission[] = [
           "(Bản ghi âm 1'05) — học viên miêu tả khu chợ truyền thống: gian hàng rau củ, người mua kẻ bán, không khí nhộn nhịp.",
         studentAudioUrl: "/audio/sample-speaking-picture.mp3",
         points: 5,
+        awarded: 4.25,
+        feedback: "Miêu tả chi tiết tốt, ý phong phú. Cần thêm từ nối để mạch lạc hơn.",
       },
+
     ],
   },
   {
