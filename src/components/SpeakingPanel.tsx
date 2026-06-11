@@ -291,49 +291,8 @@ export function SpeakingPanel({
             </div>
           </div>
 
-          <div className="mt-5 flex items-center justify-between gap-2">
-            <button
-              onClick={() => {
-                setIdx((i) => Math.max(0, i - 1));
-                setRecording(false);
-              }}
-              disabled={idx === 0}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-surface px-4 py-2.5 text-sm font-semibold text-foreground ring-1 ring-border hover:bg-muted disabled:opacity-40"
-            >
-              <ChevronLeft className="h-4 w-4" /> Trước
-            </button>
-
-            <div className="hidden flex-1 items-center justify-center gap-1.5 sm:flex">
-              {items.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    setIdx(i);
-                    setRecording(false);
-                  }}
-                  className={cn(
-                    "h-2 rounded-full transition-all",
-                    i === idx ? "w-6" : "w-2",
-                  )}
-                  style={{
-                    background: i <= idx ? accent : "oklch(0.9 0.01 260)",
-                  }}
-                  aria-label={`Từ ${i + 1}`}
-                />
-              ))}
-            </div>
-
-            {idx < total - 1 ? (
-              <button
-                onClick={() => {
-                  setIdx((i) => i + 1);
-                  setRecording(false);
-                }}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2.5 text-sm font-semibold text-background hover:opacity-90"
-              >
-                Next <ChevronRight className="h-4 w-4" />
-              </button>
-            ) : (
+          {isQuestionMode ? (
+            <div className="mt-5 flex justify-end">
               <button
                 onClick={onClose}
                 className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-white"
@@ -341,10 +300,64 @@ export function SpeakingPanel({
               >
                 Hoàn thành
               </button>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="mt-5 flex items-center justify-between gap-2">
+              <button
+                onClick={() => {
+                  setIdx((i) => Math.max(0, i - 1));
+                  setRecording(false);
+                }}
+                disabled={idx === 0}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-surface px-4 py-2.5 text-sm font-semibold text-foreground ring-1 ring-border hover:bg-muted disabled:opacity-40"
+              >
+                <ChevronLeft className="h-4 w-4" /> Trước
+              </button>
+
+              <div className="hidden flex-1 items-center justify-center gap-1.5 sm:flex">
+                {items.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setIdx(i);
+                      setRecording(false);
+                    }}
+                    className={cn(
+                      "h-2 rounded-full transition-all",
+                      i === idx ? "w-6" : "w-2",
+                    )}
+                    style={{
+                      background: i <= idx ? accent : "oklch(0.9 0.01 260)",
+                    }}
+                    aria-label={`Từ ${i + 1}`}
+                  />
+                ))}
+              </div>
+
+              {idx < total - 1 ? (
+                <button
+                  onClick={() => {
+                    setIdx((i) => i + 1);
+                    setRecording(false);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2.5 text-sm font-semibold text-background hover:opacity-90"
+                >
+                  Next <ChevronRight className="h-4 w-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={onClose}
+                  className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-white"
+                  style={{ background: accent }}
+                >
+                  Hoàn thành
+                </button>
+              )}
+            </div>
+          )}
         </section>
         </div>
+
 
         {sideOpen && (
           <aside className="flex max-h-[calc(100vh-12rem)] flex-col border-t border-border/70 bg-surface lg:border-l lg:border-t-0">
