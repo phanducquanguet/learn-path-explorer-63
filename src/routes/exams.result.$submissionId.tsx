@@ -89,10 +89,7 @@ function ResultPage() {
               </span>
               <span>•</span>
               <span>
-                Nộp lúc{" "}
-                {sub.submittedAt
-                  ? new Date(sub.submittedAt).toLocaleString("vi-VN")
-                  : "—"}
+                Nộp lúc {sub.submittedAt ? formatDateTime(sub.submittedAt) : "—"}
               </span>
               <span>•</span>
               <StatusBadge status={sub.status} />
@@ -212,6 +209,18 @@ function ResultPage() {
       </div>
     </div>
   );
+}
+
+function formatDateTime(iso: string) {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getUTCDate())}/${pad(d.getUTCMonth() + 1)}/${d.getUTCFullYear()} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}`;
+}
+
+function formatTime(iso: string) {
+  const d = new Date(iso);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`;
 }
 
 function labelType(t: TestSubmission["answers"][number]["type"]) {
@@ -504,7 +513,7 @@ function ProctorPanel({ events }: { events: ProctorEvent[] }) {
                 )}
               </div>
               <div className="shrink-0 font-mono text-[10px] text-muted-foreground">
-                {new Date(e.at).toLocaleTimeString("vi-VN")}
+                {formatTime(e.at)}
               </div>
             </div>
           ))}
