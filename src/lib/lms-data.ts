@@ -8,6 +8,10 @@ export type Activity = {
   done?: boolean;
   /** Giới thiệu nội dung — hiển thị cho học viên trước/khi vào bài. */
   description?: string;
+  /** Chế độ luyện nói: theo từ vựng hoặc theo câu hỏi có sẵn. */
+  speakingMode?: "words" | "questions";
+  /** Danh sách câu hỏi/câu prompt khi speakingMode === "questions". */
+  speakingPrompts?: string[];
 };
 
 
