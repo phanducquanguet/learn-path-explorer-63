@@ -240,20 +240,24 @@ export function SpeakingPanel({
         >
           <div className="mb-4 flex items-center justify-between text-xs font-semibold text-muted-foreground">
             <span>{isQuestionMode ? "Luyện nói theo câu hỏi có sẵn" : "Luyện phát âm theo từ"}</span>
-            <span>
-              {isQuestionMode ? "Câu" : "Từ"} <span className="text-foreground">{idx + 1}</span> / {total}
-            </span>
+            {!isQuestionMode && (
+              <span>
+                Từ <span className="text-foreground">{idx + 1}</span> / {total}
+              </span>
+            )}
           </div>
 
-          <div className="mb-5 h-1.5 w-full overflow-hidden rounded-full bg-background/80 ring-1 ring-border">
-            <div
-              className="h-full transition-all"
-              style={{
-                width: `${((idx + 1) / total) * 100}%`,
-                background: accent,
-              }}
-            />
-          </div>
+          {!isQuestionMode && (
+            <div className="mb-5 h-1.5 w-full overflow-hidden rounded-full bg-background/80 ring-1 ring-border">
+              <div
+                className="h-full transition-all"
+                style={{
+                  width: `${((idx + 1) / total) * 100}%`,
+                  background: accent,
+                }}
+              />
+            </div>
+          )}
 
           <div className="rounded-2xl bg-background p-6 text-center shadow-soft ring-1 ring-border sm:p-8">
             {isQuestionMode && (
