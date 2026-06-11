@@ -89,10 +89,7 @@ function ResultPage() {
               </span>
               <span>•</span>
               <span>
-                Nộp lúc{" "}
-                {sub.submittedAt
-                  ? new Date(sub.submittedAt).toLocaleString("vi-VN")
-                  : "—"}
+                Nộp lúc {sub.submittedAt ? formatDateTime(sub.submittedAt) : "—"}
               </span>
               <span>•</span>
               <StatusBadge status={sub.status} />
