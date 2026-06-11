@@ -335,7 +335,10 @@ export const testSubmissions: TestSubmission[] = [
           "(Bản ghi âm 1'05) — học viên miêu tả khu chợ truyền thống: gian hàng rau củ, người mua kẻ bán, không khí nhộn nhịp.",
         studentAudioUrl: "/audio/sample-speaking-picture.mp3",
         points: 5,
+        awarded: 4.25,
+        feedback: "Miêu tả chi tiết tốt, ý phong phú. Cần thêm từ nối để mạch lạc hơn.",
       },
+
     ],
   },
   {
@@ -347,7 +350,9 @@ export const testSubmissions: TestSubmission[] = [
     submittedAt: days(-3),
     durationMinutes: 88,
     autoScore: 16,
-    status: "needs-grading",
+    manualScore: 3,
+    finalScore: 19,
+    status: "graded",
     proctorEvents: [
       { at: new Date(now - 3 * 86400000 + 5 * 60000).toISOString(), type: "fullscreen-exit", severity: "high", detail: "Thoát chế độ toàn màn hình" },
       { at: new Date(now - 3 * 86400000 + 6 * 60000).toISOString(), type: "tab-switch", severity: "high", detail: "Chuyển tab 22 giây" },
@@ -375,15 +380,18 @@ export const testSubmissions: TestSubmission[] = [
         studentAnswer:
           "My hobby is cooking. I learn from YouTube and cook for my family every weekend. My favorite dish is phở bò.",
         points: 5,
+        awarded: 3,
+        feedback: "Ý ngắn, cần phát triển thêm chi tiết và ví dụ.",
         rubric: [
-          { criterion: "Nội dung & ý tưởng (Task achievement)", max: 1.5 },
-          { criterion: "Tổ chức & mạch lạc (Coherence)", max: 1.0 },
-          { criterion: "Từ vựng (Lexical resource)", max: 1.0 },
-          { criterion: "Ngữ pháp & độ chính xác", max: 1.5 },
+          { criterion: "Nội dung & ý tưởng (Task achievement)", max: 1.5, awarded: 0.75 },
+          { criterion: "Tổ chức & mạch lạc (Coherence)", max: 1.0, awarded: 0.75 },
+          { criterion: "Từ vựng (Lexical resource)", max: 1.0, awarded: 0.75 },
+          { criterion: "Ngữ pháp & độ chính xác", max: 1.5, awarded: 0.75 },
         ],
       },
     ],
   },
+
   {
     id: "ts-3",
     testId: "test-1",
@@ -393,7 +401,9 @@ export const testSubmissions: TestSubmission[] = [
     submittedAt: days(-3),
     durationMinutes: 90,
     autoScore: 22,
-    status: "needs-grading",
+    manualScore: 9,
+    finalScore: 31,
+    status: "graded",
     proctorEvents: [
       { at: new Date(now - 3 * 86400000 + 18 * 60000).toISOString(), type: "network-drop", severity: "low", detail: "Mất kết nối 4 giây rồi kết nối lại" },
     ],
@@ -415,11 +425,13 @@ export const testSubmissions: TestSubmission[] = [
         studentAnswer:
           "I love reading books, especially historical novels. Reading takes me to different worlds and times. I read at least one book per month.",
         points: 5,
+        awarded: 4.5,
+        feedback: "Diễn đạt rõ ràng, ý mạch lạc. Cần thêm ví dụ cụ thể.",
         rubric: [
-          { criterion: "Nội dung & ý tưởng (Task achievement)", max: 1.5 },
-          { criterion: "Tổ chức & mạch lạc (Coherence)", max: 1.0 },
-          { criterion: "Từ vựng (Lexical resource)", max: 1.0 },
-          { criterion: "Ngữ pháp & độ chính xác", max: 1.5 },
+          { criterion: "Nội dung & ý tưởng (Task achievement)", max: 1.5, awarded: 1.25 },
+          { criterion: "Tổ chức & mạch lạc (Coherence)", max: 1.0, awarded: 1.0 },
+          { criterion: "Từ vựng (Lexical resource)", max: 1.0, awarded: 1.0 },
+          { criterion: "Ngữ pháp & độ chính xác", max: 1.5, awarded: 1.25 },
         ],
       },
       {
@@ -430,11 +442,14 @@ export const testSubmissions: TestSubmission[] = [
         studentAnswer: "(Bản ghi âm 1'30) — học viên kể về người thầy chủ nhiệm cấp 3.",
         studentAudioUrl: "/audio/sample-speaking-2.mp3",
         points: 5,
+        awarded: 4.5,
+        feedback: "Phát âm tốt, ý cảm xúc. Lưu ý phát âm 'influenced' và 'memorable'.",
         rubric: [
-          { criterion: "Phát âm (Pronunciation)", max: 1.25 },
-          { criterion: "Lưu loát (Fluency)", max: 1.25 },
-          { criterion: "Từ vựng (Vocabulary)", max: 1.25 },
-          { criterion: "Ngữ pháp (Grammar)", max: 1.25 },
+          { criterion: "Phát âm (Pronunciation)", max: 1.25, awarded: 1.0 },
+          { criterion: "Lưu loát (Fluency)", max: 1.25, awarded: 1.25 },
+          { criterion: "Từ vựng (Vocabulary)", max: 1.25, awarded: 1.25 },
+          { criterion: "Ngữ pháp (Grammar)", max: 1.25, awarded: 1.0 },
+
         ],
       },
     ],
