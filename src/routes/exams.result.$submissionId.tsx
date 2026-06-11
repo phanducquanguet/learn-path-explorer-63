@@ -61,8 +61,6 @@ function ResultPage() {
 
   const pending = sub.status === "needs-grading" || sub.status === "auto-graded" || sub.status === "in-progress";
 
-  const pending = sub.status === "needs-grading" || sub.status === "auto-graded" || sub.status === "in-progress";
-
   return (
     <div className="min-h-screen bg-background">
       <TopNav />
