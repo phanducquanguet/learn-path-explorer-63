@@ -37,6 +37,7 @@ import { cn } from "@/lib/utils";
 import { QuizPanel } from "@/components/QuizPanel";
 import { ReadingPanel } from "@/components/ReadingPanel";
 import { VideoPanel } from "@/components/VideoPanel";
+import { SpeakingPanel } from "@/components/SpeakingPanel";
 import { useRole } from "@/contexts/RoleContext";
 
 export const Route = createFileRoute("/courses/$courseId")({
@@ -89,6 +90,7 @@ function CoursePage() {
   const [quizOpen, setQuizOpen] = useState<Activity | null>(null);
   const [readingOpen, setReadingOpen] = useState<Activity | null>(null);
   const [videoOpen, setVideoOpen] = useState<Activity | null>(null);
+  const [speakingOpen, setSpeakingOpen] = useState<Activity | null>(null);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     intro: true,
     [course.units[0].id]: true,
@@ -366,18 +368,27 @@ function CoursePage() {
                               setQuizOpen(a);
                               setReadingOpen(null);
                               setVideoOpen(null);
+                              setSpeakingOpen(null);
                             } else if (a.type === "reading") {
                               setReadingOpen(a);
                               setQuizOpen(null);
                               setVideoOpen(null);
+                              setSpeakingOpen(null);
                             } else if (a.type === "video") {
                               setVideoOpen(a);
                               setQuizOpen(null);
                               setReadingOpen(null);
+                              setSpeakingOpen(null);
+                            } else if (a.type === "speaking") {
+                              setSpeakingOpen(a);
+                              setQuizOpen(null);
+                              setReadingOpen(null);
+                              setVideoOpen(null);
                             } else {
                               setQuizOpen(null);
                               setReadingOpen(null);
                               setVideoOpen(null);
+                              setSpeakingOpen(null);
                               setTab("overview");
                             }
                           }}
@@ -419,6 +430,8 @@ function CoursePage() {
             <ReadingPanel activity={readingOpen} hue={level.hue} onClose={() => setReadingOpen(null)} />
           ) : videoOpen ? (
             <VideoPanel activity={videoOpen} hue={level.hue} onClose={() => setVideoOpen(null)} />
+          ) : speakingOpen ? (
+            <SpeakingPanel activity={speakingOpen} hue={level.hue} onClose={() => setSpeakingOpen(null)} />
           ) : (
             <>
               {/* HERO */}
