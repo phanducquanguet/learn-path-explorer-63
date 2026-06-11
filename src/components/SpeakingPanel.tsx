@@ -53,6 +53,14 @@ export function SpeakingPanel({
   onClose: () => void;
 }) {
   const accent = useMemo(() => `oklch(0.55 0.18 ${hue})`, [hue]);
+  const isQuestionMode = activity.speakingMode === "questions";
+  const items = useMemo(() => {
+    if (isQuestionMode) {
+      const prompts = activity.speakingPrompts ?? [];
+      return prompts.map((p) => ({ word: p, ipa: "", meaning: "" }));
+    }
+    return demoWords;
+  }, [isQuestionMode, activity.speakingPrompts]);
   const [idx, setIdx] = useState(0);
   const [recording, setRecording] = useState(false);
   const [playingVideo, setPlayingVideo] = useState(false);
