@@ -59,6 +59,23 @@ function ResultPage() {
   const earnedPoints = sub.answers.reduce((s, a) => s + (a.awarded ?? 0), 0);
   const pct = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
 
+  const skillOrder: Array<{ key: string; label: string }> = [
+    { key: "listening", label: "Listening" },
+    { key: "reading", label: "Reading" },
+    { key: "speaking", label: "Speaking" },
+    { key: "writing", label: "Writing" },
+  ];
+  const skillStats = skillOrder
+    .map(({ key, label }) => {
+      const items = sub.answers.filter((a) => a.skill === key);
+      if (items.length === 0) return null;
+      const earned = items.reduce((s, a) => s + (a.awarded ?? 0), 0);
+      const total = items.reduce((s, a) => s + a.points, 0);
+      const hasPending = items.some((a) => a.awarded == null);
+      return { key, label, earned, total, hasPending };
+    })
+    .filter((x): x is { key: string; label: string; earned: number; total: number; hasPending: boolean } => x !== null);
+
   const pending = sub.status === "needs-grading" || sub.status === "auto-graded" || sub.status === "in-progress";
 
   return (
@@ -97,7 +114,7 @@ function ResultPage() {
           </div>
 
           {/* Score panel */}
-          <div className="mt-6 grid gap-4 sm:grid-cols-3">
+          <div className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_2fr]">
             <ScoreCard
               icon={<GraduationCap className="h-4 w-4" />}
               label={pending ? "Điểm tạm tính" : "Điểm cuối"}
@@ -106,24 +123,42 @@ function ResultPage() {
               progress={pct}
               accent="primary"
             />
-            <ScoreCard
-              icon={<ClipboardCheck className="h-4 w-4" />}
-              label="Tự động chấm"
-              value={`${sub.autoScore.toFixed(1)} đ`}
-              hint="Trắc nghiệm & điền từ"
-              accent="emerald"
-            />
-            <ScoreCard
-              icon={<PenLine className="h-4 w-4" />}
-              label="Giáo viên chấm"
-              value={
-                sub.manualScore != null
-                  ? `${sub.manualScore.toFixed(1)} đ`
-                  : "Đang chờ"
-              }
-              hint={pending ? "Bài tự luận/nói đang chờ chấm" : "Đã hoàn tất"}
-              accent="amber"
-            />
+
+            <div className="rounded-2xl border bg-surface p-4">
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <ClipboardCheck className="h-4 w-4" /> Điểm theo kỹ năng
+              </div>
+              {skillStats.length === 0 ? (
+                <p className="mt-3 text-xs text-muted-foreground">Chưa có dữ liệu kỹ năng.</p>
+              ) : (
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  {skillStats.map((s) => {
+                    const sp = s.total > 0 ? Math.round((s.earned / s.total) * 100) : 0;
+                    return (
+                      <div key={s.key} className="rounded-xl border bg-background p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="text-sm font-semibold text-foreground">
+                            {s.label}
+                          </div>
+                          <span className="text-xs font-mono text-muted-foreground">
+                            {s.earned.toFixed(1)} / {s.total}
+                          </span>
+                        </div>
+                        <Progress value={sp} className="mt-2 h-1.5" />
+                        <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+                          <span>{sp}%</span>
+                          {s.hasPending && (
+                            <span className="font-semibold text-amber-600">
+                              Đang chờ chấm
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
 
           {pending && (
@@ -136,6 +171,7 @@ function ResultPage() {
             </div>
           )}
         </div>
+
 
         {/* Proctor warnings */}
         {sub.proctorEvents && sub.proctorEvents.length > 0 && (
