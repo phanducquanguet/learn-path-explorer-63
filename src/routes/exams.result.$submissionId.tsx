@@ -59,8 +59,7 @@ function ResultPage() {
   const earnedPoints = sub.answers.reduce((s, a) => s + (a.awarded ?? 0), 0);
   const pct = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
 
-  const autoAnswers = sub.answers.filter((a) => a.type === "mcq" || a.type === "tf" || a.type === "short" && a.skill !== "speaking");
-  const manualAnswers = sub.answers.filter((a) => a.type === "essay" || (a.type === "short" && a.skill === "speaking"));
+  const pending = sub.status === "needs-grading" || sub.status === "auto-graded" || sub.status === "in-progress";
 
   const pending = sub.status === "needs-grading" || sub.status === "auto-graded" || sub.status === "in-progress";
 
