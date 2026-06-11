@@ -51,7 +51,7 @@ export type VideoNode = Common & {
 export type SpeakingMode = "question" | "words";
 export type VideoSpeakingAttachment = {
   id: string;
-  kind: "video" | "audio" | "image" | "pdf" | "brief";
+  kind: "video" | "audio" | "image" | "pdf";
   fileName?: string;
   note?: string;
 };
