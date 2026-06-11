@@ -14,8 +14,12 @@ import {
   ShieldCheck,
   Sparkles,
   Upload,
+  History,
+  GraduationCap,
 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { TopNav } from "@/components/TopNav";
+import { testSubmissions, tests as allTests } from "@/lib/tests-data";
 import { EXAM_SKILLS } from "@/lib/teacher-data";
 import { Button } from "@/components/ui/button";
 import {
