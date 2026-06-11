@@ -4,14 +4,25 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  GraduationCap,
   Headphones,
   Mic,
+  NotebookPen,
   Pause,
   Play,
+  Plus,
+  Send,
+  StickyNote,
   Volume2,
+  X,
 } from "lucide-react";
 import type { Activity } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
+
+type Note = { id: string; text: string; ts: number };
+type TeacherQ = { id: string; text: string; ts: number; status: "pending" | "answered"; answer?: string };
+type SideTab = "notes" | "teacher";
+
 
 type Attachment =
   | { kind: "video"; label: string; src?: string }
@@ -47,8 +58,36 @@ export function SpeakingPanel({
   const [playingVideo, setPlayingVideo] = useState(false);
   const [playingAudio, setPlayingAudio] = useState(false);
 
+  // Sidebar (ẩn mặc định)
+  const [sideOpen, setSideOpen] = useState(false);
+  const [sideTab, setSideTab] = useState<SideTab>("notes");
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [noteDraft, setNoteDraft] = useState("");
+  const [teacherQs, setTeacherQs] = useState<TeacherQ[]>([]);
+  const [teacherDraft, setTeacherDraft] = useState("");
+
   const total = demoWords.length;
   const current = demoWords[idx];
+
+  const addNote = () => {
+    const t = noteDraft.trim();
+    if (!t) return;
+    setNotes((n) => [{ id: crypto.randomUUID(), text: t, ts: Date.now() }, ...n]);
+    setNoteDraft("");
+  };
+  const askTeacher = () => {
+    const t = teacherDraft.trim();
+    if (!t) return;
+    setTeacherQs((q) => [
+      { id: crypto.randomUUID(), text: t, ts: Date.now(), status: "pending" },
+      ...q,
+    ]);
+    setTeacherDraft("");
+  };
+  const sideBadge: Record<SideTab, number> = {
+    notes: notes.length,
+    teacher: teacherQs.length,
+  };
 
   return (
     <div className="overflow-hidden rounded-3xl bg-surface shadow-soft ring-1 ring-border">
@@ -82,12 +121,27 @@ export function SpeakingPanel({
             <div className="truncate text-base font-semibold text-foreground">{activity.title}</div>
           </div>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-xs text-muted-foreground ring-1 ring-border">
-          <Mic className="h-3.5 w-3.5" /> {activity.duration} phút
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="hidden md:inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-xs text-muted-foreground ring-1 ring-border">
+            <Mic className="h-3.5 w-3.5" /> {activity.duration} phút
+          </span>
+          <button
+            onClick={() => setSideOpen((v) => !v)}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold ring-1 transition",
+              sideOpen
+                ? "bg-foreground text-background ring-foreground"
+                : "bg-surface text-foreground ring-border hover:bg-muted",
+            )}
+          >
+            <NotebookPen className="h-3.5 w-3.5" />
+            {sideOpen ? "Ẩn bảng phụ" : "Ghi chú & Hỏi giáo viên"}
+          </button>
+        </div>
       </div>
 
       {/* Body */}
+      <div className={cn("grid gap-0", sideOpen ? "lg:grid-cols-[1fr_380px]" : "grid-cols-1")}>
       <div className="space-y-6 p-5 sm:p-7 lg:p-8">
         {activity.description && (
           <div className="rounded-2xl bg-muted/40 p-4 text-sm leading-relaxed text-foreground/90">
@@ -279,7 +333,152 @@ export function SpeakingPanel({
             )}
           </div>
         </section>
+        </div>
+
+        {sideOpen && (
+          <aside className="flex max-h-[calc(100vh-12rem)] flex-col border-t border-border/70 bg-surface lg:border-l lg:border-t-0">
+            <div className="flex border-b border-border/70 bg-surface-2/40">
+              {([
+                { id: "notes" as const, label: "Ghi chú", icon: StickyNote },
+                { id: "teacher" as const, label: "Hỏi giáo viên", icon: GraduationCap },
+              ]).map((t) => {
+                const active = sideTab === t.id;
+                const Icon = t.icon;
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => setSideTab(t.id)}
+                    className={cn(
+                      "inline-flex flex-1 items-center justify-center gap-1.5 border-b-2 px-2 py-2.5 text-[11px] font-semibold transition",
+                      active
+                        ? "border-foreground bg-surface text-foreground"
+                        : "border-transparent text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span>{t.label}</span>
+                    {sideBadge[t.id] > 0 && (
+                      <span
+                        className={cn(
+                          "rounded-full px-1.5 text-[9px] font-bold",
+                          active ? "bg-foreground text-background" : "bg-muted text-muted-foreground",
+                        )}
+                      >
+                        {sideBadge[t.id]}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {sideTab === "notes" ? (
+              <>
+                <div className="space-y-2 border-b border-border/70 bg-surface-2/40 p-3">
+                  <textarea
+                    value={noteDraft}
+                    onChange={(e) => setNoteDraft(e.target.value)}
+                    placeholder={`Ghi chú cho từ "${current.word}"...`}
+                    rows={3}
+                    className="w-full resize-none rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      onClick={addNote}
+                      disabled={!noteDraft.trim()}
+                      className="inline-flex items-center gap-1 rounded-lg bg-foreground px-3 py-1.5 text-xs font-semibold text-background disabled:opacity-40"
+                    >
+                      <Plus className="h-3 w-3" /> Lưu ghi chú
+                    </button>
+                  </div>
+                </div>
+                <div className="flex-1 space-y-2 overflow-y-auto p-3">
+                  {notes.length === 0 ? (
+                    <div className="px-4 py-10 text-center text-xs text-muted-foreground">
+                      Chưa có ghi chú nào.
+                    </div>
+                  ) : (
+                    notes.map((n) => (
+                      <div key={n.id} className="rounded-xl bg-surface-2/60 p-3 ring-1 ring-border/60">
+                        <div className="mb-1 flex justify-end">
+                          <button
+                            onClick={() => setNotes((all) => all.filter((x) => x.id !== n.id))}
+                            className="text-muted-foreground hover:text-foreground"
+                            aria-label="Xoá"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                        <p className="whitespace-pre-wrap text-[13px] text-foreground">{n.text}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="space-y-2 border-b border-border/70 bg-surface-2/40 p-3">
+                  <textarea
+                    value={teacherDraft}
+                    onChange={(e) => setTeacherDraft(e.target.value)}
+                    placeholder="Đặt câu hỏi cho giáo viên về phần luyện nói..."
+                    rows={3}
+                    className="w-full resize-none rounded-xl border border-border bg-surface px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  />
+                  <div className="flex justify-end">
+                    <button
+                      onClick={askTeacher}
+                      disabled={!teacherDraft.trim()}
+                      className="inline-flex items-center gap-1 rounded-lg bg-foreground px-3 py-1.5 text-xs font-semibold text-background disabled:opacity-40"
+                    >
+                      <Send className="h-3 w-3" /> Gửi câu hỏi
+                    </button>
+                  </div>
+                </div>
+                <div className="flex-1 space-y-2 overflow-y-auto p-3">
+                  {teacherQs.length === 0 ? (
+                    <div className="px-4 py-10 text-center text-xs text-muted-foreground">
+                      Chưa có câu hỏi nào.
+                    </div>
+                  ) : (
+                    teacherQs.map((q) => (
+                      <div key={q.id} className="rounded-xl bg-surface-2/60 p-3 ring-1 ring-border/60">
+                        <div className="mb-1 flex items-center justify-between">
+                          <span
+                            className={cn(
+                              "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                              q.status === "answered"
+                                ? "bg-emerald-500/10 text-emerald-700"
+                                : "bg-amber-500/10 text-amber-700",
+                            )}
+                          >
+                            {q.status === "answered" ? "Đã trả lời" : "Chờ trả lời"}
+                          </span>
+                          <button
+                            onClick={() => setTeacherQs((all) => all.filter((x) => x.id !== q.id))}
+                            className="text-muted-foreground hover:text-foreground"
+                            aria-label="Xoá"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                        <p className="whitespace-pre-wrap text-[13px] text-foreground">{q.text}</p>
+                        {q.answer && (
+                          <div className="mt-2 rounded-lg bg-background p-2 text-[12px] text-muted-foreground ring-1 ring-border">
+                            <span className="font-semibold text-foreground">Giáo viên: </span>
+                            {q.answer}
+                          </div>
+                        )}
+                      </div>
+                    ))
+                  )}
+                </div>
+              </>
+            )}
+          </aside>
+        )}
       </div>
     </div>
   );
 }
+
