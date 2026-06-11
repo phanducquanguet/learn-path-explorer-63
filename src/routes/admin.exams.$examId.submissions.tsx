@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { getSubmissionsByExam, type ExamSubmission, type ExamAnswer } from "@/lib/exam-submissions";
-import { ArrowLeft, Clock, CheckCircle2, AlertCircle, Send, X } from "lucide-react";
+import { ArrowLeft, Clock, CheckCircle2, AlertCircle, Send, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/exams/$examId/submissions")({
@@ -121,9 +121,12 @@ function GradingDrawer({
   onSave: (s: ExamSubmission) => void;
 }) {
   const [answers, setAnswers] = useState<ExamAnswer[]>(submission.answers);
+  const [idx, setIdx] = useState(0);
+  const total = answers.length;
+  const a = answers[idx];
 
   const updateAnswer = (i: number, patch: Partial<ExamAnswer>) =>
-    setAnswers((prev) => prev.map((a, idx) => (idx === i ? { ...a, ...patch } : a)));
+    setAnswers((prev) => prev.map((x, k) => (k === i ? { ...x, ...patch } : x)));
 
   const finish = () => {
     const manualTotal = answers.reduce((s, a) => s + (a.manualScore ?? 0), 0);
@@ -140,8 +143,8 @@ function GradingDrawer({
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
       <button onClick={onClose} className="absolute inset-0" aria-label="Close" />
-      <div className="relative h-full w-full max-w-3xl overflow-y-auto bg-background p-6 shadow-elevated">
-        <div className="flex items-center justify-between">
+      <div className="relative flex h-full w-full max-w-3xl flex-col bg-background shadow-elevated">
+        <div className="flex items-center justify-between border-b border-border p-6">
           <div>
             <h2 className="font-display text-xl font-semibold text-foreground">
               Chấm bài — {submission.studentName}
@@ -155,77 +158,119 @@ function GradingDrawer({
           </button>
         </div>
 
-        <div className="mt-6 space-y-4">
-          {answers.map((a, i) => (
-            <div key={a.questionId} className="rounded-2xl border border-border p-4">
-              <div className="flex items-center justify-between">
-                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Câu {i + 1} • {a.type.toUpperCase()}
-                </div>
-                {a.autoScore !== undefined && (
-                  <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                    Tự động: {a.autoScore}
-                  </span>
+        {/* Question pager */}
+        <div className="flex items-center gap-2 border-b border-border bg-muted/30 px-6 py-3 overflow-x-auto">
+          <span className="text-xs font-semibold text-muted-foreground">Câu hỏi:</span>
+          {answers.map((ans, i) => {
+            const isActive = i === idx;
+            const isGraded = ans.type !== "essay" || ans.manualScore !== undefined;
+            return (
+              <button
+                key={ans.questionId}
+                onClick={() => setIdx(i)}
+                className={cn(
+                  "flex h-8 w-8 shrink-0 items-center justify-center rounded-md border text-xs font-semibold transition-colors",
+                  isActive
+                    ? "border-primary bg-primary text-primary-foreground"
+                    : isGraded
+                      ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                      : "border-border bg-background text-muted-foreground hover:bg-muted",
                 )}
-              </div>
-              <p className="mt-2 text-sm font-medium text-foreground">{a.question}</p>
-              <div className="mt-3 rounded-xl bg-muted/60 p-3 text-sm">
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                  Bài làm
-                </div>
-                <p className="mt-1 text-foreground">{a.studentAnswer}</p>
-              </div>
-              {a.correctAnswer && (
-                <div className="mt-2 text-xs text-emerald-700">
-                  Đáp án mẫu: <strong>{a.correctAnswer}</strong>
-                </div>
-              )}
-
-              {a.type === "essay" && (
-                <div className="mt-3 grid gap-3 sm:grid-cols-[120px_1fr]">
-                  <div>
-                    <label className="text-xs text-muted-foreground">Điểm (0-5)</label>
-                    <input
-                      type="number"
-                      min={0}
-                      max={5}
-                      value={a.manualScore ?? ""}
-                      onChange={(e) =>
-                        updateAnswer(i, { manualScore: Number(e.target.value) })
-                      }
-                      className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground">Nhận xét / Giải đáp</label>
-                    <textarea
-                      value={a.feedback ?? ""}
-                      onChange={(e) => updateAnswer(i, { feedback: e.target.value })}
-                      rows={2}
-                      className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                      placeholder="Phản hồi cho học viên..."
-                    />
-                  </div>
-                </div>
-              )}
-            </div>
-          ))}
+              >
+                {i + 1}
+              </button>
+            );
+          })}
         </div>
 
-        <div className="sticky bottom-0 mt-6 flex justify-end gap-2 border-t border-border bg-background pt-4">
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="rounded-2xl border border-border p-4">
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Câu {idx + 1}/{total} • {a.type.toUpperCase()}
+              </div>
+              {a.autoScore !== undefined && (
+                <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                  Tự động: {a.autoScore}
+                </span>
+              )}
+            </div>
+            <p className="mt-2 text-sm font-medium text-foreground">{a.question}</p>
+            <div className="mt-3 rounded-xl bg-muted/60 p-3 text-sm">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Bài làm
+              </div>
+              <p className="mt-1 text-foreground">{a.studentAnswer}</p>
+            </div>
+            {a.correctAnswer && (
+              <div className="mt-2 text-xs text-emerald-700">
+                Đáp án mẫu: <strong>{a.correctAnswer}</strong>
+              </div>
+            )}
+
+            {a.type === "essay" && (
+              <div className="mt-3 grid gap-3 sm:grid-cols-[120px_1fr]">
+                <div>
+                  <label className="text-xs text-muted-foreground">Điểm (0-5)</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={5}
+                    value={a.manualScore ?? ""}
+                    onChange={(e) =>
+                      updateAnswer(idx, { manualScore: Number(e.target.value) })
+                    }
+                    className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground">Nhận xét / Giải đáp</label>
+                  <textarea
+                    value={a.feedback ?? ""}
+                    onChange={(e) => updateAnswer(idx, { feedback: e.target.value })}
+                    rows={2}
+                    className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+                    placeholder="Phản hồi cho học viên..."
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-2 border-t border-border bg-background p-4">
           <button
-            onClick={onClose}
-            className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted"
+            onClick={() => setIdx((i) => Math.max(0, i - 1))}
+            disabled={idx === 0}
+            className="inline-flex items-center gap-1 rounded-xl border border-border bg-background px-3 py-2 text-sm font-semibold hover:bg-muted disabled:opacity-40"
           >
-            Hủy
+            <ChevronLeft className="h-4 w-4" /> Câu trước
           </button>
-          <button
-            onClick={finish}
-            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft"
-            style={{ background: "var(--gradient-brand)" }}
-          >
-            <Send className="h-4 w-4" /> Hoàn tất chấm bài
-          </button>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={onClose}
+              className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted"
+            >
+              Hủy
+            </button>
+            {idx < total - 1 ? (
+              <button
+                onClick={() => setIdx((i) => Math.min(total - 1, i + 1))}
+                className="inline-flex items-center gap-1 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background hover:opacity-90"
+              >
+                Câu tiếp <ChevronRight className="h-4 w-4" />
+              </button>
+            ) : (
+              <button
+                onClick={finish}
+                className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft"
+                style={{ background: "var(--gradient-brand)" }}
+              >
+                <Send className="h-4 w-4" /> Hoàn tất chấm bài
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>
