@@ -350,7 +350,9 @@ export const testSubmissions: TestSubmission[] = [
     submittedAt: days(-3),
     durationMinutes: 88,
     autoScore: 16,
-    status: "needs-grading",
+    manualScore: 3,
+    finalScore: 19,
+    status: "graded",
     proctorEvents: [
       { at: new Date(now - 3 * 86400000 + 5 * 60000).toISOString(), type: "fullscreen-exit", severity: "high", detail: "Thoát chế độ toàn màn hình" },
       { at: new Date(now - 3 * 86400000 + 6 * 60000).toISOString(), type: "tab-switch", severity: "high", detail: "Chuyển tab 22 giây" },
@@ -378,15 +380,18 @@ export const testSubmissions: TestSubmission[] = [
         studentAnswer:
           "My hobby is cooking. I learn from YouTube and cook for my family every weekend. My favorite dish is phở bò.",
         points: 5,
+        awarded: 3,
+        feedback: "Ý ngắn, cần phát triển thêm chi tiết và ví dụ.",
         rubric: [
-          { criterion: "Nội dung & ý tưởng (Task achievement)", max: 1.5 },
-          { criterion: "Tổ chức & mạch lạc (Coherence)", max: 1.0 },
-          { criterion: "Từ vựng (Lexical resource)", max: 1.0 },
-          { criterion: "Ngữ pháp & độ chính xác", max: 1.5 },
+          { criterion: "Nội dung & ý tưởng (Task achievement)", max: 1.5, awarded: 0.75 },
+          { criterion: "Tổ chức & mạch lạc (Coherence)", max: 1.0, awarded: 0.75 },
+          { criterion: "Từ vựng (Lexical resource)", max: 1.0, awarded: 0.75 },
+          { criterion: "Ngữ pháp & độ chính xác", max: 1.5, awarded: 0.75 },
         ],
       },
     ],
   },
+
   {
     id: "ts-3",
     testId: "test-1",
