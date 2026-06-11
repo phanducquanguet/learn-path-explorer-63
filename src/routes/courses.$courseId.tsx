@@ -430,6 +430,8 @@ function CoursePage() {
             <ReadingPanel activity={readingOpen} hue={level.hue} onClose={() => setReadingOpen(null)} />
           ) : videoOpen ? (
             <VideoPanel activity={videoOpen} hue={level.hue} onClose={() => setVideoOpen(null)} />
+          ) : speakingOpen ? (
+            <SpeakingPanel activity={speakingOpen} hue={level.hue} onClose={() => setSpeakingOpen(null)} />
           ) : (
             <>
               {/* HERO */}
