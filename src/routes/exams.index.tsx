@@ -338,13 +338,10 @@ function ExamsPage() {
                 const pending = s.status !== "graded";
                 const warnHigh =
                   s.proctorEvents?.filter((e) => e.severity === "high").length ?? 0;
-                return (
-                  <Link
-                    key={s.id}
-                    to="/exams/result/$submissionId"
-                    params={{ submissionId: s.id }}
-                    className="group flex flex-col gap-3 rounded-2xl border bg-surface p-4 shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated"
-                  >
+                const cardClass =
+                  "group flex flex-col gap-3 rounded-2xl border bg-surface p-4 shadow-soft transition";
+                const inner = (
+                  <>
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex-1">
                         <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
@@ -370,7 +367,7 @@ function ExamsPage() {
                     <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                       <span className="inline-flex items-center gap-1">
                         <GraduationCap className="h-3.5 w-3.5" />
-                        {earned.toFixed(1)} / {total} điểm
+                        {pending ? "— / —" : `${earned.toFixed(1)} / ${total} điểm`}
                       </span>
                       <span>•</span>
                       <span className="inline-flex items-center gap-1">
@@ -390,13 +387,46 @@ function ExamsPage() {
                       <span className="text-xs text-muted-foreground">
                         {s.studentName}
                       </span>
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background transition group-hover:gap-2">
-                        Xem kết quả
-                        <ArrowUpRight className="h-3.5 w-3.5" />
-                      </span>
+                      {pending ? (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-xs font-semibold text-muted-foreground">
+                          Đang chờ giáo viên chấm
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background transition group-hover:gap-2">
+                          Xem kết quả
+                          <ArrowUpRight className="h-3.5 w-3.5" />
+                        </span>
+                      )}
                     </div>
+                  </>
+                );
+                if (pending) {
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() =>
+                        toast.info(
+                          "Bài thi đang được giáo viên chấm. Bạn có thể xem kết quả khi chấm xong.",
+                        )
+                      }
+                      className={`${cardClass} text-left cursor-not-allowed opacity-80`}
+                    >
+                      {inner}
+                    </button>
+                  );
+                }
+                return (
+                  <Link
+                    key={s.id}
+                    to="/exams/result/$submissionId"
+                    params={{ submissionId: s.id }}
+                    className={`${cardClass} hover:-translate-y-0.5 hover:shadow-elevated`}
+                  >
+                    {inner}
                   </Link>
                 );
+
               })}
             </div>
           </section>
