@@ -121,12 +121,27 @@ export function SpeakingPanel({
             <div className="truncate text-base font-semibold text-foreground">{activity.title}</div>
           </div>
         </div>
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-xs text-muted-foreground ring-1 ring-border">
-          <Mic className="h-3.5 w-3.5" /> {activity.duration} phút
-        </span>
+        <div className="flex items-center gap-2">
+          <span className="hidden md:inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1.5 text-xs text-muted-foreground ring-1 ring-border">
+            <Mic className="h-3.5 w-3.5" /> {activity.duration} phút
+          </span>
+          <button
+            onClick={() => setSideOpen((v) => !v)}
+            className={cn(
+              "inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold ring-1 transition",
+              sideOpen
+                ? "bg-foreground text-background ring-foreground"
+                : "bg-surface text-foreground ring-border hover:bg-muted",
+            )}
+          >
+            <NotebookPen className="h-3.5 w-3.5" />
+            {sideOpen ? "Ẩn bảng phụ" : "Ghi chú & Hỏi giáo viên"}
+          </button>
+        </div>
       </div>
 
       {/* Body */}
+      <div className={cn("grid gap-0", sideOpen ? "lg:grid-cols-[1fr_380px]" : "grid-cols-1")}>
       <div className="space-y-6 p-5 sm:p-7 lg:p-8">
         {activity.description && (
           <div className="rounded-2xl bg-muted/40 p-4 text-sm leading-relaxed text-foreground/90">
