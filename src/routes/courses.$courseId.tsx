@@ -37,6 +37,7 @@ import { cn } from "@/lib/utils";
 import { QuizPanel } from "@/components/QuizPanel";
 import { ReadingPanel } from "@/components/ReadingPanel";
 import { VideoPanel } from "@/components/VideoPanel";
+import { SpeakingPanel } from "@/components/SpeakingPanel";
 import { useRole } from "@/contexts/RoleContext";
 
 export const Route = createFileRoute("/courses/$courseId")({
