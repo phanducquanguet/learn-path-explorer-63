@@ -1021,6 +1021,183 @@ function VideoSpeakingEditor({ node, onChange }: { node: VideoSpeakingNode; onCh
           </div>
         </div>
       )}
+
+      <SpeakingStudentPreview
+        title={node.title}
+        description={node.description}
+        attachments={attachments}
+        mode={mode}
+        prompt={node.prompt}
+        words={words}
+        attachMeta={ATTACH_META}
+      />
+    </div>
+  );
+}
+
+function SpeakingStudentPreview({
+  title,
+  description,
+  attachments,
+  mode,
+  prompt,
+  words,
+  attachMeta,
+}: {
+  title?: string;
+  description?: string;
+  attachments: VideoSpeakingAttachment[];
+  mode: SpeakingMode;
+  prompt?: string;
+  words: string[];
+  attachMeta: Record<
+    VideoSpeakingAttachment["kind"],
+    { label: string; icon: React.ElementType; accept?: string }
+  >;
+}) {
+  const cleanWords = words.map((w) => w.trim()).filter(Boolean);
+  const [idx, setIdx] = useState(0);
+  const [recording, setRecording] = useState(false);
+  const safeIdx = Math.min(idx, Math.max(0, cleanWords.length - 1));
+  const current = cleanWords[safeIdx];
+  const hasDesc = !!(description && description.trim());
+
+  return (
+    <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/[0.03] p-4">
+      <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-primary">
+        <Eye className="h-3.5 w-3.5" />
+        Học viên sẽ thấy
+      </div>
+      <div className="space-y-3 rounded-xl bg-background p-4 ring-1 ring-border">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+            <Mic className="h-5 w-5" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Luyện nói
+            </div>
+            <div className="truncate text-base font-semibold text-foreground">
+              {title || "Luyện nói"}
+            </div>
+          </div>
+        </div>
+
+        {hasDesc && (
+          <div className="rounded-xl bg-muted/40 p-3 text-sm leading-relaxed text-foreground/90 whitespace-pre-wrap">
+            {description}
+          </div>
+        )}
+
+        {attachments.length > 0 && (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {attachments.map((a) => {
+              const meta = attachMeta[a.kind];
+              const I = meta.icon;
+              return (
+                <div key={a.id} className="rounded-xl border border-border bg-muted/20 p-3">
+                  <div className="mb-1.5 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    <I className="h-3 w-3" /> {meta.label}
+                  </div>
+                  {a.kind === "image" ? (
+                    <div className="flex aspect-video items-center justify-center rounded-lg bg-muted text-xs text-muted-foreground">
+                      {a.fileName || "Chưa có ảnh"}
+                    </div>
+                  ) : a.kind === "video" ? (
+                    <div className="flex aspect-video items-center justify-center rounded-lg bg-black/80 text-xs text-white/70">
+                      ▶ {a.fileName || "video"}
+                    </div>
+                  ) : a.kind === "audio" ? (
+                    <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs text-foreground">
+                      <Music2 className="h-4 w-4 text-primary" />
+                      <span className="flex-1 truncate">{a.fileName || "Audio"}</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 rounded-lg bg-muted px-3 py-2 text-xs text-foreground">
+                      <FileText className="h-4 w-4 text-primary" />
+                      <span className="flex-1 truncate">{a.fileName || "PDF"}</span>
+                    </div>
+                  )}
+                  {a.note && (
+                    <div className="mt-1.5 text-[11px] text-muted-foreground">{a.note}</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {mode === "question" ? (
+          <div className="rounded-xl border border-border bg-muted/30 p-3">
+            <div className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Chủ đề
+            </div>
+            <div className="text-sm text-foreground whitespace-pre-wrap">
+              {prompt?.trim() || <span className="italic text-muted-foreground">Chưa có chủ đề</span>}
+            </div>
+            <button
+              onClick={() => setRecording((r) => !r)}
+              className={cn(
+                "mt-3 inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold",
+                recording
+                  ? "bg-destructive text-destructive-foreground"
+                  : "bg-primary text-primary-foreground",
+              )}
+            >
+              <Mic className="h-3.5 w-3.5" /> {recording ? "Đang ghi…" : "Bắt đầu nói"}
+            </button>
+          </div>
+        ) : cleanWords.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+            Thêm từ ở danh sách phía trên để xem giao diện luyện phát âm.
+          </div>
+        ) : (
+          <div className="rounded-2xl border border-border bg-gradient-to-br from-primary/5 to-transparent p-5">
+            <div className="mb-3 flex items-center justify-between text-[11px] font-semibold text-muted-foreground">
+              <span>Từ {safeIdx + 1} / {cleanWords.length}</span>
+              <span>Luyện phát âm</span>
+            </div>
+            <div className="mb-4 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className="h-full bg-primary transition-all"
+                style={{ width: `${((safeIdx + 1) / cleanWords.length) * 100}%` }}
+              />
+            </div>
+            <div className="rounded-xl bg-background py-8 text-center text-3xl font-bold tracking-tight text-foreground ring-1 ring-border">
+              {current}
+            </div>
+            <div className="mt-4 flex items-center justify-between gap-2">
+              <button
+                onClick={() => setIdx((i) => Math.max(0, i - 1))}
+                disabled={safeIdx === 0}
+                className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted disabled:opacity-40"
+              >
+                ← Trước
+              </button>
+              <button
+                onClick={() => setRecording((r) => !r)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold",
+                  recording
+                    ? "bg-destructive text-destructive-foreground"
+                    : "bg-primary text-primary-foreground",
+                )}
+              >
+                <Mic className="h-3.5 w-3.5" /> {recording ? "Đang ghi…" : "Đọc từ này"}
+              </button>
+              <button
+                onClick={() =>
+                  setIdx((i) => Math.min(cleanWords.length - 1, i + 1))
+                }
+                disabled={safeIdx >= cleanWords.length - 1}
+                className="rounded-lg bg-foreground px-3 py-1.5 text-xs font-semibold text-background hover:opacity-90 disabled:opacity-40"
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
