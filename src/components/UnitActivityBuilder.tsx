@@ -862,7 +862,6 @@ function VideoSpeakingEditor({ node, onChange }: { node: VideoSpeakingNode; onCh
     audio: { label: "Audio", icon: Music2, accept: "audio/*" },
     image: { label: "Hình ảnh", icon: ImageIcon, accept: "image/*" },
     pdf: { label: "PDF", icon: FileText, accept: ".pdf" },
-    brief: { label: "Yêu cầu đề bài", icon: FileText, accept: ".pdf,.doc,.docx,.txt" },
   };
 
   return (
