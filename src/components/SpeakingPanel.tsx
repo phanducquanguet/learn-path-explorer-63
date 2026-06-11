@@ -262,7 +262,7 @@ export function SpeakingPanel({
           <div className="rounded-2xl bg-background p-6 text-center shadow-soft ring-1 ring-border sm:p-8">
             {isQuestionMode && (
               <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Câu hỏi {idx + 1}
+                Câu hỏi
               </div>
             )}
             <div
