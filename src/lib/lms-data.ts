@@ -64,19 +64,11 @@ const mkUnits = (prefix: string, n: number): Unit[] =>
         done: i < 2,
         description:
           i === 1
-            ? "Nghe câu hỏi mẫu, sau đó luyện nói trả lời lần lượt 5 câu hỏi có sẵn của bài."
+            ? "Đọc câu hỏi có sẵn dưới đây và luyện nói câu trả lời của bạn."
             : "Xem video mẫu của native speaker, đọc tài liệu phiên âm, sau đó luyện đọc lần lượt 5 từ vựng trọng tâm của bài.",
         speakingMode: i === 1 ? "questions" : "words",
         speakingPrompts:
-          i === 1
-            ? [
-                "What is your name and where are you from?",
-                "Can you describe your daily routine?",
-                "What do you usually do on weekends?",
-                "Tell me about your favourite hobby.",
-                "Why are you learning English?",
-              ]
-            : undefined,
+          i === 1 ? ["What is your name and where are you from?"] : undefined,
       },
       { id: `${prefix}-u${i + 1}-a4`, title: "Quiz cuối bài", type: "quiz", duration: 10, done: i < 2 },
     ],

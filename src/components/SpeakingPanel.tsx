@@ -240,25 +240,29 @@ export function SpeakingPanel({
         >
           <div className="mb-4 flex items-center justify-between text-xs font-semibold text-muted-foreground">
             <span>{isQuestionMode ? "Luyện nói theo câu hỏi có sẵn" : "Luyện phát âm theo từ"}</span>
-            <span>
-              {isQuestionMode ? "Câu" : "Từ"} <span className="text-foreground">{idx + 1}</span> / {total}
-            </span>
+            {!isQuestionMode && (
+              <span>
+                Từ <span className="text-foreground">{idx + 1}</span> / {total}
+              </span>
+            )}
           </div>
 
-          <div className="mb-5 h-1.5 w-full overflow-hidden rounded-full bg-background/80 ring-1 ring-border">
-            <div
-              className="h-full transition-all"
-              style={{
-                width: `${((idx + 1) / total) * 100}%`,
-                background: accent,
-              }}
-            />
-          </div>
+          {!isQuestionMode && (
+            <div className="mb-5 h-1.5 w-full overflow-hidden rounded-full bg-background/80 ring-1 ring-border">
+              <div
+                className="h-full transition-all"
+                style={{
+                  width: `${((idx + 1) / total) * 100}%`,
+                  background: accent,
+                }}
+              />
+            </div>
+          )}
 
           <div className="rounded-2xl bg-background p-6 text-center shadow-soft ring-1 ring-border sm:p-8">
             {isQuestionMode && (
               <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Câu hỏi {idx + 1}
+                Câu hỏi
               </div>
             )}
             <div
@@ -287,49 +291,8 @@ export function SpeakingPanel({
             </div>
           </div>
 
-          <div className="mt-5 flex items-center justify-between gap-2">
-            <button
-              onClick={() => {
-                setIdx((i) => Math.max(0, i - 1));
-                setRecording(false);
-              }}
-              disabled={idx === 0}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-surface px-4 py-2.5 text-sm font-semibold text-foreground ring-1 ring-border hover:bg-muted disabled:opacity-40"
-            >
-              <ChevronLeft className="h-4 w-4" /> Trước
-            </button>
-
-            <div className="hidden flex-1 items-center justify-center gap-1.5 sm:flex">
-              {items.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    setIdx(i);
-                    setRecording(false);
-                  }}
-                  className={cn(
-                    "h-2 rounded-full transition-all",
-                    i === idx ? "w-6" : "w-2",
-                  )}
-                  style={{
-                    background: i <= idx ? accent : "oklch(0.9 0.01 260)",
-                  }}
-                  aria-label={`Từ ${i + 1}`}
-                />
-              ))}
-            </div>
-
-            {idx < total - 1 ? (
-              <button
-                onClick={() => {
-                  setIdx((i) => i + 1);
-                  setRecording(false);
-                }}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2.5 text-sm font-semibold text-background hover:opacity-90"
-              >
-                Next <ChevronRight className="h-4 w-4" />
-              </button>
-            ) : (
+          {isQuestionMode ? (
+            <div className="mt-5 flex justify-end">
               <button
                 onClick={onClose}
                 className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-white"
@@ -337,10 +300,64 @@ export function SpeakingPanel({
               >
                 Hoàn thành
               </button>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="mt-5 flex items-center justify-between gap-2">
+              <button
+                onClick={() => {
+                  setIdx((i) => Math.max(0, i - 1));
+                  setRecording(false);
+                }}
+                disabled={idx === 0}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-surface px-4 py-2.5 text-sm font-semibold text-foreground ring-1 ring-border hover:bg-muted disabled:opacity-40"
+              >
+                <ChevronLeft className="h-4 w-4" /> Trước
+              </button>
+
+              <div className="hidden flex-1 items-center justify-center gap-1.5 sm:flex">
+                {items.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setIdx(i);
+                      setRecording(false);
+                    }}
+                    className={cn(
+                      "h-2 rounded-full transition-all",
+                      i === idx ? "w-6" : "w-2",
+                    )}
+                    style={{
+                      background: i <= idx ? accent : "oklch(0.9 0.01 260)",
+                    }}
+                    aria-label={`Từ ${i + 1}`}
+                  />
+                ))}
+              </div>
+
+              {idx < total - 1 ? (
+                <button
+                  onClick={() => {
+                    setIdx((i) => i + 1);
+                    setRecording(false);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2.5 text-sm font-semibold text-background hover:opacity-90"
+                >
+                  Next <ChevronRight className="h-4 w-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={onClose}
+                  className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-white"
+                  style={{ background: accent }}
+                >
+                  Hoàn thành
+                </button>
+              )}
+            </div>
+          )}
         </section>
         </div>
+
 
         {sideOpen && (
           <aside className="flex max-h-[calc(100vh-12rem)] flex-col border-t border-border/70 bg-surface lg:border-l lg:border-t-0">
