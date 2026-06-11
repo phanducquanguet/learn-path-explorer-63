@@ -58,8 +58,36 @@ export function SpeakingPanel({
   const [playingVideo, setPlayingVideo] = useState(false);
   const [playingAudio, setPlayingAudio] = useState(false);
 
+  // Sidebar (ẩn mặc định)
+  const [sideOpen, setSideOpen] = useState(false);
+  const [sideTab, setSideTab] = useState<SideTab>("notes");
+  const [notes, setNotes] = useState<Note[]>([]);
+  const [noteDraft, setNoteDraft] = useState("");
+  const [teacherQs, setTeacherQs] = useState<TeacherQ[]>([]);
+  const [teacherDraft, setTeacherDraft] = useState("");
+
   const total = demoWords.length;
   const current = demoWords[idx];
+
+  const addNote = () => {
+    const t = noteDraft.trim();
+    if (!t) return;
+    setNotes((n) => [{ id: crypto.randomUUID(), text: t, ts: Date.now() }, ...n]);
+    setNoteDraft("");
+  };
+  const askTeacher = () => {
+    const t = teacherDraft.trim();
+    if (!t) return;
+    setTeacherQs((q) => [
+      { id: crypto.randomUUID(), text: t, ts: Date.now(), status: "pending" },
+      ...q,
+    ]);
+    setTeacherDraft("");
+  };
+  const sideBadge: Record<SideTab, number> = {
+    notes: notes.length,
+    teacher: teacherQs.length,
+  };
 
   return (
     <div className="overflow-hidden rounded-3xl bg-surface shadow-soft ring-1 ring-border">
