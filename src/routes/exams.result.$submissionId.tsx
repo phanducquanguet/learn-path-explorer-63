@@ -126,36 +126,34 @@ function ResultPage() {
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 <ClipboardCheck className="h-4 w-4" /> Điểm theo kỹ năng
               </div>
-              {skillStats.length === 0 ? (
-                <p className="mt-3 text-xs text-muted-foreground">Chưa có dữ liệu kỹ năng.</p>
-              ) : (
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  {skillStats.map((s) => {
-                    const sp = s.total > 0 ? Math.round((s.earned / s.total) * 100) : 0;
-                    return (
-                      <div key={s.key} className="rounded-xl border bg-background p-3">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="text-sm font-semibold text-foreground">
-                            {s.label}
-                          </div>
-                          <span className="text-xs font-mono text-muted-foreground">
-                            {s.earned.toFixed(1)} / {s.total}
-                          </span>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                {skillStats.map((s) => {
+                  const sp = s.total > 0 ? Math.round((s.earned / s.total) * 100) : 0;
+                  const noData = s.count === 0;
+                  return (
+                    <div key={s.key} className="rounded-xl border bg-background p-3">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-sm font-semibold text-foreground">
+                          {s.label}
                         </div>
-                        <Progress value={sp} className="mt-2 h-1.5" />
-                        <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
-                          <span>{sp}%</span>
-                          {s.hasPending && (
-                            <span className="font-semibold text-amber-600">
-                              Đang chờ chấm
-                            </span>
-                          )}
-                        </div>
+                        <span className="text-xs font-mono text-muted-foreground">
+                          {noData ? "— / —" : `${s.earned.toFixed(1)} / ${s.total}`}
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+                      <Progress value={noData ? 0 : sp} className="mt-2 h-1.5" />
+                      <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+                        <span>{noData ? "Không có câu hỏi" : `${sp}%`}</span>
+                        {s.hasPending && (
+                          <span className="font-semibold text-amber-600">
+                            Đang chờ chấm
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
             </div>
           </div>
 
