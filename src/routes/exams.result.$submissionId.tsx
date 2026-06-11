@@ -550,6 +550,3 @@ function proctorLabel(t: ProctorEvent["type"]) {
     } as Record<ProctorEvent["type"], string>
   )[t];
 }
-
-// Suppress unused-import warnings in strict builds
-void getTestSubmissions;
