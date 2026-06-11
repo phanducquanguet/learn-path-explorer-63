@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { getSubmissionsByExam, type ExamSubmission, type ExamAnswer } from "@/lib/exam-submissions";
-import { ArrowLeft, Clock, CheckCircle2, AlertCircle, Send, X } from "lucide-react";
+import { ArrowLeft, Clock, CheckCircle2, AlertCircle, Send, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/exams/$examId/submissions")({
