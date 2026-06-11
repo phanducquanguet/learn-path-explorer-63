@@ -828,10 +828,6 @@ function VideoSpeakingEditor({ node, onChange }: { node: VideoSpeakingNode; onCh
   const mode: SpeakingMode = node.speakingMode ?? "question";
   const words = node.words ?? [];
 
-  const addAttachment = (kind: VideoSpeakingAttachment["kind"]) => {
-    const item: VideoSpeakingAttachment = { id: uid(), kind };
-    onChange({ attachments: [...attachments, item] });
-  };
   const updateAttachment = (id: string, patch: Partial<VideoSpeakingAttachment>) => {
     onChange({ attachments: attachments.map((a) => (a.id === id ? { ...a, ...patch } : a)) });
   };
