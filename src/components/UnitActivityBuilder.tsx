@@ -864,6 +864,22 @@ function VideoSpeakingEditor({ node, onChange }: { node: VideoSpeakingNode; onCh
     pdf: { label: "PDF", icon: FileText, accept: ".pdf" },
   };
 
+  const detectKind = (file: File): VideoSpeakingAttachment["kind"] => {
+    const mime = file.type;
+    const name = file.name.toLowerCase();
+    if (mime.startsWith("video/")) return "video";
+    if (mime.startsWith("audio/")) return "audio";
+    if (mime.startsWith("image/")) return "image";
+    if (mime === "application/pdf" || name.endsWith(".pdf")) return "pdf";
+    return "video";
+  };
+  const addMediaFromFile = (file: File) => {
+    const kind = detectKind(file);
+    onChange({
+      attachments: [...attachments, { id: uid(), kind, fileName: file.name }],
+    });
+  };
+
   return (
     <div className="grid gap-5">
 
@@ -871,24 +887,23 @@ function VideoSpeakingEditor({ node, onChange }: { node: VideoSpeakingNode; onCh
       <div>
         <div className="mb-2 flex items-center justify-between">
           <div className="text-xs font-semibold text-foreground">Tài liệu đi kèm</div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {(Object.keys(ATTACH_META) as VideoSpeakingAttachment["kind"][]).map((k) => {
-              const I = ATTACH_META[k].icon;
-              return (
-                <button
-                  key={k}
-                  onClick={() => addAttachment(k)}
-                  className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2 py-1 text-[11px] font-semibold text-primary hover:bg-primary/20"
-                >
-                  <Plus className="h-3 w-3" /> <I className="h-3 w-3" /> {ATTACH_META[k].label}
-                </button>
-              );
-            })}
-          </div>
+          <label className="inline-flex cursor-pointer items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary hover:bg-primary/20">
+            <Plus className="h-3 w-3" /> <Upload className="h-3 w-3" /> Thêm media
+            <input
+              type="file"
+              accept="video/*,audio/*,image/*,.pdf"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) addMediaFromFile(f);
+                e.currentTarget.value = "";
+              }}
+            />
+          </label>
         </div>
         {attachments.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
-            Có thể thêm audio, hình ảnh, PDF hoặc yêu cầu đề bài để hỗ trợ học viên luyện nói.
+            Tải lên video, audio, hình ảnh hoặc PDF để hỗ trợ học viên luyện nói.
           </div>
         ) : (
           <ul className="space-y-2">
