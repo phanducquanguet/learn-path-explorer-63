@@ -29,6 +29,7 @@ import { Route as AdminExamsIndexRouteImport } from './routes/admin.exams.index'
 import { Route as TeacherTestsTestIdRouteImport } from './routes/teacher.tests.$testId'
 import { Route as TeacherCoursesCourseIdRouteImport } from './routes/teacher.courses.$courseId'
 import { Route as TeacherClassesClassIdRouteImport } from './routes/teacher.classes.$classId'
+import { Route as ExamsResultSubmissionIdRouteImport } from './routes/exams.result.$submissionId'
 import { Route as AdminTestsNewRouteImport } from './routes/admin.tests.new'
 import { Route as AdminExamsNewRouteImport } from './routes/admin.exams.new'
 import { Route as AdminExamsExamIdRouteImport } from './routes/admin.exams.$examId'
@@ -134,6 +135,11 @@ const TeacherClassesClassIdRoute = TeacherClassesClassIdRouteImport.update({
   path: '/teacher/classes/$classId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExamsResultSubmissionIdRoute = ExamsResultSubmissionIdRouteImport.update({
+  id: '/result/$submissionId',
+  path: '/result/$submissionId',
+  getParentRoute: () => ExamsRoute,
+} as any)
 const AdminTestsNewRoute = AdminTestsNewRouteImport.update({
   id: '/admin/tests/new',
   path: '/admin/tests/new',
@@ -158,7 +164,7 @@ const AdminExamsExamIdSubmissionsRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/exams': typeof ExamsRoute
+  '/exams': typeof ExamsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
@@ -173,6 +179,7 @@ export interface FileRoutesByFullPath {
   '/admin/exams/$examId': typeof AdminExamsExamIdRouteWithChildren
   '/admin/exams/new': typeof AdminExamsNewRoute
   '/admin/tests/new': typeof AdminTestsNewRoute
+  '/exams/result/$submissionId': typeof ExamsResultSubmissionIdRoute
   '/teacher/classes/$classId': typeof TeacherClassesClassIdRoute
   '/teacher/courses/$courseId': typeof TeacherCoursesCourseIdRoute
   '/teacher/tests/$testId': typeof TeacherTestsTestIdRoute
@@ -184,7 +191,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/exams': typeof ExamsRoute
+  '/exams': typeof ExamsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
@@ -199,6 +206,7 @@ export interface FileRoutesByTo {
   '/admin/exams/$examId': typeof AdminExamsExamIdRouteWithChildren
   '/admin/exams/new': typeof AdminExamsNewRoute
   '/admin/tests/new': typeof AdminTestsNewRoute
+  '/exams/result/$submissionId': typeof ExamsResultSubmissionIdRoute
   '/teacher/classes/$classId': typeof TeacherClassesClassIdRoute
   '/teacher/courses/$courseId': typeof TeacherCoursesCourseIdRoute
   '/teacher/tests/$testId': typeof TeacherTestsTestIdRoute
@@ -211,7 +219,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/exams': typeof ExamsRoute
+  '/exams': typeof ExamsRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
@@ -226,6 +234,7 @@ export interface FileRoutesById {
   '/admin/exams/$examId': typeof AdminExamsExamIdRouteWithChildren
   '/admin/exams/new': typeof AdminExamsNewRoute
   '/admin/tests/new': typeof AdminTestsNewRoute
+  '/exams/result/$submissionId': typeof ExamsResultSubmissionIdRoute
   '/teacher/classes/$classId': typeof TeacherClassesClassIdRoute
   '/teacher/courses/$courseId': typeof TeacherCoursesCourseIdRoute
   '/teacher/tests/$testId': typeof TeacherTestsTestIdRoute
@@ -254,6 +263,7 @@ export interface FileRouteTypes {
     | '/admin/exams/$examId'
     | '/admin/exams/new'
     | '/admin/tests/new'
+    | '/exams/result/$submissionId'
     | '/teacher/classes/$classId'
     | '/teacher/courses/$courseId'
     | '/teacher/tests/$testId'
@@ -280,6 +290,7 @@ export interface FileRouteTypes {
     | '/admin/exams/$examId'
     | '/admin/exams/new'
     | '/admin/tests/new'
+    | '/exams/result/$submissionId'
     | '/teacher/classes/$classId'
     | '/teacher/courses/$courseId'
     | '/teacher/tests/$testId'
@@ -306,6 +317,7 @@ export interface FileRouteTypes {
     | '/admin/exams/$examId'
     | '/admin/exams/new'
     | '/admin/tests/new'
+    | '/exams/result/$submissionId'
     | '/teacher/classes/$classId'
     | '/teacher/courses/$courseId'
     | '/teacher/tests/$testId'
@@ -318,7 +330,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  ExamsRoute: typeof ExamsRoute
+  ExamsRoute: typeof ExamsRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   PracticeRoute: typeof PracticeRoute
@@ -484,6 +496,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TeacherClassesClassIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/exams/result/$submissionId': {
+      id: '/exams/result/$submissionId'
+      path: '/result/$submissionId'
+      fullPath: '/exams/result/$submissionId'
+      preLoaderRoute: typeof ExamsResultSubmissionIdRouteImport
+      parentRoute: typeof ExamsRoute
+    }
     '/admin/tests/new': {
       id: '/admin/tests/new'
       path: '/admin/tests/new'
@@ -515,6 +534,16 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ExamsRouteChildren {
+  ExamsResultSubmissionIdRoute: typeof ExamsResultSubmissionIdRoute
+}
+
+const ExamsRouteChildren: ExamsRouteChildren = {
+  ExamsResultSubmissionIdRoute: ExamsResultSubmissionIdRoute,
+}
+
+const ExamsRouteWithChildren = ExamsRoute._addFileChildren(ExamsRouteChildren)
+
 interface AdminExamsExamIdRouteChildren {
   AdminExamsExamIdSubmissionsRoute: typeof AdminExamsExamIdSubmissionsRoute
 }
@@ -528,7 +557,7 @@ const AdminExamsExamIdRouteWithChildren =
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  ExamsRoute: ExamsRoute,
+  ExamsRoute: ExamsRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   PracticeRoute: PracticeRoute,

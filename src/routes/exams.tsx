@@ -14,8 +14,12 @@ import {
   ShieldCheck,
   Sparkles,
   Upload,
+  History,
+  GraduationCap,
 } from "lucide-react";
+import { Link } from "@tanstack/react-router";
 import { TopNav } from "@/components/TopNav";
+import { testSubmissions, tests as allTests } from "@/lib/tests-data";
 import { EXAM_SKILLS } from "@/lib/teacher-data";
 import { Button } from "@/components/ui/button";
 import {
@@ -309,7 +313,96 @@ function ExamsPage() {
             })}
           </div>
         )}
+
+        {/* Completed exams — student can review results */}
+        {testSubmissions.length > 0 && (
+          <section className="mt-12">
+            <div className="mb-4 flex items-center gap-2">
+              <div className="grid h-8 w-8 place-content-center rounded-lg bg-primary/10 text-primary">
+                <History className="h-4 w-4" />
+              </div>
+              <div>
+                <h2 className="font-display text-lg font-semibold text-foreground">
+                  Bài thi đã hoàn thành
+                </h2>
+                <p className="text-xs text-muted-foreground">
+                  Xem lại kết quả, đáp án tự động chấm, nhận xét của giáo viên và cảnh báo trong lúc thi.
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {testSubmissions.map((s) => {
+                const t = allTests.find((x) => x.id === s.testId);
+                const total = s.answers.reduce((a, x) => a + x.points, 0);
+                const earned = s.finalScore ?? s.answers.reduce((a, x) => a + (x.awarded ?? 0), 0);
+                const pending = s.status !== "graded";
+                const warnHigh =
+                  s.proctorEvents?.filter((e) => e.severity === "high").length ?? 0;
+                return (
+                  <Link
+                    key={s.id}
+                    to="/exams/result/$submissionId"
+                    params={{ submissionId: s.id }}
+                    className="group flex flex-col gap-3 rounded-2xl border bg-surface p-4 shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          {t?.level ?? "—"} · Nộp{" "}
+                          {s.submittedAt
+                            ? new Date(s.submittedAt).toLocaleDateString("vi-VN")
+                            : "—"}
+                        </div>
+                        <div className="mt-0.5 text-sm font-semibold text-foreground">
+                          {t?.name ?? "Bài thi"}
+                        </div>
+                      </div>
+                      <span
+                        className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${
+                          pending
+                            ? "bg-amber-500/10 text-amber-700 ring-amber-500/30"
+                            : "bg-emerald-500/10 text-emerald-700 ring-emerald-500/30"
+                        }`}
+                      >
+                        {pending ? "Chờ chấm tay" : "Đã chấm xong"}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-1">
+                        <GraduationCap className="h-3.5 w-3.5" />
+                        {earned.toFixed(1)} / {total} điểm
+                      </span>
+                      <span>•</span>
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="h-3.5 w-3.5" />
+                        {s.durationMinutes ?? "—"} phút
+                      </span>
+                      {warnHigh > 0 && (
+                        <>
+                          <span>•</span>
+                          <span className="inline-flex items-center gap-1 font-semibold text-rose-600">
+                            ⚠ {warnHigh} cảnh báo nghiêm trọng
+                          </span>
+                        </>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">
+                        {s.studentName}
+                      </span>
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-3 py-1.5 text-xs font-semibold text-background transition group-hover:gap-2">
+                        Xem kết quả
+                        <ArrowUpRight className="h-3.5 w-3.5" />
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </section>
+        )}
       </div>
+
 
       <BiometricDialog
         open={openDialog}
