@@ -251,17 +251,8 @@ export function SpeakingPanel({
             <div className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
               {current.word}
             </div>
-            <div className="mt-2 font-mono text-sm text-primary sm:text-base">{current.ipa}</div>
-            <div className="mt-1 text-sm text-muted-foreground">{current.meaning}</div>
 
-            <div className="mt-5 flex items-center justify-center gap-2">
-              <button
-                onClick={() => setPlayingAudio((p) => !p)}
-                className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted/70"
-                title="Nghe mẫu"
-              >
-                <Volume2 className="h-3.5 w-3.5" /> Nghe mẫu
-              </button>
+            <div className="mt-6 flex items-center justify-center">
               <button
                 onClick={() => setRecording((r) => !r)}
                 className={cn(
@@ -269,13 +260,11 @@ export function SpeakingPanel({
                   recording && "animate-pulse",
                 )}
                 style={{
-                  background: recording
-                    ? "oklch(0.55 0.22 25)"
-                    : accent,
+                  background: recording ? "oklch(0.55 0.22 25)" : accent,
                 }}
               >
                 <Mic className="h-4 w-4" />
-                {recording ? "Đang ghi… bấm để dừng" : "Đọc từ này"}
+                {recording ? "Đang ghi… bấm để dừng" : "Ghi âm"}
               </button>
             </div>
           </div>
