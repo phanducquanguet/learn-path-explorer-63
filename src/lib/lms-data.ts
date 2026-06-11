@@ -8,6 +8,10 @@ export type Activity = {
   done?: boolean;
   /** Giới thiệu nội dung — hiển thị cho học viên trước/khi vào bài. */
   description?: string;
+  /** Chế độ luyện nói: theo từ vựng hoặc theo câu hỏi có sẵn. */
+  speakingMode?: "words" | "questions";
+  /** Danh sách câu hỏi/câu prompt khi speakingMode === "questions". */
+  speakingPrompts?: string[];
 };
 
 
@@ -54,12 +58,25 @@ const mkUnits = (prefix: string, n: number): Unit[] =>
       { id: `${prefix}-u${i + 1}-a2`, title: "Đọc hiểu", type: "reading", duration: 15, done: i < 3 },
       {
         id: `${prefix}-u${i + 1}-a3`,
-        title: "Luyện nói: Phát âm chuẩn",
+        title: i === 1 ? "Luyện nói: Trả lời câu hỏi" : "Luyện nói: Phát âm chuẩn",
         type: "speaking",
         duration: 10,
         done: i < 2,
         description:
-          "Xem video mẫu của native speaker, đọc tài liệu phiên âm, sau đó luyện đọc lần lượt 5 từ vựng trọng tâm của bài.",
+          i === 1
+            ? "Nghe câu hỏi mẫu, sau đó luyện nói trả lời lần lượt 5 câu hỏi có sẵn của bài."
+            : "Xem video mẫu của native speaker, đọc tài liệu phiên âm, sau đó luyện đọc lần lượt 5 từ vựng trọng tâm của bài.",
+        speakingMode: i === 1 ? "questions" : "words",
+        speakingPrompts:
+          i === 1
+            ? [
+                "What is your name and where are you from?",
+                "Can you describe your daily routine?",
+                "What do you usually do on weekends?",
+                "Tell me about your favourite hobby.",
+                "Why are you learning English?",
+              ]
+            : undefined,
       },
       { id: `${prefix}-u${i + 1}-a4`, title: "Quiz cuối bài", type: "quiz", duration: 10, done: i < 2 },
     ],

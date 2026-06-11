@@ -53,6 +53,14 @@ export function SpeakingPanel({
   onClose: () => void;
 }) {
   const accent = useMemo(() => `oklch(0.55 0.18 ${hue})`, [hue]);
+  const isQuestionMode = activity.speakingMode === "questions";
+  const items = useMemo(() => {
+    if (isQuestionMode) {
+      const prompts = activity.speakingPrompts ?? [];
+      return prompts.map((p) => ({ word: p, ipa: "", meaning: "" }));
+    }
+    return demoWords;
+  }, [isQuestionMode, activity.speakingPrompts]);
   const [idx, setIdx] = useState(0);
   const [recording, setRecording] = useState(false);
   const [playingVideo, setPlayingVideo] = useState(false);
@@ -66,8 +74,8 @@ export function SpeakingPanel({
   const [teacherQs, setTeacherQs] = useState<TeacherQ[]>([]);
   const [teacherDraft, setTeacherDraft] = useState("");
 
-  const total = demoWords.length;
-  const current = demoWords[idx];
+  const total = items.length;
+  const current = items[Math.min(idx, total - 1)] ?? { word: "", ipa: "", meaning: "" };
 
   const addNote = () => {
     const t = noteDraft.trim();
@@ -231,9 +239,9 @@ export function SpeakingPanel({
           }}
         >
           <div className="mb-4 flex items-center justify-between text-xs font-semibold text-muted-foreground">
-            <span>Luyện phát âm theo từ</span>
+            <span>{isQuestionMode ? "Luyện nói theo câu hỏi có sẵn" : "Luyện phát âm theo từ"}</span>
             <span>
-              Từ <span className="text-foreground">{idx + 1}</span> / {total}
+              {isQuestionMode ? "Câu" : "Từ"} <span className="text-foreground">{idx + 1}</span> / {total}
             </span>
           </div>
 
@@ -248,8 +256,18 @@ export function SpeakingPanel({
           </div>
 
           <div className="rounded-2xl bg-background p-6 text-center shadow-soft ring-1 ring-border sm:p-8">
-            <div className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
-              {current.word}
+            {isQuestionMode && (
+              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Câu hỏi {idx + 1}
+              </div>
+            )}
+            <div
+              className={cn(
+                "font-bold tracking-tight text-foreground",
+                isQuestionMode ? "text-xl sm:text-2xl leading-snug" : "text-3xl sm:text-5xl",
+              )}
+            >
+              {isQuestionMode ? `"${current.word}"` : current.word}
             </div>
 
             <div className="mt-6 flex items-center justify-center">
@@ -282,7 +300,7 @@ export function SpeakingPanel({
             </button>
 
             <div className="hidden flex-1 items-center justify-center gap-1.5 sm:flex">
-              {demoWords.map((_, i) => (
+              {items.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => {
