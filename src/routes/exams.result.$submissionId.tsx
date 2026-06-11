@@ -17,7 +17,6 @@ import { TopNav } from "@/components/TopNav";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
-  getTestSubmissions,
   testSubmissions,
   tests,
   type ProctorEvent,
