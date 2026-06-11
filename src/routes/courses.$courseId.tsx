@@ -368,18 +368,27 @@ function CoursePage() {
                               setQuizOpen(a);
                               setReadingOpen(null);
                               setVideoOpen(null);
+                              setSpeakingOpen(null);
                             } else if (a.type === "reading") {
                               setReadingOpen(a);
                               setQuizOpen(null);
                               setVideoOpen(null);
+                              setSpeakingOpen(null);
                             } else if (a.type === "video") {
                               setVideoOpen(a);
                               setQuizOpen(null);
                               setReadingOpen(null);
+                              setSpeakingOpen(null);
+                            } else if (a.type === "speaking") {
+                              setSpeakingOpen(a);
+                              setQuizOpen(null);
+                              setReadingOpen(null);
+                              setVideoOpen(null);
                             } else {
                               setQuizOpen(null);
                               setReadingOpen(null);
                               setVideoOpen(null);
+                              setSpeakingOpen(null);
                               setTab("overview");
                             }
                           }}
