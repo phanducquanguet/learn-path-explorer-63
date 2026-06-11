@@ -239,9 +239,9 @@ export function SpeakingPanel({
           }}
         >
           <div className="mb-4 flex items-center justify-between text-xs font-semibold text-muted-foreground">
-            <span>Luyện phát âm theo từ</span>
+            <span>{isQuestionMode ? "Luyện nói theo câu hỏi có sẵn" : "Luyện phát âm theo từ"}</span>
             <span>
-              Từ <span className="text-foreground">{idx + 1}</span> / {total}
+              {isQuestionMode ? "Câu" : "Từ"} <span className="text-foreground">{idx + 1}</span> / {total}
             </span>
           </div>
 
@@ -256,8 +256,18 @@ export function SpeakingPanel({
           </div>
 
           <div className="rounded-2xl bg-background p-6 text-center shadow-soft ring-1 ring-border sm:p-8">
-            <div className="text-3xl font-bold tracking-tight text-foreground sm:text-5xl">
-              {current.word}
+            {isQuestionMode && (
+              <div className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                Câu hỏi {idx + 1}
+              </div>
+            )}
+            <div
+              className={cn(
+                "font-bold tracking-tight text-foreground",
+                isQuestionMode ? "text-xl sm:text-2xl leading-snug" : "text-3xl sm:text-5xl",
+              )}
+            >
+              {isQuestionMode ? `"${current.word}"` : current.word}
             </div>
 
             <div className="mt-6 flex items-center justify-center">
