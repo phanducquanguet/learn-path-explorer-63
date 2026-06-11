@@ -513,7 +513,7 @@ function ProctorPanel({ events }: { events: ProctorEvent[] }) {
                 )}
               </div>
               <div className="shrink-0 font-mono text-[10px] text-muted-foreground">
-                {new Date(e.at).toLocaleTimeString("vi-VN")}
+                {formatTime(e.at)}
               </div>
             </div>
           ))}
