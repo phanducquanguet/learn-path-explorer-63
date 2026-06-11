@@ -300,7 +300,7 @@ export function SpeakingPanel({
             </button>
 
             <div className="hidden flex-1 items-center justify-center gap-1.5 sm:flex">
-              {demoWords.map((_, i) => (
+              {items.map((_, i) => (
                 <button
                   key={i}
                   onClick={() => {
