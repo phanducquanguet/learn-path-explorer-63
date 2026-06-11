@@ -90,6 +90,7 @@ function CoursePage() {
   const [quizOpen, setQuizOpen] = useState<Activity | null>(null);
   const [readingOpen, setReadingOpen] = useState<Activity | null>(null);
   const [videoOpen, setVideoOpen] = useState<Activity | null>(null);
+  const [speakingOpen, setSpeakingOpen] = useState<Activity | null>(null);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     intro: true,
     [course.units[0].id]: true,
