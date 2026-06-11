@@ -1,8 +1,11 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import {
   AlertTriangle,
   ArrowLeft,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
   ClipboardCheck,
   Clock,
   FileText,
@@ -55,9 +58,6 @@ function ResultPage() {
   const totalPoints = sub.answers.reduce((s, a) => s + a.points, 0);
   const earnedPoints = sub.answers.reduce((s, a) => s + (a.awarded ?? 0), 0);
   const pct = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
-
-  const autoAnswers = sub.answers.filter((a) => a.type === "mcq" || a.type === "tf" || a.type === "short" && a.skill !== "speaking");
-  const manualAnswers = sub.answers.filter((a) => a.type === "essay" || (a.type === "short" && a.skill === "speaking"));
 
   const pending = sub.status === "needs-grading" || sub.status === "auto-graded" || sub.status === "in-progress";
 
@@ -142,69 +142,203 @@ function ResultPage() {
           <ProctorPanel events={sub.proctorEvents} />
         )}
 
-        {/* Auto-graded */}
-        {autoAnswers.length > 0 && (
-          <Section
-            icon={<ClipboardCheck className="h-4 w-4" />}
-            title="Phần tự động chấm"
-            subtitle="Trắc nghiệm, Đúng/Sai, điền từ — chấm ngay theo đáp án"
-          >
-            <div className="space-y-3">
-              {autoAnswers.map((a, i) => {
-                const correct =
-                  a.correctAnswer != null &&
-                  a.studentAnswer.trim().toLowerCase() ===
-                    a.correctAnswer.trim().toLowerCase();
-                return (
-                  <div
-                    key={a.questionId}
-                    className="rounded-xl border bg-surface p-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1">
-                        <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                          Câu {i + 1} · {labelType(a.type)}
-                        </div>
-                        <div className="mt-1 text-sm font-medium text-foreground">
-                          {a.question}
-                        </div>
-                      </div>
-                      <ResultPill correct={correct} awarded={a.awarded} points={a.points} />
-                    </div>
-                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                      <KV
-                        label="Đáp án của bạn"
-                        value={a.studentAnswer || "(bỏ trống)"}
-                        tone={correct ? "good" : "bad"}
-                      />
-                      {a.correctAnswer && (
-                        <KV
-                          label="Đáp án đúng"
-                          value={a.correctAnswer}
-                          tone="good"
-                        />
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </Section>
-        )}
+        {/* Questions — paginated like the exam UI */}
+        <QuestionReview answers={sub.answers} />
+      </div>
+    </div>
+  );
+}
 
-        {/* Manual graded */}
-        {manualAnswers.length > 0 && (
-          <Section
-            icon={<PenLine className="h-4 w-4" />}
-            title="Phần giáo viên chấm"
-            subtitle="Bài viết & bài nói — có nhận xét, có thể được chấm lại"
-          >
-            <div className="space-y-3">
-              {manualAnswers.map((a, i) => (
-                <ManualAnswerCard key={a.questionId} index={i + 1} answer={a} />
-              ))}
+function QuestionReview({ answers }: { answers: TestSubmission["answers"] }) {
+  const [idx, setIdx] = useState(0);
+  const total = answers.length;
+  const current = answers[idx];
+
+  const groups = useMemo(() => {
+    const map = new Map<string, { label: string; indices: number[] }>();
+    const labels: Record<string, string> = {
+      listening: "Listening",
+      reading: "Reading",
+      speaking: "Speaking",
+      writing: "Writing",
+    };
+    answers.forEach((a, i) => {
+      const key = a.skill ?? "other";
+      const label = labels[key] ?? "Khác";
+      if (!map.has(key)) map.set(key, { label, indices: [] });
+      map.get(key)!.indices.push(i);
+    });
+    return Array.from(map.values());
+  }, [answers]);
+
+  return (
+    <section className="mt-8">
+      <div className="mb-3 flex items-center gap-2">
+        <div className="grid h-8 w-8 place-content-center rounded-lg bg-primary/10 text-primary">
+          <ClipboardCheck className="h-4 w-4" />
+        </div>
+        <div>
+          <h2 className="font-display text-lg font-semibold text-foreground">
+            Xem lại bài làm theo từng câu
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Chuyển giữa các câu để xem đáp án của bạn và đáp án đúng
+          </p>
+        </div>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-[260px_1fr]">
+        {/* Sidebar pager */}
+        <aside className="rounded-2xl border bg-surface p-4 shadow-soft lg:sticky lg:top-4 lg:self-start">
+          <div className="text-sm font-semibold text-foreground">Danh sách câu hỏi</div>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            Chuyển giữa các phần để xem lại đáp án.
+          </p>
+          <div className="mt-3 space-y-3">
+            {groups.map((g) => (
+              <div key={g.label}>
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  {g.label}
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {g.indices.map((i) => {
+                    const a = answers[i];
+                    const isActive = i === idx;
+                    const isAuto = a.type !== "essay" && !(a.type === "short" && a.skill === "speaking");
+                    const correct =
+                      isAuto &&
+                      a.correctAnswer != null &&
+                      a.studentAnswer.trim().toLowerCase() ===
+                        a.correctAnswer.trim().toLowerCase();
+                    const pending = !isAuto && a.awarded == null;
+                    return (
+                      <button
+                        key={a.questionId}
+                        onClick={() => setIdx(i)}
+                        className={`flex h-8 w-8 items-center justify-center rounded-md border text-xs font-semibold transition-colors ${
+                          isActive
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : isAuto
+                              ? correct
+                                ? "border-emerald-300 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                                : "border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100"
+                              : pending
+                                ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                                : "border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
+                        }`}
+                      >
+                        {i + 1}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 space-y-1.5 border-t pt-3 text-[11px] text-muted-foreground">
+            <LegendDot cls="bg-emerald-100 border-emerald-300" label="Đúng" />
+            <LegendDot cls="bg-rose-100 border-rose-300" label="Sai" />
+            <LegendDot cls="bg-amber-100 border-amber-300" label="Chờ chấm" />
+            <LegendDot cls="bg-primary/5 border-primary/30" label="Đã chấm tay" />
+          </div>
+        </aside>
+
+        {/* Active question */}
+        <div className="rounded-2xl border bg-surface p-5 shadow-soft">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span className="rounded-md border bg-background px-2 py-1 font-semibold text-foreground">
+                Câu {idx + 1}/{total}
+              </span>
+              <span className="rounded-md border bg-background px-2 py-1">
+                {labelType(current.type)}
+              </span>
+              {current.skill && (
+                <span className="rounded-md border bg-background px-2 py-1 capitalize">
+                  {current.skill}
+                </span>
+              )}
             </div>
-          </Section>
+            <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              {(current.awarded ?? 0).toFixed(1)} / {current.points} đ
+            </span>
+          </div>
+
+          <div className="mt-4">
+            {current.type === "essay" || (current.type === "short" && current.skill === "speaking") ? (
+              <ManualAnswerCard index={idx + 1} answer={current} />
+            ) : (
+              <AutoAnswerCard index={idx + 1} answer={current} />
+            )}
+          </div>
+
+          <div className="mt-5 flex items-center justify-between gap-2 border-t pt-4">
+            <button
+              onClick={() => setIdx((i) => Math.max(0, i - 1))}
+              disabled={idx === 0}
+              className="inline-flex items-center gap-1 rounded-xl border bg-background px-3 py-2 text-sm font-semibold hover:bg-muted disabled:opacity-40"
+            >
+              <ChevronLeft className="h-4 w-4" /> Câu trước
+            </button>
+            <div className="text-xs text-muted-foreground">
+              {idx + 1} / {total}
+            </div>
+            <button
+              onClick={() => setIdx((i) => Math.min(total - 1, i + 1))}
+              disabled={idx === total - 1}
+              className="inline-flex items-center gap-1 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background hover:opacity-90 disabled:opacity-40"
+            >
+              Câu tiếp <ChevronRight className="h-4 w-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function LegendDot({ cls, label }: { cls: string; label: string }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className={`inline-block h-4 w-4 rounded border ${cls}`} />
+      {label}
+    </div>
+  );
+}
+
+function AutoAnswerCard({
+  index,
+  answer,
+}: {
+  index: number;
+  answer: TestSubmission["answers"][number];
+}) {
+  const correct =
+    answer.correctAnswer != null &&
+    answer.studentAnswer.trim().toLowerCase() ===
+      answer.correctAnswer.trim().toLowerCase();
+  return (
+    <div>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex-1">
+          <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            Câu {index} · {labelType(answer.type)}
+          </div>
+          <div className="mt-1 text-base font-medium text-foreground">
+            {answer.question}
+          </div>
+        </div>
+        <ResultPill correct={correct} awarded={answer.awarded} points={answer.points} />
+      </div>
+      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+        <KV
+          label="Đáp án của bạn"
+          value={answer.studentAnswer || "(bỏ trống)"}
+          tone={correct ? "good" : "bad"}
+        />
+        {answer.correctAnswer && (
+          <KV label="Đáp án đúng" value={answer.correctAnswer} tone="good" />
         )}
       </div>
     </div>
