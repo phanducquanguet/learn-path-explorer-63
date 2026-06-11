@@ -42,7 +42,7 @@ import {
   type PolicySection,
 } from "@/lib/policy";
 
-export const Route = createFileRoute("/exams")({
+export const Route = createFileRoute("/exams/")({
   head: () => ({
     meta: [
       { title: "Thi cử — UNICOM LMS" },
