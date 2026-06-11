@@ -74,8 +74,8 @@ export function SpeakingPanel({
   const [teacherQs, setTeacherQs] = useState<TeacherQ[]>([]);
   const [teacherDraft, setTeacherDraft] = useState("");
 
-  const total = demoWords.length;
-  const current = demoWords[idx];
+  const total = items.length;
+  const current = items[Math.min(idx, total - 1)] ?? { word: "", ipa: "", meaning: "" };
 
   const addNote = () => {
     const t = noteDraft.trim();
