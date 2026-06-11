@@ -4,14 +4,25 @@ import {
   ChevronLeft,
   ChevronRight,
   FileText,
+  GraduationCap,
   Headphones,
   Mic,
+  NotebookPen,
   Pause,
   Play,
+  Plus,
+  Send,
+  StickyNote,
   Volume2,
+  X,
 } from "lucide-react";
 import type { Activity } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
+
+type Note = { id: string; text: string; ts: number };
+type TeacherQ = { id: string; text: string; ts: number; status: "pending" | "answered"; answer?: string };
+type SideTab = "notes" | "teacher";
+
 
 type Attachment =
   | { kind: "video"; label: string; src?: string }
