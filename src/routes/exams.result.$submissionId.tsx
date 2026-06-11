@@ -65,16 +65,14 @@ function ResultPage() {
     { key: "speaking", label: "Speaking" },
     { key: "writing", label: "Writing" },
   ];
-  const skillStats = skillOrder
-    .map(({ key, label }) => {
-      const items = sub.answers.filter((a) => a.skill === key);
-      if (items.length === 0) return null;
-      const earned = items.reduce((s, a) => s + (a.awarded ?? 0), 0);
-      const total = items.reduce((s, a) => s + a.points, 0);
-      const hasPending = items.some((a) => a.awarded == null);
-      return { key, label, earned, total, hasPending };
-    })
-    .filter((x): x is { key: string; label: string; earned: number; total: number; hasPending: boolean } => x !== null);
+  const skillStats = skillOrder.map(({ key, label }) => {
+    const items = sub.answers.filter((a) => a.skill === key);
+    const earned = items.reduce((s, a) => s + (a.awarded ?? 0), 0);
+    const total = items.reduce((s, a) => s + a.points, 0);
+    const hasPending = items.some((a) => a.awarded == null);
+    return { key, label, earned, total, hasPending, count: items.length };
+  });
+
 
   const pending = sub.status === "needs-grading" || sub.status === "auto-graded" || sub.status === "in-progress";
 
