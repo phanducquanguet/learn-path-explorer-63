@@ -1655,12 +1655,250 @@ function buildGradeGroups(course: { units: Unit[] }): GradeGroup[] {
 }
 
 function ratingFor(percent: number): { label: string; tone: string } {
-...
+  if (percent >= 90) return { label: "Xuất sắc", tone: "bg-success/15 text-success-foreground" };
+  if (percent >= 80) return { label: "Giỏi", tone: "bg-info/15 text-info-foreground" };
+  if (percent >= 70) return { label: "Khá", tone: "bg-primary/10 text-primary" };
+  if (percent >= 60) return { label: "Trung bình", tone: "bg-warning/15 text-warning-foreground" };
+  return { label: "Chưa đạt", tone: "bg-destructive/15 text-destructive" };
+}
+
+function ScoresView({
+  course,
+  hue,
+}: {
+  course: ReturnType<typeof getCourse> extends infer T
+    ? T extends { course: infer C }
+      ? C
+      : never
+    : never;
+  hue: number;
+}) {
+  const groups = buildGradeGroups(course);
+  const rows = groups.flatMap((g) => g.rows);
+  const totalWeight = rows.reduce((a, r) => a + r.weight, 0);
+  const totalContribution = rows.reduce((a, r) => {
+    if (r.score === null) return a;
+    return a + (r.score / r.maxScore) * r.weight;
+  }, 0);
+  const completedWeight = rows
+    .filter((r) => r.score !== null)
+    .reduce((a, r) => a + r.weight, 0);
+  const currentAvg = completedWeight > 0 ? (totalContribution / completedWeight) * 100 : 0;
+
+  return (
+    <div className="space-y-5">
+      <div className="grid gap-4 sm:grid-cols-3">
+        <SummaryStat
+          label="Tổng điểm hiện tại"
+          value={`${totalContribution.toFixed(1)}`}
+          suffix={`/${totalWeight.toFixed(0)}`}
+          hue={hue}
+          hint={`Đã hoàn thành ${completedWeight.toFixed(0)}% trọng số`}
+        />
+        <SummaryStat
+          label="Điểm trung bình"
+          value={`${currentAvg.toFixed(1)}`}
+          suffix="/100"
+          hue={(hue + 50) % 360}
+          hint="Tính trên các bài đã có điểm"
+        />
+        <SummaryStat
+          label="Bài đã hoàn thành"
+          value={`${rows.filter((r) => r.score !== null).length}`}
+          suffix={`/${rows.length}`}
+          hue={(hue + 100) % 360}
+          hint={`${rows.filter((r) => r.score === null).length} bài chưa có điểm`}
+        />
+      </div>
+
+      <div className="overflow-hidden rounded-3xl bg-surface ring-1 ring-border shadow-soft">
+        <div className="flex items-center justify-between border-b border-border p-5">
+          <div>
+            <h3 className="text-base font-semibold text-foreground">Bảng điểm cá nhân</h3>
+            <p className="text-xs text-muted-foreground">
+              Mỗi unit có thể có nhiều bài luyện tập — được nhóm và phân loại theo kỹ năng.
+            </p>
+          </div>
+          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary">
+            Tổng trọng số {totalWeight.toFixed(0)}%
+          </span>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-surface-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <th className="px-5 py-3">Bài học</th>
+                <th className="px-3 py-3 text-center">Loại</th>
+                <th className="px-3 py-3 text-center">Trọng số</th>
+                <th className="px-3 py-3 text-center">Kết quả</th>
+                <th className="px-3 py-3 text-center">Tỷ lệ đạt</th>
+                <th className="px-3 py-3 text-center">Đánh giá</th>
+                <th className="px-5 py-3 text-right">Đóng góp</th>
+              </tr>
+            </thead>
+            <tbody>
+              {groups.map((g) => {
+                const scored = g.rows.filter((r) => r.score !== null);
+                const groupAvg =
+                  scored.length > 0
+                    ? scored.reduce((a, r) => a + (r.score! / r.maxScore) * 100, 0) / scored.length
+                    : null;
+                const groupWeight = g.rows.reduce((a, r) => a + r.weight, 0);
+                return (
+                  <FragmentRows
+                    key={g.id}
+                    group={g}
+                    groupAvg={groupAvg}
+                    groupWeight={groupWeight}
+                    hue={hue}
+                  />
+                );
+              })}
+            </tbody>
+            <tfoot>
+              <tr className="border-t-2 border-border bg-surface-2">
+                <td className="px-5 py-3 text-sm font-semibold text-foreground" colSpan={6}>
+                  Tổng điểm tích luỹ
+                </td>
+                <td className="px-5 py-3 text-right">
+                  <div className="text-base font-bold text-foreground">
+                    {totalContribution.toFixed(2)}
+                    <span className="text-xs font-normal text-muted-foreground">
+                      {" "}/ {totalWeight.toFixed(0)}
+                    </span>
+                  </div>
+                </td>
+              </tr>
             </tfoot>
           </table>
         </div>
       </div>
     </div>
+  );
+}
+
+function FragmentRows({
+  group,
+  groupAvg,
+  groupWeight,
+  hue,
+}: {
+  group: GradeGroup;
+  groupAvg: number | null;
+  groupWeight: number;
+  hue: number;
+}) {
+  return (
+    <>
+      <tr className="border-t border-border bg-muted/40">
+        <td className="px-5 py-2.5" colSpan={2}>
+          <div className="flex items-center gap-2">
+            <span
+              className="inline-flex h-6 w-6 items-center justify-center rounded-md text-[11px] font-bold text-white"
+              style={{ background: `oklch(0.55 0.16 ${hue})` }}
+            >
+              {group.id === "exams" ? "★" : (group.title.match(/Unit\s*(\d+)/i)?.[1] ?? "•")}
+            </span>
+            <span className="text-sm font-semibold text-foreground">{group.title}</span>
+            {group.subtitle && (
+              <span className="text-[11px] text-muted-foreground">· {group.subtitle}</span>
+            )}
+          </div>
+        </td>
+        <td className="px-3 py-2.5 text-center text-xs font-semibold text-foreground">
+          {groupWeight.toFixed(1)}%
+        </td>
+        <td className="px-3 py-2.5 text-center text-xs text-muted-foreground" colSpan={3}>
+          {groupAvg !== null ? `TB nhóm: ${groupAvg.toFixed(0)}%` : "Chưa có điểm"}
+        </td>
+        <td className="px-5 py-2.5" />
+      </tr>
+      {group.rows.map((r) => {
+        const hasScore = r.score !== null;
+        const percent = hasScore ? (r.score! / r.maxScore) * 100 : 0;
+        const contribution = hasScore ? (percent / 100) * r.weight : 0;
+        const rating = hasScore ? ratingFor(percent) : null;
+        const meta = KIND_META[r.kind];
+        const Icon = meta.icon;
+        return (
+          <tr key={r.id} className="border-t border-border/60 hover:bg-muted/20">
+            <td className="px-5 py-3">
+              <div className="flex items-center gap-2 pl-8">
+                <span className="text-muted-foreground/60">└</span>
+                <Icon className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="font-medium text-foreground">{r.title}</span>
+              </div>
+            </td>
+            <td className="px-3 py-3 text-center">
+              <span
+                className={cn(
+                  "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                  meta.tone,
+                )}
+              >
+                {meta.label}
+              </span>
+            </td>
+            <td className="px-3 py-3 text-center">
+              <span className="inline-flex items-center rounded-lg bg-muted px-2 py-1 text-xs font-semibold text-foreground">
+                {r.weight}%
+              </span>
+            </td>
+            <td className="px-3 py-3 text-center">
+              {hasScore ? (
+                <ScoreBadge score={r.score!} />
+              ) : (
+                <span className="text-xs text-muted-foreground">Chưa có</span>
+              )}
+            </td>
+            <td className="px-3 py-3">
+              {hasScore ? (
+                <div className="flex items-center justify-center gap-2">
+                  <div className="h-1.5 w-20 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.min(100, percent)}%`,
+                        background: `linear-gradient(90deg, oklch(0.6 0.18 ${hue}), oklch(0.7 0.18 ${(hue + 40) % 360}))`,
+                      }}
+                    />
+                  </div>
+                  <span className="text-xs font-semibold text-foreground">
+                    {percent.toFixed(0)}%
+                  </span>
+                </div>
+              ) : (
+                <div className="text-center text-xs text-muted-foreground">—</div>
+              )}
+            </td>
+            <td className="px-3 py-3 text-center">
+              {rating ? (
+                <span
+                  className={cn(
+                    "inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold",
+                    rating.tone,
+                  )}
+                >
+                  {rating.label}
+                </span>
+              ) : (
+                <span className="text-xs text-muted-foreground">—</span>
+              )}
+            </td>
+            <td className="px-5 py-3 text-right">
+              {hasScore ? (
+                <div>
+                  <div className="font-semibold text-foreground">{contribution.toFixed(2)}</div>
+                  <div className="text-[11px] text-muted-foreground">/ {r.weight} điểm</div>
+                </div>
+              ) : (
+                <span className="text-xs text-muted-foreground">—</span>
+              )}
+            </td>
+          </tr>
+        );
+      })}
+    </>
   );
 }
 
