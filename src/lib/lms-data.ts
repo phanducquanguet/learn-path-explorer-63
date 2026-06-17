@@ -260,3 +260,43 @@ export const studentStats = {
     { day: "CN", minutes: 10 },
   ],
 };
+
+// Persona: học viên mới chỉ đang học cấp độ A1.
+// Clone từ `levels`, đặt A1 = đang học (tiến độ thấp), các cấp còn lại = khoá.
+export const newcomerLevels: Level[] = levels.map((lv) => {
+  if (lv.code === "A1") {
+    const progresses = [25, 10, 0];
+    return {
+      ...lv,
+      status: "in-progress",
+      progress: 18,
+      courses: lv.courses.map((c, i) => ({ ...c, progress: progresses[i] ?? 0 })),
+    };
+  }
+  return {
+    ...lv,
+    status: "locked",
+    progress: 0,
+    courses: [],
+  };
+});
+
+export const newcomerStats = {
+  name: "Minh Khôi",
+  studyMinutesThisWeek: 95,
+  studyMinutesGoal: 300,
+  weeklyStreak: 3,
+  completionRate: 12,
+  averageScore: 78,
+  activeCourses: 1,
+  completedCourses: 0,
+  weeklyChart: [
+    { day: "T2", minutes: 20 },
+    { day: "T3", minutes: 15 },
+    { day: "T4", minutes: 10 },
+    { day: "T5", minutes: 25 },
+    { day: "T6", minutes: 10 },
+    { day: "T7", minutes: 15 },
+    { day: "CN", minutes: 0 },
+  ],
+};

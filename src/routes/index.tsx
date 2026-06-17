@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Clock,
@@ -23,7 +23,7 @@ import {
   ChevronRight,
   Sparkle,
 } from "lucide-react";
-import { levels, studentStats, getLevel } from "@/lib/lms-data";
+import { levels, studentStats, getLevel, newcomerLevels, newcomerStats } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
 import { TopNav } from "@/components/TopNav";
 
@@ -38,9 +38,14 @@ export const Route = createFileRoute("/")({
 });
 
 function DashboardPage() {
-  const s = studentStats;
+  const [scenario, setScenario] = useState<"multi" | "newcomer">("multi");
+  const isNewcomer = scenario === "newcomer";
+  const activeLevels = isNewcomer ? newcomerLevels : levels;
+  const s = isNewcomer ? newcomerStats : studentStats;
   const goalPct = Math.round((s.studyMinutesThisWeek / s.studyMinutesGoal) * 100);
-  const currentLevel = getLevel("b2")!;
+  const currentLevel = isNewcomer
+    ? newcomerLevels.find((l) => l.status === "in-progress")!
+    : getLevel("b2")!;
   const currentCourse = currentLevel.courses[0];
   const levelsScrollRef = useRef<HTMLDivElement>(null);
   const scrollLevels = (dir: 1 | -1) =>
@@ -99,6 +104,33 @@ function DashboardPage() {
               <span className="inline-flex w-fit items-center gap-2 rounded-full bg-surface/80 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur ring-1 ring-border">
                 <Sparkles className="h-3.5 w-3.5 text-primary" /> Chào mừng trở lại
               </span>
+              {/* Scenario switcher — demo personas */}
+              <div className="mt-3 inline-flex w-fit items-center gap-1 rounded-full bg-surface/80 p-1 ring-1 ring-border backdrop-blur">
+                <button
+                  type="button"
+                  onClick={() => setScenario("multi")}
+                  className={cn(
+                    "rounded-full px-3 py-1 text-xs font-semibold transition",
+                    !isNewcomer
+                      ? "bg-foreground text-background shadow-soft"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  Học viên đa cấp
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScenario("newcomer")}
+                  className={cn(
+                    "rounded-full px-3 py-1 text-xs font-semibold transition",
+                    isNewcomer
+                      ? "bg-foreground text-background shadow-soft"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  Mới — chỉ A1
+                </button>
+              </div>
               <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
                 Xin chào, <br />
                 <span
@@ -114,7 +146,11 @@ function DashboardPage() {
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
                 <Pill icon={<Flame className="h-3.5 w-3.5 text-orange-500" />}>{s.weeklyStreak} ngày streak</Pill>
-                <Pill icon={<Trophy className="h-3.5 w-3.5 text-amber-500" />}>Top 12% lớp</Pill>
+                {isNewcomer ? (
+                  <Pill icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}>Người mới bắt đầu</Pill>
+                ) : (
+                  <Pill icon={<Trophy className="h-3.5 w-3.5 text-amber-500" />}>Top 12% lớp</Pill>
+                )}
                 <Pill icon={<Zap className="h-3.5 w-3.5 text-primary" />}>{s.activeCourses} khoá đang học</Pill>
               </div>
             </div>
@@ -203,7 +239,7 @@ function DashboardPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="hidden rounded-full bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground ring-1 ring-border sm:inline-flex">
-                  {levels.filter((l) => l.status !== "locked").length}/{levels.length} cấp đã mở
+                  {activeLevels.filter((l) => l.status !== "locked").length}/{activeLevels.length} cấp đã mở
                 </span>
               </div>
             </div>
@@ -240,8 +276,8 @@ function DashboardPage() {
                 onClickCapture={onDragClickCapture}
                 className="flex gap-5 overflow-x-auto px-6 sm:px-8 pt-3 pb-6 snap-x snap-mandatory cursor-grab select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               >
-                {levels.map((lv, i) => {
-                  const prev = i > 0 ? levels[i - 1] : undefined;
+                {activeLevels.map((lv, i) => {
+                  const prev = i > 0 ? activeLevels[i - 1] : undefined;
                   return (
                     <LevelCard
                       key={lv.id}
