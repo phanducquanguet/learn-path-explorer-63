@@ -23,7 +23,7 @@ import {
   ChevronRight,
   Sparkle,
 } from "lucide-react";
-import { levels, studentStats, getLevel, newcomerLevels, newcomerStats } from "@/lib/lms-data";
+import { levels, studentStats, getLevel, newcomerLevels, newcomerStats, enrolledB2Levels, enrolledB2Stats } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
 import { TopNav } from "@/components/TopNav";
 
@@ -38,15 +38,23 @@ export const Route = createFileRoute("/")({
 });
 
 function DashboardPage() {
-  const [scenario, setScenario] = useState<"multi" | "newcomer">("multi");
+  const [scenario, setScenario] = useState<"multi" | "newcomer" | "enrolledB2">("multi");
   const isNewcomer = scenario === "newcomer";
-  const activeLevels = isNewcomer ? newcomerLevels : levels;
-  const s = isNewcomer ? newcomerStats : studentStats;
+  const isEnrolledB2 = scenario === "enrolledB2";
+  const activeLevels = isNewcomer
+    ? newcomerLevels
+    : isEnrolledB2
+      ? enrolledB2Levels
+      : levels;
+  const s = isNewcomer ? newcomerStats : isEnrolledB2 ? enrolledB2Stats : studentStats;
   const goalPct = Math.round((s.studyMinutesThisWeek / s.studyMinutesGoal) * 100);
   const currentLevel = isNewcomer
     ? newcomerLevels.find((l) => l.status === "in-progress")!
-    : getLevel("b2")!;
+    : isEnrolledB2
+      ? enrolledB2Levels.find((l) => l.status === "in-progress")!
+      : getLevel("b2")!;
   const currentCourse = currentLevel.courses[0];
+
   const levelsScrollRef = useRef<HTMLDivElement>(null);
   const scrollLevels = (dir: 1 | -1) =>
     levelsScrollRef.current?.scrollBy({ left: dir * 380, behavior: "smooth" });
@@ -105,32 +113,28 @@ function DashboardPage() {
                 <Sparkles className="h-3.5 w-3.5 text-primary" /> Chào mừng trở lại
               </span>
               {/* Scenario switcher — demo personas */}
-              <div className="mt-3 inline-flex w-fit items-center gap-1 rounded-full bg-surface/80 p-1 ring-1 ring-border backdrop-blur">
-                <button
-                  type="button"
-                  onClick={() => setScenario("multi")}
-                  className={cn(
-                    "rounded-full px-3 py-1 text-xs font-semibold transition",
-                    !isNewcomer
-                      ? "bg-foreground text-background shadow-soft"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  Học viên đa cấp
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setScenario("newcomer")}
-                  className={cn(
-                    "rounded-full px-3 py-1 text-xs font-semibold transition",
-                    isNewcomer
-                      ? "bg-foreground text-background shadow-soft"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  Mới — chỉ A1
-                </button>
+              <div className="mt-3 inline-flex w-fit flex-wrap items-center gap-1 rounded-full bg-surface/80 p-1 ring-1 ring-border backdrop-blur">
+                {([
+                  { key: "multi", label: "Học viên đa cấp" },
+                  { key: "newcomer", label: "Vào lớp A1" },
+                  { key: "enrolledB2", label: "Vào lớp B2" },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => setScenario(opt.key)}
+                    className={cn(
+                      "rounded-full px-3 py-1 text-xs font-semibold transition",
+                      scenario === opt.key
+                        ? "bg-foreground text-background shadow-soft"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
+
               <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
                 Xin chào, <br />
                 <span
@@ -148,9 +152,12 @@ function DashboardPage() {
                 <Pill icon={<Flame className="h-3.5 w-3.5 text-orange-500" />}>{s.weeklyStreak} ngày streak</Pill>
                 {isNewcomer ? (
                   <Pill icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}>Người mới bắt đầu</Pill>
+                ) : isEnrolledB2 ? (
+                  <Pill icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}>Vào lớp B2</Pill>
                 ) : (
                   <Pill icon={<Trophy className="h-3.5 w-3.5 text-amber-500" />}>Top 12% lớp</Pill>
                 )}
+
                 <Pill icon={<Zap className="h-3.5 w-3.5 text-primary" />}>{s.activeCourses} khoá đang học</Pill>
               </div>
             </div>
@@ -514,6 +521,47 @@ function LevelCard({
   const locked = lv.status === "locked";
   const completed = lv.status === "completed";
   const active = lv.status === "in-progress";
+  const notEnrolled = lv.status === "not-enrolled";
+
+  // ---------- NOT-ENROLLED (ngoài lộ trình lớp của học viên) ----------
+  if (notEnrolled) {
+    return (
+      <div
+        aria-disabled="true"
+        className={cn(
+          "snap-start shrink-0 animate-fade-in w-[300px] md:w-[320px]",
+        )}
+        style={{ animationDelay: `${delay}ms` }}
+      >
+        <div
+          className="group relative h-full overflow-hidden rounded-3xl p-6 ring-1 ring-border bg-surface cursor-not-allowed transition-all duration-300"
+          style={{ minHeight: 320 }}
+        >
+          <div className="relative flex items-start justify-between">
+            <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-muted text-2xl font-black tracking-tight text-muted-foreground/60">
+              {lv.code}
+            </div>
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+              Ngoài lộ trình
+            </span>
+          </div>
+          <div className="mt-5">
+            <h3 className="text-xl font-bold tracking-tight text-muted-foreground">{lv.name}</h3>
+            <p className="mt-1 text-sm text-muted-foreground/80 line-clamp-2">{lv.description}</p>
+          </div>
+          <div className="mt-8 border-t border-border/60 pt-4 text-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-[11px] font-semibold text-muted-foreground">
+              Không có trong lớp của bạn
+            </span>
+            <p className="mt-2 text-[11px] text-muted-foreground/70">
+              Liên hệ trung tâm nếu bạn muốn học cấp độ này.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   // Sizing per state — active is biggest
   const sizing = active
@@ -668,7 +716,7 @@ function LevelCard({
             </div>
           )}
         </div>
-        <StatusPill status={lv.status} />
+        <StatusPill status={completed ? "completed" : "in-progress"} />
       </div>
 
       <div className="relative mt-5">

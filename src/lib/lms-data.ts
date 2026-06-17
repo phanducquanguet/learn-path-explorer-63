@@ -1,4 +1,4 @@
-export type LevelStatus = "completed" | "in-progress" | "locked";
+export type LevelStatus = "completed" | "in-progress" | "locked" | "not-enrolled";
 
 export type Activity = {
   id: string;
@@ -296,6 +296,46 @@ export const newcomerStats = {
     { day: "T4", minutes: 10 },
     { day: "T5", minutes: 25 },
     { day: "T6", minutes: 10 },
+    { day: "T7", minutes: 15 },
+    { day: "CN", minutes: 0 },
+  ],
+};
+
+// Persona: học viên được thêm thẳng vào lớp B2.
+// A1, A2, B1 = ngoài lộ trình (học viên không học tại trung tâm này).
+// B2 = đang học. C1, C2 = khoá theo lộ trình.
+export const enrolledB2Levels: Level[] = levels.map((lv) => {
+  if (lv.code === "B2") {
+    const progresses = [22, 8];
+    return {
+      ...lv,
+      status: "in-progress",
+      progress: 15,
+      courses: lv.courses.map((c, i) => ({ ...c, progress: progresses[i] ?? 0 })),
+    };
+  }
+  if (lv.code === "C1" || lv.code === "C2") {
+    return { ...lv, status: "locked", progress: 0, courses: [] };
+  }
+  // A1, A2, B1 — ngoài lộ trình của học viên
+  return { ...lv, status: "not-enrolled", progress: 0, courses: [] };
+});
+
+export const enrolledB2Stats = {
+  name: "Quỳnh Như",
+  studyMinutesThisWeek: 140,
+  studyMinutesGoal: 360,
+  weeklyStreak: 5,
+  completionRate: 15,
+  averageScore: 82,
+  activeCourses: 2,
+  completedCourses: 0,
+  weeklyChart: [
+    { day: "T2", minutes: 25 },
+    { day: "T3", minutes: 30 },
+    { day: "T4", minutes: 20 },
+    { day: "T5", minutes: 15 },
+    { day: "T6", minutes: 35 },
     { day: "T7", minutes: 15 },
     { day: "CN", minutes: 0 },
   ],
