@@ -525,42 +525,95 @@ function LevelCard({
 
   // ---------- NOT-ENROLLED (ngoài lộ trình lớp của học viên) ----------
   if (notEnrolled) {
+    // Tông pastel theo cấp độ — gợi cảm giác thân thiện, mời gọi khám phá
+    const toneMap: Record<
+      string,
+      { badgeIcon: string; chip: string; badge: string; dashed: string; hint: string }
+    > = {
+      A1: {
+        badgeIcon: "bg-sky-50 text-sky-600",
+        chip: "bg-sky-50 text-sky-600",
+        badge: "bg-sky-50 text-sky-600",
+        dashed: "border-sky-200 bg-sky-50/30 text-sky-700",
+        hint: "Sẵn sàng để bắt đầu hành trình mới của bạn bất cứ lúc nào.",
+      },
+      A2: {
+        badgeIcon: "bg-amber-50 text-amber-600",
+        chip: "bg-amber-50 text-amber-600",
+        badge: "bg-amber-50 text-amber-600",
+        dashed: "border-amber-200 bg-amber-50/30 text-amber-700",
+        hint: "Liên hệ trung tâm để ghi danh thêm cấp độ này vào tài khoản.",
+      },
+      B1: {
+        badgeIcon: "bg-indigo-50 text-indigo-600",
+        chip: "bg-indigo-50 text-indigo-600",
+        badge: "bg-indigo-50 text-indigo-600",
+        dashed: "border-indigo-200 bg-indigo-50/30 text-indigo-700",
+        hint: "Chinh phục mục tiêu tiếp theo trong kế hoạch học tập của bạn.",
+      },
+    };
+    const tone =
+      toneMap[lv.code] ?? {
+        badgeIcon: "bg-muted text-muted-foreground",
+        chip: "bg-muted text-muted-foreground",
+        badge: "bg-muted text-muted-foreground",
+        dashed: "border-border bg-muted/30 text-muted-foreground",
+        hint: "Liên hệ trung tâm nếu bạn muốn học cấp độ này.",
+      };
+
     return (
       <div
         aria-disabled="true"
-        className={cn(
-          "snap-start shrink-0 animate-fade-in w-[300px] md:w-[320px]",
-        )}
+        className="snap-start shrink-0 animate-fade-in w-[300px] md:w-[320px]"
         style={{ animationDelay: `${delay}ms` }}
       >
         <div
-          className="group relative h-full overflow-hidden rounded-3xl p-6 ring-1 ring-border bg-surface cursor-not-allowed transition-all duration-300"
-          style={{ minHeight: 320 }}
+          className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border/60 bg-card p-6 shadow-sm transition-all duration-300 hover:shadow-md"
+          style={{ minHeight: 340 }}
         >
-          <div className="relative flex items-start justify-between">
-            <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-muted text-2xl font-black tracking-tight text-muted-foreground/60">
+          <div className="flex items-start justify-between">
+            <div
+              className={cn(
+                "flex h-12 w-12 items-center justify-center rounded-2xl text-lg font-bold",
+                tone.badgeIcon,
+              )}
+            >
               {lv.code}
             </div>
-            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
-              Ngoài lộ trình
+            <span
+              className={cn(
+                "rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider",
+                tone.badge,
+              )}
+            >
+              Chờ bạn khám phá
             </span>
           </div>
-          <div className="mt-5">
-            <h3 className="text-xl font-bold tracking-tight text-muted-foreground">{lv.name}</h3>
-            <p className="mt-1 text-sm text-muted-foreground/80 line-clamp-2">{lv.description}</p>
-          </div>
-          <div className="mt-8 border-t border-border/60 pt-4 text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-[11px] font-semibold text-muted-foreground">
-              Không có trong lớp của bạn
-            </span>
-            <p className="mt-2 text-[11px] text-muted-foreground/70">
-              Liên hệ trung tâm nếu bạn muốn học cấp độ này.
+
+          <div className="mt-6 flex-1">
+            <h3 className="text-xl font-bold tracking-tight text-foreground">{lv.name}</h3>
+            <p className="mt-2 text-sm leading-relaxed text-muted-foreground line-clamp-3">
+              {lv.description}
             </p>
+          </div>
+
+          <div className="mt-auto space-y-3 pt-6">
+            <div
+              className={cn(
+                "flex w-full items-center justify-center rounded-xl border border-dashed py-2.5",
+                tone.dashed,
+              )}
+            >
+              <span className="text-xs font-semibold">Mở rộng lộ trình</span>
+            </div>
+            <p className="px-2 text-center text-[11px] text-muted-foreground/80">{tone.hint}</p>
           </div>
         </div>
       </div>
     );
   }
+
+
 
 
   // Sizing per state — active is biggest
