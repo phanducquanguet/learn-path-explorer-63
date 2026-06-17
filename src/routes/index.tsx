@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Clock,
@@ -23,7 +23,7 @@ import {
   ChevronRight,
   Sparkle,
 } from "lucide-react";
-import { levels, studentStats, getLevel } from "@/lib/lms-data";
+import { levels, studentStats, getLevel, newcomerLevels, newcomerStats, type Level } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
 import { TopNav } from "@/components/TopNav";
 
@@ -38,9 +38,14 @@ export const Route = createFileRoute("/")({
 });
 
 function DashboardPage() {
-  const s = studentStats;
+  const [scenario, setScenario] = useState<"multi" | "newcomer">("multi");
+  const isNewcomer = scenario === "newcomer";
+  const activeLevels = isNewcomer ? newcomerLevels : levels;
+  const s = isNewcomer ? newcomerStats : studentStats;
   const goalPct = Math.round((s.studyMinutesThisWeek / s.studyMinutesGoal) * 100);
-  const currentLevel = getLevel("b2")!;
+  const currentLevel = isNewcomer
+    ? newcomerLevels.find((l) => l.status === "in-progress")!
+    : getLevel("b2")!;
   const currentCourse = currentLevel.courses[0];
   const levelsScrollRef = useRef<HTMLDivElement>(null);
   const scrollLevels = (dir: 1 | -1) =>
