@@ -709,7 +709,7 @@ function LevelCard({
             </div>
           )}
         </div>
-        <StatusPill status={lv.status} />
+        <StatusPill status={completed ? "completed" : "in-progress"} />
       </div>
 
       <div className="relative mt-5">
