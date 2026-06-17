@@ -514,6 +514,47 @@ function LevelCard({
   const locked = lv.status === "locked";
   const completed = lv.status === "completed";
   const active = lv.status === "in-progress";
+  const notEnrolled = lv.status === "not-enrolled";
+
+  // ---------- NOT-ENROLLED (ngoài lộ trình lớp của học viên) ----------
+  if (notEnrolled) {
+    return (
+      <div
+        aria-disabled="true"
+        className={cn(
+          "snap-start shrink-0 animate-fade-in w-[300px] md:w-[320px]",
+        )}
+        style={{ animationDelay: `${delay}ms` }}
+      >
+        <div
+          className="group relative h-full overflow-hidden rounded-3xl p-6 ring-1 ring-border bg-surface cursor-not-allowed transition-all duration-300"
+          style={{ minHeight: 320 }}
+        >
+          <div className="relative flex items-start justify-between">
+            <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-muted text-2xl font-black tracking-tight text-muted-foreground/60">
+              {lv.code}
+            </div>
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+              Ngoài lộ trình
+            </span>
+          </div>
+          <div className="mt-5">
+            <h3 className="text-xl font-bold tracking-tight text-muted-foreground">{lv.name}</h3>
+            <p className="mt-1 text-sm text-muted-foreground/80 line-clamp-2">{lv.description}</p>
+          </div>
+          <div className="mt-8 border-t border-border/60 pt-4 text-center">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-3 py-1.5 text-[11px] font-semibold text-muted-foreground">
+              Không có trong lớp của bạn
+            </span>
+            <p className="mt-2 text-[11px] text-muted-foreground/70">
+              Liên hệ trung tâm nếu bạn muốn học cấp độ này.
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
 
   // Sizing per state — active is biggest
   const sizing = active
