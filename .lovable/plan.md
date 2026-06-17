@@ -1,81 +1,69 @@
-# Kế hoạch: Tài liệu nghiệm thu module "Thi cử / Luyện thi" (theo tên màn hình UI)
+## Mục tiêu
 
-## Đầu ra
-File Word: `/mnt/documents/Nghiem-thu_Thi-cu_reap_v2.docx` — A4, font Arial, header "REAP – Nghiệm thu Thi cử", footer số trang. QA bằng cách convert sang ảnh từng trang.
+Mô phỏng trải nghiệm dashboard (`/`) cho trường hợp **học viên mới chỉ đang học cấp độ A1** — chưa hoàn thành cấp nào, các cấp A2–C2 đều bị khoá. Giữ nguyên dữ liệu hiện tại để không phá demo "học viên đa cấp" đang dùng.
 
-## Điểm khác biệt so với bản trước
-**Không dùng path** (`/practice`, `/teacher/exams/...`). Thay vào đó dùng **tên màn hình theo UI** mà người dùng thực sự thấy trên giao diện:
+## Cách tiếp cận
 
-| Tên màn hình dùng trong tài liệu | Vai trò |
-|---|---|
-| Màn hình **"Bài luyện trên hệ thống"** | Học sinh |
-| Màn hình **"Làm bài luyện tập"** (QuizRunner + tổng kết) | Học sinh |
-| Màn hình **"Cổng thi chính thức"** | Học sinh |
-| Màn hình **"Danh sách bài luyện thi"** | Giáo viên & Admin |
-| Màn hình **"Tạo bài thi mới"** | Admin |
-| Màn hình **"Chi tiết bài thi"** (tab Tổng quan / Câu hỏi) | Giáo viên & Admin |
-| Màn hình **"Bài làm học viên"** (bảng + Drawer chấm bài) | Giáo viên & Admin |
+Thêm **bộ chuyển kịch bản (scenario switcher)** ở góc trên dashboard, cho phép xem 2 persona:
 
-## Cấu trúc tài liệu
+1. **Học viên đa cấp** (mặc định hiện tại — đang học B1/B2, đã xong A1/A2).
+2. **Học viên mới — chỉ A1** (mới).
 
-### 1. Trang bìa
-"BIÊN BẢN NGHIỆM THU TÍNH NĂNG – Module Thi cử / Luyện thi", REAP, v1.0, 22/05/2026.
+Lý do dùng switcher thay vì sửa đè dữ liệu: bạn vẫn cần demo cho cả hai trường hợp khi trình bày.
 
-### 2. Thông tin chung
-Mục đích, phạm vi (liệt kê 7 màn hình theo tên UI ở trên), 3 vai trò, dữ liệu mẫu (B1 Mock Test 01, A2 Reading Practice, Listening Mini Quiz).
+## Persona "Học viên mới — chỉ A1"
 
-### 3. Ma trận phân quyền
-Bảng: **Tính năng | Học sinh | Giáo viên | Admin**
-- Truy cập "Bài luyện trên hệ thống" & làm bài có chấm tức thì
-- Truy cập "Cổng thi chính thức" để mở bài thi ngoài
-- Xem "Danh sách bài luyện thi"
-- Tạo bài thi mới (Admin)
-- Sửa / Xoá bài thi (Admin)
-- Xem "Chi tiết bài thi"
-- Xem "Bài làm học viên"
-- Chấm bài tự luận (điểm 0–5 + nhận xét) – GV & Admin
+Dữ liệu mô phỏng:
 
-### 4. Mô tả tính năng theo từng màn hình
-Mỗi mục: **Mục đích · Thành phần UI chính · Hành động · Khác biệt theo vai trò**, viết theo tên màn hình UI (không có URL).
+```text
+A1  Đang học   Khởi đầu        ~18%   3 khoá  → "Học tiếp"
+A2  Đã khoá    Sơ cấp                         "Mở khoá khi hoàn thành A1"
+B1  Đã khoá    Trung cấp                      "Mở khoá khi hoàn thành A2"
+B2  Đã khoá    ...                            "Mở khoá khi hoàn thành B1"
+C1  Đã khoá    ...                            "Mở khoá khi hoàn thành B2"
+C2  Đã khoá    ...                            "Mở khoá khi hoàn thành C1"
+```
 
-4.1 Màn hình "Bài luyện trên hệ thống" — card kỹ năng, cấp độ, thời lượng, số câu, điểm cao nhất.
-4.2 Màn hình "Làm bài luyện tập" — Info screen → QuizRunner → tổng kết & đáp án chi tiết.
-4.3 Màn hình "Cổng thi chính thức" — hiển thị danh sách bài thi, mở cổng thi ngoài.
-4.4 Màn hình "Danh sách bài luyện thi" — 3 thẻ thống kê, card bài thi, nút theo vai trò.
-4.5 Màn hình "Tạo bài thi mới" — meta + chọn kỹ năng + khối câu hỏi (đơn / Audio / Đoạn văn) + MCQ/TF/Essay + thumbnail.
-4.6 Màn hình "Chi tiết bài thi" — tab Tổng quan, tab Câu hỏi.
-4.7 Màn hình "Bài làm học viên" — bảng + Drawer chấm tự luận.
+Tiến độ khoá A1:
+- `A1 Foundation` — 25%
+- `A1 Writing Lab` — 10%
+- `A1 Listening and Reading Lab` — 0% (chưa bắt đầu)
 
-### 5. Use case chính
-Học sinh (UC-S01..03), Giáo viên (UC-T01..03), Admin (UC-A01..03). Mô tả bằng tên màn hình UI.
+Thẻ "Tiếp tục học" ở hero → trỏ tới `A1 Foundation`.
 
-### 6. Bảng test case (~45 case)
-Cột: ID | Màn hình | Vai trò | Tiền điều kiện | Các bước | Kết quả mong đợi | Pass/Fail | Ghi chú.
-Cột "Màn hình" ghi tên UI (vd: "Danh sách bài luyện thi", "Tạo bài thi mới"…), không ghi path.
+Thống kê tuần (`studentStats`) cho persona này:
+- Tên: "Minh Khôi" (học viên mới)
+- Thời gian học tuần: 95 phút / mục tiêu 300 phút
+- Streak: 3 ngày
+- Tỷ lệ hoàn thành: 12%
+- Điểm TB: 78
+- Khoá đang học: 1 • Khoá đã xong: 0
+- `weeklyChart`: thấp hơn, ví dụ [20, 15, 10, 25, 10, 15, 0]
 
-Nhóm:
-- TC-PRA-01..08: "Bài luyện trên hệ thống" & "Làm bài luyện tập" (HS)
-- TC-EXM-09..12: "Cổng thi chính thức" (HS)
-- TC-LST-13..18: "Danh sách bài luyện thi" (GV/Admin)
-- TC-NEW-19..28: "Tạo bài thi mới" (Admin)
-- TC-DET-29..34: "Chi tiết bài thi"
-- TC-SUB-35..40: "Bài làm học viên" + Drawer chấm bài
-- TC-RBAC-41..43: Phân quyền theo vai trò
-- TC-RES-44..45: Responsive & xử lý lỗi
+Pill ở hero điều chỉnh: bỏ "Top 12% lớp", thay bằng "Người mới bắt đầu".
 
-### 7. Tiêu chí nghiệm thu
-- 100% test case Pass (hoặc có giải trình & lịch fix).
-- Không lỗi blocker/critical.
-- UI khớp design system.
-- Phân quyền đúng ma trận mục 3.
-- Mobile/tablet/desktop mượt.
+## Triển khai kỹ thuật
 
-### 8. Phần ký xác nhận
-Bảng: Bên giao – Bên nhận – Ngày ký.
+1. `src/lib/lms-data.ts`
+   - Thêm export `newcomerLevels: Level[]` — clone từ `levels` nhưng:
+     - A1: `status: "in-progress"`, `progress: 18`, ba khoá progress 25/10/0.
+     - A2–C2: `status: "locked"`, `progress: 0`, `courses: []`.
+   - Thêm export `newcomerStats` với các số ở trên.
 
-## Triển khai
-1. Viết script `/tmp/build-uat-thicu-v2.mjs` (Node + `docx`).
-2. Sinh `.docx` → convert sang PDF → ảnh từng trang để QA (không clip, không overflow).
-3. Trả `<presentation-artifact path="Nghiem-thu_Thi-cu_reap_v2.docx" mime_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document">`.
+2. `src/routes/index.tsx`
+   - Thêm `useState<"multi" | "newcomer">("multi")`.
+   - Chọn nguồn dữ liệu: `const data = scenario === "newcomer" ? { levels: newcomerLevels, stats: newcomerStats, currentLevel: newcomerLevels[0], currentCourse: newcomerLevels[0].courses[0] } : ...`.
+   - Thay các tham chiếu `levels`, `studentStats`, `currentLevel`, `currentCourse` bằng nguồn dữ liệu này.
+   - Đặt switcher (2 nút pill) ngay trên hero, ví dụ cạnh badge "Chào mừng trở lại": **[Đa cấp]** **[Mới — chỉ A1]**.
+   - Khi `scenario === "newcomer"`: badge "Top 12% lớp" đổi thành "Người mới bắt đầu", `s.activeCourses` lấy từ `newcomerStats`.
 
-Bạn duyệt để tôi build chứ?
+3. Không đụng `LevelCard` — component đã xử lý đúng `status: locked` (hiển thị "Đã khoá" + "Mở khoá khi hoàn thành <prev>").
+
+## Phạm vi không đụng
+
+- Routes con (`/levels/:level`, `/courses/:courseId`) giữ nguyên — chúng đọc qua `getLevel` / `getCourse` từ `levels` gốc; persona chỉ ảnh hưởng dashboard.
+- Không sửa style, layout, hay logic LevelCard.
+
+## Kết quả demo
+
+Sau khi build, vào `/`, bấm nút **"Mới — chỉ A1"** → dashboard hiển thị đúng trạng thái học viên mới: 1 cấp đang học, 5 cấp khoá theo thứ tự, hero "Tiếp tục học" trỏ A1 Foundation, thống kê tuần thấp, streak 3 ngày.
