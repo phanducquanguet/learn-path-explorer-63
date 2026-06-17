@@ -87,7 +87,7 @@ export const levels: Level[] = [
   {
     id: "a1",
     code: "A1",
-    name: "Khởi đầu",
+    name: "Làm quen",
     description: "Nền tảng giao tiếp cơ bản, từ vựng đời sống.",
     status: "completed",
     progress: 100,
@@ -128,7 +128,7 @@ export const levels: Level[] = [
   {
     id: "a2",
     code: "A2",
-    name: "Sơ cấp",
+    name: "Khám phá",
     description: "Mở rộng vốn từ và ngữ pháp căn bản.",
     status: "completed",
     progress: 100,
@@ -149,7 +149,7 @@ export const levels: Level[] = [
   {
     id: "b1",
     code: "B1",
-    name: "Trung cấp",
+    name: "Nền tảng",
     description: "Tự tin trao đổi trong các tình huống thường gặp.",
     status: "in-progress",
     progress: 64,
@@ -180,7 +180,7 @@ export const levels: Level[] = [
   {
     id: "b2",
     code: "B2",
-    name: "Trung cao cấp",
+    name: "Bứt phá",
     description: "Diễn đạt linh hoạt, học thuật & công việc.",
     status: "in-progress",
     progress: 28,
@@ -211,7 +211,7 @@ export const levels: Level[] = [
   {
     id: "c1",
     code: "C1",
-    name: "Cao cấp",
+    name: "Chuyên sâu",
     description: "Sử dụng ngôn ngữ hiệu quả trong môi trường chuyên nghiệp.",
     status: "locked",
     progress: 0,
@@ -221,7 +221,7 @@ export const levels: Level[] = [
   {
     id: "c2",
     code: "C2",
-    name: "Thành thạo",
+    name: "Hoàn thiện",
     description: "Trình độ gần như người bản xứ.",
     status: "locked",
     progress: 0,
