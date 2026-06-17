@@ -113,32 +113,28 @@ function DashboardPage() {
                 <Sparkles className="h-3.5 w-3.5 text-primary" /> Chào mừng trở lại
               </span>
               {/* Scenario switcher — demo personas */}
-              <div className="mt-3 inline-flex w-fit items-center gap-1 rounded-full bg-surface/80 p-1 ring-1 ring-border backdrop-blur">
-                <button
-                  type="button"
-                  onClick={() => setScenario("multi")}
-                  className={cn(
-                    "rounded-full px-3 py-1 text-xs font-semibold transition",
-                    !isNewcomer
-                      ? "bg-foreground text-background shadow-soft"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  Học viên đa cấp
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setScenario("newcomer")}
-                  className={cn(
-                    "rounded-full px-3 py-1 text-xs font-semibold transition",
-                    isNewcomer
-                      ? "bg-foreground text-background shadow-soft"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  Mới — chỉ A1
-                </button>
+              <div className="mt-3 inline-flex w-fit flex-wrap items-center gap-1 rounded-full bg-surface/80 p-1 ring-1 ring-border backdrop-blur">
+                {([
+                  { key: "multi", label: "Học viên đa cấp" },
+                  { key: "newcomer", label: "Vào lớp A1" },
+                  { key: "enrolledB2", label: "Vào lớp B2" },
+                ] as const).map((opt) => (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => setScenario(opt.key)}
+                    className={cn(
+                      "rounded-full px-3 py-1 text-xs font-semibold transition",
+                      scenario === opt.key
+                        ? "bg-foreground text-background shadow-soft"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
               </div>
+
               <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
                 Xin chào, <br />
                 <span
@@ -156,9 +152,12 @@ function DashboardPage() {
                 <Pill icon={<Flame className="h-3.5 w-3.5 text-orange-500" />}>{s.weeklyStreak} ngày streak</Pill>
                 {isNewcomer ? (
                   <Pill icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}>Người mới bắt đầu</Pill>
+                ) : isEnrolledB2 ? (
+                  <Pill icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}>Vào lớp B2</Pill>
                 ) : (
                   <Pill icon={<Trophy className="h-3.5 w-3.5 text-amber-500" />}>Top 12% lớp</Pill>
                 )}
+
                 <Pill icon={<Zap className="h-3.5 w-3.5 text-primary" />}>{s.activeCourses} khoá đang học</Pill>
               </div>
             </div>
