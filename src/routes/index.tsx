@@ -23,7 +23,7 @@ import {
   ChevronRight,
   Sparkle,
 } from "lucide-react";
-import { levels, studentStats, getLevel, newcomerLevels, newcomerStats } from "@/lib/lms-data";
+import { levels, studentStats, getLevel, newcomerLevels, newcomerStats, enrolledB2Levels, enrolledB2Stats } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
 import { TopNav } from "@/components/TopNav";
 
@@ -38,15 +38,23 @@ export const Route = createFileRoute("/")({
 });
 
 function DashboardPage() {
-  const [scenario, setScenario] = useState<"multi" | "newcomer">("multi");
+  const [scenario, setScenario] = useState<"multi" | "newcomer" | "enrolledB2">("multi");
   const isNewcomer = scenario === "newcomer";
-  const activeLevels = isNewcomer ? newcomerLevels : levels;
-  const s = isNewcomer ? newcomerStats : studentStats;
+  const isEnrolledB2 = scenario === "enrolledB2";
+  const activeLevels = isNewcomer
+    ? newcomerLevels
+    : isEnrolledB2
+      ? enrolledB2Levels
+      : levels;
+  const s = isNewcomer ? newcomerStats : isEnrolledB2 ? enrolledB2Stats : studentStats;
   const goalPct = Math.round((s.studyMinutesThisWeek / s.studyMinutesGoal) * 100);
   const currentLevel = isNewcomer
     ? newcomerLevels.find((l) => l.status === "in-progress")!
-    : getLevel("b2")!;
+    : isEnrolledB2
+      ? enrolledB2Levels.find((l) => l.status === "in-progress")!
+      : getLevel("b2")!;
   const currentCourse = currentLevel.courses[0];
+
   const levelsScrollRef = useRef<HTMLDivElement>(null);
   const scrollLevels = (dir: 1 | -1) =>
     levelsScrollRef.current?.scrollBy({ left: dir * 380, behavior: "smooth" });
