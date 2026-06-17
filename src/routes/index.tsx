@@ -23,7 +23,7 @@ import {
   ChevronRight,
   Sparkle,
 } from "lucide-react";
-import { levels, studentStats, getLevel, newcomerLevels, newcomerStats, type Level } from "@/lib/lms-data";
+import { levels, studentStats, getLevel, newcomerLevels, newcomerStats } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
 import { TopNav } from "@/components/TopNav";
 
