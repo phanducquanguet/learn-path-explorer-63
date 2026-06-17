@@ -239,7 +239,7 @@ function DashboardPage() {
               </div>
               <div className="flex items-center gap-2">
                 <span className="hidden rounded-full bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground ring-1 ring-border sm:inline-flex">
-                  {levels.filter((l) => l.status !== "locked").length}/{levels.length} cấp đã mở
+                  {activeLevels.filter((l) => l.status !== "locked").length}/{activeLevels.length} cấp đã mở
                 </span>
               </div>
             </div>
@@ -276,8 +276,8 @@ function DashboardPage() {
                 onClickCapture={onDragClickCapture}
                 className="flex gap-5 overflow-x-auto px-6 sm:px-8 pt-3 pb-6 snap-x snap-mandatory cursor-grab select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               >
-                {levels.map((lv, i) => {
-                  const prev = i > 0 ? levels[i - 1] : undefined;
+                {activeLevels.map((lv, i) => {
+                  const prev = i > 0 ? activeLevels[i - 1] : undefined;
                   return (
                     <LevelCard
                       key={lv.id}
