@@ -1,4 +1,4 @@
-export type LevelStatus = "completed" | "in-progress" | "locked";
+export type LevelStatus = "completed" | "in-progress" | "locked" | "not-enrolled";
 
 export type Activity = {
   id: string;
