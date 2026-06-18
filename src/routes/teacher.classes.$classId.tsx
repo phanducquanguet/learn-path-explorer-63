@@ -243,7 +243,14 @@ function ClassDetailPage() {
 
         <div className="mt-6">
           {tab === "overview" && (
-            <OverviewTab cls={cls} members={members} courses={courses} onPickCourse={setPickedCourse} />
+            <OverviewTab
+              cls={cls}
+              members={members}
+              courses={courses}
+              onPickCourse={setPickedCourse}
+              upcomingLive={upcomingLive}
+              onOpenLiveDialog={() => setShowLiveDialog(true)}
+            />
           )}
           {tab === "courses" && <CoursesTab courses={courses} onPickCourse={setPickedCourse} />}
           {tab === "members" && <MembersTab members={members} onPickStudent={setPicked} />}
