@@ -1200,7 +1200,7 @@ function AudioChip({
   accent: Section["accent"];
   playing: boolean;
   onToggle: () => void;
-  onTakeNote: () => void;
+  onTakeNote?: () => void;
 }) {
   const a = ACCENTS[accent];
   const [progress, setProgress] = useState(0);
