@@ -100,51 +100,19 @@ export function CourseContentViewer({ course, level, classesSummary = [] }: Prop
               </span>
             </div>
 
-            <SidebarGroup
-              id="guide"
-              title="Hướng dẫn"
-              hue={level.hue}
-              open={openGroups["guide"] ?? false}
-              onToggle={() => setOpenGroups((g) => ({ ...g, guide: !g.guide }))}
-            >
+            <div className="mb-2">
               <SidebarLeaf
-                label="Hướng dẫn sử dụng"
-                meta="2 phút"
-                active={activeUnitId === "__guide"}
+                label="Course overview"
+                meta="Lộ trình & tổng quan lớp"
+                icon={<BookOpen className="h-4 w-4" />}
+                active={activeUnitId === "__overview"}
                 onClick={() => {
-                  setActiveUnitId("__guide");
+                  setActiveUnitId("__overview");
                   setActiveActivity(null);
-                  
                 }}
               />
-            </SidebarGroup>
+            </div>
 
-            <SidebarGroup
-              id="intro"
-              title="Introduction"
-              hue={level.hue}
-              open={openGroups["intro"] ?? false}
-              onToggle={() => setOpenGroups((g) => ({ ...g, intro: !g.intro }))}
-            >
-              <SidebarLeaf
-                label="Introduction 1 — Phonemic symbols"
-                meta="6 phút"
-                active={activeUnitId === "__intro1"}
-                onClick={() => {
-                  setActiveUnitId("__intro1");
-                  setActiveActivity(null);
-                }}
-              />
-              <SidebarLeaf
-                label="Introduction 2 — Phonemic symbols"
-                meta="8 phút"
-                active={activeUnitId === "__intro2"}
-                onClick={() => {
-                  setActiveUnitId("__intro2");
-                  setActiveActivity(null);
-                }}
-              />
-            </SidebarGroup>
 
             {course.units.map((u) => {
               const done = u.activities.filter((a) => a.done).length;
@@ -192,11 +160,11 @@ export function CourseContentViewer({ course, level, classesSummary = [] }: Prop
         {activeActivity?.type === "quiz" && activeActivity.activity ? (
           <QuizPanel quiz={activeActivity.activity} hue={level.hue} onClose={() => setActiveActivity(null)} />
         ) : activeActivity?.type === "reading" && activeActivity.activity ? (
-          <ReadingPanel activity={activeActivity.activity} hue={level.hue} onClose={() => setActiveActivity(null)} />
+          <ReadingPanel audience="teacher" activity={activeActivity.activity} hue={level.hue} onClose={() => setActiveActivity(null)} />
         ) : activeActivity?.type === "video" && activeActivity.activity ? (
-          <VideoPanel activity={activeActivity.activity} hue={level.hue} onClose={() => setActiveActivity(null)} />
+          <VideoPanel audience="teacher" activity={activeActivity.activity} hue={level.hue} onClose={() => setActiveActivity(null)} />
         ) : (
-          <OverviewView course={course} hue={level.hue} totalMinutes={totalMinutes} activeUnit={activeUnit} />
+          <CourseOverviewView course={course} hue={level.hue} totalMinutes={totalMinutes} classesSummary={classesSummary} />
         )}
       </main>
     </div>
