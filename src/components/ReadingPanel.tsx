@@ -468,7 +468,7 @@ export function ReadingPanel({
                 page={page}
                 playingId={playingId}
                 onTogglePlay={(id) => setPlayingId((cur) => (cur === id ? null : id))}
-                onTakeNote={(scopeId, scopeLabel) => {
+                onTakeNote={isTeacher ? undefined : (scopeId, scopeLabel) => {
                   setDraftScope({ id: scopeId, label: scopeLabel });
                   setSideTab("notes");
                   setSideOpen(true);
