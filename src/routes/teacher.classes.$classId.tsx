@@ -30,6 +30,7 @@ import {
   ArrowLeft,
   BookOpen,
   Calendar,
+  CalendarPlus,
   Clock,
   Crown,
   HandHelping,
@@ -37,8 +38,21 @@ import {
   Search,
   TrendingUp,
   Users,
+  Video,
+  X,
+  ArrowUpRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatStartAt, relativeFromNow } from "@/lib/live-data";
+
+type QuickLiveSession = {
+  id: string;
+  title: string;
+  topic?: string;
+  startAt: string;
+  durationMin: number;
+  autoRecord: boolean;
+};
 
 /* ---------- Sub-skill định nghĩa (đồng bộ màn năng lực học viên) ---------- */
 const SUB_SKILLS: Record<"listening" | "reading" | "writing" | "speaking", string[]> = {
