@@ -276,6 +276,16 @@ function ClassDetailPage() {
         }}
       />
 
+      <QuickLiveDialog
+        open={showLiveDialog}
+        onOpenChange={setShowLiveDialog}
+        className={cls.name}
+        classCode={cls.id}
+        onCreate={(s) => {
+          setLiveSessionsLocal((prev) => [...prev, s]);
+          setShowLiveDialog(false);
+        }}
+      />
     </div>
   );
 }
