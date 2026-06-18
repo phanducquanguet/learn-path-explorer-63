@@ -52,19 +52,11 @@ export function CourseContentViewer({ course, level, classesSummary = [] }: Prop
     type: Activity["type"];
     activity: Activity;
   } | null>(null);
-  
-
-  const totalActivities = course.units.reduce((a, u) => a + u.activities.length, 0);
-  const doneActivities = course.units.reduce(
-    (a, u) => a + u.activities.filter((x) => x.done).length,
-    0,
-  );
   const totalMinutes = course.units.reduce(
     (a, u) => a + u.activities.reduce((b, x) => b + x.duration, 0),
     0,
   );
 
-  const activeUnit = course.units.find((u) => u.id === activeUnitId) ?? null;
 
   const handleActivityClick = (unitId: string, a: Activity) => {
     setActiveUnitId(unitId);
@@ -262,43 +254,6 @@ function activityIcon(t: Activity["type"]) {
   return <Icon className="h-4 w-4" />;
 }
 
-function labelType(t: Activity["type"]) {
-  return ({ video: "Video", reading: "Đọc", quiz: "Quiz", speaking: "Nói", writing: "Viết" })[t];
-}
-
-function HeroPill({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-background backdrop-blur ring-1 ring-white/15">
-      {icon}
-      {children}
-    </span>
-  );
-}
-
-function Tab({
-  active,
-  onClick,
-  icon,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "inline-flex shrink-0 items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-medium transition",
-        active ? "bg-foreground text-background shadow-soft" : "text-muted-foreground hover:bg-muted hover:text-foreground",
-      )}
-    >
-      {icon}
-      {children}
-    </button>
-  );
-}
 
 /* =========== Views =========== */
 
@@ -479,118 +434,3 @@ function MiniStat({ label, value }: { label: string; value: string | number }) {
   );
 }
 
-function IntroCard({
-  tag,
-  title,
-  desc,
-  hue,
-}: {
-  tag: string;
-  title: string;
-  desc: string;
-  hue: number;
-}) {
-  return (
-    <div className="group relative overflow-hidden rounded-3xl bg-surface ring-1 ring-border shadow-soft transition hover:-translate-y-1 hover:shadow-elevated">
-      <div
-        className="relative aspect-[16/10] overflow-hidden"
-        style={{
-          background: `linear-gradient(135deg, oklch(0.55 0.2 ${hue}), oklch(0.4 0.22 ${(hue + 50) % 360}))`,
-        }}
-      >
-        <div className="absolute inset-0 opacity-30 mix-blend-overlay [background-image:radial-gradient(circle_at_25%_20%,rgba(255,255,255,0.5),transparent_40%),radial-gradient(circle_at_80%_80%,rgba(0,0,0,0.4),transparent_40%)]" />
-        <div className="absolute left-4 top-4">
-          <span className="rounded-full bg-black/30 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white backdrop-blur">
-            {tag}
-          </span>
-        </div>
-        <div className="absolute inset-x-4 bottom-4">
-          <h3 className="font-display text-2xl font-bold text-white drop-shadow">{title}</h3>
-        </div>
-      </div>
-      <div className="space-y-3 p-5">
-        <p className="text-sm text-muted-foreground line-clamp-2">{desc}</p>
-        <button
-          className="inline-flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft transition group-hover:shadow-elevated"
-          style={{ background: "var(--gradient-brand)" }}
-        >
-          <Play className="h-4 w-4 fill-primary-foreground" />
-          Hãy bắt đầu
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function ActivitiesView({
-  course,
-  hue,
-  onQuizClick,
-}: {
-  course: Course;
-  hue: number;
-  onQuizClick: (a: Activity) => void;
-}) {
-  return (
-    <div className="space-y-5">
-      {course.units.map((u) => (
-        <div key={u.id} className="rounded-3xl bg-surface p-5 ring-1 ring-border shadow-soft">
-          <div className="mb-3 flex items-center gap-3">
-            <div
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-sm font-bold text-white"
-              style={{ background: `linear-gradient(135deg, oklch(0.55 0.18 ${hue}), oklch(0.7 0.18 ${(hue + 40) % 360}))` }}
-            >
-              {u.index}
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="truncate text-sm font-semibold text-foreground">{u.title}</div>
-              <div className="text-xs text-muted-foreground">{u.description}</div>
-            </div>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2">
-            {u.activities.map((a) => {
-              const isQuiz = a.type === "quiz";
-              const interactive = isQuiz;
-              const Wrapper: any = interactive ? "button" : "div";
-              return (
-                <Wrapper
-                  key={a.id}
-                  onClick={interactive ? () => onQuizClick(a) : undefined}
-                  className={cn(
-                    "flex items-center gap-3 rounded-2xl bg-surface-2 p-3 text-left ring-1 ring-border/60 transition",
-                    interactive && "hover:bg-primary/5 hover:ring-primary/40 cursor-pointer",
-                  )}
-                >
-                  <div
-                    className={cn(
-                      "flex h-9 w-9 items-center justify-center rounded-xl",
-                      a.done ? "bg-success/15 text-success-foreground" : "bg-primary/10 text-primary",
-                    )}
-                  >
-                    {activityIcon(a.type)}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="truncate text-sm font-medium text-foreground">{a.title}</div>
-                    <div className="text-[11px] text-muted-foreground">
-                      {labelType(a.type)} • {a.duration} phút
-                      {isQuiz && " • Không giới hạn lượt"}
-                    </div>
-                  </div>
-                  {isQuiz ? (
-                    <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-semibold text-primary">
-                      Làm bài
-                    </span>
-                  ) : a.done ? (
-                    <CheckCircle2 className="h-4 w-4 text-success-foreground" />
-                  ) : (
-                    <Circle className="h-4 w-4 text-muted-foreground" />
-                  )}
-                </Wrapper>
-              );
-            })}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
