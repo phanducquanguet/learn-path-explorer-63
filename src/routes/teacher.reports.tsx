@@ -5,11 +5,11 @@ import { classes, students } from "@/lib/teacher-data";
 import {
   BarChart3,
   Sparkles,
-  Clock,
+  CheckCircle2,
   TrendingUp,
   Trophy,
-  Users,
   Activity,
+  AlertTriangle,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -27,8 +27,6 @@ import {
   PolarAngleAxis,
   PolarRadiusAxis,
   Radar,
-  AreaChart,
-  Area,
 } from "recharts";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +35,16 @@ export const Route = createFileRoute("/teacher/reports")({
   component: ReportsPage,
 });
 
-const DAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
+const MASTERY_BUCKETS = [
+  { key: "excellent", label: "Xuất sắc (≥85)", min: 85, color: "oklch(0.7 0.16 155)" },
+  { key: "good", label: "Khá (70-84)", min: 70, color: "oklch(0.7 0.15 220)" },
+  { key: "average", label: "Trung bình (55-69)", min: 55, color: "oklch(0.78 0.14 75)" },
+  { key: "atrisk", label: "Cần hỗ trợ (<55)", min: 0, color: "oklch(0.65 0.2 25)" },
+] as const;
+
+function studentAvg(s: { scoresByUnit: { score: number }[] }) {
+  return s.scoresByUnit.reduce((a, x) => a + x.score, 0) / Math.max(1, s.scoresByUnit.length);
+}
 
 function ReportsPage() {
   const [classId, setClassId] = useState<string>("all");
@@ -47,7 +54,6 @@ function ReportsPage() {
     [classId],
   );
 
-  // Avg score per class
   const scoreData = selectedClasses.map((c) => ({
     name: c.name.replace(/^.*— /, ""),
     score: c.avgScore,
@@ -55,24 +61,17 @@ function ReportsPage() {
     attendance: c.attendance,
   }));
 
-  // Weekly study time aggregated
-  const weeklyTime = DAYS.map((d, i) => {
-    const total = selectedClasses.reduce((a, c) => a + (c.weeklyMinutes[i] ?? 0), 0);
-    return { day: d, minutes: total };
-  });
-
   // Progress trend (mock 6-week)
   const trend = Array.from({ length: 6 }).map((_, i) => {
     const week = `T${i + 1}`;
     const obj: Record<string, number | string> = { week };
     selectedClasses.forEach((c) => {
       const base = Math.max(20, c.avgProgress - (5 - i) * 8);
-      obj[c.name.replace(/^.*— /, "")] = Math.min(100, Math.round(base + Math.random() * 4));
+      obj[c.name.replace(/^.*— /, "")] = Math.min(100, Math.round(base + ((i * 7 + c.id.length) % 5)));
     });
     return obj;
   });
 
-  // Skill radar (avg of all students in selection)
   const targetIds = new Set(selectedClasses.map((c) => c.id));
   const studentsInScope = students.filter((s) => targetIds.has(s.classId));
   const avg = (k: "listening" | "reading" | "writing" | "speaking") =>
@@ -87,12 +86,61 @@ function ReportsPage() {
     { skill: "Nói", value: avg("speaking") },
   ];
 
-  // Usage time = study minutes * 1.6 (mock includes browsing/quiz time)
-  const usageData = DAYS.map((d, i) => {
-    const study = selectedClasses.reduce((a, c) => a + (c.weeklyMinutes[i] ?? 0), 0);
-    return { day: d, "Học tập": study, "Truy cập": Math.round(study * 1.6) };
+  // Mastery distribution per class (stacked)
+  const masteryData = selectedClasses.map((c) => {
+    const members = students.filter((s) => s.classId === c.id);
+    const row: Record<string, number | string> = {
+      name: c.name.replace(/^.*— /, ""),
+    };
+    for (const b of MASTERY_BUCKETS) row[b.label] = 0;
+    for (const s of members) {
+      const a = studentAvg(s);
+      const b = MASTERY_BUCKETS.find((b) => a >= b.min)!;
+      row[b.label] = (row[b.label] as number) + 1;
+    }
+    return row;
   });
 
+  // Avg score per Unit + pass-rate across selected students
+  const unitProgress = useMemo(() => {
+    const unitMap = new Map<string, { sum: number; n: number; pass: number }>();
+    for (const s of studentsInScope) {
+      for (const u of s.scoresByUnit) {
+        const cur = unitMap.get(u.unit) ?? { sum: 0, n: 0, pass: 0 };
+        cur.sum += u.score;
+        cur.n += 1;
+        if (u.score >= 60) cur.pass += 1;
+        unitMap.set(u.unit, cur);
+      }
+    }
+    return Array.from(unitMap.entries())
+      .map(([unit, v]) => ({
+        unit,
+        score: Math.round(v.sum / Math.max(1, v.n)),
+        passRate: Math.round((v.pass / Math.max(1, v.n)) * 100),
+      }))
+      .sort((a, b) => a.unit.localeCompare(b.unit));
+  }, [studentsInScope]);
+
+  // Top học viên & học viên cần quan tâm
+  const ranked = useMemo(
+    () =>
+      studentsInScope
+        .map((s) => ({ ...s, avg: Math.round(studentAvg(s)) }))
+        .sort((a, b) => b.avg - a.avg),
+    [studentsInScope],
+  );
+  const topStudents = ranked.slice(0, 5);
+  const atRiskStudents = ranked.filter((s) => s.avg < 55).slice(0, 5);
+
+  // KPIs
+  const totalUnits = studentsInScope.reduce((a, s) => a + s.scoresByUnit.length, 0);
+  const passedUnits = studentsInScope.reduce(
+    (a, s) => a + s.scoresByUnit.filter((u) => u.score >= 60).length,
+    0,
+  );
+  const completionRate = totalUnits ? Math.round((passedUnits / totalUnits) * 100) : 0;
+  const atRiskCount = atRiskStudents.length;
   const totalStudents = studentsInScope.length || classes.reduce((a, c) => a + c.studentCount, 0);
   const avgScore = Math.round(
     selectedClasses.reduce((a, c) => a + c.avgScore, 0) / Math.max(1, selectedClasses.length),
@@ -100,7 +148,6 @@ function ReportsPage() {
   const avgProgress = Math.round(
     selectedClasses.reduce((a, c) => a + c.avgProgress, 0) / Math.max(1, selectedClasses.length),
   );
-  const totalMinutes = weeklyTime.reduce((a, d) => a + d.minutes, 0);
 
   return (
     <div className="min-h-screen bg-background">
@@ -115,7 +162,7 @@ function ReportsPage() {
               Báo cáo & Phân tích
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Theo dõi điểm số, thời gian học tập, tiến độ và mức độ tham gia của các lớp đang quản lý.
+              Theo dõi tiến độ học tập, mức độ thành thạo và học viên cần quan tâm trong các lớp đang quản lý.
             </p>
           </div>
           <div className="flex items-center gap-2 rounded-xl border border-border bg-surface p-2 shadow-soft">
@@ -139,8 +186,8 @@ function ReportsPage() {
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Kpi icon={Trophy} label="Điểm TB" value={avgScore} suffix="/100" tint="from-emerald-500 to-teal-600" />
           <Kpi icon={TrendingUp} label="Tiến độ TB" value={`${avgProgress}%`} tint="from-violet-500 to-indigo-600" />
-          <Kpi icon={Clock} label="Tổng giờ học (tuần)" value={`${(totalMinutes / 60).toFixed(1)}h`} tint="from-amber-500 to-orange-600" />
-          <Kpi icon={Users} label="Học viên" value={totalStudents} tint="from-sky-500 to-cyan-600" />
+          <Kpi icon={CheckCircle2} label="Tỉ lệ hoàn thành bài" value={`${completionRate}%`} tint="from-sky-500 to-cyan-600" />
+          <Kpi icon={AlertTriangle} label="HV cần hỗ trợ" value={atRiskCount} suffix={`/${totalStudents}`} tint="from-rose-500 to-orange-600" />
         </div>
 
         {/* Charts grid */}
@@ -157,28 +204,18 @@ function ReportsPage() {
             </ResponsiveContainer>
           </Card>
 
-          <Card title="Thời gian học tập theo ngày" subtitle="Tổng phút học của các lớp trong tuần">
+          <Card title="Phân bố mức độ học viên" subtitle="Số học viên theo từng nhóm năng lực trong mỗi lớp">
             <ResponsiveContainer width="100%" height={260}>
-              <AreaChart data={weeklyTime}>
-                <defs>
-                  <linearGradient id="g1" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="oklch(0.6 0.2 280)" stopOpacity={0.6} />
-                    <stop offset="100%" stopColor="oklch(0.6 0.2 280)" stopOpacity={0.05} />
-                  </linearGradient>
-                </defs>
+              <BarChart data={masteryData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="day" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} allowDecimals={false} />
                 <Tooltip />
-                <Area
-                  type="monotone"
-                  dataKey="minutes"
-                  stroke="oklch(0.55 0.2 280)"
-                  fill="url(#g1)"
-                  strokeWidth={2}
-                  name="Phút"
-                />
-              </AreaChart>
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                {MASTERY_BUCKETS.map((b) => (
+                  <Bar key={b.key} dataKey={b.label} stackId="m" fill={b.color} radius={[2, 2, 0, 0]} />
+                ))}
+              </BarChart>
             </ResponsiveContainer>
           </Card>
 
@@ -223,21 +260,77 @@ function ReportsPage() {
           </Card>
 
           <Card
-            title="Thời gian sử dụng vs Học tập"
-            subtitle="Phân biệt thời gian truy cập hệ thống và thời gian học hiệu quả"
+            title="Điểm trung bình & Tỉ lệ đạt theo Unit"
+            subtitle="Theo dõi mức độ thành thạo của học viên qua từng Unit"
             wide
           >
             <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={usageData}>
+              <BarChart data={unitProgress}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="day" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
+                <XAxis dataKey="unit" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} domain={[0, 100]} unit="%" />
                 <Tooltip />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="Truy cập" fill="oklch(0.7 0.15 220)" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="Học tập" fill="oklch(0.55 0.2 280)" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="score" name="Điểm TB" fill="oklch(0.55 0.2 280)" radius={[6, 6, 0, 0]} />
+                <Bar dataKey="passRate" name="Tỉ lệ đạt (≥60)" fill="oklch(0.7 0.15 155)" radius={[6, 6, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
+          </Card>
+        </div>
+
+        {/* Top + At-risk students */}
+        <div className="mt-8 grid gap-5 lg:grid-cols-2">
+          <Card title="Top học viên" subtitle="5 học viên có điểm trung bình cao nhất trong phạm vi">
+            <ul className="space-y-2">
+              {topStudents.length === 0 && (
+                <li className="text-center text-xs text-muted-foreground">Chưa có dữ liệu</li>
+              )}
+              {topStudents.map((s, i) => (
+                <li key={s.id} className="flex items-center justify-between rounded-xl bg-muted/40 px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <div className="grid h-7 w-7 place-items-center rounded-full bg-foreground text-[11px] font-bold text-background">
+                      {i + 1}
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-foreground">{s.name}</div>
+                      <div className="text-[11px] text-muted-foreground">
+                        {classes.find((c) => c.id === s.classId)?.name}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-sm font-bold text-emerald-600">{s.avg}</div>
+                </li>
+              ))}
+            </ul>
+          </Card>
+
+          <Card
+            title="Học viên cần quan tâm"
+            subtitle="Điểm TB < 55 — cần giáo viên hỗ trợ thêm"
+          >
+            <ul className="space-y-2">
+              {atRiskStudents.length === 0 && (
+                <li className="rounded-xl bg-emerald-50 px-3 py-3 text-center text-xs font-medium text-emerald-700">
+                  🎉 Tất cả học viên đang theo kịp tiến độ
+                </li>
+              )}
+              {atRiskStudents.map((s) => (
+                <li key={s.id} className="flex items-center justify-between rounded-xl bg-rose-50 px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <div className="grid h-7 w-7 place-items-center rounded-full bg-rose-500 text-[11px] font-bold text-white">
+                      <AlertTriangle className="h-3.5 w-3.5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-foreground">{s.name}</div>
+                      <div className="text-[11px] text-muted-foreground">
+                        {classes.find((c) => c.id === s.classId)?.name} · {s.lastActive}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="text-sm font-bold text-rose-600">{s.avg}</div>
+                </li>
+              ))}
+            </ul>
           </Card>
         </div>
 
