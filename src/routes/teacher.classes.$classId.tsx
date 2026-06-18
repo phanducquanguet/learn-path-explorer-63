@@ -135,6 +135,8 @@ function ClassDetailPage() {
   const [tab, setTab] = useState<TabId>("overview");
   const [picked, setPicked] = useState<TeacherStudent | null>(null);
   const [pickedCourse, setPickedCourse] = useState<Course | null>(null);
+  const [liveSessionsLocal, setLiveSessionsLocal] = useState<QuickLiveSession[]>([]);
+  const [showLiveDialog, setShowLiveDialog] = useState(false);
 
 
   const members = useMemo(
@@ -147,6 +149,14 @@ function ClassDetailPage() {
   }, [cls.levelCode]);
 
   const isPrimary = cls.role === "primary";
+
+  const upcomingLive = useMemo(
+    () =>
+      [...liveSessionsLocal].sort(
+        (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime(),
+      ),
+    [liveSessionsLocal],
+  );
 
   return (
     <div className="min-h-screen bg-background">
