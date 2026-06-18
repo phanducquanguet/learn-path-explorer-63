@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import {
-  ArrowLeft,
   BookOpen,
   CheckCircle2,
   ChevronDown,
@@ -13,13 +12,12 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   PenLine,
-  Play,
   PlayCircle,
   Sparkles,
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { type Course, type Activity, type Unit } from "@/lib/lms-data";
+import { type Course, type Activity } from "@/lib/lms-data";
 import { QuizPanel } from "@/components/QuizPanel";
 import { ReadingPanel } from "@/components/ReadingPanel";
 import { VideoPanel } from "@/components/VideoPanel";
