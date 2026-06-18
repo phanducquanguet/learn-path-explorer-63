@@ -24,6 +24,7 @@ import {
   XCircle,
   Upload,
   Eye,
+  Video,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRole, type Role } from "@/contexts/RoleContext";
@@ -48,6 +49,7 @@ import {
 const studentTabs = [
   { to: "/" as const, label: "Trang chủ", icon: Home },
   { to: "/courses" as const, label: "Khóa học", icon: GraduationCap },
+  { to: "/live" as const, label: "Lớp trực tuyến", icon: Video },
   { to: "/practice" as const, label: "Luyện thi", icon: ClipboardCheck },
   { to: "/exams" as const, label: "Thi cử", icon: ScrollText },
 ];
@@ -55,6 +57,7 @@ const studentTabs = [
 const teacherTabs = [
   { to: "/teacher" as const, label: "Tổng quan", icon: LayoutDashboard },
   { to: "/teacher/classes" as const, label: "Lớp học", icon: Users },
+  { to: "/teacher/live" as const, label: "Lớp trực tuyến", icon: Video },
   { to: "/teacher/courses" as const, label: "Khóa học", icon: GraduationCap },
   { to: "/teacher/tests" as const, label: "Thi cử", icon: ScrollText },
   { to: "/teacher/reports" as const, label: "Báo cáo", icon: BarChart3 },
