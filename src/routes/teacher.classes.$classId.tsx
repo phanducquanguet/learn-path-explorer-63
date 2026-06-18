@@ -433,6 +433,60 @@ function OverviewTab({
       </div>
 
 
+      {/* Buổi học trực tuyến sắp tới */}
+      <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft lg:col-span-3">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div>
+            <div className="text-sm font-semibold">Buổi học trực tuyến sắp tới</div>
+            <div className="text-[11px] text-muted-foreground">
+              Đặt lịch nhanh các buổi live cho học viên trong lớp này.
+            </div>
+          </div>
+          <button
+            onClick={onOpenLiveDialog}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted"
+          >
+            <CalendarPlus className="h-3.5 w-3.5" /> Đặt lịch
+          </button>
+        </div>
+        {upcomingLive.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border bg-card/50 p-6 text-center">
+            <Video className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">
+              Chưa có buổi học trực tuyến nào. Bấm “Đặt lịch” để tạo nhanh cho cả lớp.
+            </p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-border/60 overflow-hidden rounded-xl border border-border/60 bg-card">
+            {upcomingLive.map((s) => (
+              <li key={s.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                    <Video className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-foreground">{s.title}</div>
+                    <div className="text-[11px] text-muted-foreground" suppressHydrationWarning>
+                      {formatStartAt(s.startAt)} · {s.durationMin} phút · {relativeFromNow(s.startAt)}
+                      {s.autoRecord ? " · Tự động ghi hình" : ""}
+                    </div>
+                    {s.topic && (
+                      <div className="mt-0.5 text-[11px] text-muted-foreground line-clamp-1">{s.topic}</div>
+                    )}
+                  </div>
+                </div>
+                <Link
+                  to="/teacher/live"
+                  className="inline-flex items-center gap-1 self-start rounded-full bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground hover:opacity-90 sm:self-auto"
+                >
+                  Quản lý <ArrowUpRight className="h-3 w-3" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft lg:col-span-3">
         <div className="mb-3 flex items-center justify-between">
           <div className="text-sm font-semibold">Khóa học đang gắn với lớp</div>
