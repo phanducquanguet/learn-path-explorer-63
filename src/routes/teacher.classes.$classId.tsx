@@ -207,11 +207,19 @@ function ClassDetailPage() {
               )}
             </div>
           </div>
-          <div className="grid grid-cols-4 gap-2">
-            <KPI label="Sĩ số" value={members.length || cls.studentCount} icon={<Users className="h-3.5 w-3.5" />} />
-            <KPI label="Tiến độ" value={`${cls.avgProgress}%`} />
-            <KPI label="Điểm TB" value={cls.avgScore} />
-            <KPI label="Tham gia" value={`${cls.attendance}%`} icon={<TrendingUp className="h-3.5 w-3.5" />} />
+          <div className="flex flex-col items-stretch gap-3 sm:items-end">
+            <button
+              onClick={() => setShowLiveDialog(true)}
+              className="inline-flex items-center justify-center gap-2 self-stretch rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-soft hover:opacity-90 sm:self-end"
+            >
+              <CalendarPlus className="h-3.5 w-3.5" /> Đặt lịch buổi học trực tuyến
+            </button>
+            <div className="grid grid-cols-4 gap-2">
+              <KPI label="Sĩ số" value={members.length || cls.studentCount} icon={<Users className="h-3.5 w-3.5" />} />
+              <KPI label="Tiến độ" value={`${cls.avgProgress}%`} />
+              <KPI label="Điểm TB" value={cls.avgScore} />
+              <KPI label="Tham gia" value={`${cls.attendance}%`} icon={<TrendingUp className="h-3.5 w-3.5" />} />
+            </div>
           </div>
         </div>
 
