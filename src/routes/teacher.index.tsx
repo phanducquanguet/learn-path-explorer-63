@@ -13,10 +13,8 @@ import {
   ClipboardCheck,
   AlertTriangle,
   Video,
-  CalendarClock,
   Mail,
   Search,
-  CheckCircle2,
   Crown,
   UserCog,
 } from "lucide-react";
