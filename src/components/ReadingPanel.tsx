@@ -1238,13 +1238,15 @@ function AudioChip({
           <span className="text-[10px] text-neutral-500">{track.durationLabel}</span>
         </span>
       )}
-      <button
-        onClick={onTakeNote}
-        className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-semibold text-neutral-700 ring-1 ring-black/5 hover:bg-white"
-        title="Take note for this audio"
-      >
-        <NotebookPen className="h-3 w-3" /> Note
-      </button>
+      {onTakeNote && (
+        <button
+          onClick={onTakeNote}
+          className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-semibold text-neutral-700 ring-1 ring-black/5 hover:bg-white"
+          title="Take note for this audio"
+        >
+          <NotebookPen className="h-3 w-3" /> Note
+        </button>
+      )}
     </div>
   );
 }
