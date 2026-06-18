@@ -24,18 +24,30 @@ import { QuizPanel } from "@/components/QuizPanel";
 import { ReadingPanel } from "@/components/ReadingPanel";
 import { VideoPanel } from "@/components/VideoPanel";
 
+type ClassSummary = {
+  id: string;
+  name: string;
+  studentCount: number;
+  avgProgress: number;
+  avgScore: number;
+  attendance: number;
+  schedule: string;
+  role: "primary" | "assistant";
+};
+
 type Props = {
   course: Course;
   level: { code: string; name: string; hue: number };
+  classesSummary?: ClassSummary[];
 };
 
-export function CourseContentViewer({ course, level }: Props) {
+export function CourseContentViewer({ course, level, classesSummary = [] }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
-    intro: true,
+    overview: true,
     [course.units[0]?.id]: true,
   });
-  const [activeUnitId, setActiveUnitId] = useState<string | null>(null);
+  const [activeUnitId, setActiveUnitId] = useState<string | null>("__overview");
   const [activeActivity, setActiveActivity] = useState<{
     type: Activity["type"];
     activity: Activity;
