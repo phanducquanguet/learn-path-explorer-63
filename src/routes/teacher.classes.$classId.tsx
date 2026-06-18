@@ -1395,3 +1395,151 @@ function CourseDetailDialog({
     </Dialog>
   );
 }
+
+/* --------------- Quick schedule live session dialog --------------- */
+function QuickLiveDialog({
+  open,
+  onOpenChange,
+  className,
+  classCode,
+  onCreate,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  className: string;
+  classCode: string;
+  onCreate: (s: QuickLiveSession) => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [topic, setTopic] = useState("");
+  const [startAt, setStartAt] = useState("");
+  const [durationMin, setDurationMin] = useState(60);
+  const [autoRecord, setAutoRecord] = useState(true);
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur"
+      onClick={() => onOpenChange(false)}
+    >
+      <div
+        className="w-full max-w-lg rounded-2xl bg-card p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">
+              Đặt lịch buổi học trực tuyến
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Lớp <span className="font-medium text-foreground">{className}</span> · mã{" "}
+              <span className="font-mono">{classCode}</span>
+            </p>
+          </div>
+          <button
+            onClick={() => onOpenChange(false)}
+            className="rounded-full p-1 text-muted-foreground hover:bg-muted"
+            aria-label="Đóng"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <form
+          className="mt-5 space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!title.trim() || !startAt) return;
+            onCreate({
+              id: `qls-${Date.now()}`,
+              title: title.trim(),
+              topic: topic.trim() || undefined,
+              startAt: new Date(startAt).toISOString(),
+              durationMin,
+              autoRecord,
+            });
+            setTitle("");
+            setTopic("");
+            setStartAt("");
+            setDurationMin(60);
+            setAutoRecord(true);
+          }}
+        >
+          <div>
+            <label className="mb-1 block text-xs font-medium text-foreground">
+              Tiêu đề buổi học
+            </label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              placeholder="VD: Ôn tập Unit 4 — Speaking"
+              className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-foreground">
+                Bắt đầu
+              </label>
+              <input
+                type="datetime-local"
+                value={startAt}
+                onChange={(e) => setStartAt(e.target.value)}
+                required
+                className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-foreground">
+                Thời lượng (phút)
+              </label>
+              <input
+                type="number"
+                min={15}
+                step={5}
+                value={durationMin}
+                onChange={(e) => setDurationMin(Number(e.target.value) || 60)}
+                className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-foreground">
+              Chủ đề / Nội dung
+            </label>
+            <textarea
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="Mô tả ngắn nội dung buổi học..."
+              className="block min-h-[80px] w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={autoRecord}
+              onChange={(e) => setAutoRecord(e.target.checked)}
+            />{" "}
+            Tự động ghi hình buổi học
+          </label>
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="rounded-full px-4 py-2 text-sm text-muted-foreground hover:bg-muted"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+            >
+              <CalendarPlus className="h-4 w-4" /> Tạo buổi học
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
