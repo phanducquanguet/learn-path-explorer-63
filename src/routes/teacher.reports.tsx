@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { classes, students } from "@/lib/teacher-data";
+import { levels } from "@/lib/lms-data";
 import {
   BarChart3,
   Sparkles,
