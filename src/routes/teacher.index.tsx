@@ -341,10 +341,6 @@ function TeacherOverview() {
 }
 
 function ClassCard({ cls, riskCount }: { cls: (typeof classes)[number]; riskCount: number }) {
-  const max = Math.max(...cls.weeklyMinutes, 1);
-  const pts = cls.weeklyMinutes
-    .map((v, i) => `${(i / (cls.weeklyMinutes.length - 1)) * 100},${100 - (v / max) * 100}`)
-    .join(" ");
   const isPrimary = cls.role === "primary";
 
   return (
