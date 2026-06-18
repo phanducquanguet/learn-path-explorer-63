@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { TopNav } from "@/components/TopNav";
 import { classes, students, recentActivity, teacherProfile } from "@/lib/teacher-data";
@@ -14,7 +14,6 @@ import {
   AlertTriangle,
   Video,
   Mail,
-  Search,
   Crown,
   UserCog,
 } from "lucide-react";
@@ -29,26 +28,14 @@ export const Route = createFileRoute("/teacher/")({
   component: TeacherOverview,
 });
 
-type RoleFilter = "all" | "primary" | "assistant";
-
 function avgOf(scoresByUnit: { score: number }[]) {
   if (!scoresByUnit.length) return 0;
   return Math.round(scoresByUnit.reduce((a, b) => a + b.score, 0) / scoresByUnit.length);
 }
 
 function TeacherOverview() {
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
-  const [query, setQuery] = useState("");
-
-  const filteredClasses = useMemo(
-    () => classes.filter((c) => roleFilter === "all" || c.role === roleFilter),
-    [roleFilter],
-  );
-  const classIds = useMemo(() => new Set(filteredClasses.map((c) => c.id)), [filteredClasses]);
-  const scopedStudents = useMemo(
-    () => students.filter((s) => classIds.has(s.classId)),
-    [classIds],
-  );
+  const filteredClasses = classes;
+  const scopedStudents = students;
 
   const totalStudents = scopedStudents.length;
   const avgScore = scopedStudents.length
@@ -73,21 +60,13 @@ function TeacherOverview() {
     [scopedStudents],
   );
 
-  const searched = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [] as typeof scopedStudents;
-    return scopedStudents
-      .filter((s) => s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q))
-      .slice(0, 8);
-  }, [query, scopedStudents]);
-
   const primaryCount = classes.filter((c) => c.role === "primary").length;
   const assistantCount = classes.filter((c) => c.role === "assistant").length;
 
   const stats = [
     {
       icon: GraduationCap,
-      label: roleFilter === "assistant" ? "Lớp trợ giảng" : roleFilter === "primary" ? "Lớp chủ nhiệm" : "Lớp đang theo",
+      label: "Lớp đang theo",
       value: filteredClasses.length,
       hint: `${primaryCount} chủ nhiệm · ${assistantCount} trợ giảng`,
       tint: "from-violet-500 to-indigo-600",
@@ -154,64 +133,6 @@ function TeacherOverview() {
           </div>
         </div>
 
-        {/* Role filter + quick search */}
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-2 pl-3">
-          <div className="inline-flex items-center gap-1 rounded-xl bg-muted/60 p-1">
-            {([
-              { id: "all", label: `Tất cả (${classes.length})`, icon: GraduationCap },
-              { id: "primary", label: `Chủ nhiệm (${primaryCount})`, icon: Crown },
-              { id: "assistant", label: `Trợ giảng (${assistantCount})`, icon: UserCog },
-            ] as { id: RoleFilter; label: string; icon: typeof Crown }[]).map((t) => {
-              const Icon = t.icon;
-              const active = roleFilter === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setRoleFilter(t.id)}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                    active
-                      ? "bg-background text-foreground shadow-soft"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" /> {t.label}
-                </button>
-              );
-            })}
-          </div>
-          <div className="relative w-full max-w-xs">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Tìm nhanh học viên theo tên hoặc email…"
-              className="w-full rounded-xl border border-border bg-background py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
-            />
-            {query && searched.length > 0 && (
-              <div className="absolute left-0 right-0 top-full z-10 mt-1 overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
-                {searched.map((s) => {
-                  const cls = classes.find((c) => c.id === s.classId);
-                  return (
-                    <Link
-                      key={s.id}
-                      to="/teacher/classes/$classId"
-                      params={{ classId: s.classId }}
-                      className="flex items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-muted"
-                      onClick={() => setQuery("")}
-                    >
-                      <div className="min-w-0">
-                        <div className="truncate font-medium text-foreground">{s.name}</div>
-                        <div className="truncate text-[11px] text-muted-foreground">{cls?.name}</div>
-                      </div>
-                      <span className="text-xs font-semibold text-foreground">{avgOf(s.scoresByUnit)}đ</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Stats */}
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
