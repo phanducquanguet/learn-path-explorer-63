@@ -48,12 +48,15 @@ export function VideoPanel({
   activity,
   hue,
   onClose,
+  audience = "student",
 }: {
   activity: Activity;
   hue: number;
   onClose: () => void;
+  audience?: "student" | "teacher";
 }) {
-  const [sideTab, setSideTab] = useState<SidebarTab>("notes");
+  const isTeacher = audience === "teacher";
+  const [sideTab, setSideTab] = useState<SidebarTab>(isTeacher ? "ai" : "notes");
   const [sideOpen, setSideOpen] = useState(true);
   const [playing, setPlaying] = useState(false);
 
@@ -249,16 +252,18 @@ export function VideoPanel({
                   </h2>
                   <p className="mt-1 text-sm text-muted-foreground">{lecture.subtitle}</p>
                 </div>
-                <button
-                  onClick={() => {
-                    setDraftScope({ id: "lecture", label: "Toàn bài giảng" });
-                    setSideTab("notes");
-                    setSideOpen(true);
-                  }}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-3 py-2 text-xs font-semibold text-background hover:opacity-90"
-                >
-                  <StickyNote className="h-3.5 w-3.5" /> Ghi chú
-                </button>
+                {!isTeacher && (
+                  <button
+                    onClick={() => {
+                      setDraftScope({ id: "lecture", label: "Toàn bài giảng" });
+                      setSideTab("notes");
+                      setSideOpen(true);
+                    }}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-3 py-2 text-xs font-semibold text-background hover:opacity-90"
+                  >
+                    <StickyNote className="h-3.5 w-3.5" /> Ghi chú
+                  </button>
+                )}
               </div>
             </div>
 
@@ -270,11 +275,13 @@ export function VideoPanel({
           <aside className="border-t lg:border-t-0 lg:border-l border-border/70 bg-surface flex flex-col max-h-[calc(100vh-12rem)]">
             <div className="flex border-b border-border/70 bg-surface-2/40">
               {(
-                [
-                  { id: "notes", label: "Ghi chú", icon: StickyNote },
-                  { id: "teacher", label: "Giáo viên", icon: GraduationCap },
-                  { id: "ai", label: "AI", icon: Bot },
-                ] as { id: SidebarTab; label: string; icon: typeof StickyNote }[]
+                (isTeacher
+                  ? [{ id: "ai", label: "AI", icon: Bot }]
+                  : [
+                      { id: "notes", label: "Ghi chú", icon: StickyNote },
+                      { id: "teacher", label: "Giáo viên", icon: GraduationCap },
+                      { id: "ai", label: "AI", icon: Bot },
+                    ]) as { id: SidebarTab; label: string; icon: typeof StickyNote }[]
               ).map((t) => {
                 const active = sideTab === t.id;
                 const Icon = t.icon;

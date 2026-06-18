@@ -287,11 +287,14 @@ export function ReadingPanel({
   activity,
   hue,
   onClose,
+  audience = "student",
 }: {
   activity: Activity;
   hue: number;
   onClose: () => void;
+  audience?: "student" | "teacher";
 }) {
+  const isTeacher = audience === "teacher";
   const [sideTab, setSideTab] = useState<SidebarTab>("tracks");
   const [sideOpen, setSideOpen] = useState(true);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -481,12 +484,17 @@ export function ReadingPanel({
           <aside className="border-t lg:border-t-0 lg:border-l border-border/70 bg-surface flex flex-col max-h-[calc(100vh-12rem)]">
             <div className="flex border-b border-border/70 bg-surface-2/40">
               {(
-                [
-                  { id: "tracks", label: "Tracks", icon: ListMusic },
-                  { id: "notes", label: "Ghi chú", icon: StickyNote },
-                  { id: "teacher", label: "Giáo viên", icon: GraduationCap },
-                  { id: "ai", label: "AI", icon: Bot },
-                ] as { id: SidebarTab; label: string; icon: typeof ListMusic }[]
+                (isTeacher
+                  ? [
+                      { id: "tracks", label: "Tracks", icon: ListMusic },
+                      { id: "ai", label: "AI", icon: Bot },
+                    ]
+                  : [
+                      { id: "tracks", label: "Tracks", icon: ListMusic },
+                      { id: "notes", label: "Ghi chú", icon: StickyNote },
+                      { id: "teacher", label: "Giáo viên", icon: GraduationCap },
+                      { id: "ai", label: "AI", icon: Bot },
+                    ]) as { id: SidebarTab; label: string; icon: typeof ListMusic }[]
               ).map((t) => {
                 const active = sideTab === t.id;
                 const Icon = t.icon;
