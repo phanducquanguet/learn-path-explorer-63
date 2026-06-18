@@ -80,7 +80,7 @@ function LiveIndexPage() {
                       <span className="inline-flex items-center gap-1 rounded-full bg-red-500 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-white">
                         <span className="h-1.5 w-1.5 rounded-full bg-white animate-pulse" /> Đang diễn ra
                       </span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-muted-foreground" suppressHydrationWarning>
                         Bắt đầu {relativeFromNow(s.startAt)}
                       </span>
                     </div>
@@ -138,7 +138,7 @@ function LiveIndexPage() {
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5">
+                  <span className="inline-flex items-center gap-1.5" suppressHydrationWarning>
                     <CalendarDays className="h-3.5 w-3.5" /> {formatStartAt(s.startAt)}
                   </span>
                   <span className="inline-flex items-center gap-1.5">
@@ -197,7 +197,7 @@ function LiveIndexPage() {
                       <Eye className="h-3 w-3" /> {r.views}
                     </span>
                   </div>
-                  <div className="text-[11px] text-muted-foreground">{formatStartAt(r.recordedAt)}</div>
+                  <div className="text-[11px] text-muted-foreground" suppressHydrationWarning>{formatStartAt(r.recordedAt)}</div>
                 </div>
               </Link>
             ))}

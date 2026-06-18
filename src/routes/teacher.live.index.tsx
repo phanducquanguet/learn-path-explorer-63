@@ -154,8 +154,8 @@ function TeacherLivePage() {
                       <span className="ml-2 text-xs text-muted-foreground">{s.classCode}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="text-foreground">{formatStartAt(s.startAt)}</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-foreground" suppressHydrationWarning>{formatStartAt(s.startAt)}</div>
+                      <div className="text-xs text-muted-foreground" suppressHydrationWarning>
                         {s.durationMin} phút · {relativeFromNow(s.startAt)}
                       </div>
                     </td>
@@ -206,7 +206,7 @@ function TeacherLivePage() {
                       <Eye className="h-3 w-3" /> {r.views} lượt xem
                     </span>
                   </div>
-                  <div className="text-[11px] text-muted-foreground">{formatStartAt(r.recordedAt)}</div>
+                  <div className="text-[11px] text-muted-foreground" suppressHydrationWarning>{formatStartAt(r.recordedAt)}</div>
                 </div>
               </div>
             ))}

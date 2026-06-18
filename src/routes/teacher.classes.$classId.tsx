@@ -30,6 +30,7 @@ import {
   ArrowLeft,
   BookOpen,
   Calendar,
+  CalendarPlus,
   Clock,
   Crown,
   HandHelping,
@@ -37,8 +38,21 @@ import {
   Search,
   TrendingUp,
   Users,
+  Video,
+  X,
+  ArrowUpRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatStartAt, relativeFromNow } from "@/lib/live-data";
+
+type QuickLiveSession = {
+  id: string;
+  title: string;
+  topic?: string;
+  startAt: string;
+  durationMin: number;
+  autoRecord: boolean;
+};
 
 /* ---------- Sub-skill định nghĩa (đồng bộ màn năng lực học viên) ---------- */
 const SUB_SKILLS: Record<"listening" | "reading" | "writing" | "speaking", string[]> = {
@@ -121,6 +135,8 @@ function ClassDetailPage() {
   const [tab, setTab] = useState<TabId>("overview");
   const [picked, setPicked] = useState<TeacherStudent | null>(null);
   const [pickedCourse, setPickedCourse] = useState<Course | null>(null);
+  const [liveSessionsLocal, setLiveSessionsLocal] = useState<QuickLiveSession[]>([]);
+  const [showLiveDialog, setShowLiveDialog] = useState(false);
 
 
   const members = useMemo(
@@ -133,6 +149,14 @@ function ClassDetailPage() {
   }, [cls.levelCode]);
 
   const isPrimary = cls.role === "primary";
+
+  const upcomingLive = useMemo(
+    () =>
+      [...liveSessionsLocal].sort(
+        (a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime(),
+      ),
+    [liveSessionsLocal],
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -183,11 +207,19 @@ function ClassDetailPage() {
               )}
             </div>
           </div>
-          <div className="grid grid-cols-4 gap-2">
-            <KPI label="Sĩ số" value={members.length || cls.studentCount} icon={<Users className="h-3.5 w-3.5" />} />
-            <KPI label="Tiến độ" value={`${cls.avgProgress}%`} />
-            <KPI label="Điểm TB" value={cls.avgScore} />
-            <KPI label="Tham gia" value={`${cls.attendance}%`} icon={<TrendingUp className="h-3.5 w-3.5" />} />
+          <div className="flex flex-col items-stretch gap-3 sm:items-end">
+            <button
+              onClick={() => setShowLiveDialog(true)}
+              className="inline-flex items-center justify-center gap-2 self-stretch rounded-full bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-soft hover:opacity-90 sm:self-end"
+            >
+              <CalendarPlus className="h-3.5 w-3.5" /> Đặt lịch buổi học trực tuyến
+            </button>
+            <div className="grid grid-cols-4 gap-2">
+              <KPI label="Sĩ số" value={members.length || cls.studentCount} icon={<Users className="h-3.5 w-3.5" />} />
+              <KPI label="Tiến độ" value={`${cls.avgProgress}%`} />
+              <KPI label="Điểm TB" value={cls.avgScore} />
+              <KPI label="Tham gia" value={`${cls.attendance}%`} icon={<TrendingUp className="h-3.5 w-3.5" />} />
+            </div>
           </div>
         </div>
 
@@ -211,7 +243,14 @@ function ClassDetailPage() {
 
         <div className="mt-6">
           {tab === "overview" && (
-            <OverviewTab cls={cls} members={members} courses={courses} onPickCourse={setPickedCourse} />
+            <OverviewTab
+              cls={cls}
+              members={members}
+              courses={courses}
+              onPickCourse={setPickedCourse}
+              upcomingLive={upcomingLive}
+              onOpenLiveDialog={() => setShowLiveDialog(true)}
+            />
           )}
           {tab === "courses" && <CoursesTab courses={courses} onPickCourse={setPickedCourse} />}
           {tab === "members" && <MembersTab members={members} onPickStudent={setPicked} />}
@@ -237,6 +276,16 @@ function ClassDetailPage() {
         }}
       />
 
+      <QuickLiveDialog
+        open={showLiveDialog}
+        onOpenChange={setShowLiveDialog}
+        className={cls.name}
+        classCode={cls.id}
+        onCreate={(s) => {
+          setLiveSessionsLocal((prev) => [...prev, s]);
+          setShowLiveDialog(false);
+        }}
+      />
     </div>
   );
 }
@@ -259,11 +308,15 @@ function OverviewTab({
   members,
   courses,
   onPickCourse,
+  upcomingLive,
+  onOpenLiveDialog,
 }: {
   cls: (typeof classes)[number];
   members: TeacherStudent[];
   courses: Course[];
   onPickCourse: (c: Course) => void;
+  upcomingLive: QuickLiveSession[];
+  onOpenLiveDialog: () => void;
 }) {
   // Phân loại học viên theo mức độ hoạt động (dựa trên điểm TB)
   const engagement = useMemo(() => {
@@ -379,6 +432,60 @@ function OverviewTab({
         </div>
       </div>
 
+
+      {/* Buổi học trực tuyến sắp tới */}
+      <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft lg:col-span-3">
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <div>
+            <div className="text-sm font-semibold">Buổi học trực tuyến sắp tới</div>
+            <div className="text-[11px] text-muted-foreground">
+              Đặt lịch nhanh các buổi live cho học viên trong lớp này.
+            </div>
+          </div>
+          <button
+            onClick={onOpenLiveDialog}
+            className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted"
+          >
+            <CalendarPlus className="h-3.5 w-3.5" /> Đặt lịch
+          </button>
+        </div>
+        {upcomingLive.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border bg-card/50 p-6 text-center">
+            <Video className="mx-auto mb-2 h-6 w-6 text-muted-foreground" />
+            <p className="text-xs text-muted-foreground">
+              Chưa có buổi học trực tuyến nào. Bấm “Đặt lịch” để tạo nhanh cho cả lớp.
+            </p>
+          </div>
+        ) : (
+          <ul className="divide-y divide-border/60 overflow-hidden rounded-xl border border-border/60 bg-card">
+            {upcomingLive.map((s) => (
+              <li key={s.id} className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                    <Video className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-semibold text-foreground">{s.title}</div>
+                    <div className="text-[11px] text-muted-foreground" suppressHydrationWarning>
+                      {formatStartAt(s.startAt)} · {s.durationMin} phút · {relativeFromNow(s.startAt)}
+                      {s.autoRecord ? " · Tự động ghi hình" : ""}
+                    </div>
+                    {s.topic && (
+                      <div className="mt-0.5 text-[11px] text-muted-foreground line-clamp-1">{s.topic}</div>
+                    )}
+                  </div>
+                </div>
+                <Link
+                  to="/teacher/live"
+                  className="inline-flex items-center gap-1 self-start rounded-full bg-primary px-3 py-1.5 text-[11px] font-semibold text-primary-foreground hover:opacity-90 sm:self-auto"
+                >
+                  Quản lý <ArrowUpRight className="h-3 w-3" />
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
 
       <div className="rounded-2xl border border-border bg-surface p-5 shadow-soft lg:col-span-3">
         <div className="mb-3 flex items-center justify-between">
@@ -1286,5 +1393,153 @@ function CourseDetailDialog({
         </div>
       </DialogContent>
     </Dialog>
+  );
+}
+
+/* --------------- Quick schedule live session dialog --------------- */
+function QuickLiveDialog({
+  open,
+  onOpenChange,
+  className,
+  classCode,
+  onCreate,
+}: {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  className: string;
+  classCode: string;
+  onCreate: (s: QuickLiveSession) => void;
+}) {
+  const [title, setTitle] = useState("");
+  const [topic, setTopic] = useState("");
+  const [startAt, setStartAt] = useState("");
+  const [durationMin, setDurationMin] = useState(60);
+  const [autoRecord, setAutoRecord] = useState(true);
+
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur"
+      onClick={() => onOpenChange(false)}
+    >
+      <div
+        className="w-full max-w-lg rounded-2xl bg-card p-6 shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">
+              Đặt lịch buổi học trực tuyến
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Lớp <span className="font-medium text-foreground">{className}</span> · mã{" "}
+              <span className="font-mono">{classCode}</span>
+            </p>
+          </div>
+          <button
+            onClick={() => onOpenChange(false)}
+            className="rounded-full p-1 text-muted-foreground hover:bg-muted"
+            aria-label="Đóng"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <form
+          className="mt-5 space-y-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!title.trim() || !startAt) return;
+            onCreate({
+              id: `qls-${Date.now()}`,
+              title: title.trim(),
+              topic: topic.trim() || undefined,
+              startAt: new Date(startAt).toISOString(),
+              durationMin,
+              autoRecord,
+            });
+            setTitle("");
+            setTopic("");
+            setStartAt("");
+            setDurationMin(60);
+            setAutoRecord(true);
+          }}
+        >
+          <div>
+            <label className="mb-1 block text-xs font-medium text-foreground">
+              Tiêu đề buổi học
+            </label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+              placeholder="VD: Ôn tập Unit 4 — Speaking"
+              className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="mb-1 block text-xs font-medium text-foreground">
+                Bắt đầu
+              </label>
+              <input
+                type="datetime-local"
+                value={startAt}
+                onChange={(e) => setStartAt(e.target.value)}
+                required
+                className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-foreground">
+                Thời lượng (phút)
+              </label>
+              <input
+                type="number"
+                min={15}
+                step={5}
+                value={durationMin}
+                onChange={(e) => setDurationMin(Number(e.target.value) || 60)}
+                className="block w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="mb-1 block text-xs font-medium text-foreground">
+              Chủ đề / Nội dung
+            </label>
+            <textarea
+              value={topic}
+              onChange={(e) => setTopic(e.target.value)}
+              placeholder="Mô tả ngắn nội dung buổi học..."
+              className="block min-h-[80px] w-full rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
+          <label className="flex items-center gap-2 text-sm text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={autoRecord}
+              onChange={(e) => setAutoRecord(e.target.checked)}
+            />{" "}
+            Tự động ghi hình buổi học
+          </label>
+          <div className="flex justify-end gap-2 pt-2">
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="rounded-full px-4 py-2 text-sm text-muted-foreground hover:bg-muted"
+            >
+              Hủy
+            </button>
+            <button
+              type="submit"
+              className="inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90"
+            >
+              <CalendarPlus className="h-4 w-4" /> Tạo buổi học
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
   );
 }
