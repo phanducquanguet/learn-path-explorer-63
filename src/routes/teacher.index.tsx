@@ -154,64 +154,6 @@ function TeacherOverview() {
           </div>
         </div>
 
-        {/* Role filter + quick search */}
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border bg-surface p-2 pl-3">
-          <div className="inline-flex items-center gap-1 rounded-xl bg-muted/60 p-1">
-            {([
-              { id: "all", label: `Tất cả (${classes.length})`, icon: GraduationCap },
-              { id: "primary", label: `Chủ nhiệm (${primaryCount})`, icon: Crown },
-              { id: "assistant", label: `Trợ giảng (${assistantCount})`, icon: UserCog },
-            ] as { id: RoleFilter; label: string; icon: typeof Crown }[]).map((t) => {
-              const Icon = t.icon;
-              const active = roleFilter === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setRoleFilter(t.id)}
-                  className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
-                    active
-                      ? "bg-background text-foreground shadow-soft"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Icon className="h-3.5 w-3.5" /> {t.label}
-                </button>
-              );
-            })}
-          </div>
-          <div className="relative w-full max-w-xs">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Tìm nhanh học viên theo tên hoặc email…"
-              className="w-full rounded-xl border border-border bg-background py-2 pl-9 pr-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40"
-            />
-            {query && searched.length > 0 && (
-              <div className="absolute left-0 right-0 top-full z-10 mt-1 overflow-hidden rounded-xl border border-border bg-surface shadow-elevated">
-                {searched.map((s) => {
-                  const cls = classes.find((c) => c.id === s.classId);
-                  return (
-                    <Link
-                      key={s.id}
-                      to="/teacher/classes/$classId"
-                      params={{ classId: s.classId }}
-                      className="flex items-center justify-between gap-2 px-3 py-2 text-sm hover:bg-muted"
-                      onClick={() => setQuery("")}
-                    >
-                      <div className="min-w-0">
-                        <div className="truncate font-medium text-foreground">{s.name}</div>
-                        <div className="truncate text-[11px] text-muted-foreground">{cls?.name}</div>
-                      </div>
-                      <span className="text-xs font-semibold text-foreground">{avgOf(s.scoresByUnit)}đ</span>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* Stats */}
         <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
