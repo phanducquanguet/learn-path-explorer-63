@@ -287,11 +287,14 @@ export function ReadingPanel({
   activity,
   hue,
   onClose,
+  audience = "student",
 }: {
   activity: Activity;
   hue: number;
   onClose: () => void;
+  audience?: "student" | "teacher";
 }) {
+  const isTeacher = audience === "teacher";
   const [sideTab, setSideTab] = useState<SidebarTab>("tracks");
   const [sideOpen, setSideOpen] = useState(true);
   const [notes, setNotes] = useState<Note[]>([]);
@@ -465,7 +468,7 @@ export function ReadingPanel({
                 page={page}
                 playingId={playingId}
                 onTogglePlay={(id) => setPlayingId((cur) => (cur === id ? null : id))}
-                onTakeNote={(scopeId, scopeLabel) => {
+                onTakeNote={isTeacher ? undefined : (scopeId, scopeLabel) => {
                   setDraftScope({ id: scopeId, label: scopeLabel });
                   setSideTab("notes");
                   setSideOpen(true);
@@ -481,12 +484,17 @@ export function ReadingPanel({
           <aside className="border-t lg:border-t-0 lg:border-l border-border/70 bg-surface flex flex-col max-h-[calc(100vh-12rem)]">
             <div className="flex border-b border-border/70 bg-surface-2/40">
               {(
-                [
-                  { id: "tracks", label: "Tracks", icon: ListMusic },
-                  { id: "notes", label: "Ghi chú", icon: StickyNote },
-                  { id: "teacher", label: "Giáo viên", icon: GraduationCap },
-                  { id: "ai", label: "AI", icon: Bot },
-                ] as { id: SidebarTab; label: string; icon: typeof ListMusic }[]
+                (isTeacher
+                  ? [
+                      { id: "tracks", label: "Tracks", icon: ListMusic },
+                      { id: "ai", label: "AI", icon: Bot },
+                    ]
+                  : [
+                      { id: "tracks", label: "Tracks", icon: ListMusic },
+                      { id: "notes", label: "Ghi chú", icon: StickyNote },
+                      { id: "teacher", label: "Giáo viên", icon: GraduationCap },
+                      { id: "ai", label: "AI", icon: Bot },
+                    ]) as { id: SidebarTab; label: string; icon: typeof ListMusic }[]
               ).map((t) => {
                 const active = sideTab === t.id;
                 const Icon = t.icon;
@@ -1049,7 +1057,7 @@ function PdfPage({
   page: Page;
   playingId: string | null;
   onTogglePlay: (id: string) => void;
-  onTakeNote: (scopeId: string, scopeLabel: string) => void;
+  onTakeNote?: (scopeId: string, scopeLabel: string) => void;
 }) {
   return (
     <article className="relative bg-white rounded-xl shadow-[0_8px_30px_-12px_rgba(0,0,0,0.18)] ring-1 ring-black/5 overflow-hidden">
@@ -1102,7 +1110,7 @@ function SectionView({
   section: Section;
   playingId: string | null;
   onTogglePlay: (id: string) => void;
-  onTakeNote: (scopeId: string, scopeLabel: string) => void;
+  onTakeNote?: (scopeId: string, scopeLabel: string) => void;
 }) {
   const a = ACCENTS[section.accent];
   return (
@@ -1132,11 +1140,11 @@ function SectionView({
             accent={section.accent}
             playing={!!task.audio && playingId === task.audio.id}
             onTogglePlay={() => task.audio && onTogglePlay(task.audio.id)}
-            onTakeNote={() =>
+            onTakeNote={onTakeNote ? () =>
               task.audio
                 ? onTakeNote(task.audio.id, `${task.audio.code} ${task.audio.label}`)
                 : onTakeNote(task.id, `Task ${section.number}${task.letter}`)
-            }
+              : undefined}
           />
         ))}
       </div>
@@ -1155,7 +1163,7 @@ function TaskView({
   accent: Section["accent"];
   playing: boolean;
   onTogglePlay: () => void;
-  onTakeNote: () => void;
+  onTakeNote?: () => void;
 }) {
   const a = ACCENTS[accent];
   return (
@@ -1192,7 +1200,7 @@ function AudioChip({
   accent: Section["accent"];
   playing: boolean;
   onToggle: () => void;
-  onTakeNote: () => void;
+  onTakeNote?: () => void;
 }) {
   const a = ACCENTS[accent];
   const [progress, setProgress] = useState(0);
@@ -1230,13 +1238,15 @@ function AudioChip({
           <span className="text-[10px] text-neutral-500">{track.durationLabel}</span>
         </span>
       )}
-      <button
-        onClick={onTakeNote}
-        className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-semibold text-neutral-700 ring-1 ring-black/5 hover:bg-white"
-        title="Take note for this audio"
-      >
-        <NotebookPen className="h-3 w-3" /> Note
-      </button>
+      {onTakeNote && (
+        <button
+          onClick={onTakeNote}
+          className="inline-flex items-center gap-1 rounded-full bg-white/80 px-2 py-0.5 text-[10px] font-semibold text-neutral-700 ring-1 ring-black/5 hover:bg-white"
+          title="Take note for this audio"
+        >
+          <NotebookPen className="h-3 w-3" /> Note
+        </button>
+      )}
     </div>
   );
 }

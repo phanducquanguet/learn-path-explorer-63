@@ -194,7 +194,22 @@ function TeacherCourseDetailPage() {
         </div>
 
         <div className="mt-6">
-          {tab === "content" && <CourseContentViewer course={course} level={level} />}
+          {tab === "content" && (
+            <CourseContentViewer
+              course={course}
+              level={level}
+              classesSummary={courseClasses.map((c) => ({
+                id: c.id,
+                name: c.name,
+                studentCount: c.studentCount,
+                avgProgress: c.avgProgress,
+                avgScore: c.avgScore,
+                attendance: c.attendance,
+                schedule: c.schedule,
+                role: c.role,
+              }))}
+            />
+          )}
           {tab === "students" && (
             <StudentsTab
               students={filteredStudents}
