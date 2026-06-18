@@ -24,6 +24,7 @@ import {
   XCircle,
   Upload,
   Eye,
+  Video,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRole, type Role } from "@/contexts/RoleContext";
