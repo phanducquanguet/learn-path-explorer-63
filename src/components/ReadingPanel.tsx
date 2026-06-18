@@ -1140,11 +1140,11 @@ function SectionView({
             accent={section.accent}
             playing={!!task.audio && playingId === task.audio.id}
             onTogglePlay={() => task.audio && onTogglePlay(task.audio.id)}
-            onTakeNote={() =>
+            onTakeNote={onTakeNote ? () =>
               task.audio
                 ? onTakeNote(task.audio.id, `${task.audio.code} ${task.audio.label}`)
                 : onTakeNote(task.id, `Task ${section.number}${task.letter}`)
-            }
+              : undefined}
           />
         ))}
       </div>
@@ -1163,7 +1163,7 @@ function TaskView({
   accent: Section["accent"];
   playing: boolean;
   onTogglePlay: () => void;
-  onTakeNote: () => void;
+  onTakeNote?: () => void;
 }) {
   const a = ACCENTS[accent];
   return (
