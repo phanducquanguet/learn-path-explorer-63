@@ -389,44 +389,10 @@ function ClassCard({ cls, riskCount }: { cls: (typeof classes)[number]; riskCoun
         <Stat label="Cần hỗ trợ" value={riskCount} tone={riskCount > 0 ? "warn" : "default"} />
       </div>
 
-      <div className="mt-4">
-        <div className="flex items-center justify-between text-[11px] text-muted-foreground">
-          <span>Hoạt động 7 ngày</span>
-          <span className="inline-flex items-center gap-1 text-emerald-600">
-            <TrendingUp className="h-3 w-3" /> {cls.attendance}% tham gia
-          </span>
-        </div>
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none" className="mt-1 h-10 w-full">
-          <polyline
-            fill="none"
-            stroke="oklch(0.55 0.18 260)"
-            strokeWidth="2"
-            vectorEffect="non-scaling-stroke"
-            points={pts}
-          />
-        </svg>
-      </div>
-
-      <div className="mt-4 flex flex-wrap items-center gap-1.5">
-        <Link
-          to="/teacher/classes/$classId"
-          params={{ classId: cls.id }}
-          className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold text-foreground hover:bg-muted"
-        >
-          <Users className="h-3 w-3" /> Học viên
-        </Link>
-        <Link
-          to="/teacher/live"
-          className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold text-foreground hover:bg-muted"
-        >
-          <CalendarClock className="h-3 w-3" /> Đặt lịch
-        </Link>
-        <Link
-          to="/admin/exams"
-          className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-[11px] font-semibold text-foreground hover:bg-muted"
-        >
-          <CheckCircle2 className="h-3 w-3" /> Giao bài
-        </Link>
+      <div className="mt-4 flex items-center justify-end text-[11px]">
+        <span className="inline-flex items-center gap-1 text-emerald-600">
+          <TrendingUp className="h-3 w-3" /> {cls.attendance}% tham gia
+        </span>
       </div>
     </div>
   );
