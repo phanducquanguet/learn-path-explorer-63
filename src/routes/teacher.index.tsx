@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { TopNav } from "@/components/TopNav";
 import { classes, students, recentActivity, teacherProfile } from "@/lib/teacher-data";
@@ -14,7 +14,6 @@ import {
   AlertTriangle,
   Video,
   Mail,
-  Search,
   Crown,
   UserCog,
 } from "lucide-react";
@@ -29,26 +28,14 @@ export const Route = createFileRoute("/teacher/")({
   component: TeacherOverview,
 });
 
-type RoleFilter = "all" | "primary" | "assistant";
-
 function avgOf(scoresByUnit: { score: number }[]) {
   if (!scoresByUnit.length) return 0;
   return Math.round(scoresByUnit.reduce((a, b) => a + b.score, 0) / scoresByUnit.length);
 }
 
 function TeacherOverview() {
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
-  const [query, setQuery] = useState("");
-
-  const filteredClasses = useMemo(
-    () => classes.filter((c) => roleFilter === "all" || c.role === roleFilter),
-    [roleFilter],
-  );
-  const classIds = useMemo(() => new Set(filteredClasses.map((c) => c.id)), [filteredClasses]);
-  const scopedStudents = useMemo(
-    () => students.filter((s) => classIds.has(s.classId)),
-    [classIds],
-  );
+  const filteredClasses = classes;
+  const scopedStudents = students;
 
   const totalStudents = scopedStudents.length;
   const avgScore = scopedStudents.length
@@ -73,21 +60,13 @@ function TeacherOverview() {
     [scopedStudents],
   );
 
-  const searched = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return [] as typeof scopedStudents;
-    return scopedStudents
-      .filter((s) => s.name.toLowerCase().includes(q) || s.email.toLowerCase().includes(q))
-      .slice(0, 8);
-  }, [query, scopedStudents]);
-
   const primaryCount = classes.filter((c) => c.role === "primary").length;
   const assistantCount = classes.filter((c) => c.role === "assistant").length;
 
   const stats = [
     {
       icon: GraduationCap,
-      label: roleFilter === "assistant" ? "Lớp trợ giảng" : roleFilter === "primary" ? "Lớp chủ nhiệm" : "Lớp đang theo",
+      label: "Lớp đang theo",
       value: filteredClasses.length,
       hint: `${primaryCount} chủ nhiệm · ${assistantCount} trợ giảng`,
       tint: "from-violet-500 to-indigo-600",
