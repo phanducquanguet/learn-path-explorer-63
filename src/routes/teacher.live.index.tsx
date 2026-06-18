@@ -206,7 +206,7 @@ function TeacherLivePage() {
                       <Eye className="h-3 w-3" /> {r.views} lượt xem
                     </span>
                   </div>
-                  <div className="text-[11px] text-muted-foreground">{formatStartAt(r.recordedAt)}</div>
+                  <div className="text-[11px] text-muted-foreground" suppressHydrationWarning>{formatStartAt(r.recordedAt)}</div>
                 </div>
               </div>
             ))}
