@@ -284,21 +284,27 @@ function ReportsPage() {
           </Card>
 
           <Card
-            title="Điểm trung bình & Tỉ lệ đạt theo Unit"
-            subtitle="Theo dõi mức độ thành thạo của học viên qua từng Unit"
+            title="Tiến độ & Điểm TB theo khóa học"
+            subtitle="Mỗi lớp có nhiều khóa với chương trình riêng — theo dõi tổng thể tiến độ và điểm trung bình"
             wide
           >
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={unitProgress}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis dataKey="unit" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} domain={[0, 100]} unit="%" />
-                <Tooltip />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Bar dataKey="score" name="Điểm TB" fill="oklch(0.55 0.2 280)" radius={[6, 6, 0, 0]} />
-                <Bar dataKey="passRate" name="Tỉ lệ đạt (≥60)" fill="oklch(0.7 0.15 155)" radius={[6, 6, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {courseProgress.length === 0 ? (
+              <div className="grid h-[260px] place-items-center text-sm text-muted-foreground">
+                Chưa có khóa học gắn với lớp đã chọn.
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height={Math.max(280, courseProgress.length * 38)}>
+                <BarChart data={courseProgress} layout="vertical" margin={{ left: 8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                  <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
+                  <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={210} />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  <Bar dataKey="progress" name="Tiến độ" fill="oklch(0.55 0.2 280)" radius={[0, 6, 6, 0]} />
+                  <Bar dataKey="score" name="Điểm TB" fill="oklch(0.7 0.15 155)" radius={[0, 6, 6, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </Card>
         </div>
 
