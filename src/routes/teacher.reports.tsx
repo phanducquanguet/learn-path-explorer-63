@@ -102,26 +102,49 @@ function ReportsPage() {
     return row;
   });
 
-  // Avg score per Unit + pass-rate across selected students
-  const unitProgress = useMemo(() => {
-    const unitMap = new Map<string, { sum: number; n: number; pass: number }>();
-    for (const s of studentsInScope) {
-      for (const u of s.scoresByUnit) {
-        const cur = unitMap.get(u.unit) ?? { sum: 0, n: 0, pass: 0 };
-        cur.sum += u.score;
-        cur.n += 1;
-        if (u.score >= 60) cur.pass += 1;
-        unitMap.set(u.unit, cur);
+  // Tiến độ trung bình theo khóa học (mỗi lớp có nhiều khóa, mỗi khóa có chương trình riêng)
+  const courseProgress = useMemo(() => {
+    const rows: { name: string; level: string; progress: number; score: number; learners: number }[] = [];
+    const seen = new Set<string>();
+    for (const cls of selectedClasses) {
+      const lv = levels.find((l) => l.code === cls.levelCode);
+      if (!lv) continue;
+      const clsStudents = studentsInScope.filter((s) => s.classId === cls.id);
+      for (const c of lv.courses) {
+        const key = `${cls.id}::${c.id}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const avgScore = clsStudents.length
+          ? Math.round(clsStudents.reduce((a, s) => a + studentAvg(s), 0) / clsStudents.length)
+          : 0;
+        // Mỗi học viên có tiến độ khóa riêng — lệch nhẹ quanh course.progress theo điểm TB
+        const progress = clsStudents.length
+          ? Math.max(
+              0,
+              Math.min(
+                100,
+                Math.round(
+                  clsStudents.reduce((a, s) => {
+                    const bias = (studentAvg(s) - 70) * 0.4;
+                    return a + Math.max(0, Math.min(100, c.progress + bias));
+                  }, 0) / clsStudents.length,
+                ),
+              ),
+            )
+          : c.progress;
+        const short = c.title.length > 26 ? c.title.slice(0, 24) + "…" : c.title;
+        rows.push({
+          name: `${cls.levelCode} · ${short}`,
+          level: cls.levelCode,
+          progress,
+          score: avgScore,
+          learners: clsStudents.length,
+        });
       }
     }
-    return Array.from(unitMap.entries())
-      .map(([unit, v]) => ({
-        unit,
-        score: Math.round(v.sum / Math.max(1, v.n)),
-        passRate: Math.round((v.pass / Math.max(1, v.n)) * 100),
-      }))
-      .sort((a, b) => a.unit.localeCompare(b.unit));
-  }, [studentsInScope]);
+    return rows.sort((a, b) => b.progress - a.progress).slice(0, 10);
+  }, [selectedClasses, studentsInScope]);
+
 
   // Top học viên & học viên cần quan tâm
   const ranked = useMemo(
