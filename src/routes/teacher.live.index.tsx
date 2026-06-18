@@ -154,8 +154,8 @@ function TeacherLivePage() {
                       <span className="ml-2 text-xs text-muted-foreground">{s.classCode}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="text-foreground">{formatStartAt(s.startAt)}</div>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-foreground" suppressHydrationWarning>{formatStartAt(s.startAt)}</div>
+                      <div className="text-xs text-muted-foreground" suppressHydrationWarning>
                         {s.durationMin} phút · {relativeFromNow(s.startAt)}
                       </div>
                     </td>
