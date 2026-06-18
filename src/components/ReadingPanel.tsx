@@ -1057,7 +1057,7 @@ function PdfPage({
   page: Page;
   playingId: string | null;
   onTogglePlay: (id: string) => void;
-  onTakeNote: (scopeId: string, scopeLabel: string) => void;
+  onTakeNote?: (scopeId: string, scopeLabel: string) => void;
 }) {
   return (
     <article className="relative bg-white rounded-xl shadow-[0_8px_30px_-12px_rgba(0,0,0,0.18)] ring-1 ring-black/5 overflow-hidden">
@@ -1110,7 +1110,7 @@ function SectionView({
   section: Section;
   playingId: string | null;
   onTogglePlay: (id: string) => void;
-  onTakeNote: (scopeId: string, scopeLabel: string) => void;
+  onTakeNote?: (scopeId: string, scopeLabel: string) => void;
 }) {
   const a = ACCENTS[section.accent];
   return (
