@@ -487,6 +487,15 @@ export function ManualQuestionEditor({
                         className={cn(inputClass, "mt-1 font-normal text-foreground")}
                       />
                     </label>
+                    <label className="block text-[11px] font-semibold text-muted-foreground">
+                      Dàn ý gợi ý (giáo viên dựa vào để chấm)
+                      <textarea
+                        value={c.outline ?? ""}
+                        onChange={(e) => updateAt(idx, { outline: e.target.value })}
+                        rows={4}
+                        placeholder={"VD:\n1. Mở bài...\n2. Thân bài: luận điểm 1, 2...\n3. Kết bài..."}
+                        className={cn(inputClass, "mt-1 font-normal text-foreground")}
+                      />
                     <div>
                       <div className="mb-1.5 flex items-center justify-between">
                         <span className="text-[11px] font-semibold text-muted-foreground">
