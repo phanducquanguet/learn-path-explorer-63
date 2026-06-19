@@ -449,7 +449,7 @@ function NewTestPage() {
                                 <th className="px-3 py-2 text-center">Độ khó</th>
                                 <th className="px-3 py-2 text-left">Tags</th>
                                 <th className="px-3 py-2 text-center">Số câu</th>
-                                <th className="px-3 py-2 text-center">Thời gian (phút)</th>
+                                
                                 <th className="px-3 py-2 text-center">Có sẵn</th>
                                 <th className="px-3 py-2"></th>
                               </tr>
