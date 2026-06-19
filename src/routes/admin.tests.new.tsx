@@ -364,198 +364,276 @@ function NewTestPage() {
           )}
 
           {step === 2 && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                Thêm các dòng cấu trúc đề. Mỗi dòng có thể chỉ định kỹ năng, cấp độ và độ khó riêng — cho phép cùng một kỹ năng xuất hiện nhiều lần với các độ khó khác nhau.
+                Thêm các <strong>cấu trúc đề</strong> theo kỹ năng (VD: Nghe, Nói). Trong mỗi cấu trúc có thể thêm nhiều dòng với loại câu hỏi, độ khó và số câu khác nhau.
               </p>
-              <div className="overflow-hidden rounded-xl border border-border">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
-                    <tr>
-                      <th className="px-3 py-2 text-left">#</th>
-                      <th className="px-3 py-2 text-left">Kỹ năng</th>
-                      <th className="px-3 py-2 text-left">Loại câu hỏi</th>
-                      <th className="px-3 py-2 text-center">Cấp độ</th>
-                      <th className="px-3 py-2 text-center">Độ khó</th>
-                      <th className="px-3 py-2 text-left">Tags</th>
-                      <th className="px-3 py-2 text-center">Số câu</th>
-                      <th className="px-3 py-2 text-center">Thời gian (phút)</th>
-                      <th className="px-3 py-2 text-center">Có sẵn</th>
-                      <th className="px-3 py-2"></th>
-                    </tr>
 
-                  </thead>
-                  <tbody>
-                    {structure.map((row, idx) => {
-                      const available = matchBank(row).length;
-                      const short = available < row.count;
-                      const upsertAt = (patch: Partial<StructureItem>) => {
-                        setStructure((p) =>
-                          p.map((x, k) => (k === idx ? { ...x, ...patch, pickedIds: [] } : x)),
-                        );
-                      };
+              {(() => {
+                const usedSkills = Array.from(new Set(structure.map((s) => s.skill)));
+                const availableSkills = SKILLS.filter((sk) => !usedSkills.includes(sk));
+                return (
+                  <>
+                    {usedSkills.length === 0 && (
+                      <div className="rounded-2xl border border-dashed border-border bg-muted/30 p-8 text-center text-sm text-muted-foreground">
+                        Chưa có cấu trúc nào. Nhấn “Thêm cấu trúc đề” bên dưới để bắt đầu.
+                      </div>
+                    )}
+
+                    {usedSkills.map((sk) => {
+                      const rowsWithIdx = structure
+                        .map((r, i) => ({ r, i }))
+                        .filter((x) => x.r.skill === sk);
+                      const skillCount = rowsWithIdx.reduce((a, x) => a + x.r.count, 0);
+                      const skillMinutes = rowsWithIdx.reduce(
+                        (a, x) => a + (x.r.sectionDurationMinutes ?? 0),
+                        0,
+                      );
                       return (
-                        <tr key={idx} className="border-t border-border">
-                          <td className="px-3 py-2 text-xs font-semibold text-muted-foreground">
-                            {idx + 1}
-                          </td>
-                          <td className="px-3 py-2">
-                            <select
-                              value={row.skill}
-                              onChange={(e) => {
-                                const skill = e.target.value as QSkill;
-                                upsertAt({ skill, type: "mixed" });
-                              }}
-                              className="rounded-lg border border-border bg-background px-2 py-1 text-xs font-semibold"
-                            >
-                              {SKILLS.map((sk) => (
-                                <option key={sk} value={sk}>
-                                  {SKILL_LABEL[sk]}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="px-3 py-2">
-                            <select
-                              value={row.type}
-                              onChange={(e) => upsertAt({ type: e.target.value as QType | "mixed" })}
-                              className="rounded-lg border border-border bg-background px-2 py-1 text-xs"
-                            >
-                              <option value="mixed">Trộn nhiều dạng</option>
-                              {TYPES_BY_SKILL[row.skill].map((t) => (
-                                <option key={t} value={t}>
-                                  {TYPE_LABEL[t]}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="px-3 py-2 text-center">
-                            <select
-                              value={row.level}
-                              onChange={(e) => upsertAt({ level: e.target.value as QLevel })}
-                              className="rounded-lg border border-border bg-background px-2 py-1 text-xs"
-                            >
-                              {LEVELS.map((l) => (
-                                <option key={l}>{l}</option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="px-3 py-2 text-center">
-                            <select
-                              value={row.difficulty ?? "mixed"}
-                              onChange={(e) =>
-                                upsertAt({ difficulty: e.target.value as QDifficulty | "mixed" })
-                              }
-                              className="rounded-lg border border-border bg-background px-2 py-1 text-xs"
-                            >
-                              {DIFFICULTIES.map((d) => (
-                                <option key={d} value={d}>
-                                  {d === "mixed" ? "Trộn" : DIFFICULTY_LABEL[d]}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                          <td className="px-3 py-2">
-                            <input
-                              type="text"
-                              value={(row.tags ?? []).join(", ")}
-                              onChange={(e) => {
-                                const tags = e.target.value
-                                  .split(",")
-                                  .map((t) => t.trim())
-                                  .filter(Boolean);
-                                upsertAt({ tags });
-                              }}
-                              placeholder="grammar, unit-3"
-                              className="w-44 rounded-lg border border-border bg-background px-2 py-1 text-xs"
-                            />
-                          </td>
-                          <td className="px-3 py-2 text-center">
-                            <input
-                              type="number"
-                              min={0}
-                              value={row.count}
-                              onChange={(e) =>
-                                upsertAt({ count: Math.max(0, Number(e.target.value)) })
-                              }
-                              className="w-20 rounded-lg border border-border bg-background px-2 py-1 text-center text-xs"
-                            />
-                          </td>
-
-                          <td className="px-3 py-2 text-center">
-                            <input
-                              type="number"
-                              min={0}
-                              placeholder="—"
-                              value={row.sectionDurationMinutes ?? ""}
-                              onChange={(e) => {
-                                const v = e.target.value;
-                                setStructure((p) =>
-                                  p.map((x, k) =>
-                                    k === idx
-                                      ? { ...x, sectionDurationMinutes: v === "" ? undefined : Math.max(0, Number(v)) }
-                                      : x,
-                                  ),
-                                );
-                              }}
-                              className="w-20 rounded-lg border border-border bg-background px-2 py-1 text-center text-xs"
-                            />
-                          </td>
-                          <td className="px-3 py-2 text-center">
-                            <span
-                              className={cn(
-                                "rounded-md px-2 py-0.5 text-[11px] font-semibold",
-                                short
-                                  ? "bg-rose-500/10 text-rose-600"
-                                  : "bg-emerald-500/10 text-emerald-600",
-                              )}
-                            >
-                              {available}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2 text-right">
+                        <div
+                          key={sk}
+                          className="overflow-hidden rounded-2xl border border-border bg-background"
+                        >
+                          <div className="flex items-center justify-between gap-3 border-b border-border bg-muted/40 px-4 py-2.5">
+                            <div className="flex items-center gap-2">
+                              <span className="rounded-md bg-foreground/5 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-foreground">
+                                {SKILL_LABEL[sk]}
+                              </span>
+                              <span className="text-xs text-muted-foreground">
+                                {rowsWithIdx.length} dòng · {skillCount} câu
+                                {skillMinutes ? ` · ${skillMinutes} phút` : ""}
+                              </span>
+                            </div>
                             <button
                               onClick={() =>
-                                setStructure((p) => p.filter((_, k) => k !== idx))
+                                setStructure((p) => p.filter((x) => x.skill !== sk))
                               }
                               className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
-                              title="Xóa dòng"
+                              title="Xóa cấu trúc này"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
-                          </td>
-                        </tr>
+                          </div>
+                          <table className="w-full text-sm">
+                            <thead className="text-xs uppercase tracking-wider text-muted-foreground">
+                              <tr className="border-b border-border">
+                                <th className="px-3 py-2 text-left">#</th>
+                                <th className="px-3 py-2 text-left">Loại câu hỏi</th>
+                                <th className="px-3 py-2 text-center">Cấp độ</th>
+                                <th className="px-3 py-2 text-center">Độ khó</th>
+                                <th className="px-3 py-2 text-left">Tags</th>
+                                <th className="px-3 py-2 text-center">Số câu</th>
+                                <th className="px-3 py-2 text-center">Thời gian (phút)</th>
+                                <th className="px-3 py-2 text-center">Có sẵn</th>
+                                <th className="px-3 py-2"></th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {rowsWithIdx.map(({ r: row, i: idx }, localIdx) => {
+                                const available = matchBank(row).length;
+                                const short = available < row.count;
+                                const upsertAt = (patch: Partial<StructureItem>) => {
+                                  setStructure((p) =>
+                                    p.map((x, k) =>
+                                      k === idx ? { ...x, ...patch, pickedIds: [] } : x,
+                                    ),
+                                  );
+                                };
+                                return (
+                                  <tr key={idx} className="border-t border-border">
+                                    <td className="px-3 py-2 text-xs font-semibold text-muted-foreground">
+                                      {localIdx + 1}
+                                    </td>
+                                    <td className="px-3 py-2">
+                                      <select
+                                        value={row.type}
+                                        onChange={(e) =>
+                                          upsertAt({ type: e.target.value as QType | "mixed" })
+                                        }
+                                        className="rounded-lg border border-border bg-background px-2 py-1 text-xs"
+                                      >
+                                        <option value="mixed">Trộn nhiều dạng</option>
+                                        {TYPES_BY_SKILL[row.skill].map((t) => (
+                                          <option key={t} value={t}>
+                                            {TYPE_LABEL[t]}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </td>
+                                    <td className="px-3 py-2 text-center">
+                                      <select
+                                        value={row.level}
+                                        onChange={(e) =>
+                                          upsertAt({ level: e.target.value as QLevel })
+                                        }
+                                        className="rounded-lg border border-border bg-background px-2 py-1 text-xs"
+                                      >
+                                        {LEVELS.map((l) => (
+                                          <option key={l}>{l}</option>
+                                        ))}
+                                      </select>
+                                    </td>
+                                    <td className="px-3 py-2 text-center">
+                                      <select
+                                        value={row.difficulty ?? "mixed"}
+                                        onChange={(e) =>
+                                          upsertAt({
+                                            difficulty: e.target.value as QDifficulty | "mixed",
+                                          })
+                                        }
+                                        className="rounded-lg border border-border bg-background px-2 py-1 text-xs"
+                                      >
+                                        {DIFFICULTIES.map((d) => (
+                                          <option key={d} value={d}>
+                                            {d === "mixed" ? "Trộn" : DIFFICULTY_LABEL[d]}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </td>
+                                    <td className="px-3 py-2">
+                                      <input
+                                        type="text"
+                                        value={(row.tags ?? []).join(", ")}
+                                        onChange={(e) => {
+                                          const tags = e.target.value
+                                            .split(",")
+                                            .map((t) => t.trim())
+                                            .filter(Boolean);
+                                          upsertAt({ tags });
+                                        }}
+                                        placeholder="grammar, unit-3"
+                                        className="w-44 rounded-lg border border-border bg-background px-2 py-1 text-xs"
+                                      />
+                                    </td>
+                                    <td className="px-3 py-2 text-center">
+                                      <input
+                                        type="number"
+                                        min={0}
+                                        value={row.count}
+                                        onChange={(e) =>
+                                          upsertAt({ count: Math.max(0, Number(e.target.value)) })
+                                        }
+                                        className="w-20 rounded-lg border border-border bg-background px-2 py-1 text-center text-xs"
+                                      />
+                                    </td>
+                                    <td className="px-3 py-2 text-center">
+                                      <input
+                                        type="number"
+                                        min={0}
+                                        placeholder="—"
+                                        value={row.sectionDurationMinutes ?? ""}
+                                        onChange={(e) => {
+                                          const v = e.target.value;
+                                          setStructure((p) =>
+                                            p.map((x, k) =>
+                                              k === idx
+                                                ? {
+                                                    ...x,
+                                                    sectionDurationMinutes:
+                                                      v === ""
+                                                        ? undefined
+                                                        : Math.max(0, Number(v)),
+                                                  }
+                                                : x,
+                                            ),
+                                          );
+                                        }}
+                                        className="w-20 rounded-lg border border-border bg-background px-2 py-1 text-center text-xs"
+                                      />
+                                    </td>
+                                    <td className="px-3 py-2 text-center">
+                                      <span
+                                        className={cn(
+                                          "rounded-md px-2 py-0.5 text-[11px] font-semibold",
+                                          short
+                                            ? "bg-rose-500/10 text-rose-600"
+                                            : "bg-emerald-500/10 text-emerald-600",
+                                        )}
+                                      >
+                                        {available}
+                                      </span>
+                                    </td>
+                                    <td className="px-3 py-2 text-right">
+                                      <button
+                                        onClick={() =>
+                                          setStructure((p) => p.filter((_, k) => k !== idx))
+                                        }
+                                        className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
+                                        title="Xóa dòng"
+                                      >
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                          <div className="border-t border-border bg-muted/20 px-3 py-2">
+                            <button
+                              onClick={() =>
+                                setStructure((p) => {
+                                  const defaultType: QType | "mixed" =
+                                    TYPES_BY_SKILL[sk][0] ?? "mixed";
+                                  return [
+                                    ...p,
+                                    {
+                                      skill: sk,
+                                      type: defaultType,
+                                      level,
+                                      difficulty: "mixed",
+                                      count: 5,
+                                      sectionDurationMinutes: 10,
+                                      pickedIds: [],
+                                    },
+                                  ];
+                                })
+                              }
+                              className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border bg-background px-2.5 py-1.5 text-xs font-semibold hover:bg-muted"
+                            >
+                              <Plus className="h-3.5 w-3.5" /> Thêm dòng vào {SKILL_LABEL[sk]}
+                            </button>
+                          </div>
+                        </div>
                       );
                     })}
-                    {structure.length === 0 && (
-                      <tr>
-                        <td colSpan={10} className="px-3 py-8 text-center text-xs text-muted-foreground">
-                          Chưa có dòng nào. Nhấn “Thêm dòng” bên dưới để bắt đầu.
-                        </td>
-                      </tr>
+
+                    {availableSkills.length > 0 && (
+                      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-dashed border-border bg-muted/20 p-3">
+                        <span className="text-xs font-semibold text-muted-foreground">
+                          Thêm cấu trúc đề:
+                        </span>
+                        {availableSkills.map((sk) => {
+                          const defaultType: QType | "mixed" = TYPES_BY_SKILL[sk][0] ?? "mixed";
+                          return (
+                            <button
+                              key={sk}
+                              onClick={() =>
+                                setStructure((p) => [
+                                  ...p,
+                                  {
+                                    skill: sk,
+                                    type: defaultType,
+                                    level,
+                                    difficulty: "mixed",
+                                    count: 5,
+                                    sectionDurationMinutes: 10,
+                                    pickedIds: [],
+                                  },
+                                ])
+                              }
+                              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-background px-3 py-1.5 text-xs font-semibold hover:bg-muted"
+                            >
+                              <Plus className="h-3.5 w-3.5" /> {SKILL_LABEL[sk]}
+                            </button>
+                          );
+                        })}
+                      </div>
                     )}
-                  </tbody>
-                </table>
-              </div>
-              <button
-                onClick={() =>
-                  setStructure((p) => [
-                    ...p,
-                    {
-                      skill: "reading",
-                      type: "mixed",
-                      level,
-                      difficulty: "mixed",
-                      count: 5,
-                      sectionDurationMinutes: 10,
-                      pickedIds: [],
-                    },
-                  ])
-                }
-                className="inline-flex items-center gap-1.5 rounded-xl border border-dashed border-border bg-background px-3 py-2 text-xs font-semibold hover:bg-muted"
-              >
-                <Plus className="h-3.5 w-3.5" /> Thêm dòng
-              </button>
+                  </>
+                );
+              })()}
+
               <div className="space-y-2 rounded-xl bg-muted/40 p-3 text-sm">
                 <div>
                   Tổng cộng: <strong>{totalQuestions} câu</strong> qua{" "}
@@ -566,7 +644,8 @@ function NewTestPage() {
                     const over = sec > duration;
                     return (
                       <span className={cn("ml-2", over ? "text-rose-600" : "text-muted-foreground")}>
-                        • Tổng thời gian các phần: <strong>{sec} phút</strong> {over && `(vượt thời lượng ${duration} phút)`}
+                        • Tổng thời gian các phần: <strong>{sec} phút</strong>{" "}
+                        {over && `(vượt thời lượng ${duration} phút)`}
                       </span>
                     );
                   })()}
@@ -594,7 +673,10 @@ function NewTestPage() {
                           >
                             <span className="text-foreground">{SKILL_LABEL[sk]}</span>
                             <span className="text-muted-foreground">·</span>
-                            <span className="text-primary">⏱ {info.minutes || "—"}{info.minutes ? "'" : ""}</span>
+                            <span className="text-primary">
+                              ⏱ {info.minutes || "—"}
+                              {info.minutes ? "'" : ""}
+                            </span>
                             <span className="text-muted-foreground">· {info.count} câu</span>
                           </span>
                         );
