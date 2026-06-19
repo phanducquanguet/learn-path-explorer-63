@@ -3,7 +3,7 @@ import { useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { getTest, getTestSubmissions, testStatus, type TestSubmission, type ProctorEvent, type ProctorEventType } from "@/lib/tests-data";
 import { SKILL_LABEL, TYPE_LABEL, questionBank, type BankQuestion, type QSkill } from "@/lib/question-bank";
-import { classes } from "@/lib/teacher-data";
+import { classes, students } from "@/lib/teacher-data";
 import {
   ArrowLeft,
   Calendar,
@@ -41,7 +41,7 @@ function TestDetail() {
   const { testId } = Route.useParams();
   const test = getTest(testId);
   if (!test) throw notFound();
-  const [tab, setTab] = useState<"overview" | "structure" | "questions" | "results">("overview");
+  const [tab, setTab] = useState<"overview" | "monitor" | "structure" | "questions" | "results">("overview");
   const [subs, setSubs] = useState<TestSubmission[]>(getTestSubmissions(testId));
   const [grading, setGrading] = useState<TestSubmission | null>(null);
   const st = testStatus(test);
@@ -83,6 +83,7 @@ function TestDetail() {
           {(
             [
               { id: "overview", label: "Tổng quan", icon: BarChart3 },
+              { id: "monitor", label: "Giám sát", icon: Monitor },
               { id: "structure", label: "Cấu trúc đề", icon: ListChecks },
               { id: "questions", label: "Câu hỏi", icon: HelpCircle },
               { id: "results", label: "Kết quả thi", icon: FileText },
@@ -153,6 +154,17 @@ function TestDetail() {
               </div>
             </div>
           </div>
+        )}
+
+        {tab === "monitor" && (
+          <MonitorTab
+            test={test}
+            subs={subs}
+            onOpenSubmission={(s) => {
+              setTab("results");
+              setGrading(s);
+            }}
+          />
         )}
 
         {tab === "structure" && (
@@ -1067,5 +1079,226 @@ function SevPill({
       <span className="font-display text-sm font-bold leading-none">{count}</span>
       {label && <span className="text-[11px] font-medium opacity-80">{label}</span>}
     </span>
+  );
+}
+
+function MonitorTab({
+  test,
+  subs,
+  onOpenSubmission,
+}: {
+  test: ReturnType<typeof getTest> extends infer T ? Exclude<T, undefined> : never;
+  subs: TestSubmission[];
+  onOpenSubmission: (s: TestSubmission) => void;
+}) {
+  // Roster = tất cả học viên trong các lớp được giao.
+  const roster = students.filter((st) => test.classIds.includes(st.classId));
+  const [classFilter, setClassFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "not-started" | "in-progress" | "submitted">("all");
+  const [query, setQuery] = useState("");
+
+  // Map học viên -> submission (theo tên + tên lớp).
+  const subByName = new Map<string, TestSubmission>();
+  subs.forEach((s) => subByName.set(`${s.studentName}__${s.studentClass}`, s));
+
+  type Row = {
+    student: (typeof roster)[number];
+    className: string;
+    sub?: TestSubmission;
+    state: "not-started" | "in-progress" | "submitted";
+  };
+  const rows: Row[] = roster.map((st) => {
+    const className = classes.find((c) => c.id === st.classId)?.name ?? st.classId;
+    const sub = subByName.get(`${st.name}__${className}`);
+    let state: Row["state"] = "not-started";
+    if (sub) {
+      state = sub.status === "in-progress" ? "in-progress" : "submitted";
+    }
+    return { student: st, className, sub, state };
+  });
+
+  const filtered = rows.filter((r) => {
+    if (classFilter !== "all" && r.student.classId !== classFilter) return false;
+    if (statusFilter !== "all" && r.state !== statusFilter) return false;
+    if (query.trim()) {
+      const q = query.trim().toLowerCase();
+      if (!r.student.name.toLowerCase().includes(q) && !r.student.email.toLowerCase().includes(q))
+        return false;
+    }
+    return true;
+  });
+
+  const counts = {
+    total: rows.length,
+    notStarted: rows.filter((r) => r.state === "not-started").length,
+    inProgress: rows.filter((r) => r.state === "in-progress").length,
+    submitted: rows.filter((r) => r.state === "submitted").length,
+  };
+
+  const st = testStatus(test);
+  const classOpts = test.classIds
+    .map((id) => classes.find((c) => c.id === id))
+    .filter((c): c is NonNullable<typeof c> => !!c);
+
+  return (
+    <div className="mt-6 space-y-4">
+      <div className="grid gap-3 sm:grid-cols-4">
+        <MonStat tone="slate" icon={Users2} label="Tổng học viên" value={counts.total} />
+        <MonStat tone="rose" icon={UserX} label="Chưa vào thi" value={counts.notStarted} />
+        <MonStat tone="blue" icon={Monitor} label="Đang làm bài" value={counts.inProgress} />
+        <MonStat tone="emerald" icon={CheckCircle2} label="Đã nộp bài" value={counts.submitted} />
+      </div>
+
+      {st === "upcoming" && (
+        <div className="rounded-xl bg-amber-50 p-3 text-xs text-amber-900">
+          Bài thi chưa mở. Học viên sẽ chỉ vào được sau {new Date(test.openAt).toLocaleString("vi-VN")}.
+        </div>
+      )}
+
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-surface p-3">
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Tìm theo tên, email…"
+          className="min-w-[200px] flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-sm"
+        />
+        <select
+          value={classFilter}
+          onChange={(e) => setClassFilter(e.target.value)}
+          className="rounded-lg border border-border bg-background px-2 py-1.5 text-xs font-semibold"
+        >
+          <option value="all">Tất cả lớp ({roster.length})</option>
+          {classOpts.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        {(["all", "not-started", "in-progress", "submitted"] as const).map((s) => {
+          const label =
+            s === "all"
+              ? "Tất cả"
+              : s === "not-started"
+                ? "Chưa thi"
+                : s === "in-progress"
+                  ? "Đang làm"
+                  : "Đã nộp";
+          return (
+            <button
+              key={s}
+              onClick={() => setStatusFilter(s)}
+              className={cn(
+                "rounded-full px-3 py-1 text-xs font-semibold transition",
+                statusFilter === s
+                  ? "bg-foreground text-background"
+                  : "bg-muted text-muted-foreground hover:bg-muted/70",
+              )}
+            >
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
+            <tr>
+              <th className="px-4 py-3 text-left">Học viên</th>
+              <th className="px-4 py-3 text-left">Lớp</th>
+              <th className="px-4 py-3 text-center">Trạng thái</th>
+              <th className="px-4 py-3 text-left">Bắt đầu / Nộp lúc</th>
+              <th className="px-4 py-3 text-center">Giám sát</th>
+              <th className="px-4 py-3"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
+                  Không có học viên phù hợp với bộ lọc.
+                </td>
+              </tr>
+            ) : (
+              filtered.map((r) => (
+                <tr key={r.student.id} className="border-t border-border hover:bg-muted/30">
+                  <td className="px-4 py-3">
+                    <div className="font-medium text-foreground">{r.student.name}</div>
+                    <div className="text-[11px] text-muted-foreground">{r.student.email}</div>
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">{r.className}</td>
+                  <td className="px-4 py-3 text-center">
+                    <MonStatePill state={r.state} />
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {r.sub?.submittedAt
+                      ? new Date(r.sub.submittedAt).toLocaleString("vi-VN")
+                      : r.state === "in-progress"
+                        ? "Đang trong phòng thi"
+                        : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {r.sub ? <ProctorBadge events={r.sub.proctorEvents} /> : (
+                      <span className="text-[11px] text-muted-foreground">—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    {r.sub ? (
+                      <button
+                        onClick={() => onOpenSubmission(r.sub!)}
+                        className="rounded-lg bg-foreground px-3 py-1.5 text-xs font-semibold text-background hover:opacity-90"
+                      >
+                        Xem
+                      </button>
+                    ) : (
+                      <span className="text-[11px] text-muted-foreground">Chưa vào thi</span>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function MonStat({
+  tone,
+  icon: Icon,
+  label,
+  value,
+}: {
+  tone: "slate" | "rose" | "blue" | "emerald";
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: number;
+}) {
+  const map = {
+    slate: "bg-slate-50 text-slate-700 ring-slate-200",
+    rose: "bg-rose-50 text-rose-700 ring-rose-200",
+    blue: "bg-blue-50 text-blue-700 ring-blue-200",
+    emerald: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+  } as const;
+  return (
+    <div className={cn("rounded-2xl px-4 py-3 ring-1", map[tone])}>
+      <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider opacity-80">
+        <Icon className="h-3.5 w-3.5" /> {label}
+      </div>
+      <div className="mt-1 font-display text-2xl font-bold">{value}</div>
+    </div>
+  );
+}
+
+function MonStatePill({ state }: { state: "not-started" | "in-progress" | "submitted" }) {
+  const map = {
+    "not-started": { c: "bg-rose-100 text-rose-700", t: "Chưa vào thi" },
+    "in-progress": { c: "bg-blue-100 text-blue-700", t: "Đang làm bài" },
+    submitted: { c: "bg-emerald-100 text-emerald-700", t: "Đã nộp" },
+  } as const;
+  const m = map[state];
+  return (
+    <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", m.c)}>{m.t}</span>
   );
 }
