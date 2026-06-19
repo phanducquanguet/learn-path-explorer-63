@@ -105,6 +105,7 @@ function NewTestPage() {
     { skill: "writing", type: "essay", level: "B1", difficulty: "mixed", count: 2, sectionDurationMinutes: 25, pickedIds: [] },
   ]);
   const [mode, setMode] = useState<"fixed" | "random" | "manual">("random");
+  const [enforceOrder, setEnforceOrder] = useState(false);
   const [previewing, setPreviewing] = useState(false);
 
   const totalQuestions = structure.reduce((s, x) => s + x.count, 0);
