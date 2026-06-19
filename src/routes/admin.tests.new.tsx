@@ -385,10 +385,6 @@ function NewTestPage() {
                         .map((r, i) => ({ r, i }))
                         .filter((x) => x.r.skill === sk);
                       const skillCount = rowsWithIdx.reduce((a, x) => a + x.r.count, 0);
-                      const skillMinutes = rowsWithIdx.reduce(
-                        (a, x) => a + (x.r.sectionDurationMinutes ?? 0),
-                        0,
-                      );
                       return (
                         <div
                           key={sk}
