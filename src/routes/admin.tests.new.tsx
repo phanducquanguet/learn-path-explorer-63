@@ -705,7 +705,8 @@ function NewTestPage() {
                 <Row label="Mở" value={openAt || "—"} />
                 <Row label="Đóng" value={closeAt || "—"} />
                 <Row label="Tổng câu" value={String(totalQuestions)} />
-                <Row label="Chế độ" value={mode === "random" ? "Bốc ngẫu nhiên" : "Cố định"} />
+                <Row label="Chế độ" value={mode === "random" ? "Bốc ngẫu nhiên" : mode === "manual" ? "Tự soạn" : "Cố định"} />
+                <Row label="Thứ tự làm bài" value={enforceOrder ? "Bắt buộc theo flow" : "Tự do"} />
               </div>
 
               <div className="rounded-2xl border border-border bg-background p-4">
