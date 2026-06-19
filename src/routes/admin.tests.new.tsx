@@ -741,27 +741,6 @@ function NewTestPage() {
                 );
               })}
 
-              <label
-                className={cn(
-                  "mt-2 flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition",
-                  enforceOrder ? "border-primary bg-primary/5" : "border-border bg-background hover:bg-muted",
-                )}
-              >
-                <input
-                  type="checkbox"
-                  checked={enforceOrder}
-                  onChange={(e) => setEnforceOrder(e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-border accent-primary"
-                />
-                <div>
-                  <div className="font-semibold text-foreground">
-                    Bắt buộc làm bài theo đúng thứ tự cấu trúc đề
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Học viên phải hoàn thành lần lượt theo flow đã định (VD: Nghe → Đọc → Nói → Viết) và không thể quay lại phần trước hay chọn nhảy bài.
-                  </p>
-                </div>
-              </label>
             </div>
           )}
 
