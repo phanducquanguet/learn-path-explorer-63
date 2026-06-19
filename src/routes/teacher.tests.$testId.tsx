@@ -156,6 +156,17 @@ function TestDetail() {
           </div>
         )}
 
+        {tab === "monitor" && (
+          <MonitorTab
+            test={test}
+            subs={subs}
+            onOpenSubmission={(s) => {
+              setTab("results");
+              setGrading(s);
+            }}
+          />
+        )}
+
         {tab === "structure" && (
           <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
             <table className="w-full text-sm">
