@@ -171,6 +171,7 @@ function NewTestPage() {
         openAt,
         closeAt,
         mode,
+        enforceOrder,
         structure,
         createdAt: new Date().toISOString(),
       });
