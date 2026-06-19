@@ -401,18 +401,44 @@ function NewTestPage() {
                               </span>
                               <span className="text-xs text-muted-foreground">
                                 {rowsWithIdx.length} dòng · {skillCount} câu
-                                {skillMinutes ? ` · ${skillMinutes} phút` : ""}
                               </span>
                             </div>
-                            <button
-                              onClick={() =>
-                                setStructure((p) => p.filter((x) => x.skill !== sk))
-                              }
-                              className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
-                              title="Xóa cấu trúc này"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                                ⏱ Thời gian
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={rowsWithIdx[0]?.r.sectionDurationMinutes ?? ""}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    const minutes =
+                                      v === "" ? undefined : Math.max(0, Number(v));
+                                    const firstIdx = rowsWithIdx[0]?.i;
+                                    setStructure((p) =>
+                                      p.map((x, k) => {
+                                        if (x.skill !== sk) return x;
+                                        if (k === firstIdx)
+                                          return { ...x, sectionDurationMinutes: minutes };
+                                        return { ...x, sectionDurationMinutes: undefined };
+                                      }),
+                                    );
+                                  }}
+                                  placeholder="—"
+                                  className="w-16 rounded-lg border border-border bg-background px-2 py-1 text-center text-xs"
+                                />
+                                <span className="text-muted-foreground">phút</span>
+                              </label>
+                              <button
+                                onClick={() =>
+                                  setStructure((p) => p.filter((x) => x.skill !== sk))
+                                }
+                                className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
+                                title="Xóa cấu trúc này"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </div>
                           <table className="w-full text-sm">
                             <thead className="text-xs uppercase tracking-wider text-muted-foreground">
