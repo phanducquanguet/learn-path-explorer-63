@@ -105,6 +105,7 @@ function NewTestPage() {
     { skill: "writing", type: "essay", level: "B1", difficulty: "mixed", count: 2, sectionDurationMinutes: 25, pickedIds: [] },
   ]);
   const [mode, setMode] = useState<"fixed" | "random" | "manual">("random");
+  const [enforceOrder, setEnforceOrder] = useState(false);
   const [previewing, setPreviewing] = useState(false);
 
   const totalQuestions = structure.reduce((s, x) => s + x.count, 0);
@@ -170,6 +171,7 @@ function NewTestPage() {
         openAt,
         closeAt,
         mode,
+        enforceOrder,
         structure,
         createdAt: new Date().toISOString(),
       });
@@ -659,6 +661,28 @@ function NewTestPage() {
                   </button>
                 );
               })}
+
+              <label
+                className={cn(
+                  "mt-2 flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition",
+                  enforceOrder ? "border-primary bg-primary/5" : "border-border bg-background hover:bg-muted",
+                )}
+              >
+                <input
+                  type="checkbox"
+                  checked={enforceOrder}
+                  onChange={(e) => setEnforceOrder(e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-border accent-primary"
+                />
+                <div>
+                  <div className="font-semibold text-foreground">
+                    Bắt buộc làm bài theo đúng thứ tự cấu trúc đề
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Học viên phải hoàn thành lần lượt theo flow đã định (VD: Nghe → Đọc → Nói → Viết) và không thể quay lại phần trước hay chọn nhảy bài.
+                  </p>
+                </div>
+              </label>
             </div>
           )}
 
@@ -681,7 +705,8 @@ function NewTestPage() {
                 <Row label="Mở" value={openAt || "—"} />
                 <Row label="Đóng" value={closeAt || "—"} />
                 <Row label="Tổng câu" value={String(totalQuestions)} />
-                <Row label="Chế độ" value={mode === "random" ? "Bốc ngẫu nhiên" : "Cố định"} />
+                <Row label="Chế độ" value={mode === "random" ? "Bốc ngẫu nhiên" : mode === "manual" ? "Tự soạn" : "Cố định"} />
+                <Row label="Thứ tự làm bài" value={enforceOrder ? "Bắt buộc theo flow" : "Tự do"} />
               </div>
 
               <div className="rounded-2xl border border-border bg-background p-4">
