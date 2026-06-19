@@ -1207,21 +1207,24 @@ function MonitorTab({
               <th className="px-4 py-3 text-left">Học viên</th>
               <th className="px-4 py-3 text-left">Lớp</th>
               <th className="px-4 py-3 text-center">Trạng thái</th>
-              <th className="px-4 py-3 text-left">Bắt đầu / Nộp lúc</th>
-              <th className="px-4 py-3 text-center">Giám sát</th>
-              <th className="px-4 py-3"></th>
+              <th className="px-4 py-3 text-left">Bắt đầu lúc</th>
+              <th className="px-4 py-3 text-left">Nộp lúc</th>
             </tr>
           </thead>
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={6} className="px-4 py-10 text-center text-muted-foreground">
+                <td colSpan={5} className="px-4 py-10 text-center text-muted-foreground">
                   Không có học viên phù hợp với bộ lọc.
                 </td>
               </tr>
             ) : (
               filtered.map((r) => (
-                <tr key={r.student.id} className="border-t border-border hover:bg-muted/30">
+                <tr
+                  key={r.student.id}
+                  className="border-t border-border hover:bg-muted/30 cursor-pointer"
+                  onClick={() => r.sub && onOpenSubmission(r.sub)}
+                >
                   <td className="px-4 py-3">
                     <div className="font-medium text-foreground">{r.student.name}</div>
                     <div className="text-[11px] text-muted-foreground">{r.student.email}</div>
@@ -1231,28 +1234,14 @@ function MonitorTab({
                     <MonStatePill state={r.state} />
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
+                    {r.sub?.startedAt
+                      ? new Date(r.sub.startedAt).toLocaleString("vi-VN")
+                      : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">
                     {r.sub?.submittedAt
                       ? new Date(r.sub.submittedAt).toLocaleString("vi-VN")
-                      : r.state === "in-progress"
-                        ? "Đang trong phòng thi"
-                        : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    {r.sub ? <ProctorBadge events={r.sub.proctorEvents} /> : (
-                      <span className="text-[11px] text-muted-foreground">—</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    {r.sub ? (
-                      <button
-                        onClick={() => onOpenSubmission(r.sub!)}
-                        className="rounded-lg bg-foreground px-3 py-1.5 text-xs font-semibold text-background hover:opacity-90"
-                      >
-                        Xem
-                      </button>
-                    ) : (
-                      <span className="text-[11px] text-muted-foreground">Chưa vào thi</span>
-                    )}
+                      : "—"}
                   </td>
                 </tr>
               ))
