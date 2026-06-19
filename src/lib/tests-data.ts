@@ -11,6 +11,8 @@ export type CustomQuestion = {
   correctAnswer?: string;
   /** Bài mẫu tham khảo cho câu hỏi tự luận. */
   solution?: string;
+  /** Dàn ý gợi ý cho giáo viên dựa vào chấm điểm. */
+  outline?: string;
   /** Rubric chấm tự động cho essay. */
   feedback?: { keyword: string; comment: string }[];
 };

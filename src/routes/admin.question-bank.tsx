@@ -1831,6 +1831,18 @@ export function EditDialog({
                 />
               </div>
               <div>
+                <label className="text-xs font-semibold text-muted-foreground">
+                  Dàn ý gợi ý <span className="font-normal text-muted-foreground/70">(giáo viên dựa vào để chấm điểm)</span>
+                </label>
+                <textarea
+                  value={form.outline ?? ""}
+                  onChange={(e) => setForm({ ...form, outline: e.target.value })}
+                  rows={5}
+                  placeholder={"VD:\n1. Mở bài: giới thiệu chủ đề\n2. Thân bài:\n   - Luận điểm 1...\n   - Luận điểm 2...\n3. Kết bài: tóm tắt & nêu quan điểm"}
+                  className="mt-1 w-full rounded-xl border border-border bg-background p-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+              <div>
                 <div className="mb-1.5 flex items-center justify-between">
                   <label className="text-xs font-semibold text-muted-foreground">
                     Feedback / Rubric chấm điểm

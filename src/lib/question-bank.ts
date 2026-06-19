@@ -71,6 +71,8 @@ export type BankQuestion = {
   options?: string[];
   correctAnswer?: string;
   solution?: string;
+  /** Dàn ý gợi ý cho bài tự luận — giáo viên dựa vào đây để chấm điểm. */
+  outline?: string;
   feedback?: FeedbackCriterion[];
   /** Audio đính kèm câu hỏi (optional). */
   audioUrl?: string;
