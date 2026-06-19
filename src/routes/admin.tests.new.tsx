@@ -385,10 +385,6 @@ function NewTestPage() {
                         .map((r, i) => ({ r, i }))
                         .filter((x) => x.r.skill === sk);
                       const skillCount = rowsWithIdx.reduce((a, x) => a + x.r.count, 0);
-                      const skillMinutes = rowsWithIdx.reduce(
-                        (a, x) => a + (x.r.sectionDurationMinutes ?? 0),
-                        0,
-                      );
                       return (
                         <div
                           key={sk}
@@ -401,18 +397,44 @@ function NewTestPage() {
                               </span>
                               <span className="text-xs text-muted-foreground">
                                 {rowsWithIdx.length} dòng · {skillCount} câu
-                                {skillMinutes ? ` · ${skillMinutes} phút` : ""}
                               </span>
                             </div>
-                            <button
-                              onClick={() =>
-                                setStructure((p) => p.filter((x) => x.skill !== sk))
-                              }
-                              className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
-                              title="Xóa cấu trúc này"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <label className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+                                ⏱ Thời gian
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={rowsWithIdx[0]?.r.sectionDurationMinutes ?? ""}
+                                  onChange={(e) => {
+                                    const v = e.target.value;
+                                    const minutes =
+                                      v === "" ? undefined : Math.max(0, Number(v));
+                                    const firstIdx = rowsWithIdx[0]?.i;
+                                    setStructure((p) =>
+                                      p.map((x, k) => {
+                                        if (x.skill !== sk) return x;
+                                        if (k === firstIdx)
+                                          return { ...x, sectionDurationMinutes: minutes };
+                                        return { ...x, sectionDurationMinutes: undefined };
+                                      }),
+                                    );
+                                  }}
+                                  placeholder="—"
+                                  className="w-16 rounded-lg border border-border bg-background px-2 py-1 text-center text-xs"
+                                />
+                                <span className="text-muted-foreground">phút</span>
+                              </label>
+                              <button
+                                onClick={() =>
+                                  setStructure((p) => p.filter((x) => x.skill !== sk))
+                                }
+                                className="rounded-md p-1 text-rose-500 hover:bg-rose-500/10"
+                                title="Xóa cấu trúc này"
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </button>
+                            </div>
                           </div>
                           <table className="w-full text-sm">
                             <thead className="text-xs uppercase tracking-wider text-muted-foreground">
@@ -423,7 +445,7 @@ function NewTestPage() {
                                 <th className="px-3 py-2 text-center">Độ khó</th>
                                 <th className="px-3 py-2 text-left">Tags</th>
                                 <th className="px-3 py-2 text-center">Số câu</th>
-                                <th className="px-3 py-2 text-center">Thời gian (phút)</th>
+                                
                                 <th className="px-3 py-2 text-center">Có sẵn</th>
                                 <th className="px-3 py-2"></th>
                               </tr>
@@ -513,31 +535,6 @@ function NewTestPage() {
                                         onChange={(e) =>
                                           upsertAt({ count: Math.max(0, Number(e.target.value)) })
                                         }
-                                        className="w-20 rounded-lg border border-border bg-background px-2 py-1 text-center text-xs"
-                                      />
-                                    </td>
-                                    <td className="px-3 py-2 text-center">
-                                      <input
-                                        type="number"
-                                        min={0}
-                                        placeholder="—"
-                                        value={row.sectionDurationMinutes ?? ""}
-                                        onChange={(e) => {
-                                          const v = e.target.value;
-                                          setStructure((p) =>
-                                            p.map((x, k) =>
-                                              k === idx
-                                                ? {
-                                                    ...x,
-                                                    sectionDurationMinutes:
-                                                      v === ""
-                                                        ? undefined
-                                                        : Math.max(0, Number(v)),
-                                                  }
-                                                : x,
-                                            ),
-                                          );
-                                        }}
                                         className="w-20 rounded-lg border border-border bg-background px-2 py-1 text-center text-xs"
                                       />
                                     </td>
