@@ -380,11 +380,26 @@ function NewTestPage() {
                       </div>
                     )}
 
-                    {usedSkills.map((sk) => {
+                    {usedSkills.map((sk, skIdx) => {
                       const rowsWithIdx = structure
                         .map((r, i) => ({ r, i }))
                         .filter((x) => x.r.skill === sk);
                       const skillCount = rowsWithIdx.reduce((a, x) => a + x.r.count, 0);
+                      const moveSkill = (dir: -1 | 1) => {
+                        const target = skIdx + dir;
+                        if (target < 0 || target >= usedSkills.length) return;
+                        const newOrder = [...usedSkills];
+                        [newOrder[skIdx], newOrder[target]] = [newOrder[target], newOrder[skIdx]];
+                        setStructure((p) => {
+                          const grouped: typeof p = [];
+                          newOrder.forEach((s) => {
+                            p.forEach((row) => {
+                              if (row.skill === s) grouped.push(row);
+                            });
+                          });
+                          return grouped;
+                        });
+                      };
                       return (
                         <div
                           key={sk}
@@ -392,6 +407,27 @@ function NewTestPage() {
                         >
                           <div className="flex items-center justify-between gap-3 border-b border-border bg-muted/40 px-4 py-2.5">
                             <div className="flex items-center gap-2">
+                              <div className="flex flex-col">
+                                <button
+                                  onClick={() => moveSkill(-1)}
+                                  disabled={skIdx === 0}
+                                  className="rounded-sm p-0.5 text-muted-foreground hover:bg-muted disabled:opacity-30"
+                                  title="Lên"
+                                >
+                                  <ArrowUp className="h-3 w-3" />
+                                </button>
+                                <button
+                                  onClick={() => moveSkill(1)}
+                                  disabled={skIdx === usedSkills.length - 1}
+                                  className="rounded-sm p-0.5 text-muted-foreground hover:bg-muted disabled:opacity-30"
+                                  title="Xuống"
+                                >
+                                  <ArrowDown className="h-3 w-3" />
+                                </button>
+                              </div>
+                              <span className="text-xs font-bold text-muted-foreground">
+                                {skIdx + 1}.
+                              </span>
                               <span className="rounded-md bg-foreground/5 px-2 py-0.5 text-xs font-bold uppercase tracking-wider text-foreground">
                                 {SKILL_LABEL[sk]}
                               </span>
@@ -631,6 +667,30 @@ function NewTestPage() {
                 );
               })()}
 
+              <label
+                className={cn(
+                  "flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition",
+                  enforceOrder
+                    ? "border-primary bg-primary/5"
+                    : "border-border bg-background hover:bg-muted",
+                )}
+              >
+                <input
+                  type="checkbox"
+                  checked={enforceOrder}
+                  onChange={(e) => setEnforceOrder(e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-border accent-primary"
+                />
+                <div>
+                  <div className="text-sm font-semibold text-foreground">
+                    Bắt buộc làm bài theo đúng thứ tự cấu trúc đề
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Học viên phải hoàn thành lần lượt theo thứ tự kỹ năng ở trên (dùng nút ↑ ↓ để sắp xếp) và không thể quay lại phần trước hay chọn nhảy bài.
+                  </p>
+                </div>
+              </label>
+
               <div className="space-y-2 rounded-xl bg-muted/40 p-3 text-sm">
                 <div>
                   Tổng cộng: <strong>{totalQuestions} câu</strong> qua{" "}
@@ -741,27 +801,6 @@ function NewTestPage() {
                 );
               })}
 
-              <label
-                className={cn(
-                  "mt-2 flex cursor-pointer items-start gap-3 rounded-2xl border p-4 transition",
-                  enforceOrder ? "border-primary bg-primary/5" : "border-border bg-background hover:bg-muted",
-                )}
-              >
-                <input
-                  type="checkbox"
-                  checked={enforceOrder}
-                  onChange={(e) => setEnforceOrder(e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-border accent-primary"
-                />
-                <div>
-                  <div className="font-semibold text-foreground">
-                    Bắt buộc làm bài theo đúng thứ tự cấu trúc đề
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Học viên phải hoàn thành lần lượt theo flow đã định (VD: Nghe → Đọc → Nói → Viết) và không thể quay lại phần trước hay chọn nhảy bài.
-                  </p>
-                </div>
-              </label>
             </div>
           )}
 
