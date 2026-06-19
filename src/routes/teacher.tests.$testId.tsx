@@ -83,6 +83,7 @@ function TestDetail() {
           {(
             [
               { id: "overview", label: "Tổng quan", icon: BarChart3 },
+              { id: "monitor", label: "Giám sát", icon: Monitor },
               { id: "structure", label: "Cấu trúc đề", icon: ListChecks },
               { id: "questions", label: "Câu hỏi", icon: HelpCircle },
               { id: "results", label: "Kết quả thi", icon: FileText },
