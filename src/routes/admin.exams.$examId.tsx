@@ -52,15 +52,21 @@ type SavedExam = {
   savedAt: string;
 };
 
-function ExamDetail() {
-  const { examId } = Route.useParams();
+export function ExamDetail({
+  examId,
+  scope = "admin",
+}: {
+  examId: string;
+  scope?: "admin" | "teacher";
+}) {
   const [exam, setExam] = useState<SavedExam | null>(null);
   const [tab, setTab] = useState<"overview" | "questions">("overview");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const raw = window.localStorage.getItem("unicom.exams");
+      const key = scope === "teacher" ? "unicom.teacher.exams" : "unicom.exams";
+      const raw = window.localStorage.getItem(key);
       const list: SavedExam[] = raw ? JSON.parse(raw) : [];
       const found =
         list.find((e) => e.id === examId) ?? list[Number(examId)] ?? null;
@@ -68,7 +74,8 @@ function ExamDetail() {
     } catch {
       setExam(null);
     }
-  }, [examId]);
+  }, [examId, scope]);
+
 
   const skillLabel = (id: string) =>
     EXAM_SKILLS.find((s) => s.id === id)?.label.replace(/\s*\(.*\)/, "") ?? id;
