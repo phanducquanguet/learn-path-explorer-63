@@ -57,6 +57,8 @@ export const Route = createFileRoute("/teacher/courses/")({
   component: TeacherCoursesPage,
 });
 
+type ApprovalStatus = "draft" | "pending" | "approved" | "rejected";
+
 type DraftCourse = {
   id: string;
   title?: string;
@@ -67,6 +69,13 @@ type DraftCourse = {
   visibility?: "system" | "classes";
   classIds?: string[];
   createdBy?: "teacher" | "admin";
+  // Phê duyệt
+  approvalStatus?: ApprovalStatus;
+  pendingVisibility?: "system" | "classes";
+  pendingClassIds?: string[];
+  submittedAt?: string;
+  reviewedAt?: string;
+  reviewerNote?: string;
 };
 
 type CourseRow = {
@@ -79,6 +88,8 @@ type CourseRow = {
   origin: "system" | "teacher";
   publishedClassNames?: string[];
   isPublished?: boolean;
+  approvalStatus?: ApprovalStatus;
+  reviewerNote?: string;
   draft?: DraftCourse;
 };
 
