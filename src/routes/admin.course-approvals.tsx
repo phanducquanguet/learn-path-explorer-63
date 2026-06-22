@@ -39,7 +39,21 @@ type DraftNode = {
   fileName?: string;
   duration?: number;
   children?: DraftNode[];
-  questions?: unknown[];
+  questions?: Array<{
+    q?: string;
+    options?: string[];
+    answer?: number;
+    explain?: string;
+  }>;
+  videoUrl?: string;
+  thumbnail?: string;
+  transcript?: string;
+  pages?: Array<{ page: number; heading?: string; body?: string }>;
+  audioUrl?: string;
+  prompt?: string;
+  tips?: string[];
+  sampleAnswer?: string;
+  embedUrl?: string;
 };
 
 type DraftUnit = {
@@ -61,10 +75,11 @@ type DraftCourse = {
   units?: DraftUnit[];
   visibility?: "system" | "classes";
   classIds?: string[];
-  /** Đơn vị (trường / trung tâm) mà giáo viên thuộc về. */
   orgId?: string;
-  /** Tên giáo viên đề xuất khóa học (hiển thị tham khảo). */
   teacherName?: string;
+  teacherEmail?: string;
+  teacherPhone?: string;
+  teacherNote?: string;
   createdBy?: "teacher" | "admin";
   approvalStatus?: ApprovalStatus;
   pendingVisibility?: "system" | "classes";
@@ -73,6 +88,7 @@ type DraftCourse = {
   reviewedAt?: string;
   reviewerNote?: string;
 };
+
 
 const NODE_KIND_LABEL: Record<string, string> = {
   group: "Nhóm",
@@ -655,6 +671,10 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
     hours: 24,
     orgId: "org-unicom-hn",
     teacherName: "Cô Mai Lan",
+    teacherEmail: "mailan.tran@unicom.edu.vn",
+    teacherPhone: "0901 234 567",
+    teacherNote:
+      "Em đã chuẩn bị 3 unit hoàn chỉnh với video, tài liệu và quiz. Mong thầy/cô review và góp ý ạ — em sẽ bổ sung Unit 4–6 sau khi đợt 1 được duyệt.",
     createdBy: "teacher",
     approvalStatus: "pending",
     submittedAt: submittedPending,
@@ -675,6 +695,12 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
             description: "12 phút video giảng giải các mẫu câu chào hỏi phổ biến.",
             duration: 12,
             fileName: "u1-greetings.mp4",
+            videoUrl:
+              "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
+            thumbnail:
+              "https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=800&q=70",
+            transcript:
+              "Hello everyone, in this lesson we will learn how to greet people professionally in different work situations.\n\n1. Formal greetings: \"Good morning, Mr. Smith. It's a pleasure to meet you.\"\n2. Semi-formal: \"Hi, I'm Lan from the marketing team. Nice to meet you.\"\n3. Casual: \"Hey, how's it going?\"\n\nRemember to maintain eye contact and offer a firm handshake when appropriate.",
           },
           {
             id: "demo-u1-n2",
@@ -682,6 +708,26 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
             title: "Tài liệu: Common greeting phrases",
             description: "Tổng hợp 30 mẫu câu chào hỏi và giới thiệu.",
             fileName: "u1-handout.pdf",
+            pages: [
+              {
+                page: 1,
+                heading: "Section 1 — Formal greetings",
+                body:
+                  "• Good morning / afternoon / evening, Mr./Ms. [Last name].\n• It's a pleasure to meet you.\n• How do you do? — How do you do?\n• I'd like to introduce myself. My name is ...\n• I work as a [position] at [company].",
+              },
+              {
+                page: 2,
+                heading: "Section 2 — Semi-formal greetings",
+                body:
+                  "• Hi, I'm [first name]. Nice to meet you.\n• Hello, I don't think we've met. I'm ...\n• Good to see you again.\n• How have you been?\n• What do you do? — I work in the marketing department.",
+              },
+              {
+                page: 3,
+                heading: "Section 3 — Small talk starters",
+                body:
+                  "• How's your week going?\n• Did you have a good weekend?\n• Have you been busy lately?\n• What brings you to [city/event]?\n• How long have you been with the company?",
+              },
+            ],
           },
           {
             id: "demo-u1-n3",
@@ -689,13 +735,71 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
             title: "Luyện nói: Self introduction",
             description: "Học viên ghi âm phần giới thiệu bản thân trong 60 giây.",
             duration: 5,
+            prompt:
+              "Hãy giới thiệu bản thân trong 60 giây: tên, công việc, sở thích, và một điều thú vị về bạn.",
+            tips: [
+              "Bắt đầu bằng lời chào lịch sự.",
+              "Nói rõ tên, vị trí công việc và công ty.",
+              "Kết thúc bằng một câu hỏi mở để tiếp tục cuộc trò chuyện.",
+            ],
+            sampleAnswer:
+              "Hi everyone, my name is Mai Lan. I work as a content marketer at UNICOM, focusing on educational technology. In my free time I love hiking and photography. One interesting fact about me is that I've visited 12 countries in the past 3 years. What about you?",
           },
           {
             id: "demo-u1-n4",
             kind: "practice",
             title: "Quiz cuối Unit 1",
             description: "Đánh giá nhanh về từ vựng và mẫu câu vừa học.",
-            questions: [{}, {}, {}, {}, {}, {}, {}, {}],
+            questions: [
+              {
+                q: "Which greeting is most appropriate in a formal business meeting?",
+                options: [
+                  "Hey, what's up?",
+                  "Good morning, Mr. Smith. It's a pleasure to meet you.",
+                  "Yo, nice to see ya!",
+                  "Hi there!",
+                ],
+                answer: 1,
+                explain: "Trong cuộc họp formal, dùng \"Good morning + Mr./Ms. + last name\".",
+              },
+              {
+                q: "Complete the sentence: \"I'd like to ___ myself. My name is Lan.\"",
+                options: ["introduce", "present", "show", "tell"],
+                answer: 0,
+              },
+              {
+                q: "Choose the best small talk starter:",
+                options: [
+                  "How much do you earn?",
+                  "Why are you single?",
+                  "How's your week going?",
+                  "Are you married?",
+                ],
+                answer: 2,
+                explain: "Tránh các câu hỏi cá nhân nhạy cảm khi mới gặp.",
+              },
+              {
+                q: "Which response is correct for \"How do you do?\"",
+                options: [
+                  "I'm fine, thank you.",
+                  "How do you do?",
+                  "I'm doing my homework.",
+                  "Not bad.",
+                ],
+                answer: 1,
+                explain: "\"How do you do?\" là chào trang trọng, đáp lại bằng chính câu đó.",
+              },
+              {
+                q: "What should you do when shaking hands in a business setting?",
+                options: [
+                  "Look at the floor",
+                  "Use a weak grip",
+                  "Maintain eye contact and use a firm grip",
+                  "Hug the person",
+                ],
+                answer: 2,
+              },
+            ],
           },
         ],
       },
@@ -710,6 +814,10 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
             title: "Video: Describing your role",
             duration: 10,
             fileName: "u2-role.mp4",
+            videoUrl:
+              "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+            transcript:
+              "When describing your role, focus on three things: your position, your responsibilities, and the team you work with.\n\nExample: \"I'm a project manager at UNICOM. I lead a team of 5 developers and we build learning platforms for schools.\"",
           },
           {
             id: "demo-u2-g1",
@@ -722,12 +830,29 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
                 kind: "pdf-audio",
                 title: "Job vocabulary handbook",
                 fileName: "u2-jobs.pdf",
+                audioUrl:
+                  "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+                pages: [
+                  {
+                    page: 1,
+                    heading: "Job titles & departments",
+                    body:
+                      "Marketing — content creator, brand manager, SEO specialist\nEngineering — software developer, QA engineer, DevOps\nFinance — accountant, financial analyst, controller\nHR — recruiter, HR business partner, L&D specialist",
+                  },
+                  {
+                    page: 2,
+                    heading: "Useful phrases",
+                    body:
+                      "• I'm in charge of ...\n• I'm responsible for ...\n• My main duties include ...\n• I report to ...\n• I work closely with ...",
+                  },
+                ],
               },
               {
                 id: "demo-u2-g1-n2",
                 kind: "h5p",
                 title: "Tương tác: Match the job titles",
                 fileName: "u2-match.h5p",
+                embedUrl: "https://h5p.org/h5p/embed/6724",
               },
             ],
           },
@@ -735,7 +860,28 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
             id: "demo-u2-n3",
             kind: "practice",
             title: "Bài thực hành Unit 2",
-            questions: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+            questions: [
+              {
+                q: "Who is responsible for hiring new employees?",
+                options: ["Accountant", "Recruiter", "Designer", "DevOps engineer"],
+                answer: 1,
+              },
+              {
+                q: "Complete: \"I'm ___ for managing the marketing budget.\"",
+                options: ["responsible", "charge", "duty", "report"],
+                answer: 0,
+              },
+              {
+                q: "Which phrase means \"my boss\"?",
+                options: [
+                  "The person I report to",
+                  "The person I work with",
+                  "The person I hire",
+                  "The person I train",
+                ],
+                answer: 0,
+              },
+            ],
           },
         ],
       },
@@ -750,23 +896,71 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
             title: "Video: Joining a meeting",
             duration: 14,
             fileName: "u3-meeting.mp4",
+            videoUrl:
+              "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+            transcript:
+              "Joining a meeting professionally:\n1. Arrive 2-3 minutes early.\n2. Greet everyone briefly.\n3. If late, apologize quickly and sit down.\n4. Listen actively before contributing.",
           },
           {
             id: "demo-u3-n2",
             kind: "scorm",
             title: "Bài tương tác SCORM: Meeting roleplay",
             fileName: "u3-roleplay.zip",
+            embedUrl: "https://h5p.org/h5p/embed/617",
           },
           {
             id: "demo-u3-n3",
             kind: "practice",
             title: "Quiz tổng kết",
-            questions: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+            questions: [
+              {
+                q: "What's the best way to politely interrupt a meeting?",
+                options: [
+                  "Just start talking",
+                  "Sorry to interrupt, but may I add something?",
+                  "Hey! Listen to me!",
+                  "Wait until everyone stops talking",
+                ],
+                answer: 1,
+              },
+              {
+                q: "Choose the appropriate phrase to ask for clarification:",
+                options: [
+                  "What?",
+                  "Could you clarify what you mean by that?",
+                  "I don't get it.",
+                  "Say again?",
+                ],
+                answer: 1,
+              },
+              {
+                q: "How do you politely disagree?",
+                options: [
+                  "You're wrong.",
+                  "That's nonsense.",
+                  "I see your point, but I have a different perspective.",
+                  "No way!",
+                ],
+                answer: 2,
+              },
+              {
+                q: "Best way to end a meeting?",
+                options: [
+                  "Bye!",
+                  "Thanks everyone, let's recap the action items.",
+                  "I'm leaving.",
+                  "Done.",
+                ],
+                answer: 1,
+              },
+            ],
           },
         ],
       },
     ],
   };
+
+
 
   const rejected: DraftCourse = {
     id: "demo-rejected",
