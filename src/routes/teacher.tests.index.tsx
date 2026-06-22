@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/teacher/tests/")({
-  head: () => ({ meta: [{ title: "Thi cử — UNICOM LMS" }] }),
+  head: () => ({ meta: [{ title: "Chấm thi — UNICOM LMS" }] }),
   component: TestsList,
 });
 
@@ -178,7 +178,7 @@ function TestsList() {
               <ScrollText className="h-3.5 w-3.5" /> Quản lý kỳ thi
             </span>
             <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-              Thi cử
+              Chấm thi
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Danh sách đề thi đã tạo cho các lớp. Theo dõi lịch mở, số học viên thi và chấm bài.

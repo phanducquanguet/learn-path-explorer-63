@@ -60,7 +60,7 @@ const teacherTabs = [
   { to: "/teacher/live" as const, label: "Lớp trực tuyến", icon: Video },
   { to: "/teacher/courses" as const, label: "Khóa học", icon: GraduationCap },
   { to: "/teacher/exams" as const, label: "Bài tập & Kiểm tra", icon: ClipboardCheck },
-  { to: "/teacher/tests" as const, label: "Thi cử", icon: ScrollText },
+  { to: "/teacher/tests" as const, label: "Chấm thi", icon: ScrollText },
   { to: "/teacher/reports" as const, label: "Báo cáo", icon: BarChart3 },
 ];
 
@@ -130,7 +130,7 @@ export function TopNav() {
 
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6 sm:px-8">
+      <div className="flex h-16 w-full items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         <Link to={homeFor(role)} className="flex items-center gap-2">
           <div
             className="flex h-9 w-9 items-center justify-center rounded-xl text-primary-foreground shadow-soft"

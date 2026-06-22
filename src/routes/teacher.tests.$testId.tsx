@@ -55,7 +55,7 @@ function TestDetail() {
           to="/teacher/tests"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" /> Trở lại Thi cử
+          <ArrowLeft className="h-4 w-4" /> Trở lại Chấm thi
         </Link>
 
         <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
