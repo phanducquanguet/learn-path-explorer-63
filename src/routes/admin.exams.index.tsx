@@ -162,15 +162,15 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <Sparkles className="h-3.5 w-3.5" /> Quản lý bài thi
+              <Sparkles className="h-3.5 w-3.5" /> Quản lý đề thi
             </span>
             <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              {scope === "teacher" ? "Bài tập & Kiểm tra" : "Bài luyện thi"}
+              {scope === "teacher" ? "Bài tập & Kiểm tra" : "Đề luyện tập"}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {scope === "teacher"
                 ? "Tạo bài kiểm tra và luyện tập cho học viên trong các lớp bạn được phân công."
-                : "Bài thi được phân loại theo cấp độ (A1–C2) và dùng chung cho mọi học viên cùng cấp."}
+                : "Đề thi được phân loại theo cấp độ (A1–C2) và dùng chung cho mọi học viên cùng cấp."}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
