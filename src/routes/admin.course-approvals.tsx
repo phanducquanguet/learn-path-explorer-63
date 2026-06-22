@@ -558,6 +558,9 @@ function NodeRow({ node, depth }: { node: DraftNode; depth: number }) {
       )}
     </li>
   );
+}
+
+
 
 
 function StatusBadge({ status }: { status: ApprovalStatus }) {
