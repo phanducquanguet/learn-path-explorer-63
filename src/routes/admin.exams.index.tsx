@@ -413,6 +413,24 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
                         ))}
                       </div>
 
+                      {scope === "teacher" && (exam.classIds?.length ?? 0) > 0 && (
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                          <Users className="h-3 w-3 text-muted-foreground" />
+                          {(exam.classIds ?? []).map((cid) => {
+                            const c = teacherClasses.find((x) => x.id === cid);
+                            return (
+                              <span
+                                key={cid}
+                                className="rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary"
+                              >
+                                {c?.name ?? cid}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+
+
                       <div className="mt-4 flex items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
                         <span className="inline-flex items-center gap-1">
                           <Clock className="h-3.5 w-3.5" /> {exam.duration} phút
