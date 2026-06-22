@@ -179,7 +179,6 @@ function ApprovalsPage() {
       pendingClassIds: undefined,
       reviewerNote: undefined,
     });
-    setReviewing(null);
   };
 
   const reject = (d: DraftCourse, note: string) => {
@@ -189,8 +188,8 @@ function ApprovalsPage() {
       reviewerNote: note || "Không đạt yêu cầu.",
     });
     setRejecting(null);
-    setReviewing(null);
   };
+
 
   return (
     <div className="min-h-screen bg-background">
