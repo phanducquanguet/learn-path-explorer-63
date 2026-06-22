@@ -27,8 +27,9 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/exams/new")({
   head: () => ({ meta: [{ title: "Tạo bài luyện thi — UNICOM LMS" }] }),
-  component: ExamBuilder,
+  component: () => <ExamBuilder scope="admin" />,
 });
+
 
 const SKILL_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
   listening: Headphones,
