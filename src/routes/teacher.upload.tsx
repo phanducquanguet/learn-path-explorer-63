@@ -50,8 +50,9 @@ type UnitDraft = {
 };
 
 function UploadPage() {
-  const { edit } = Route.useSearch();
+  const { edit, mode } = Route.useSearch();
   const isEdit = !!edit;
+  const isTeacher = mode === "teacher";
   const [categories] = useCategories();
   const [step, setStep] = useState(0);
   const [managerOpen, setManagerOpen] = useState(false);
@@ -67,7 +68,19 @@ function UploadPage() {
   const [units, setUnits] = useState<UnitDraft[]>([
     { id: "u1", title: "Unit 1: Greetings & Introductions", desc: "", nodes: [] },
   ]);
+  // Phân phối: với GV mặc định là "classes" (chỉ lớp đã chọn). Với admin = "system" (toàn hệ thống theo level).
+  const [visibility, setVisibility] = useState<"system" | "classes">(
+    isTeacher ? "classes" : "system",
+  );
+  const [classIds, setClassIds] = useState<string[]>([]);
   const [saved, setSaved] = useState(false);
+
+  // Lớp gợi ý theo cấp độ đang chọn (giáo viên thường chỉ phân phối cho lớp cùng level).
+  const eligibleClasses = useMemo(
+    () => teacherClasses.filter((c) => c.levelCode === course.levelCode),
+    [course.levelCode],
+  );
+
 
   // Prefill khi sửa
   useEffect(() => {
