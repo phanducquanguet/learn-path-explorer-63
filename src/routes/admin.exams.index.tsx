@@ -162,12 +162,14 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <Link
-              to="/teacher/qa"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-sm font-semibold text-foreground hover:bg-muted"
-            >
-              <MessageSquare className="h-4 w-4" /> Hỏi đáp học viên
-            </Link>
+            {scope === "teacher" && (
+              <Link
+                to="/teacher/qa"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-sm font-semibold text-foreground hover:bg-muted"
+              >
+                <MessageSquare className="h-4 w-4" /> Hỏi đáp học viên
+              </Link>
+            )}
             {canManage && tab === "exams" && (
               <Link
                 to={scope === "teacher" ? "/teacher/exams/new" : "/admin/exams/new"}
@@ -181,30 +183,32 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
           </div>
         </div>
 
-        {/* Tabs: Bài luyện thi | Ngân hàng câu hỏi */}
-        <div className="mt-6 inline-flex items-center gap-1 rounded-xl border border-border bg-surface p-1">
-          {([
-            { id: "exams" as const, label: "Bài luyện thi", icon: ClipboardCheck },
-            { id: "bank" as const, label: "Ngân hàng câu hỏi", icon: Library },
-          ]).map((t) => {
-            const Icon = t.icon;
-            const active = tab === t.id;
-            return (
-              <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
-                className={cn(
-                  "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition",
-                  active
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                <Icon className="h-4 w-4" /> {t.label}
-              </button>
-            );
-          })}
-        </div>
+        {/* Tabs: Bài luyện thi | Ngân hàng câu hỏi (chỉ giáo viên) */}
+        {scope === "teacher" && (
+          <div className="mt-6 inline-flex items-center gap-1 rounded-xl border border-border bg-surface p-1">
+            {([
+              { id: "exams" as const, label: "Bài luyện thi", icon: ClipboardCheck },
+              { id: "bank" as const, label: "Ngân hàng câu hỏi", icon: Library },
+            ]).map((t) => {
+              const Icon = t.icon;
+              const active = tab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setTab(t.id)}
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition",
+                    active
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  <Icon className="h-4 w-4" /> {t.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
 
         {tab === "bank" ? (
           <div className="mt-6">
