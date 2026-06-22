@@ -94,7 +94,7 @@ export function ExamDetail({
         <TopNav />
         <div className="mx-auto max-w-4xl px-6 pt-16 text-center">
           <Link
-            to="/admin/exams"
+            to={scope === "teacher" ? "/teacher/exams" : "/admin/exams"}
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Trở lại Luyện thi
@@ -118,7 +118,7 @@ export function ExamDetail({
       <TopNav />
       <div className="mx-auto max-w-6xl px-6 pb-20 pt-10 sm:px-8">
         <Link
-          to="/admin/exams"
+          to={scope === "teacher" ? "/teacher/exams" : "/admin/exams"}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" /> Trở lại Luyện thi
