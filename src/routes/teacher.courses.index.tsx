@@ -208,25 +208,43 @@ function TeacherCoursesPage() {
   const [query, setQuery] = useState("");
   const [levelFilter, setLevelFilter] = useState("all");
   const [originFilter, setOriginFilter] = useState<"all" | "system" | "teacher">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | ApprovalStatus>("all");
+
+  const teacherCounts = useMemo(
+    () => ({
+      all: teacherRows.length,
+      pending: teacherRows.filter((r) => (r.approvalStatus ?? "draft") === "pending").length,
+      approved: teacherRows.filter((r) => (r.approvalStatus ?? "draft") === "approved").length,
+      rejected: teacherRows.filter((r) => (r.approvalStatus ?? "draft") === "rejected").length,
+      draft: teacherRows.filter((r) => (r.approvalStatus ?? "draft") === "draft").length,
+    }),
+    [teacherRows],
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return rows.filter(({ course, level, origin }) => {
+    return rows.filter(({ course, level, origin, approvalStatus }) => {
       if (levelFilter !== "all" && level.code !== levelFilter) return false;
       if (originFilter !== "all" && origin !== originFilter) return false;
+      if (statusFilter !== "all") {
+        if (origin !== "teacher") return false;
+        if ((approvalStatus ?? "draft") !== statusFilter) return false;
+      }
       if (q && !`${course.title} ${course.subtitle} ${level.code}`.toLowerCase().includes(q))
         return false;
       return true;
     });
-  }, [rows, query, levelFilter, originFilter]);
+  }, [rows, query, levelFilter, originFilter, statusFilter]);
 
   const totalStudents = rows.reduce((s, r) => s + r.studentCount, 0);
   const totalClasses = classes.length;
 
   const [publishingId, setPublishingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [viewingNoteId, setViewingNoteId] = useState<string | null>(null);
   const publishingDraft = drafts.find((d) => d.id === publishingId) ?? null;
   const deletingDraft = drafts.find((d) => d.id === confirmDeleteId) ?? null;
+  const viewingNoteDraft = drafts.find((d) => d.id === viewingNoteId) ?? null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -333,6 +351,45 @@ function TeacherCoursesPage() {
           </div>
         </div>
 
+        {/* Approval status tabs (cho khóa tự tạo) */}
+        <div className="mt-4 flex flex-wrap items-center gap-1 rounded-xl bg-muted/40 p-1">
+          {([
+            { key: "all", label: "Tất cả", count: teacherCounts.all + (originFilter === "teacher" ? 0 : systemRows.length) },
+            { key: "pending", label: "Chờ duyệt", count: teacherCounts.pending },
+            { key: "approved", label: "Đã duyệt", count: teacherCounts.approved },
+            { key: "rejected", label: "Bị từ chối", count: teacherCounts.rejected },
+          ] as const).map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setStatusFilter(t.key)}
+              className={cn(
+                "inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition",
+                statusFilter === t.key
+                  ? "bg-surface text-foreground shadow-soft"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t.label}
+              <span
+                className={cn(
+                  "inline-flex h-5 min-w-[20px] items-center justify-center rounded-md px-1 text-[10px] font-bold",
+                  statusFilter === t.key
+                    ? "bg-primary/10 text-primary"
+                    : "bg-muted text-muted-foreground",
+                )}
+              >
+                {t.count}
+              </span>
+            </button>
+          ))}
+          {statusFilter !== "all" && (
+            <span className="ml-2 text-[11px] text-muted-foreground">
+              (lọc trên khóa do bạn tạo)
+            </span>
+          )}
+        </div>
+
+
         {/* Rows */}
         <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((row) => (
@@ -341,6 +398,7 @@ function TeacherCoursesPage() {
               {...row}
               onPublish={() => setPublishingId(row.course.id)}
               onDelete={() => setConfirmDeleteId(row.course.id)}
+              onViewNote={() => setViewingNoteId(row.course.id)}
             />
           ))}
           {filtered.length === 0 && (
@@ -393,6 +451,52 @@ function TeacherCoursesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* View admin rejection note */}
+      <Dialog open={!!viewingNoteId} onOpenChange={(o) => !o && setViewingNoteId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nhận xét từ admin</DialogTitle>
+            <DialogDescription>
+              Khóa học "{viewingNoteDraft?.title || "Chưa đặt tên"}" đã bị từ chối publish.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-red-700 dark:border-red-900/40 dark:bg-red-950/30">
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider">
+                <MessageSquare className="h-3 w-3" /> Lý do từ chối
+              </div>
+              <div className="mt-1.5 text-sm leading-relaxed">
+                {viewingNoteDraft?.reviewerNote || "Admin chưa để lại nhận xét cụ thể."}
+              </div>
+            </div>
+            {viewingNoteDraft?.reviewedAt && (
+              <div className="text-[11px] text-muted-foreground">
+                Đánh giá lúc:{" "}
+                {new Date(viewingNoteDraft.reviewedAt).toLocaleString("vi-VN")}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <button
+              onClick={() => setViewingNoteId(null)}
+              className="inline-flex h-9 items-center rounded-lg border border-border bg-surface px-3 text-sm font-medium hover:bg-muted"
+            >
+              Đóng
+            </button>
+            <button
+              onClick={() => {
+                const id = viewingNoteId;
+                setViewingNoteId(null);
+                if (id) setPublishingId(id);
+              }}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground hover:opacity-90"
+            >
+              <Send className="h-3.5 w-3.5" /> Chỉnh sửa & gửi lại
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -434,7 +538,8 @@ function TeacherCourseCard({
   reviewerNote,
   onPublish,
   onDelete,
-}: CourseRow & { onPublish: () => void; onDelete: () => void }) {
+  onViewNote,
+}: CourseRow & { onPublish: () => void; onDelete: () => void; onViewNote: () => void }) {
   const cover = COURSE_COVERS[course.id] ?? LEVEL_COVERS[level.code];
   const isTeacherOwn = origin === "teacher";
   const cardClass =
@@ -520,9 +625,23 @@ function TeacherCourseCard({
           <Stat label="Học viên" value={studentCount} />
         </div>
 
-        {isTeacherOwn && approvalStatus === "rejected" && reviewerNote && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] text-red-700 dark:border-red-900/40 dark:bg-red-950/30">
-            <span className="font-semibold">Admin từ chối:</span> {reviewerNote}
+        {isTeacherOwn && approvalStatus === "rejected" && (
+          <div className="flex items-start justify-between gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] text-red-700 dark:border-red-900/40 dark:bg-red-950/30">
+            <div className="min-w-0 flex-1">
+              <div className="font-semibold">Khóa học bị admin từ chối</div>
+              <div className="mt-0.5 line-clamp-1 text-red-600/80">
+                {reviewerNote ? `"${reviewerNote}"` : "Bấm để xem nhận xét chi tiết."}
+              </div>
+            </div>
+            <button
+              onClick={(e) => {
+                stop(e);
+                onViewNote();
+              }}
+              className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md border border-red-300 bg-white px-2 text-[11px] font-semibold text-red-700 hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/40"
+            >
+              <MessageSquare className="h-3 w-3" /> Xem nhận xét
+            </button>
           </div>
         )}
 
