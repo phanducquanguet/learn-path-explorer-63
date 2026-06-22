@@ -257,6 +257,7 @@ export function TestExamBuilder({
           enforceOrder,
           structure,
           resolved,
+          classIds: scope === "teacher" ? classIds : undefined,
         });
         prev.push(payload);
         window.localStorage.setItem(key, JSON.stringify(prev));
