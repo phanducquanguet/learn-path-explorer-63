@@ -363,27 +363,44 @@ export function TestExamBuilder({
                   className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
                 />
               </Field>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Cấp độ">
-                  <select
-                    value={level}
-                    onChange={(e) => setLevel(e.target.value as QLevel)}
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-                  >
-                    {LEVELS.map((l) => (
-                      <option key={l}>{l}</option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="Thời lượng (phút)">
-                  <input
-                    type="number"
-                    value={duration}
-                    onChange={(e) => setDuration(Number(e.target.value))}
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-                  />
-                </Field>
-              </div>
+              <Field label="Cấp độ (chọn 1 hoặc nhiều để phân hoá học viên)">
+                <div className="flex flex-wrap gap-1.5">
+                  {LEVELS.map((l) => {
+                    const on = levels.includes(l);
+                    return (
+                      <button
+                        key={l}
+                        type="button"
+                        onClick={() =>
+                          setLevels((p) => {
+                            const next = on ? p.filter((x) => x !== l) : [...p, l];
+                            return next.length === 0 ? [l] : next;
+                          })
+                        }
+                        className={cn(
+                          "rounded-lg border px-2.5 py-1 text-xs font-bold uppercase tracking-wider transition",
+                          on
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-foreground hover:bg-muted",
+                        )}
+                      >
+                        {l}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Lớp áp dụng phía dưới sẽ được lọc theo các cấp độ đã chọn.
+                </p>
+              </Field>
+              <Field label="Thời lượng (phút)">
+                <input
+                  type="number"
+                  value={duration}
+                  onChange={(e) => setDuration(Number(e.target.value))}
+                  className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                />
+              </Field>
               {!isExam && (
                 <>
               <Field label="Đơn vị (trường / trung tâm)">
