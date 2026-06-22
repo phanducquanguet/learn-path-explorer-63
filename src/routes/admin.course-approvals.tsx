@@ -61,6 +61,10 @@ type DraftCourse = {
   units?: DraftUnit[];
   visibility?: "system" | "classes";
   classIds?: string[];
+  /** Đơn vị (trường / trung tâm) mà giáo viên thuộc về. */
+  orgId?: string;
+  /** Tên giáo viên đề xuất khóa học (hiển thị tham khảo). */
+  teacherName?: string;
   createdBy?: "teacher" | "admin";
   approvalStatus?: ApprovalStatus;
   pendingVisibility?: "system" | "classes";
