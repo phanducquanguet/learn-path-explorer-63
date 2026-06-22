@@ -187,18 +187,36 @@ function ApprovalsPage() {
                 className="h-10 w-full rounded-xl border border-border bg-background pl-9 pr-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
               />
             </div>
-            <div className="relative">
-              <select
-                value={tab}
-                onChange={(e) => setTab(e.target.value as typeof tab)}
-                className="h-9 appearance-none rounded-xl border border-border bg-background pl-3 pr-8 text-xs font-medium text-foreground outline-none transition hover:border-primary/40 focus:border-primary focus:ring-2 focus:ring-primary/20"
-              >
-                <option value="pending">Chờ duyệt ({counts.pending})</option>
-                <option value="approved">Đã duyệt ({counts.approved})</option>
-                <option value="rejected">Bị từ chối ({counts.rejected})</option>
-                <option value="all">Tất cả ({counts.all})</option>
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <div className="flex flex-wrap items-center gap-1 rounded-xl bg-muted/40 p-1">
+              {([
+                { key: "pending", label: "Chờ duyệt", count: counts.pending },
+                { key: "approved", label: "Đã duyệt", count: counts.approved },
+                { key: "rejected", label: "Bị từ chối", count: counts.rejected },
+                { key: "all", label: "Tất cả", count: counts.all },
+              ] as const).map((t) => (
+                <button
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
+                  className={cn(
+                    "inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition",
+                    tab === t.key
+                      ? "bg-surface text-foreground shadow-soft"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {t.label}
+                  <span
+                    className={cn(
+                      "inline-flex h-5 min-w-[20px] items-center justify-center rounded-md px-1 text-[10px] font-bold",
+                      tab === t.key
+                        ? "bg-primary/10 text-primary"
+                        : "bg-muted text-muted-foreground",
+                    )}
+                  >
+                    {t.count}
+                  </span>
+                </button>
+              ))}
             </div>
           </div>
         </div>
