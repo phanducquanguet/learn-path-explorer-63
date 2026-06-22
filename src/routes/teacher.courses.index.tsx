@@ -625,9 +625,23 @@ function TeacherCourseCard({
           <Stat label="Học viên" value={studentCount} />
         </div>
 
-        {isTeacherOwn && approvalStatus === "rejected" && reviewerNote && (
-          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] text-red-700 dark:border-red-900/40 dark:bg-red-950/30">
-            <span className="font-semibold">Admin từ chối:</span> {reviewerNote}
+        {isTeacherOwn && approvalStatus === "rejected" && (
+          <div className="flex items-start justify-between gap-2 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] text-red-700 dark:border-red-900/40 dark:bg-red-950/30">
+            <div className="min-w-0 flex-1">
+              <div className="font-semibold">Khóa học bị admin từ chối</div>
+              <div className="mt-0.5 line-clamp-1 text-red-600/80">
+                {reviewerNote ? `"${reviewerNote}"` : "Bấm để xem nhận xét chi tiết."}
+              </div>
+            </div>
+            <button
+              onClick={(e) => {
+                stop(e);
+                onViewNote();
+              }}
+              className="inline-flex h-7 shrink-0 items-center gap-1 rounded-md border border-red-300 bg-white px-2 text-[11px] font-semibold text-red-700 hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/40"
+            >
+              <MessageSquare className="h-3 w-3" /> Xem nhận xét
+            </button>
           </div>
         )}
 
