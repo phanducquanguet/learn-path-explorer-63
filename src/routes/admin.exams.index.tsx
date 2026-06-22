@@ -160,7 +160,9 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
               Bài luyện thi
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Bài thi được phân loại theo cấp độ (A1–C2) và dùng chung cho mọi học viên cùng cấp.
+              {scope === "teacher"
+                ? "Tạo bài kiểm tra và luyện tập cho học viên trong các lớp bạn được phân công."
+                : "Bài thi được phân loại theo cấp độ (A1–C2) và dùng chung cho mọi học viên cùng cấp."}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
