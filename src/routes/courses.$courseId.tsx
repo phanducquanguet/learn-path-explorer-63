@@ -31,7 +31,9 @@ import {
   ArrowRight,
   TrendingUp,
   StickyNote,
+  Star,
 } from "lucide-react";
+import { CourseReviewsView } from "@/components/CourseReviewsView";
 import { getCourse, type Activity, type Unit } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
 import { QuizPanel } from "@/components/QuizPanel";
@@ -65,7 +67,7 @@ const activityIcon = (t: Activity["type"]) => {
 const labelType = (t: Activity["type"]) =>
   ({ video: "Video", reading: "Đọc", quiz: "Quiz", speaking: "Nói", writing: "Viết" })[t];
 
-type TabKey = "overview" | "members" | "scores" | "activities" | "competence" | "notes" | "qa";
+type TabKey = "overview" | "members" | "scores" | "activities" | "competence" | "notes" | "qa" | "reviews";
 
 function CoursePage() {
   const { courseId } = Route.useParams();
@@ -565,6 +567,9 @@ function CoursePage() {
                   <Tab active={tab === "qa"} onClick={() => setTab("qa")} icon={<MessageSquare className="h-4 w-4" />}>
                     Hỏi đáp
                   </Tab>
+                  <Tab active={tab === "reviews"} onClick={() => setTab("reviews")} icon={<Star className="h-4 w-4" />}>
+                    Nhận xét
+                  </Tab>
                 </div>
               </div>
 
@@ -590,6 +595,13 @@ function CoursePage() {
               {tab === "competence" && <CompetenceView />}
               {tab === "notes" && <CourseNotesView course={course} hue={level.hue} />}
               {tab === "qa" && <CourseQAView course={course} role={role} />}
+              {tab === "reviews" && (
+                <CourseReviewsView
+                  courseId={course.id}
+                  teacherName="Cô Mai Lan"
+                  role={isStaff ? role : "student"}
+                />
+              )}
             </>
           )}
         </main>
