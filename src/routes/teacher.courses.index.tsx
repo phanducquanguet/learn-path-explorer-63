@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Search,
   X,
@@ -12,6 +12,8 @@ import {
   Sparkles,
   ArrowRight,
   MessageSquare,
+  Plus,
+  UserCheck,
 } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
 import { levels, type Course, type Level } from "@/lib/lms-data";
