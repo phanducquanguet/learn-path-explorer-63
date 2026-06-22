@@ -663,8 +663,10 @@ function PublishDialog({
 
   useEffect(() => {
     if (draft) {
-      setVisibility(draft.visibility === "system" ? "system" : "classes");
-      setSelected(draft.classIds ?? []);
+      const v =
+        draft.pendingVisibility ?? draft.visibility ?? "classes";
+      setVisibility(v === "system" ? "system" : "classes");
+      setSelected(draft.pendingClassIds ?? draft.classIds ?? []);
     }
   }, [draft?.id]);
 
@@ -678,10 +680,10 @@ function PublishDialog({
     <Dialog open={!!draft} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Publish khóa học</DialogTitle>
+          <DialogTitle>Gửi yêu cầu publish</DialogTitle>
           <DialogDescription>
-            Chọn phạm vi để học viên có thể nhìn thấy khóa "{draft?.title || "Chưa đặt tên"}" (cấp
-            độ {levelCode}).
+            Chọn phạm vi muốn publish cho khóa "{draft?.title || "Chưa đặt tên"}" (cấp độ{" "}
+            {levelCode}). Yêu cầu sẽ được gửi tới admin để phê duyệt trước khi học viên thấy.
           </DialogDescription>
         </DialogHeader>
 
