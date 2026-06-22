@@ -1024,7 +1024,7 @@ export function TestExamBuilder({
               className="rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft"
               style={{ background: "var(--gradient-brand)" }}
             >
-              Tạo đề thi
+              {submitLabel}
             </button>
           )}
         </div>
