@@ -31,6 +31,7 @@ type SavedExam = {
   id?: string;
   name: string;
   levelCode: string;
+  levelCodes?: string[];
   duration: number;
   description?: string;
   thumbnail?: string;
@@ -39,6 +40,11 @@ type SavedExam = {
   groups?: Record<string, { questions: unknown[] }>;
   classIds?: string[];
   savedAt: string;
+};
+
+const getLevels = (e: SavedExam): string[] => {
+  if (e.levelCodes && e.levelCodes.length) return e.levelCodes;
+  return e.levelCode ? [e.levelCode] : [];
 };
 
 const SEED: SavedExam[] = [
