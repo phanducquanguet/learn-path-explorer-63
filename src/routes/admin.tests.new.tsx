@@ -176,13 +176,13 @@ export function TestExamBuilder({
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
-  const [level, setLevel] = useState<QLevel>("B1");
+  const [levels, setLevels] = useState<QLevel[]>(["B1"]);
+  const level: QLevel = levels[0] ?? "B1";
   const [orgId, setOrgId] = useState<string>(orgs[0]?.id ?? "");
   const [classIds, setClassIds] = useState<string[]>([]);
   const [duration, setDuration] = useState(isExam ? 90 : 60);
   const [openAt, setOpenAt] = useState("");
   const [closeAt, setCloseAt] = useState("");
-  const [thumbnail, setThumbnail] = useState<string>("");
   const [structure, setStructure] = useState<StructureItem[]>([
     { skill: "listening", type: "mcq", level: "B1", difficulty: "mixed", count: 10, sectionDurationMinutes: 15, pickedIds: [] },
     { skill: "reading", type: "mcq", level: "B1", difficulty: "mixed", count: 10, sectionDurationMinutes: 20, pickedIds: [] },
