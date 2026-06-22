@@ -22,8 +22,9 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/exams/")({
   head: () => ({ meta: [{ title: "Bài luyện thi — UNICOM LMS" }] }),
-  component: ExamsList,
+  component: () => <ExamsList scope="admin" />,
 });
+
 
 type SavedExam = {
   id?: string;
@@ -71,11 +72,19 @@ const SEED: SavedExam[] = [
   },
 ];
 
-function ExamsList() {
+const EXAMS_KEY = (scope: "admin" | "teacher") =>
+  scope === "teacher" ? "unicom.teacher.exams" : "unicom.exams";
+const PUBLISH_SCOPE = (scope: "admin" | "teacher") =>
+  scope === "teacher" ? "teacher.exams" : "exams";
+
+export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } = {}) {
   const { role } = useRole();
-  const isAdmin = role === "admin";
+  const canManage = scope === "admin" ? role === "admin" : role === "teacher";
   const [exams, setExams] = useState<SavedExam[]>([]);
-  const { getStatus, toggle, wasEverPublished } = usePublishStatus("exams", "published");
+  const { getStatus, toggle, wasEverPublished } = usePublishStatus(
+    PUBLISH_SCOPE(scope),
+    "published",
+  );
 
   const handleTogglePublish = (id: string, name: string) => {
     const current = getStatus(id);
@@ -90,10 +99,12 @@ function ExamsList() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const raw = window.localStorage.getItem("unicom.exams");
+    const KEY = EXAMS_KEY(scope);
+    const raw = window.localStorage.getItem(KEY);
     if (!raw) {
-      window.localStorage.setItem("unicom.exams", JSON.stringify(SEED));
-      setExams(SEED);
+      const seed = scope === "admin" ? SEED : [];
+      window.localStorage.setItem(KEY, JSON.stringify(seed));
+      setExams(seed);
     } else {
       try {
         const parsed: SavedExam[] = JSON.parse(raw);
@@ -111,17 +122,18 @@ function ExamsList() {
         });
         setExams(cleaned);
       } catch {
-        setExams(SEED);
+        setExams(scope === "admin" ? SEED : []);
       }
     }
-  }, []);
+  }, [scope]);
 
   const persist = (next: SavedExam[]) => {
     setExams(next);
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("unicom.exams", JSON.stringify(next));
+      window.localStorage.setItem(EXAMS_KEY(scope), JSON.stringify(next));
     }
   };
+
 
   const remove = (id: string) => {
     persist(exams.filter((e) => e.id !== id));
@@ -153,15 +165,16 @@ function ExamsList() {
             >
               <MessageSquare className="h-4 w-4" /> Hỏi đáp học viên
             </Link>
-            {isAdmin && (
+            {canManage && (
               <Link
-                to="/admin/exams/new"
+                to={scope === "teacher" ? "/teacher/exams/new" : "/admin/exams/new"}
                 className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
                 style={{ background: "var(--gradient-brand)" }}
               >
                 <Plus className="h-4 w-4" /> Tạo bài thi mới
               </Link>
             )}
+
           </div>
         </div>
 
@@ -181,7 +194,7 @@ function ExamsList() {
         </div>
 
         {/* Filter trạng thái xuất bản (chỉ admin) */}
-        {isAdmin && (
+        {canManage && (
           <div className="mt-6 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3">
             <span className="text-xs font-semibold text-muted-foreground">Trạng thái:</span>
             {([
@@ -227,7 +240,7 @@ function ExamsList() {
             {exams
               .filter((e) => {
                 const st = getStatus(e.id ?? "");
-                if (!isAdmin) return st === "published";
+                if (!canManage) return st === "published";
                 if (statusFilter === "all") return true;
                 return st === statusFilter;
               })
@@ -243,10 +256,11 @@ function ExamsList() {
                   )}
                 >
                   <Link
-                    to="/admin/exams/$examId"
+                    to={scope === "teacher" ? "/teacher/exams/$examId" : "/admin/exams/$examId"}
                     params={{ examId: id }}
                     className="flex flex-1 flex-col"
                   >
+
                     <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
                       {exam.thumbnail ? (
                         <img
@@ -282,7 +296,7 @@ function ExamsList() {
                           {STATUS_LABEL[status]}
                         </span>
                       </div>
-                      {isAdmin && (
+                      {canManage && (
                         <div className="absolute right-3 top-3 flex gap-1.5">
                           <button
                             onClick={(e) => {
@@ -334,7 +348,7 @@ function ExamsList() {
                   </Link>
 
                   <div className="flex flex-wrap gap-2 px-5 pb-5">
-                    {isAdmin && (
+                    {canManage && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -359,7 +373,7 @@ function ExamsList() {
                         )}
                       </button>
                     )}
-                    {isAdmin && (
+                    {canManage && (
                       <button
                         onClick={(e) => e.stopPropagation()}
                         className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted"

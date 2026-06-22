@@ -21,8 +21,12 @@ export const Route = createFileRoute("/admin/exams/$examId")({
   head: ({ params }) => ({
     meta: [{ title: `Bài luyện thi ${params.examId} — UNICOM LMS` }],
   }),
-  component: ExamDetail,
+  component: () => {
+    const { examId } = Route.useParams();
+    return <ExamDetail examId={examId} scope="admin" />;
+  },
 });
+
 
 type QuestionBlock = {
   id: string;
@@ -48,15 +52,21 @@ type SavedExam = {
   savedAt: string;
 };
 
-function ExamDetail() {
-  const { examId } = Route.useParams();
+export function ExamDetail({
+  examId,
+  scope = "admin",
+}: {
+  examId: string;
+  scope?: "admin" | "teacher";
+}) {
   const [exam, setExam] = useState<SavedExam | null>(null);
   const [tab, setTab] = useState<"overview" | "questions">("overview");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const raw = window.localStorage.getItem("unicom.exams");
+      const key = scope === "teacher" ? "unicom.teacher.exams" : "unicom.exams";
+      const raw = window.localStorage.getItem(key);
       const list: SavedExam[] = raw ? JSON.parse(raw) : [];
       const found =
         list.find((e) => e.id === examId) ?? list[Number(examId)] ?? null;
@@ -64,7 +74,8 @@ function ExamDetail() {
     } catch {
       setExam(null);
     }
-  }, [examId]);
+  }, [examId, scope]);
+
 
   const skillLabel = (id: string) =>
     EXAM_SKILLS.find((s) => s.id === id)?.label.replace(/\s*\(.*\)/, "") ?? id;
@@ -83,7 +94,7 @@ function ExamDetail() {
         <TopNav />
         <div className="mx-auto max-w-4xl px-6 pt-16 text-center">
           <Link
-            to="/admin/exams"
+            to={scope === "teacher" ? "/teacher/exams" : "/admin/exams"}
             className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" /> Trở lại Luyện thi
@@ -107,7 +118,7 @@ function ExamDetail() {
       <TopNav />
       <div className="mx-auto max-w-6xl px-6 pb-20 pt-10 sm:px-8">
         <Link
-          to="/admin/exams"
+          to={scope === "teacher" ? "/teacher/exams" : "/admin/exams"}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" /> Trở lại Luyện thi

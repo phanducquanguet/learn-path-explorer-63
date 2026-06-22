@@ -27,8 +27,9 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/exams/new")({
   head: () => ({ meta: [{ title: "Tạo bài luyện thi — UNICOM LMS" }] }),
-  component: ExamBuilder,
+  component: () => <ExamBuilder scope="admin" />,
 });
+
 
 const SKILL_ICON: Record<string, React.ComponentType<{ className?: string }>> = {
   listening: Headphones,
@@ -76,7 +77,7 @@ const emptyQuestion = (skill: QSkill, level: QLevel): CustomQuestion => {
   };
 };
 
-function ExamBuilder() {
+export function ExamBuilder({ scope = "admin" }: { scope?: "admin" | "teacher" } = {}) {
   const [meta, setMeta] = useState({
     name: "",
     levelCode: "B1" as QLevel,
@@ -121,7 +122,9 @@ function ExamBuilder() {
   const navigate = useNavigate();
   const save = () => {
     if (typeof window !== "undefined") {
-      const drafts = JSON.parse(window.localStorage.getItem("unicom.exams") || "[]");
+      const storeKey = scope === "teacher" ? "unicom.teacher.exams" : "unicom.exams";
+      const publishKey = scope === "teacher" ? "unicom.publish.teacher.exams" : "unicom.publish.exams";
+      const drafts = JSON.parse(window.localStorage.getItem(storeKey) || "[]");
       drafts.push({
         id: `exam-${Date.now()}`,
         ...meta,
@@ -130,21 +133,24 @@ function ExamBuilder() {
         totalQuestions,
         savedAt: new Date().toISOString(),
       });
-      window.localStorage.setItem("unicom.exams", JSON.stringify(drafts));
-      // Đánh dấu bài thi mới ở trạng thái "Bản nháp" để admin chủ động xuất bản.
+      window.localStorage.setItem(storeKey, JSON.stringify(drafts));
+      // Đánh dấu bài thi mới ở trạng thái "Bản nháp" để chủ động xuất bản.
       try {
         const id = drafts[drafts.length - 1].id;
-        const pubKey = "unicom.publish.exams";
-        const pub = JSON.parse(window.localStorage.getItem(pubKey) || "{}");
+        const pub = JSON.parse(window.localStorage.getItem(publishKey) || "{}");
         pub[id] = "draft";
-        window.localStorage.setItem(pubKey, JSON.stringify(pub));
+        window.localStorage.setItem(publishKey, JSON.stringify(pub));
       } catch {
         /* noop */
       }
     }
     setSaved(true);
-    setTimeout(() => navigate({ to: "/admin/exams" }), 700);
+    setTimeout(
+      () => navigate({ to: scope === "teacher" ? "/teacher/exams" : "/admin/exams" }),
+      700,
+    );
   };
+
 
   const isMulti = selectedSkills.length > 1;
   const current = groups[activeSkill];
