@@ -29,13 +29,34 @@ import {
 
 type ApprovalStatus = "draft" | "pending" | "approved" | "rejected";
 
+type DraftNode = {
+  id: string;
+  kind: string;
+  title?: string;
+  description?: string;
+  fileName?: string;
+  duration?: number;
+  children?: DraftNode[];
+  questions?: unknown[];
+};
+
+type DraftUnit = {
+  id: string;
+  title?: string;
+  desc?: string;
+  nodes?: DraftNode[];
+};
+
 type DraftCourse = {
   id: string;
   title?: string;
   subtitle?: string;
+  description?: string;
+  thumbnail?: string;
+  category?: string;
   levelCode?: string;
   hours?: number;
-  units?: { id: string }[];
+  units?: DraftUnit[];
   visibility?: "system" | "classes";
   classIds?: string[];
   createdBy?: "teacher" | "admin";
@@ -45,6 +66,18 @@ type DraftCourse = {
   submittedAt?: string;
   reviewedAt?: string;
   reviewerNote?: string;
+};
+
+const NODE_KIND_LABEL: Record<string, string> = {
+  group: "Nhóm",
+  video: "Video bài giảng",
+  "video-speaking": "Luyện nói",
+  pdf: "Tài liệu PDF",
+  "pdf-audio": "PDF kèm audio",
+  practice: "Bài thực hành",
+  scorm: "Gói SCORM",
+  h5p: "Gói H5P",
+  question: "Câu hỏi",
 };
 
 const STORAGE_KEY = "unicom.uploaded.courses";
