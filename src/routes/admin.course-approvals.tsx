@@ -16,7 +16,9 @@ import {
 } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
 import { classes as allClasses } from "@/lib/teacher-data";
+import { orgs, classOrgMap, getOrg } from "@/lib/orgs";
 import { levels } from "@/lib/lms-data";
+import { Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -59,6 +61,10 @@ type DraftCourse = {
   units?: DraftUnit[];
   visibility?: "system" | "classes";
   classIds?: string[];
+  /** Đơn vị (trường / trung tâm) mà giáo viên thuộc về. */
+  orgId?: string;
+  /** Tên giáo viên đề xuất khóa học (hiển thị tham khảo). */
+  teacherName?: string;
   createdBy?: "teacher" | "admin";
   approvalStatus?: ApprovalStatus;
   pendingVisibility?: "system" | "classes";
@@ -100,6 +106,7 @@ function ApprovalsPage() {
   const [drafts, setDrafts] = useState<DraftCourse[]>([]);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"pending" | "approved" | "rejected" | "all">("pending");
+  const [orgFilter, setOrgFilter] = useState<string>("all");
   const [reviewing, setReviewing] = useState<DraftCourse | null>(null);
   const [rejecting, setRejecting] = useState<DraftCourse | null>(null);
 
@@ -108,14 +115,12 @@ function ApprovalsPage() {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       const existing: DraftCourse[] = raw ? JSON.parse(raw) : [];
-      const hasTeacherDraft = existing.some((d) => d.createdBy === "teacher");
-      if (!hasTeacherDraft) {
-        const seeded = [...existing, ...buildDemoTeacherDrafts()];
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-        setDrafts(seeded);
-      } else {
-        setDrafts(existing);
-      }
+      // Loại bỏ các bản demo cũ (thiếu orgId / thiếu bản "approved") và seed lại
+      // để các trường mới (đơn vị, giáo viên, khóa hoàn chỉnh) xuất hiện.
+      const withoutDemo = existing.filter((d) => !d.id?.startsWith("demo-"));
+      const seeded = [...withoutDemo, ...buildDemoTeacherDrafts()];
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+      setDrafts(seeded);
     } catch {
       setDrafts([]);
     }
@@ -151,14 +156,15 @@ function ApprovalsPage() {
     const q = query.trim().toLowerCase();
     return teacherDrafts
       .filter((d) => (tab === "all" ? true : (d.approvalStatus ?? "draft") === tab))
+      .filter((d) => (orgFilter === "all" ? true : d.orgId === orgFilter))
       .filter((d) => {
         if (!q) return true;
-        return `${d.title ?? ""} ${d.subtitle ?? ""} ${d.levelCode ?? ""}`
+        return `${d.title ?? ""} ${d.subtitle ?? ""} ${d.levelCode ?? ""} ${d.teacherName ?? ""}`
           .toLowerCase()
           .includes(q);
       })
       .sort((a, b) => (b.submittedAt ?? "").localeCompare(a.submittedAt ?? ""));
-  }, [teacherDrafts, tab, query]);
+  }, [teacherDrafts, tab, query, orgFilter]);
 
   const approve = (d: DraftCourse) => {
     const visibility = d.pendingVisibility ?? d.visibility ?? "classes";
@@ -263,11 +269,47 @@ function ApprovalsPage() {
           </div>
         </div>
 
+        {/* Org filter */}
+        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3">
+          <div className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+            <Building2 className="h-3.5 w-3.5" /> Đơn vị:
+          </div>
+          <button
+            onClick={() => setOrgFilter("all")}
+            className={cn(
+              "rounded-lg px-2.5 py-1 text-xs font-semibold transition",
+              orgFilter === "all"
+                ? "bg-foreground text-background"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Tất cả ({teacherDrafts.length})
+          </button>
+          {orgs.map((o) => {
+            const count = teacherDrafts.filter((d) => d.orgId === o.id).length;
+            return (
+              <button
+                key={o.id}
+                onClick={() => setOrgFilter(o.id)}
+                className={cn(
+                  "rounded-lg px-2.5 py-1 text-xs font-semibold transition",
+                  orgFilter === o.id
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {o.shortName} ({count})
+              </button>
+            );
+          })}
+        </div>
+
         <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">Khóa học</th>
+                <th className="px-4 py-3">Đơn vị</th>
                 <th className="px-4 py-3">Cấp độ</th>
                 <th className="px-4 py-3">Đề xuất phạm vi</th>
                 <th className="px-4 py-3">Gửi lúc</th>
@@ -278,7 +320,7 @@ function ApprovalsPage() {
             <tbody>
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                  <td colSpan={7} className="px-4 py-12 text-center text-sm text-muted-foreground">
                     Không có khóa học phù hợp.
                   </td>
                 </tr>
@@ -287,6 +329,7 @@ function ApprovalsPage() {
                 const lv = levels.find((l) => l.code === d.levelCode);
                 const status = (d.approvalStatus ?? "draft") as ApprovalStatus;
                 const scope = scopeSummary(d);
+                const org = getOrg(d.orgId);
                 return (
                   <tr key={d.id} className="border-t border-border">
                     <td className="px-4 py-3">
@@ -296,6 +339,20 @@ function ApprovalsPage() {
                       <div className="line-clamp-1 text-xs text-muted-foreground">
                         {d.subtitle || "—"}
                       </div>
+                      {d.teacherName && (
+                        <div className="mt-0.5 text-[11px] text-muted-foreground">
+                          GV: {d.teacherName}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {org ? (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                          <Building2 className="h-3 w-3" /> {org.shortName}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">
                       {lv ? lv.code : d.levelCode || "—"}
@@ -370,24 +427,31 @@ function ApprovalsPage() {
                   </p>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3 lg:grid-cols-5">
+                <Meta
+                  icon={Building2}
+                  label="Đơn vị"
+                  value={getOrg(reviewing.orgId)?.name || "—"}
+                />
                 <Meta icon={Layers} label="Cấp độ" value={reviewing.levelCode || "—"} />
                 <Meta
                   icon={Users}
                   label="Số Units"
                   value={String(reviewing.units?.length ?? 0)}
                 />
-                <Meta
-                  icon={Clock}
-                  label="Giờ học"
-                  value={`${reviewing.hours ?? 0}h`}
-                />
+                <Meta icon={Clock} label="Giờ học" value={`${reviewing.hours ?? 0}h`} />
                 <Meta
                   icon={Sparkles}
                   label="Danh mục"
                   value={reviewing.category || "—"}
                 />
               </div>
+              {reviewing.teacherName && (
+                <div className="rounded-xl border border-border bg-background p-3 text-xs">
+                  <span className="font-semibold text-foreground">Giáo viên đề xuất:</span>{" "}
+                  <span className="text-muted-foreground">{reviewing.teacherName}</span>
+                </div>
+              )}
               <div className="rounded-xl border border-border bg-background p-3 text-xs">
                 <div className="font-semibold text-foreground">Đề xuất phạm vi publish</div>
                 <div className="mt-1 text-muted-foreground">{scopeSummary(reviewing)}</div>
@@ -701,10 +765,18 @@ function RejectDialog({
 function buildDemoTeacherDrafts(): DraftCourse[] {
   const now = Date.now();
   const submittedPending = new Date(now - 1000 * 60 * 60 * 6).toISOString(); // 6h trước
+  const submittedApproved = new Date(now - 1000 * 60 * 60 * 24 * 5).toISOString(); // 5 ngày trước
+  const reviewedApproved = new Date(now - 1000 * 60 * 60 * 24 * 4).toISOString();
   const submittedRejected = new Date(now - 1000 * 60 * 60 * 48).toISOString(); // 2 ngày trước
   const reviewedRejected = new Date(now - 1000 * 60 * 60 * 24).toISOString();
 
-  const demoClassIds = allClasses.slice(0, 2).map((c) => c.id);
+  // Lấy lớp theo từng đơn vị để demo phân bổ đa đơn vị.
+  const classesOf = (orgId: string) =>
+    allClasses.filter((c) => classOrgMap[c.id] === orgId).map((c) => c.id);
+
+  const hnClassIds = classesOf("org-unicom-hn");
+  const hcmClassIds = classesOf("org-unicom-hcm");
+  const thptClassIds = classesOf("org-thpt-abc");
 
   const pending: DraftCourse = {
     id: `demo-pending-${now}`,
@@ -715,13 +787,15 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
     category: "Empower",
     levelCode: "A2",
     hours: 24,
+    orgId: "org-unicom-hn",
+    teacherName: "Cô Mai Lan",
     createdBy: "teacher",
     approvalStatus: "pending",
     submittedAt: submittedPending,
     pendingVisibility: "classes",
-    pendingClassIds: demoClassIds,
+    pendingClassIds: hnClassIds,
     visibility: "classes",
-    classIds: demoClassIds,
+    classIds: hnClassIds,
     units: [
       {
         id: "demo-u1",
@@ -832,10 +906,13 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
     id: `demo-rejected-${now}`,
     title: "Business Writing Essentials",
     subtitle: "Viết email và báo cáo công việc hiệu quả",
-    description: "Khóa học cô đọng kỹ năng viết email, memo và báo cáo trong môi trường doanh nghiệp.",
+    description:
+      "Khóa học cô đọng kỹ năng viết email, memo và báo cáo trong môi trường doanh nghiệp.",
     category: "Empower",
     levelCode: "B1",
     hours: 16,
+    orgId: "org-thpt-abc",
+    teacherName: "Thầy Nguyễn Tuấn",
     createdBy: "teacher",
     approvalStatus: "rejected",
     submittedAt: submittedRejected,
@@ -843,9 +920,9 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
     reviewerNote:
       "Nội dung Unit 2 còn thiếu phần bài tập thực hành. Vui lòng bổ sung quiz cuối bài trước khi gửi lại.",
     pendingVisibility: "classes",
-    pendingClassIds: demoClassIds,
+    pendingClassIds: thptClassIds,
     visibility: "classes",
-    classIds: demoClassIds,
+    classIds: thptClassIds,
     units: [
       {
         id: "demo-r-u1",
@@ -884,6 +961,177 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
     ],
   };
 
-  return [pending, rejected];
+  // Khóa học hoàn chỉnh — đã phê duyệt, đầy đủ video/PDF/luyện nói/quiz/SCORM/H5P.
+  const approved: DraftCourse = {
+    id: `demo-approved-${now}`,
+    title: "IELTS Foundation B1 — Complete Course",
+    subtitle: "Khóa học hoàn chỉnh chuẩn bị nền tảng IELTS từ B1",
+    description:
+      "Khóa học 12 tuần được biên soạn đầy đủ 4 kỹ năng, mỗi unit gồm video bài giảng, tài liệu PDF kèm audio, phòng luyện nói, bài tập tương tác H5P, gói SCORM mô phỏng phòng thi và quiz đánh giá cuối bài. Đã được trung tâm phê duyệt và publish toàn hệ thống cho học viên cấp B1.",
+    category: "Empower",
+    levelCode: "B1",
+    hours: 48,
+    orgId: "org-unicom-hcm",
+    teacherName: "Cô Trần Hồng Nhung",
+    createdBy: "teacher",
+    approvalStatus: "approved",
+    submittedAt: submittedApproved,
+    reviewedAt: reviewedApproved,
+    visibility: "system",
+    classIds: hcmClassIds,
+    pendingVisibility: undefined,
+    pendingClassIds: undefined,
+    units: [
+      {
+        id: "demo-a-u1",
+        title: "Unit 1: IELTS Listening — Part 1 & 2",
+        desc: "Làm quen format đề và luyện nghe các tình huống đời sống.",
+        nodes: [
+          {
+            id: "demo-a-u1-n1",
+            kind: "video",
+            title: "Video: Tổng quan IELTS Listening",
+            description: "Giới thiệu format, scoring và chiến lược làm bài.",
+            duration: 15,
+            fileName: "a-u1-overview.mp4",
+          },
+          {
+            id: "demo-a-u1-n2",
+            kind: "pdf-audio",
+            title: "Tài liệu PDF + Audio: Part 1 practice",
+            description: "10 bài luyện nghe Part 1 kèm transcript.",
+            fileName: "a-u1-part1.pdf",
+          },
+          {
+            id: "demo-a-u1-n3",
+            kind: "h5p",
+            title: "Tương tác H5P: Fill in the blanks",
+            fileName: "a-u1-h5p.h5p",
+          },
+          {
+            id: "demo-a-u1-n4",
+            kind: "practice",
+            title: "Quiz Listening Unit 1",
+            questions: Array.from({ length: 15 }, () => ({})),
+          },
+        ],
+      },
+      {
+        id: "demo-a-u2",
+        title: "Unit 2: IELTS Reading — True/False/Not Given",
+        desc: "Nắm vững dạng câu hỏi T/F/NG và chiến lược skim/scan.",
+        nodes: [
+          {
+            id: "demo-a-u2-n1",
+            kind: "video",
+            title: "Video: Chiến lược True/False/Not Given",
+            duration: 18,
+            fileName: "a-u2-strategy.mp4",
+          },
+          {
+            id: "demo-a-u2-g1",
+            kind: "group",
+            title: "Tài liệu luyện đọc",
+            children: [
+              {
+                id: "demo-a-u2-g1-n1",
+                kind: "pdf",
+                title: "PDF: 5 passages B1",
+                fileName: "a-u2-passages.pdf",
+              },
+              {
+                id: "demo-a-u2-g1-n2",
+                kind: "pdf",
+                title: "PDF: Đáp án và giải thích",
+                fileName: "a-u2-answers.pdf",
+              },
+            ],
+          },
+          {
+            id: "demo-a-u2-n3",
+            kind: "practice",
+            title: "Quiz Reading Unit 2",
+            questions: Array.from({ length: 20 }, () => ({})),
+          },
+        ],
+      },
+      {
+        id: "demo-a-u3",
+        title: "Unit 3: IELTS Speaking — Part 1 Q&A",
+        desc: "Luyện trả lời các câu hỏi quen thuộc trong Part 1.",
+        nodes: [
+          {
+            id: "demo-a-u3-n1",
+            kind: "video",
+            title: "Video: 50 câu hỏi Part 1 thường gặp",
+            duration: 22,
+            fileName: "a-u3-questions.mp4",
+          },
+          {
+            id: "demo-a-u3-n2",
+            kind: "video-speaking",
+            title: "Luyện nói: Self-recording 10 chủ đề",
+            description: "Học viên ghi âm và nhận nhận xét tự động từ AI.",
+            duration: 30,
+          },
+          {
+            id: "demo-a-u3-n3",
+            kind: "scorm",
+            title: "Gói SCORM: Mô phỏng phòng thi Speaking",
+            fileName: "a-u3-scorm.zip",
+          },
+        ],
+      },
+      {
+        id: "demo-a-u4",
+        title: "Unit 4: IELTS Writing — Task 1 Overview",
+        desc: "Phân tích biểu đồ và viết overview chuẩn.",
+        nodes: [
+          {
+            id: "demo-a-u4-n1",
+            kind: "video",
+            title: "Video: Cấu trúc Task 1",
+            duration: 16,
+            fileName: "a-u4-task1.mp4",
+          },
+          {
+            id: "demo-a-u4-n2",
+            kind: "pdf",
+            title: "PDF: 20 sample answers band 6.5+",
+            fileName: "a-u4-samples.pdf",
+          },
+          {
+            id: "demo-a-u4-n3",
+            kind: "practice",
+            title: "Bài viết Task 1 — Nộp bài chấm tự luận",
+            questions: Array.from({ length: 3 }, () => ({})),
+          },
+        ],
+      },
+      {
+        id: "demo-a-u5",
+        title: "Unit 5: Mock Test & Tổng kết",
+        desc: "Bài thi thử toàn diện 4 kỹ năng và review.",
+        nodes: [
+          {
+            id: "demo-a-u5-n1",
+            kind: "scorm",
+            title: "Mock Test SCORM — 4 kỹ năng",
+            fileName: "a-u5-mock.zip",
+            duration: 165,
+          },
+          {
+            id: "demo-a-u5-n2",
+            kind: "video",
+            title: "Video: Phân tích kết quả & lộ trình B2",
+            duration: 20,
+            fileName: "a-u5-review.mp4",
+          },
+        ],
+      },
+    ],
+  };
+
+  return [pending, approved, rejected];
 }
 
