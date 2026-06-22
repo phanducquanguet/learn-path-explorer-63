@@ -561,6 +561,21 @@ function UploadPage() {
                 </div>
               )}
 
+              {isTeacher && (
+                <div className="rounded-xl border border-border bg-surface p-4">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    Lời nhắn cho admin (nếu có)
+                  </label>
+                  <textarea
+                    value={course.teacherNote}
+                    onChange={(e) => setCourse((c) => ({ ...c, teacherNote: e.target.value }))}
+                    placeholder="VD: Khóa học này cần được duyệt gấp cho lớp A1-01 tuần sau..."
+                    rows={3}
+                    className="mt-2 w-full rounded-lg border border-border bg-background p-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+              )}
+
               {saved && (
                 <div className="rounded-xl bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-700">
                   {isTeacher
