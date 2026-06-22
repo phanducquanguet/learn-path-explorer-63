@@ -202,12 +202,25 @@ function TeacherCourseDetailPage() {
     : 0;
   const avgProgress = courseClasses.length
     ? Math.round(courseClasses.reduce((s, c) => s + c.avgProgress, 0) / courseClasses.length)
-    : course.progress;
+    : (data?.course.progress ?? 0);
+
+  if (!data) {
+    return (
+      <div className="min-h-screen bg-background">
+        <TopNav />
+        <div className="p-10 text-center text-muted-foreground">
+          {draftLoaded ? "Không tìm thấy khóa học." : "Đang tải…"}
+        </div>
+      </div>
+    );
+  }
+  const { course, level } = data;
 
   return (
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-8 sm:px-8">
+
         {/* Breadcrumb */}
         <Link
           to="/teacher/courses"
