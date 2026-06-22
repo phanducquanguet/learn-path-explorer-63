@@ -44,6 +44,7 @@ import { Route as ExamsResultSubmissionIdRouteImport } from './routes/exams.resu
 import { Route as AdminTestsNewRouteImport } from './routes/admin.tests.new'
 import { Route as AdminExamsNewRouteImport } from './routes/admin.exams.new'
 import { Route as AdminExamsExamIdRouteImport } from './routes/admin.exams.$examId'
+import { Route as AdminCourseApprovalsDraftIdRouteImport } from './routes/admin.course-approvals.$draftId'
 import { Route as AdminExamsExamIdSubmissionsRouteImport } from './routes/admin.exams.$examId.submissions'
 
 const PracticeRoute = PracticeRouteImport.update({
@@ -221,6 +222,12 @@ const AdminExamsExamIdRoute = AdminExamsExamIdRouteImport.update({
   path: '/admin/exams/$examId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminCourseApprovalsDraftIdRoute =
+  AdminCourseApprovalsDraftIdRouteImport.update({
+    id: '/$draftId',
+    path: '/$draftId',
+    getParentRoute: () => AdminCourseApprovalsRoute,
+  } as any)
 const AdminExamsExamIdSubmissionsRoute =
   AdminExamsExamIdSubmissionsRouteImport.update({
     id: '/submissions',
@@ -234,7 +241,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
-  '/admin/course-approvals': typeof AdminCourseApprovalsRoute
+  '/admin/course-approvals': typeof AdminCourseApprovalsRouteWithChildren
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -247,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/exams/': typeof ExamsIndexRoute
   '/live/': typeof LiveIndexRoute
   '/teacher/': typeof TeacherIndexRoute
+  '/admin/course-approvals/$draftId': typeof AdminCourseApprovalsDraftIdRoute
   '/admin/exams/$examId': typeof AdminExamsExamIdRouteWithChildren
   '/admin/exams/new': typeof AdminExamsNewRoute
   '/admin/tests/new': typeof AdminTestsNewRoute
@@ -271,7 +279,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
-  '/admin/course-approvals': typeof AdminCourseApprovalsRoute
+  '/admin/course-approvals': typeof AdminCourseApprovalsRouteWithChildren
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -284,6 +292,7 @@ export interface FileRoutesByTo {
   '/exams': typeof ExamsIndexRoute
   '/live': typeof LiveIndexRoute
   '/teacher': typeof TeacherIndexRoute
+  '/admin/course-approvals/$draftId': typeof AdminCourseApprovalsDraftIdRoute
   '/admin/exams/$examId': typeof AdminExamsExamIdRouteWithChildren
   '/admin/exams/new': typeof AdminExamsNewRoute
   '/admin/tests/new': typeof AdminTestsNewRoute
@@ -310,7 +319,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
-  '/admin/course-approvals': typeof AdminCourseApprovalsRoute
+  '/admin/course-approvals': typeof AdminCourseApprovalsRouteWithChildren
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -323,6 +332,7 @@ export interface FileRoutesById {
   '/exams/': typeof ExamsIndexRoute
   '/live/': typeof LiveIndexRoute
   '/teacher/': typeof TeacherIndexRoute
+  '/admin/course-approvals/$draftId': typeof AdminCourseApprovalsDraftIdRoute
   '/admin/exams/$examId': typeof AdminExamsExamIdRouteWithChildren
   '/admin/exams/new': typeof AdminExamsNewRoute
   '/admin/tests/new': typeof AdminTestsNewRoute
@@ -363,6 +373,7 @@ export interface FileRouteTypes {
     | '/exams/'
     | '/live/'
     | '/teacher/'
+    | '/admin/course-approvals/$draftId'
     | '/admin/exams/$examId'
     | '/admin/exams/new'
     | '/admin/tests/new'
@@ -400,6 +411,7 @@ export interface FileRouteTypes {
     | '/exams'
     | '/live'
     | '/teacher'
+    | '/admin/course-approvals/$draftId'
     | '/admin/exams/$examId'
     | '/admin/exams/new'
     | '/admin/tests/new'
@@ -438,6 +450,7 @@ export interface FileRouteTypes {
     | '/exams/'
     | '/live/'
     | '/teacher/'
+    | '/admin/course-approvals/$draftId'
     | '/admin/exams/$examId'
     | '/admin/exams/new'
     | '/admin/tests/new'
@@ -464,7 +477,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   PracticeRoute: typeof PracticeRoute
-  AdminCourseApprovalsRoute: typeof AdminCourseApprovalsRoute
+  AdminCourseApprovalsRoute: typeof AdminCourseApprovalsRouteWithChildren
   AdminQuestionBankRoute: typeof AdminQuestionBankRoute
   CoursesCourseIdRoute: typeof CoursesCourseIdRoute
   LevelsLevelRoute: typeof LevelsLevelRoute
@@ -741,6 +754,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminExamsExamIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/course-approvals/$draftId': {
+      id: '/admin/course-approvals/$draftId'
+      path: '/$draftId'
+      fullPath: '/admin/course-approvals/$draftId'
+      preLoaderRoute: typeof AdminCourseApprovalsDraftIdRouteImport
+      parentRoute: typeof AdminCourseApprovalsRoute
+    }
     '/admin/exams/$examId/submissions': {
       id: '/admin/exams/$examId/submissions'
       path: '/submissions'
@@ -763,6 +783,17 @@ const ExamsRouteChildren: ExamsRouteChildren = {
 
 const ExamsRouteWithChildren = ExamsRoute._addFileChildren(ExamsRouteChildren)
 
+interface AdminCourseApprovalsRouteChildren {
+  AdminCourseApprovalsDraftIdRoute: typeof AdminCourseApprovalsDraftIdRoute
+}
+
+const AdminCourseApprovalsRouteChildren: AdminCourseApprovalsRouteChildren = {
+  AdminCourseApprovalsDraftIdRoute: AdminCourseApprovalsDraftIdRoute,
+}
+
+const AdminCourseApprovalsRouteWithChildren =
+  AdminCourseApprovalsRoute._addFileChildren(AdminCourseApprovalsRouteChildren)
+
 interface AdminExamsExamIdRouteChildren {
   AdminExamsExamIdSubmissionsRoute: typeof AdminExamsExamIdSubmissionsRoute
 }
@@ -780,7 +811,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   PracticeRoute: PracticeRoute,
-  AdminCourseApprovalsRoute: AdminCourseApprovalsRoute,
+  AdminCourseApprovalsRoute: AdminCourseApprovalsRouteWithChildren,
   AdminQuestionBankRoute: AdminQuestionBankRoute,
   CoursesCourseIdRoute: CoursesCourseIdRoute,
   LevelsLevelRoute: LevelsLevelRoute,
