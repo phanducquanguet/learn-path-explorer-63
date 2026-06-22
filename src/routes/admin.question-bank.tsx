@@ -260,15 +260,17 @@ export function BankPage({ scope = "admin" }: { scope?: "admin" | "teacher" } = 
     return m;
   }, [items]);
 
-  if (role !== "admin") {
+  if (role !== scope) {
     return (
       <div className="min-h-screen bg-background">
         <TopNav />
         <div className="mx-auto max-w-3xl px-6 py-20 text-center">
           <Library className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h1 className="mt-4 font-display text-2xl font-semibold">Chỉ Quản trị viên</h1>
+          <h1 className="mt-4 font-display text-2xl font-semibold">
+            {scope === "admin" ? "Chỉ Quản trị viên" : "Chỉ Giáo viên"}
+          </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Trang Ngân hàng câu hỏi chỉ dành cho Quản trị viên.
+            Trang Ngân hàng câu hỏi này chỉ dành cho {scope === "admin" ? "Quản trị viên" : "Giáo viên"}.
           </p>
           <Link
             to="/teacher"
@@ -280,6 +282,7 @@ export function BankPage({ scope = "admin" }: { scope?: "admin" | "teacher" } = 
       </div>
     );
   }
+
 
   const remove = (id: string) => {
     setItems((p) => p.filter((x) => x.id !== id));
