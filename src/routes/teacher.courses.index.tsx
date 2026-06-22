@@ -14,12 +14,24 @@ import {
   MessageSquare,
   Plus,
   UserCheck,
+  Send,
+  Pencil,
+  Trash2,
+  Check,
 } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
 import { levels, type Course, type Level } from "@/lib/lms-data";
 import { classes, students } from "@/lib/teacher-data";
 import { cn } from "@/lib/utils";
 import empowerA1Asset from "@/assets/empower-a1.png.asset.json";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 const COURSE_COVERS: Record<string, string> = {};
 const LEVEL_COVERS: Record<string, string> = {
@@ -45,6 +57,18 @@ export const Route = createFileRoute("/teacher/courses/")({
   component: TeacherCoursesPage,
 });
 
+type DraftCourse = {
+  id: string;
+  title?: string;
+  subtitle?: string;
+  levelCode?: string;
+  hours?: number;
+  units?: { id: string }[];
+  visibility?: "system" | "classes";
+  classIds?: string[];
+  createdBy?: "teacher" | "admin";
+};
+
 type CourseRow = {
   course: Course;
   level: Level;
@@ -54,6 +78,8 @@ type CourseRow = {
   avgScore: number;
   origin: "system" | "teacher";
   publishedClassNames?: string[];
+  isPublished?: boolean;
+  draft?: DraftCourse;
 };
 
 function useCourseStats(): CourseRow[] {
@@ -87,41 +113,45 @@ function useCourseStats(): CourseRow[] {
   }, []);
 }
 
-type DraftCourse = {
-  id: string;
-  title?: string;
-  subtitle?: string;
-  levelCode?: string;
-  hours?: number;
-  units?: { id: string }[];
-  visibility?: "system" | "classes";
-  classIds?: string[];
-  createdBy?: "teacher" | "admin";
-};
+const STORAGE_KEY = "unicom.uploaded.courses";
 
-function useTeacherCreatedRows(): CourseRow[] {
+function TeacherCoursesPage() {
+  const systemRows = useCourseStats();
   const [drafts, setDrafts] = useState<DraftCourse[]>([]);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
     try {
-      const raw = window.localStorage.getItem("unicom.uploaded.courses");
+      const raw = window.localStorage.getItem(STORAGE_KEY);
       setDrafts(raw ? JSON.parse(raw) : []);
     } catch {
       setDrafts([]);
     }
   }, []);
 
-  return useMemo(() => {
+  const persist = (next: DraftCourse[]) => {
+    setDrafts(next);
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    } catch {}
+  };
+  const updateDraft = (id: string, patch: Partial<DraftCourse>) =>
+    persist(drafts.map((d) => (d.id === id ? { ...d, ...patch } : d)));
+  const deleteDraft = (id: string) => persist(drafts.filter((d) => d.id !== id));
+
+  const teacherRows = useMemo<CourseRow[]>(() => {
     return drafts
-      .filter((d) => d.createdBy !== "admin") // chỉ khóa giáo viên tự tạo
-      .map<CourseRow | null>((d) => {
+      .filter((d) => d.createdBy !== "admin")
+      .map<CourseRow>((d) => {
         const lv = levels.find((l) => l.code === d.levelCode) ?? levels[0];
-        const publishedClassIds = d.visibility === "system"
-          ? classes.filter((c) => c.levelCode === lv.code).map((c) => c.id)
-          : (d.classIds ?? []);
+        const publishedClassIds =
+          d.visibility === "system"
+            ? classes.filter((c) => c.levelCode === lv.code).map((c) => c.id)
+            : (d.classIds ?? []);
         const lvClasses = classes.filter((c) => publishedClassIds.includes(c.id));
-        if (lvClasses.length === 0) return null; // chưa publish thì không show
-        const lvStudents = students.filter((s) => lvClasses.some((c) => c.id === s.classId));
+        const lvStudents = students.filter((s) =>
+          lvClasses.some((c) => c.id === s.classId),
+        );
         const fakeCourse: Course = {
           id: d.id,
           title: d.title || "Khóa học chưa đặt tên",
@@ -144,20 +174,19 @@ function useTeacherCreatedRows(): CourseRow[] {
           classCount: lvClasses.length,
           studentCount: lvStudents.length,
           avgProgress: lvClasses.length
-            ? Math.round(lvClasses.reduce((s, c) => s + c.avgProgress, 0) / lvClasses.length)
+            ? Math.round(
+                lvClasses.reduce((s, c) => s + c.avgProgress, 0) / lvClasses.length,
+              )
             : 0,
           avgScore: 0,
           origin: "teacher",
           publishedClassNames: lvClasses.map((c) => c.name),
+          isPublished: !!d.visibility && lvClasses.length > 0,
+          draft: d,
         };
-      })
-      .filter((r): r is CourseRow => r !== null);
+      });
   }, [drafts]);
-}
 
-function TeacherCoursesPage() {
-  const systemRows = useCourseStats();
-  const teacherRows = useTeacherCreatedRows();
   const rows = useMemo(() => [...teacherRows, ...systemRows], [teacherRows, systemRows]);
   const [query, setQuery] = useState("");
   const [levelFilter, setLevelFilter] = useState("all");
@@ -176,6 +205,11 @@ function TeacherCoursesPage() {
 
   const totalStudents = rows.reduce((s, r) => s + r.studentCount, 0);
   const totalClasses = classes.length;
+
+  const [publishingId, setPublishingId] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const publishingDraft = drafts.find((d) => d.id === publishingId) ?? null;
+  const deletingDraft = drafts.find((d) => d.id === confirmDeleteId) ?? null;
 
   return (
     <div className="min-h-screen bg-background">
@@ -211,7 +245,6 @@ function TeacherCoursesPage() {
             </Link>
           </div>
         </div>
-
 
         {/* KPI strip */}
         <div className="mt-6 grid gap-3 sm:grid-cols-4">
@@ -280,14 +313,18 @@ function TeacherCoursesPage() {
                 <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               </div>
             </div>
-
           </div>
         </div>
 
         {/* Rows */}
         <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((row) => (
-            <TeacherCourseCard key={row.course.id} {...row} />
+            <TeacherCourseCard
+              key={row.course.id}
+              {...row}
+              onPublish={() => setPublishingId(row.course.id)}
+              onDelete={() => setConfirmDeleteId(row.course.id)}
+            />
           ))}
           {filtered.length === 0 && (
             <div className="col-span-full rounded-3xl border border-dashed border-border bg-surface/40 p-12 text-center">
@@ -299,6 +336,46 @@ function TeacherCoursesPage() {
           )}
         </div>
       </div>
+
+      {/* Publish dialog */}
+      <PublishDialog
+        draft={publishingDraft}
+        onClose={() => setPublishingId(null)}
+        onSave={(patch) => {
+          if (publishingId) updateDraft(publishingId, patch);
+          setPublishingId(null);
+        }}
+      />
+
+      {/* Delete confirm */}
+      <Dialog open={!!confirmDeleteId} onOpenChange={(o) => !o && setConfirmDeleteId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xóa khóa học?</DialogTitle>
+            <DialogDescription>
+              Khóa học "{deletingDraft?.title || "Chưa đặt tên"}" sẽ bị xóa vĩnh viễn khỏi danh sách
+              của bạn. Học viên sẽ không còn thấy khóa này.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <button
+              onClick={() => setConfirmDeleteId(null)}
+              className="inline-flex h-9 items-center rounded-lg border border-border bg-surface px-3 text-sm font-medium hover:bg-muted"
+            >
+              Hủy
+            </button>
+            <button
+              onClick={() => {
+                if (confirmDeleteId) deleteDraft(confirmDeleteId);
+                setConfirmDeleteId(null);
+              }}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-red-600 px-3 text-sm font-semibold text-white hover:bg-red-700"
+            >
+              <Trash2 className="h-3.5 w-3.5" /> Xóa
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
@@ -335,15 +412,22 @@ function TeacherCourseCard({
   avgProgress,
   origin,
   publishedClassNames,
-}: CourseRow) {
+  isPublished,
+  onPublish,
+  onDelete,
+}: CourseRow & { onPublish: () => void; onDelete: () => void }) {
   const cover = COURSE_COVERS[course.id] ?? LEVEL_COVERS[level.code];
   const isTeacherOwn = origin === "teacher";
   const cardClass =
     "group flex flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated";
+
+  const stop = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
   const inner = (
     <>
-
-
       <div
         className="relative h-44 w-full overflow-hidden"
         style={{
@@ -367,12 +451,23 @@ function TeacherCourseCard({
           {level.code}
         </span>
         {isTeacherOwn && (
-          <span className="absolute right-3 top-3 inline-flex h-6 items-center gap-1 rounded-md bg-foreground/90 px-2 text-[11px] font-semibold uppercase tracking-wider text-background shadow-soft">
-            <UserCheck className="h-3 w-3" /> Tự tạo
-          </span>
+          <div className="absolute right-3 top-3 flex flex-col items-end gap-1">
+            <span className="inline-flex h-6 items-center gap-1 rounded-md bg-foreground/90 px-2 text-[11px] font-semibold uppercase tracking-wider text-background shadow-soft">
+              <UserCheck className="h-3 w-3" /> Tự tạo
+            </span>
+            <span
+              className={cn(
+                "inline-flex h-5 items-center rounded-md px-2 text-[10px] font-semibold uppercase tracking-wider shadow-soft",
+                isPublished
+                  ? "bg-emerald-600/90 text-white"
+                  : "bg-amber-500/90 text-white",
+              )}
+            >
+              {isPublished ? "Đã publish" : "Chưa publish"}
+            </span>
+          </div>
         )}
       </div>
-
 
       <div className="flex flex-1 flex-col gap-4 p-5">
         <div className="flex items-start justify-between gap-3">
@@ -400,7 +495,6 @@ function TeacherCourseCard({
           </div>
         )}
 
-
         <div className="mt-auto">
           <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
             <span className="inline-flex items-center gap-1">
@@ -418,14 +512,42 @@ function TeacherCourseCard({
             />
           </div>
         </div>
+
+        {isTeacherOwn && (
+          <div className="-mx-1 flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
+            <button
+              onClick={(e) => {
+                stop(e);
+                onPublish();
+              }}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-2.5 text-xs font-semibold text-primary-foreground hover:opacity-90"
+            >
+              <Send className="h-3 w-3" /> Publish
+            </button>
+            <Link
+              to="/teacher/upload"
+              search={{ edit: course.id }}
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 text-xs font-semibold text-foreground hover:bg-muted"
+            >
+              <Pencil className="h-3 w-3" /> Sửa
+            </Link>
+            <button
+              onClick={(e) => {
+                stop(e);
+                onDelete();
+              }}
+              className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-red-200 bg-red-50 px-2.5 text-xs font-semibold text-red-600 hover:bg-red-100 dark:border-red-900/40 dark:bg-red-950/30"
+            >
+              <Trash2 className="h-3 w-3" /> Xóa
+            </button>
+          </div>
+        )}
       </div>
     </>
   );
-  return isTeacherOwn ? (
-    <Link to="/teacher/upload" search={{ edit: course.id }} className={cardClass}>
-      {inner}
-    </Link>
-  ) : (
+
+  return (
     <Link
       to="/teacher/courses/$courseId"
       params={{ courseId: course.id }}
@@ -435,7 +557,6 @@ function TeacherCourseCard({
     </Link>
   );
 }
-
 
 function Stat({
   label,
@@ -461,5 +582,129 @@ function Stat({
         {value}
       </div>
     </div>
+  );
+}
+
+function PublishDialog({
+  draft,
+  onClose,
+  onSave,
+}: {
+  draft: DraftCourse | null;
+  onClose: () => void;
+  onSave: (patch: Partial<DraftCourse>) => void;
+}) {
+  const [visibility, setVisibility] = useState<"system" | "classes">("classes");
+  const [selected, setSelected] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (draft) {
+      setVisibility(draft.visibility === "system" ? "system" : "classes");
+      setSelected(draft.classIds ?? []);
+    }
+  }, [draft?.id]);
+
+  const levelCode = draft?.levelCode ?? "A1";
+  const availableClasses = classes.filter((c) => c.levelCode === levelCode);
+
+  const toggle = (id: string) =>
+    setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
+
+  return (
+    <Dialog open={!!draft} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Publish khóa học</DialogTitle>
+          <DialogDescription>
+            Chọn phạm vi để học viên có thể nhìn thấy khóa "{draft?.title || "Chưa đặt tên"}" (cấp
+            độ {levelCode}).
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-surface p-3 hover:bg-muted/40">
+            <input
+              type="radio"
+              checked={visibility === "classes"}
+              onChange={() => setVisibility("classes")}
+              className="mt-0.5"
+            />
+            <div>
+              <div className="text-sm font-semibold text-foreground">Chọn lớp cụ thể</div>
+              <div className="text-xs text-muted-foreground">
+                Chỉ những lớp được tick mới thấy khóa học này.
+              </div>
+            </div>
+          </label>
+
+          {visibility === "classes" && (
+            <div className="max-h-56 space-y-1.5 overflow-auto rounded-xl border border-border bg-background p-2">
+              {availableClasses.length === 0 && (
+                <div className="px-3 py-4 text-center text-xs text-muted-foreground">
+                  Bạn chưa có lớp nào ở cấp độ {levelCode}.
+                </div>
+              )}
+              {availableClasses.map((c) => {
+                const on = selected.includes(c.id);
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => toggle(c.id)}
+                    className={cn(
+                      "flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-xs transition",
+                      on
+                        ? "border-primary bg-primary/10 text-foreground"
+                        : "border-border bg-surface hover:bg-muted/40",
+                    )}
+                  >
+                    <span className="font-medium">{c.name}</span>
+                    {on && <Check className="h-3.5 w-3.5 text-primary" />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-border bg-surface p-3 hover:bg-muted/40">
+            <input
+              type="radio"
+              checked={visibility === "system"}
+              onChange={() => setVisibility("system")}
+              className="mt-0.5"
+            />
+            <div>
+              <div className="text-sm font-semibold text-foreground">
+                Toàn bộ lớp cấp độ {levelCode}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Mọi lớp bạn quản lý ở cấp độ này đều được publish.
+              </div>
+            </div>
+          </label>
+        </div>
+
+        <DialogFooter>
+          <button
+            onClick={onClose}
+            className="inline-flex h-9 items-center rounded-lg border border-border bg-surface px-3 text-sm font-medium hover:bg-muted"
+          >
+            Hủy
+          </button>
+          <button
+            onClick={() =>
+              onSave({
+                visibility,
+                classIds: visibility === "classes" ? selected : [],
+              })
+            }
+            disabled={visibility === "classes" && selected.length === 0}
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <Send className="h-3.5 w-3.5" /> Lưu publish
+          </button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
