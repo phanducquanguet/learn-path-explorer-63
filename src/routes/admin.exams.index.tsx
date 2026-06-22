@@ -192,7 +192,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
         {scope === "teacher" && (
           <div className="mt-6 inline-flex items-center gap-1 rounded-xl border border-border bg-surface p-1">
             {([
-              { id: "exams" as const, label: "Bài luyện thi", icon: ClipboardCheck },
+              { id: "exams" as const, label: "Bài tập & Kiểm tra", icon: ClipboardCheck },
               { id: "bank" as const, label: "Ngân hàng câu hỏi", icon: Library },
             ]).map((t) => {
               const Icon = t.icon;
