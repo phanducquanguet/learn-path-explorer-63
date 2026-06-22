@@ -5,15 +5,17 @@ import { EXAM_SKILLS } from "@/lib/teacher-data";
 import type { CustomQuestion } from "@/lib/tests-data";
 import type { QSkill } from "@/lib/question-bank";
 import { SKILL_LABEL } from "@/lib/question-bank";
+import { SubmissionsView } from "@/routes/admin.exams.$examId.submissions";
+import { getSubmissionsByExam } from "@/lib/exam-submissions";
 import {
   ArrowLeft,
   Clock,
   FileQuestion,
   BarChart3,
   HelpCircle,
-  Eye,
   FileAudio,
   FileText as FileTextIcon,
+  ClipboardCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
