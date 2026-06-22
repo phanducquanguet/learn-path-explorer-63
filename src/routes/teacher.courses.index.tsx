@@ -430,6 +430,8 @@ function TeacherCourseCard({
   origin,
   publishedClassNames,
   isPublished,
+  approvalStatus,
+  reviewerNote,
   onPublish,
   onDelete,
 }: CourseRow & { onPublish: () => void; onDelete: () => void }) {
