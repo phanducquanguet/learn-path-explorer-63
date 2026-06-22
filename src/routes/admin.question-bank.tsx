@@ -699,7 +699,6 @@ export function BankPage({ scope = "admin", embedded = false }: { scope?: "admin
           }}
         />
       )}
-    </div>
     </>
   );
 
