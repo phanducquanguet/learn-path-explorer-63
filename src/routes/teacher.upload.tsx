@@ -560,9 +560,9 @@ function UploadPage() {
 
               {saved && (
                 <div className="rounded-xl bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-700">
-                  ✓ Đã lưu & publish khóa học. Học viên thuộc{" "}
-                  {visibility === "system" ? "mọi lớp" : `${classIds.length} lớp đã chọn`} sẽ thấy
-                  trên giao diện học tập.
+                  {isTeacher
+                    ? `✓ Đã lưu & gửi yêu cầu phê duyệt tới admin (${visibility === "system" ? "toàn cấp độ" : `${classIds.length} lớp`}). Khóa học chỉ hiển thị cho học viên sau khi được admin duyệt.`
+                    : `✓ Đã lưu & publish khóa học. Học viên thuộc ${visibility === "system" ? "mọi lớp" : `${classIds.length} lớp đã chọn`} sẽ thấy trên giao diện học tập.`}
                 </div>
               )}
             </div>
