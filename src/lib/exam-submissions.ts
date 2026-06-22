@@ -1,10 +1,13 @@
 export type ExamAnswer = {
   questionId: string;
   question: string;
-  type: "mcq" | "essay" | "short";
+  type: "mcq" | "essay" | "short" | "speaking";
   studentAnswer: string;
+  audioUrl?: string;
   correctAnswer?: string;
   autoScore?: number;
+  autoMax?: number;
+  autoFeedback?: string;
   manualScore?: number;
   feedback?: string;
 };
