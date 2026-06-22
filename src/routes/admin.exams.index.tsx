@@ -292,10 +292,10 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
           <div className="mt-8 rounded-3xl border border-dashed border-border bg-surface/40 p-16 text-center">
             <ClipboardCheck className="mx-auto h-10 w-10 text-muted-foreground" />
             <div className="mt-3 font-display text-lg font-semibold text-foreground">
-              Chưa có bài thi nào
+              Chưa có đề thi nào
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              Tạo bài thi đầu tiên để học viên bắt đầu luyện tập.
+              Tạo đề thi đầu tiên để học viên bắt đầu luyện tập.
             </p>
           </div>
         ) : (
