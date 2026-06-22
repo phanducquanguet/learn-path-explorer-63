@@ -311,7 +311,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
                     <th className="px-4 py-3 text-center">Câu hỏi</th>
                     <th className="px-4 py-3 text-center">Thời lượng</th>
                     {canManage && <th className="px-4 py-3">Trạng thái</th>}
-                    <th className="px-4 py-3">Cập nhật</th>
+                    <th className="px-4 py-3 text-center">Cần chấm</th>
                     <th className="px-4 py-3 text-right">Thao tác</th>
                   </tr>
                 </thead>
