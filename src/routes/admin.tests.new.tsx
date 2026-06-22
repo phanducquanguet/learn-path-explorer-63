@@ -989,7 +989,7 @@ export function TestExamBuilder({
             <div className="space-y-4 text-sm">
               <div className="grid gap-2 sm:grid-cols-2">
                 <Row label="Tên đề" value={name || "—"} />
-                <Row label="Cấp độ" value={level} />
+                <Row label="Cấp độ" value={levels.join(", ")} />
                 <Row label="Thời lượng" value={`${duration} phút`} />
                 {!isExam && (
                   <>
