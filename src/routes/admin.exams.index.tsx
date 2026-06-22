@@ -100,6 +100,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
     toggle(id);
   };
   const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "published">("all");
+  const [classFilter, setClassFilter] = useState<string>("all");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
