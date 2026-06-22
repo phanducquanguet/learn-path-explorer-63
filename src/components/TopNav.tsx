@@ -65,6 +65,7 @@ const teacherTabs = [
 
 const adminTabs = [
   { to: "/courses" as const, label: "Khóa học", icon: GraduationCap },
+  { to: "/admin/course-approvals" as const, label: "Duyệt khóa học", icon: ShieldCheck },
   { to: "/admin/exams" as const, label: "Luyện thi", icon: ClipboardCheck },
   { to: "/teacher/tests" as const, label: "Thi cử", icon: ScrollText },
   { to: "/admin/question-bank" as const, label: "Ngân hàng câu hỏi", icon: Library },
