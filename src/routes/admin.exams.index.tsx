@@ -72,11 +72,19 @@ const SEED: SavedExam[] = [
   },
 ];
 
-function ExamsList() {
+const EXAMS_KEY = (scope: "admin" | "teacher") =>
+  scope === "teacher" ? "unicom.teacher.exams" : "unicom.exams";
+const PUBLISH_SCOPE = (scope: "admin" | "teacher") =>
+  scope === "teacher" ? "teacher.exams" : "exams";
+
+export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } = {}) {
   const { role } = useRole();
-  const isAdmin = role === "admin";
+  const canManage = scope === "admin" ? role === "admin" : role === "teacher";
   const [exams, setExams] = useState<SavedExam[]>([]);
-  const { getStatus, toggle, wasEverPublished } = usePublishStatus("exams", "published");
+  const { getStatus, toggle, wasEverPublished } = usePublishStatus(
+    PUBLISH_SCOPE(scope),
+    "published",
+  );
 
   const handleTogglePublish = (id: string, name: string) => {
     const current = getStatus(id);
@@ -91,10 +99,12 @@ function ExamsList() {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const raw = window.localStorage.getItem("unicom.exams");
+    const KEY = EXAMS_KEY(scope);
+    const raw = window.localStorage.getItem(KEY);
     if (!raw) {
-      window.localStorage.setItem("unicom.exams", JSON.stringify(SEED));
-      setExams(SEED);
+      const seed = scope === "admin" ? SEED : [];
+      window.localStorage.setItem(KEY, JSON.stringify(seed));
+      setExams(seed);
     } else {
       try {
         const parsed: SavedExam[] = JSON.parse(raw);
@@ -112,17 +122,18 @@ function ExamsList() {
         });
         setExams(cleaned);
       } catch {
-        setExams(SEED);
+        setExams(scope === "admin" ? SEED : []);
       }
     }
-  }, []);
+  }, [scope]);
 
   const persist = (next: SavedExam[]) => {
     setExams(next);
     if (typeof window !== "undefined") {
-      window.localStorage.setItem("unicom.exams", JSON.stringify(next));
+      window.localStorage.setItem(EXAMS_KEY(scope), JSON.stringify(next));
     }
   };
+
 
   const remove = (id: string) => {
     persist(exams.filter((e) => e.id !== id));
