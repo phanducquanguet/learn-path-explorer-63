@@ -77,7 +77,7 @@ const emptyQuestion = (skill: QSkill, level: QLevel): CustomQuestion => {
   };
 };
 
-function ExamBuilder() {
+export function ExamBuilder({ scope = "admin" }: { scope?: "admin" | "teacher" } = {}) {
   const [meta, setMeta] = useState({
     name: "",
     levelCode: "B1" as QLevel,
