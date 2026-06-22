@@ -573,86 +573,206 @@ function NodePreview({ node }: { node: DraftNode }) {
         </div>
       </div>
 
-      {/* Preview body — mimic student view */}
-      <div className="p-6">
-        {node.kind === "video" || node.kind === "video-speaking" ? (
-          <div className="aspect-video w-full overflow-hidden rounded-xl bg-slate-900 text-white">
-            <div className="flex h-full flex-col items-center justify-center gap-3">
-              <PlayCircle className="h-14 w-14 opacity-80" />
-              <div className="text-sm opacity-80">
-                {node.fileName || "Video sẽ phát ở đây cho học viên"}
-              </div>
-              {node.kind === "video-speaking" && (
-                <div className="rounded-md bg-white/10 px-3 py-1 text-xs">
-                  Học viên ghi âm sau khi xem video
+      {/* Preview body — render real content */}
+      <div className="space-y-4 p-6">
+        {(node.kind === "video" || node.kind === "video-speaking") && (
+          <>
+            <div className="aspect-video w-full overflow-hidden rounded-xl bg-slate-900 text-white">
+              {node.videoUrl ? (
+                <video
+                  src={node.videoUrl}
+                  poster={node.thumbnail}
+                  controls
+                  className="h-full w-full"
+                />
+              ) : (
+                <div className="flex h-full flex-col items-center justify-center gap-2">
+                  <PlayCircle className="h-14 w-14 opacity-80" />
+                  <div className="text-sm opacity-80">
+                    {node.fileName || "Video chưa có URL phát"}
+                  </div>
                 </div>
               )}
             </div>
-          </div>
-        ) : node.kind === "pdf" || node.kind === "pdf-audio" ? (
-          <div className="rounded-xl border border-dashed border-border bg-muted/30 p-8 text-center">
-            <FileText className="mx-auto h-12 w-12 text-muted-foreground" />
-            <div className="mt-3 text-sm font-semibold text-foreground">
-              {node.fileName || "Tài liệu PDF"}
-            </div>
-            <div className="mt-1 text-xs text-muted-foreground">
-              {node.kind === "pdf-audio"
-                ? "Học viên đọc PDF kèm audio đồng bộ theo trang."
-                : "Học viên xem trực tiếp trên trình duyệt."}
-            </div>
-            {node.fileName && (
-              <button className="mt-4 inline-flex h-9 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-xs font-semibold hover:bg-muted">
-                <Download className="h-3.5 w-3.5" /> Tải xuống bản gốc
-              </button>
+            {node.transcript && (
+              <div className="rounded-xl border border-border bg-background p-4">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Transcript / Lời thoại
+                </div>
+                <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-foreground">
+                  {node.transcript}
+                </p>
+              </div>
             )}
-          </div>
-        ) : node.kind === "practice" ? (
+            {node.kind === "video-speaking" && node.prompt && (
+              <div className="rounded-xl border border-purple-200 bg-purple-50/60 p-4 dark:border-purple-900/40 dark:bg-purple-950/20">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-purple-700">
+                  Yêu cầu luyện nói
+                </div>
+                <p className="mt-1 text-sm text-foreground">{node.prompt}</p>
+                {node.tips && node.tips.length > 0 && (
+                  <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-muted-foreground">
+                    {node.tips.map((t, i) => (
+                      <li key={i}>{t}</li>
+                    ))}
+                  </ul>
+                )}
+                {node.sampleAnswer && (
+                  <div className="mt-3 rounded-lg border border-border bg-background p-3 text-xs">
+                    <div className="font-semibold text-foreground">Bài mẫu của GV</div>
+                    <p className="mt-1 whitespace-pre-line text-muted-foreground">
+                      {node.sampleAnswer}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </>
+        )}
+
+        {(node.kind === "pdf" || node.kind === "pdf-audio") && (
+          <>
+            <div className="flex items-center justify-between rounded-xl border border-border bg-background px-4 py-3">
+              <div className="flex items-center gap-2 text-sm">
+                <FileText className="h-4 w-4 text-blue-600" />
+                <span className="font-semibold text-foreground">
+                  {node.fileName || "Tài liệu PDF"}
+                </span>
+                {node.pages && (
+                  <span className="text-xs text-muted-foreground">
+                    • {node.pages.length} trang
+                  </span>
+                )}
+              </div>
+              <button className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-surface px-3 text-xs font-semibold hover:bg-muted">
+                <Download className="h-3 w-3" /> Tải xuống
+              </button>
+            </div>
+            {node.kind === "pdf-audio" && node.audioUrl && (
+              <audio src={node.audioUrl} controls className="w-full" />
+            )}
+            {node.pages && node.pages.length > 0 ? (
+              <div className="space-y-3">
+                {node.pages.map((p) => (
+                  <article
+                    key={p.page}
+                    className="rounded-xl border border-border bg-background p-5"
+                  >
+                    <div className="flex items-center justify-between border-b border-border pb-2">
+                      <h4 className="text-sm font-semibold text-foreground">
+                        {p.heading || `Trang ${p.page}`}
+                      </h4>
+                      <span className="text-[10px] font-semibold text-muted-foreground">
+                        Trang {p.page}
+                      </span>
+                    </div>
+                    <p className="mt-3 whitespace-pre-line text-sm leading-relaxed text-foreground">
+                      {p.body}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-border bg-muted/30 p-8 text-center text-xs text-muted-foreground">
+                Tài liệu chưa có nội dung trích xuất để xem trước.
+              </div>
+            )}
+          </>
+        )}
+
+        {node.kind === "practice" && (
           <div className="space-y-3">
             <div className="rounded-xl border border-border bg-background p-4">
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Bảng xem trước
-              </div>
-              <div className="mt-2 text-sm text-foreground">
+              <div className="text-xs text-muted-foreground">
                 Bài thực hành gồm{" "}
-                <span className="font-semibold">{node.questions?.length ?? 0}</span> câu hỏi.
-                Học viên sẽ làm bài và nhận điểm tự động.
+                <span className="font-semibold text-foreground">
+                  {node.questions?.length ?? 0}
+                </span>{" "}
+                câu hỏi.
               </div>
             </div>
-            <ul className="space-y-2">
-              {(node.questions ?? []).slice(0, 5).map((_, i) => (
+            <ol className="space-y-3">
+              {(node.questions ?? []).map((q, i) => (
                 <li
                   key={i}
-                  className="rounded-lg border border-border bg-background p-3 text-sm text-foreground"
+                  className="rounded-xl border border-border bg-background p-4"
                 >
-                  <span className="font-semibold">Câu {i + 1}.</span>{" "}
-                  <span className="text-muted-foreground">
-                    (Nội dung câu hỏi sẽ hiển thị tại đây khi học viên làm bài)
-                  </span>
+                  <div className="text-sm font-semibold text-foreground">
+                    Câu {i + 1}. {q.q || "(chưa có nội dung)"}
+                  </div>
+                  {q.options && q.options.length > 0 && (
+                    <ul className="mt-2 space-y-1.5">
+                      {q.options.map((opt, oi) => {
+                        const isCorrect = q.answer === oi;
+                        return (
+                          <li
+                            key={oi}
+                            className={cn(
+                              "flex items-start gap-2 rounded-lg border px-3 py-2 text-sm",
+                              isCorrect
+                                ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900/40 dark:bg-emerald-950/20"
+                                : "border-border bg-muted/30 text-foreground",
+                            )}
+                          >
+                            <span className="mt-0.5 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-border bg-surface text-[10px] font-bold">
+                              {String.fromCharCode(65 + oi)}
+                            </span>
+                            <span className="flex-1">{opt}</span>
+                            {isCorrect && (
+                              <CheckCircle2 className="h-4 w-4 text-emerald-600" />
+                            )}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                  {q.explain && (
+                    <div className="mt-2 rounded-lg bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+                      <span className="font-semibold">Giải thích:</span> {q.explain}
+                    </div>
+                  )}
                 </li>
               ))}
-              {(node.questions?.length ?? 0) > 5 && (
-                <li className="text-center text-xs text-muted-foreground">
-                  ... và {(node.questions!.length - 5)} câu khác
-                </li>
-              )}
-            </ul>
+            </ol>
           </div>
-        ) : node.kind === "scorm" || node.kind === "h5p" ? (
-          <div className="rounded-xl border border-dashed border-border bg-muted/30 p-8 text-center">
-            <Package className="mx-auto h-12 w-12 text-muted-foreground" />
-            <div className="mt-3 text-sm font-semibold text-foreground">
-              Gói {node.kind.toUpperCase()}: {node.fileName || "(chưa có file)"}
+        )}
+
+        {(node.kind === "scorm" || node.kind === "h5p") && (
+          <div className="rounded-xl border border-border bg-background p-6">
+            <div className="flex items-center gap-3">
+              <Package className="h-8 w-8 text-amber-600" />
+              <div>
+                <div className="text-sm font-semibold text-foreground">
+                  Gói {node.kind.toUpperCase()}: {node.fileName || "(chưa có file)"}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Nội dung tương tác sẽ nhúng iframe khi học viên truy cập.
+                </div>
+              </div>
             </div>
-            <div className="mt-1 text-xs text-muted-foreground">
-              Nội dung tương tác sẽ được nhúng trong iframe khi học viên truy cập.
-            </div>
+            {node.embedUrl ? (
+              <iframe
+                src={node.embedUrl}
+                title={node.title}
+                className="mt-4 h-[420px] w-full rounded-lg border border-border bg-white"
+              />
+            ) : (
+              <div className="mt-4 flex h-48 items-center justify-center rounded-lg border border-dashed border-border bg-muted/30 text-xs text-muted-foreground">
+                Chưa có URL nhúng để xem trước.
+              </div>
+            )}
           </div>
-        ) : (
+        )}
+
+        {!["video", "video-speaking", "pdf", "pdf-audio", "practice", "scorm", "h5p"].includes(
+          node.kind,
+        ) && (
           <div className="rounded-xl border border-dashed border-border bg-muted/30 p-8 text-center text-sm text-muted-foreground">
             {node.fileName || "Hoạt động chưa có nội dung xem trước."}
           </div>
         )}
       </div>
+
     </div>
   );
 }
