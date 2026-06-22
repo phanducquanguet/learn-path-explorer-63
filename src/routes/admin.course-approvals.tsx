@@ -107,11 +107,20 @@ function ApprovalsPage() {
     if (typeof window === "undefined") return;
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      setDrafts(raw ? JSON.parse(raw) : []);
+      const existing: DraftCourse[] = raw ? JSON.parse(raw) : [];
+      const hasTeacherDraft = existing.some((d) => d.createdBy === "teacher");
+      if (!hasTeacherDraft) {
+        const seeded = [...existing, ...buildDemoTeacherDrafts()];
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+        setDrafts(seeded);
+      } else {
+        setDrafts(existing);
+      }
     } catch {
       setDrafts([]);
     }
   }, []);
+
 
   const persist = (next: DraftCourse[]) => {
     setDrafts(next);
@@ -688,3 +697,193 @@ function RejectDialog({
     </Dialog>
   );
 }
+
+function buildDemoTeacherDrafts(): DraftCourse[] {
+  const now = Date.now();
+  const submittedPending = new Date(now - 1000 * 60 * 60 * 6).toISOString(); // 6h trước
+  const submittedRejected = new Date(now - 1000 * 60 * 60 * 48).toISOString(); // 2 ngày trước
+  const reviewedRejected = new Date(now - 1000 * 60 * 60 * 24).toISOString();
+
+  const demoClassIds = allClasses.slice(0, 2).map((c) => c.id);
+
+  const pending: DraftCourse = {
+    id: `demo-pending-${now}`,
+    title: "English for Daily Communication",
+    subtitle: "Khóa giao tiếp tiếng Anh cho người đi làm — 6 tuần",
+    description:
+      "Khóa học giúp học viên tự tin giao tiếp tiếng Anh trong các tình huống công sở và đời sống. Mỗi unit gồm video bài giảng, tài liệu PDF, bài luyện nói và quiz đánh giá cuối bài.",
+    category: "Empower",
+    levelCode: "A2",
+    hours: 24,
+    createdBy: "teacher",
+    approvalStatus: "pending",
+    submittedAt: submittedPending,
+    pendingVisibility: "classes",
+    pendingClassIds: demoClassIds,
+    visibility: "classes",
+    classIds: demoClassIds,
+    units: [
+      {
+        id: "demo-u1",
+        title: "Unit 1: Greetings & Self-introduction",
+        desc: "Làm quen, chào hỏi và giới thiệu bản thân trong môi trường công sở.",
+        nodes: [
+          {
+            id: "demo-u1-n1",
+            kind: "video",
+            title: "Video bài giảng: How to greet professionally",
+            description: "12 phút video giảng giải các mẫu câu chào hỏi phổ biến.",
+            duration: 12,
+            fileName: "u1-greetings.mp4",
+          },
+          {
+            id: "demo-u1-n2",
+            kind: "pdf",
+            title: "Tài liệu: Common greeting phrases",
+            description: "Tổng hợp 30 mẫu câu chào hỏi và giới thiệu.",
+            fileName: "u1-handout.pdf",
+          },
+          {
+            id: "demo-u1-n3",
+            kind: "video-speaking",
+            title: "Luyện nói: Self introduction",
+            description: "Học viên ghi âm phần giới thiệu bản thân trong 60 giây.",
+            duration: 5,
+          },
+          {
+            id: "demo-u1-n4",
+            kind: "practice",
+            title: "Quiz cuối Unit 1",
+            description: "Đánh giá nhanh về từ vựng và mẫu câu vừa học.",
+            questions: [{}, {}, {}, {}, {}, {}, {}, {}],
+          },
+        ],
+      },
+      {
+        id: "demo-u2",
+        title: "Unit 2: Talking about your job",
+        desc: "Mô tả công việc, phòng ban và trách nhiệm hàng ngày.",
+        nodes: [
+          {
+            id: "demo-u2-n1",
+            kind: "video",
+            title: "Video: Describing your role",
+            duration: 10,
+            fileName: "u2-role.mp4",
+          },
+          {
+            id: "demo-u2-g1",
+            kind: "group",
+            title: "Tài liệu tham khảo",
+            description: "PDF kèm audio để luyện nghe theo trang.",
+            children: [
+              {
+                id: "demo-u2-g1-n1",
+                kind: "pdf-audio",
+                title: "Job vocabulary handbook",
+                fileName: "u2-jobs.pdf",
+              },
+              {
+                id: "demo-u2-g1-n2",
+                kind: "h5p",
+                title: "Tương tác: Match the job titles",
+                fileName: "u2-match.h5p",
+              },
+            ],
+          },
+          {
+            id: "demo-u2-n3",
+            kind: "practice",
+            title: "Bài thực hành Unit 2",
+            questions: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+          },
+        ],
+      },
+      {
+        id: "demo-u3",
+        title: "Unit 3: Meetings & Small talk",
+        desc: "Tham gia họp, đặt câu hỏi và trò chuyện ngoài lề.",
+        nodes: [
+          {
+            id: "demo-u3-n1",
+            kind: "video",
+            title: "Video: Joining a meeting",
+            duration: 14,
+            fileName: "u3-meeting.mp4",
+          },
+          {
+            id: "demo-u3-n2",
+            kind: "scorm",
+            title: "Bài tương tác SCORM: Meeting roleplay",
+            fileName: "u3-roleplay.zip",
+          },
+          {
+            id: "demo-u3-n3",
+            kind: "practice",
+            title: "Quiz tổng kết",
+            questions: [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+          },
+        ],
+      },
+    ],
+  };
+
+  const rejected: DraftCourse = {
+    id: `demo-rejected-${now}`,
+    title: "Business Writing Essentials",
+    subtitle: "Viết email và báo cáo công việc hiệu quả",
+    description: "Khóa học cô đọng kỹ năng viết email, memo và báo cáo trong môi trường doanh nghiệp.",
+    category: "Empower",
+    levelCode: "B1",
+    hours: 16,
+    createdBy: "teacher",
+    approvalStatus: "rejected",
+    submittedAt: submittedRejected,
+    reviewedAt: reviewedRejected,
+    reviewerNote:
+      "Nội dung Unit 2 còn thiếu phần bài tập thực hành. Vui lòng bổ sung quiz cuối bài trước khi gửi lại.",
+    pendingVisibility: "classes",
+    pendingClassIds: demoClassIds,
+    visibility: "classes",
+    classIds: demoClassIds,
+    units: [
+      {
+        id: "demo-r-u1",
+        title: "Unit 1: Email structure",
+        desc: "Cấu trúc email công việc chuẩn.",
+        nodes: [
+          {
+            id: "demo-r-u1-n1",
+            kind: "video",
+            title: "Video: Anatomy of a business email",
+            duration: 9,
+            fileName: "r-u1-email.mp4",
+          },
+          {
+            id: "demo-r-u1-n2",
+            kind: "pdf",
+            title: "Template: Email samples",
+            fileName: "r-u1-templates.pdf",
+          },
+        ],
+      },
+      {
+        id: "demo-r-u2",
+        title: "Unit 2: Writing reports",
+        desc: "Cấu trúc báo cáo và cách trình bày số liệu.",
+        nodes: [
+          {
+            id: "demo-r-u2-n1",
+            kind: "video",
+            title: "Video: Report structure",
+            duration: 11,
+            fileName: "r-u2-report.mp4",
+          },
+        ],
+      },
+    ],
+  };
+
+  return [pending, rejected];
+}
+
