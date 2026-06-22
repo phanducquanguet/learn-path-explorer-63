@@ -269,6 +269,12 @@ export function ExamDetail({
             groups={exam.groups}
           />
         )}
+
+        {tab === "results" && (
+          <div className="mt-6">
+            <SubmissionsView examId={exam.id ?? examId} />
+          </div>
+        )}
       </div>
     </div>
   );
