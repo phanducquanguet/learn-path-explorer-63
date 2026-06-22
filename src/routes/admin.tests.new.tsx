@@ -39,8 +39,70 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/tests/new")({
   head: () => ({ meta: [{ title: "Tạo đề thi mới — UNICOM LMS" }] }),
-  component: NewTestPage,
+  component: () => <TestExamBuilder kind="test" scope="admin" />,
 });
+
+type BuilderKind = "test" | "exam";
+type BuilderScope = "admin" | "teacher";
+
+type SavedExamShape = {
+  id: string;
+  name: string;
+  levelCode: string;
+  duration: number;
+  description?: string;
+  thumbnail?: string;
+  skills: string[];
+  totalQuestions: number;
+  groups: Record<string, { blocks: { id: string; kind: "single" | "group"; media: string; questions: unknown[] }[] }>;
+  // Wizard payload kept for later editing.
+  mode: "fixed" | "random" | "manual";
+  enforceOrder: boolean;
+  structure: StructureItem[];
+  savedAt: string;
+};
+
+function buildExamPayload(input: {
+  name: string;
+  desc: string;
+  level: QLevel;
+  duration: number;
+  thumbnail: string;
+  mode: "fixed" | "random" | "manual";
+  enforceOrder: boolean;
+  structure: StructureItem[];
+  resolved: { item: StructureItem; questions: BankQuestion[] }[];
+}): SavedExamShape {
+  const skills = Array.from(new Set(input.structure.filter((s) => s.count > 0).map((s) => s.skill)));
+  const groups: SavedExamShape["groups"] = {};
+  for (const sk of skills) {
+    const blocks = input.resolved
+      .filter((r) => r.item.skill === sk && r.questions.length > 0)
+      .map((r) => ({
+        id: `B-${Math.random().toString(36).slice(2, 8)}`,
+        kind: "group" as const,
+        media: "",
+        questions: r.questions as unknown[],
+      }));
+    groups[sk] = { blocks };
+  }
+  const totalQuestions = input.resolved.reduce((a, r) => a + r.questions.length, 0);
+  return {
+    id: `e-${Date.now()}`,
+    name: input.name,
+    levelCode: input.level,
+    duration: input.duration,
+    description: input.desc,
+    thumbnail: input.thumbnail,
+    skills,
+    totalQuestions,
+    groups,
+    mode: input.mode,
+    enforceOrder: input.enforceOrder,
+    structure: input.structure,
+    savedAt: new Date().toISOString(),
+  };
+}
 
 const LEVELS: QLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
 const SKILLS: QSkill[] = ["listening", "reading", "writing", "speaking"];
@@ -86,18 +148,39 @@ function rollRandom(s: StructureItem, seed = 0): BankQuestion[] {
   return shuffled.slice(0, s.count);
 }
 
+
 function NewTestPage() {
+
+  return <TestExamBuilder kind="test" scope="admin" />;
+}
+
+export function TestExamBuilder({
+  kind = "test",
+  scope = "admin",
+}: { kind?: BuilderKind; scope?: BuilderScope } = {}) {
   const { role } = useRole();
   const navigate = useNavigate();
+  const isExam = kind === "exam";
+  const allowedRole: "admin" | "teacher" = scope;
+  const backTo = isExam
+    ? scope === "teacher"
+      ? "/teacher/exams"
+      : "/admin/exams"
+    : "/teacher/tests";
+  const backLabel = isExam ? "Trở lại Luyện thi" : "Trở lại Thi cử";
+  const pageTitle = isExam ? "Tạo bài luyện thi mới" : "Tạo đề thi mới";
+  const submitLabel = isExam ? "Tạo bài luyện thi" : "Tạo đề thi";
+
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [level, setLevel] = useState<QLevel>("B1");
   const [orgId, setOrgId] = useState<string>(orgs[0]?.id ?? "");
   const [classIds, setClassIds] = useState<string[]>([]);
-  const [duration, setDuration] = useState(60);
+  const [duration, setDuration] = useState(isExam ? 90 : 60);
   const [openAt, setOpenAt] = useState("");
   const [closeAt, setCloseAt] = useState("");
+  const [thumbnail, setThumbnail] = useState<string>("");
   const [structure, setStructure] = useState<StructureItem[]>([
     { skill: "listening", type: "mcq", level: "B1", difficulty: "mixed", count: 10, sectionDurationMinutes: 15, pickedIds: [] },
     { skill: "reading", type: "mcq", level: "B1", difficulty: "mixed", count: 10, sectionDurationMinutes: 20, pickedIds: [] },
@@ -141,15 +224,16 @@ function NewTestPage() {
     });
   }, [structure, mode]);
 
-  if (role !== "admin") {
+  if (role !== allowedRole) {
+    const who = allowedRole === "admin" ? "Quản trị viên" : "Giáo viên";
     return (
       <div className="min-h-screen bg-background">
         <TopNav />
         <div className="mx-auto max-w-3xl px-6 py-20 text-center">
           <ScrollText className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h1 className="mt-4 font-display text-2xl font-semibold">Chỉ Quản trị viên</h1>
+          <h1 className="mt-4 font-display text-2xl font-semibold">Chỉ {who}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Chỉ Quản trị viên mới có thể tạo đề thi.
+            Chỉ {who} mới có thể tạo {isExam ? "bài luyện thi" : "đề thi"}.
           </p>
         </div>
       </div>
@@ -158,26 +242,44 @@ function NewTestPage() {
 
   const submit = () => {
     if (typeof window !== "undefined") {
-      const key = "unicom.admin.tests";
-      const prev = JSON.parse(window.localStorage.getItem(key) ?? "[]");
-      prev.push({
-        id: `t-${Date.now()}`,
-        name,
-        description: desc,
-        level,
-        orgId,
-        classIds,
-        durationMinutes: duration,
-        openAt,
-        closeAt,
-        mode,
-        enforceOrder,
-        structure,
-        createdAt: new Date().toISOString(),
-      });
-      window.localStorage.setItem(key, JSON.stringify(prev));
+      if (isExam) {
+        const key = scope === "teacher" ? "unicom.teacher.exams" : "unicom.exams";
+        const prev = JSON.parse(window.localStorage.getItem(key) ?? "[]");
+        const payload = buildExamPayload({
+          name,
+          desc,
+          level,
+          duration,
+          thumbnail,
+          mode,
+          enforceOrder,
+          structure,
+          resolved,
+        });
+        prev.push(payload);
+        window.localStorage.setItem(key, JSON.stringify(prev));
+      } else {
+        const key = "unicom.admin.tests";
+        const prev = JSON.parse(window.localStorage.getItem(key) ?? "[]");
+        prev.push({
+          id: `t-${Date.now()}`,
+          name,
+          description: desc,
+          level,
+          orgId,
+          classIds,
+          durationMinutes: duration,
+          openAt,
+          closeAt,
+          mode,
+          enforceOrder,
+          structure,
+          createdAt: new Date().toISOString(),
+        });
+        window.localStorage.setItem(key, JSON.stringify(prev));
+      }
     }
-    navigate({ to: "/teacher/tests" });
+    navigate({ to: backTo });
   };
 
   const canNext = (() => {
@@ -202,15 +304,16 @@ function NewTestPage() {
       <TopNav />
       <div className="mx-auto max-w-5xl px-6 pb-20 pt-10 sm:px-8">
         <Link
-          to="/teacher/tests"
+          to={backTo}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" /> Trở lại Thi cử
+          <ArrowLeft className="h-4 w-4" /> {backLabel}
         </Link>
 
         <h1 className="mt-4 font-display text-3xl font-semibold tracking-tight">
-          Tạo đề thi mới
+          {pageTitle}
         </h1>
+
 
         {/* Steps */}
         <div className="mt-6 flex flex-wrap items-center gap-2">
@@ -278,6 +381,8 @@ function NewTestPage() {
                   />
                 </Field>
               </div>
+              {!isExam && (
+                <>
               <Field label="Đơn vị (trường / trung tâm)">
                 <select
                   value={orgId}
@@ -360,6 +465,19 @@ function NewTestPage() {
               <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-900">
                 Học sinh vào trước giờ mở sẽ không thể bắt đầu làm bài.
               </p>
+                </>
+              )}
+              {isExam && (
+                <Field label="Ảnh bìa (URL, tuỳ chọn)">
+                  <input
+                    value={thumbnail}
+                    onChange={(e) => setThumbnail(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                  />
+                </Field>
+              )}
+
             </div>
           )}
 
@@ -818,10 +936,14 @@ function NewTestPage() {
                 <Row label="Tên đề" value={name || "—"} />
                 <Row label="Cấp độ" value={level} />
                 <Row label="Thời lượng" value={`${duration} phút`} />
-                <Row label="Đơn vị" value={orgs.find((o) => o.id === orgId)?.name ?? "—"} />
-                <Row label="Lớp" value={classIds.length ? classIds.length + " lớp" : "—"} />
-                <Row label="Mở" value={openAt || "—"} />
-                <Row label="Đóng" value={closeAt || "—"} />
+                {!isExam && (
+                  <>
+                    <Row label="Đơn vị" value={orgs.find((o) => o.id === orgId)?.name ?? "—"} />
+                    <Row label="Lớp" value={classIds.length ? classIds.length + " lớp" : "—"} />
+                    <Row label="Mở" value={openAt || "—"} />
+                    <Row label="Đóng" value={closeAt || "—"} />
+                  </>
+                )}
                 <Row label="Tổng câu" value={String(totalQuestions)} />
                 <Row label="Chế độ" value={mode === "random" ? "Bốc ngẫu nhiên" : mode === "manual" ? "Tự soạn" : "Cố định"} />
                 <Row label="Thứ tự làm bài" value={enforceOrder ? "Bắt buộc theo flow" : "Tự do"} />
@@ -902,7 +1024,7 @@ function NewTestPage() {
               className="rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft"
               style={{ background: "var(--gradient-brand)" }}
             >
-              Tạo đề thi
+              {submitLabel}
             </button>
           )}
         </div>

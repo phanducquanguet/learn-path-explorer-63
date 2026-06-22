@@ -61,7 +61,6 @@ const teacherTabs = [
   { to: "/teacher/courses" as const, label: "Khóa học", icon: GraduationCap },
   { to: "/teacher/exams" as const, label: "Luyện thi", icon: ClipboardCheck },
   { to: "/teacher/tests" as const, label: "Thi cử", icon: ScrollText },
-  { to: "/teacher/question-bank" as const, label: "Ngân hàng câu hỏi", icon: Library },
   { to: "/teacher/reports" as const, label: "Báo cáo", icon: BarChart3 },
 ];
 
@@ -71,7 +70,6 @@ const adminTabs = [
   { to: "/admin/course-approvals" as const, label: "Duyệt khóa học", icon: ShieldCheck },
   { to: "/admin/exams" as const, label: "Luyện thi", icon: ClipboardCheck },
   { to: "/teacher/tests" as const, label: "Thi cử", icon: ScrollText },
-  { to: "/admin/question-bank" as const, label: "Ngân hàng câu hỏi", icon: Library },
   { to: "/teacher/reports" as const, label: "Báo cáo", icon: BarChart3 },
 ];
 

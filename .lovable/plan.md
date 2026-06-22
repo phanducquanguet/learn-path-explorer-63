@@ -1,69 +1,28 @@
 ## Mục tiêu
+1. **Bài luyện thi (exams) dùng chung format các bước như bài thi (tests)** — thay builder 1 trang hiện tại bằng wizard 5 bước (Thông tin chung → Cấu trúc đề → Chế độ → Thiết lập đề → Xem lại) giống `admin/tests/new`.
+2. **Ngân hàng câu hỏi không còn là menu riêng** — chuyển thành tab nằm bên trong trang "Luyện thi" (cho cả admin và teacher).
 
-Mô phỏng trải nghiệm dashboard (`/`) cho trường hợp **học viên mới chỉ đang học cấp độ A1** — chưa hoàn thành cấp nào, các cấp A2–C2 đều bị khoá. Giữ nguyên dữ liệu hiện tại để không phá demo "học viên đa cấp" đang dùng.
+## Thay đổi cụ thể
 
-## Cách tiếp cận
+### 1. Wizard tạo bài luyện thi (dùng chung với bài thi)
+- Tách logic wizard hiện tại trong `src/routes/admin.tests.new.tsx` thành component dùng chung `StepBuilder` nhận prop `kind: "test" | "exam"` và `scope: "admin" | "teacher"`.
+- Với `kind="exam"`:
+  - Bỏ phần gán Đơn vị/Lớp và Mở/Đóng lúc (exam dùng cơ chế publish riêng).
+  - Cho phép upload thumbnail + mô tả như builder cũ.
+  - Khi lưu: ghi vào `unicom.exams` (admin) hoặc `unicom.teacher.exams` (teacher) theo đúng schema `SavedExam` đang dùng ở list.
+- Viết lại `src/routes/admin.exams.new.tsx` và `src/routes/teacher.exams.new.tsx` để dùng `StepBuilder` với `kind="exam"`.
+- Giữ nguyên hành vi role-guard: admin manage admin scope, teacher manage teacher scope.
 
-Thêm **bộ chuyển kịch bản (scenario switcher)** ở góc trên dashboard, cho phép xem 2 persona:
+### 2. Tab Ngân hàng câu hỏi trong trang Luyện thi
+- Trang `admin/exams` và `teacher/exams` thêm thanh tab phía trên: **"Bài luyện thi" | "Ngân hàng câu hỏi"**.
+- Tab "Ngân hàng câu hỏi" render lại nội dung `BankPage` (đã được scope hoá) trong cùng trang.
+- Xoá entry "Ngân hàng câu hỏi" khỏi `adminTabs` và `teacherTabs` trong `TopNav.tsx`.
+- Giữ route `/admin/question-bank` và `/teacher/question-bank` (redirect nhẹ về `/exams?tab=bank`) để tránh vỡ link cũ.
 
-1. **Học viên đa cấp** (mặc định hiện tại — đang học B1/B2, đã xong A1/A2).
-2. **Học viên mới — chỉ A1** (mới).
+### 3. File ảnh hưởng
+- Sửa: `src/routes/admin.tests.new.tsx` (export builder dùng chung), `src/routes/admin.exams.new.tsx`, `src/routes/teacher.exams.new.tsx`, `src/routes/admin.exams.index.tsx` (thêm tabs), `src/components/TopNav.tsx` (gỡ menu Ngân hàng).
+- Có thể thêm: `src/components/ExamStepBuilder.tsx` nếu tách file gọn hơn.
 
-Lý do dùng switcher thay vì sửa đè dữ liệu: bạn vẫn cần demo cho cả hai trường hợp khi trình bày.
-
-## Persona "Học viên mới — chỉ A1"
-
-Dữ liệu mô phỏng:
-
-```text
-A1  Đang học   Khởi đầu        ~18%   3 khoá  → "Học tiếp"
-A2  Đã khoá    Sơ cấp                         "Mở khoá khi hoàn thành A1"
-B1  Đã khoá    Trung cấp                      "Mở khoá khi hoàn thành A2"
-B2  Đã khoá    ...                            "Mở khoá khi hoàn thành B1"
-C1  Đã khoá    ...                            "Mở khoá khi hoàn thành B2"
-C2  Đã khoá    ...                            "Mở khoá khi hoàn thành C1"
-```
-
-Tiến độ khoá A1:
-- `A1 Foundation` — 25%
-- `A1 Writing Lab` — 10%
-- `A1 Listening and Reading Lab` — 0% (chưa bắt đầu)
-
-Thẻ "Tiếp tục học" ở hero → trỏ tới `A1 Foundation`.
-
-Thống kê tuần (`studentStats`) cho persona này:
-- Tên: "Minh Khôi" (học viên mới)
-- Thời gian học tuần: 95 phút / mục tiêu 300 phút
-- Streak: 3 ngày
-- Tỷ lệ hoàn thành: 12%
-- Điểm TB: 78
-- Khoá đang học: 1 • Khoá đã xong: 0
-- `weeklyChart`: thấp hơn, ví dụ [20, 15, 10, 25, 10, 15, 0]
-
-Pill ở hero điều chỉnh: bỏ "Top 12% lớp", thay bằng "Người mới bắt đầu".
-
-## Triển khai kỹ thuật
-
-1. `src/lib/lms-data.ts`
-   - Thêm export `newcomerLevels: Level[]` — clone từ `levels` nhưng:
-     - A1: `status: "in-progress"`, `progress: 18`, ba khoá progress 25/10/0.
-     - A2–C2: `status: "locked"`, `progress: 0`, `courses: []`.
-   - Thêm export `newcomerStats` với các số ở trên.
-
-2. `src/routes/index.tsx`
-   - Thêm `useState<"multi" | "newcomer">("multi")`.
-   - Chọn nguồn dữ liệu: `const data = scenario === "newcomer" ? { levels: newcomerLevels, stats: newcomerStats, currentLevel: newcomerLevels[0], currentCourse: newcomerLevels[0].courses[0] } : ...`.
-   - Thay các tham chiếu `levels`, `studentStats`, `currentLevel`, `currentCourse` bằng nguồn dữ liệu này.
-   - Đặt switcher (2 nút pill) ngay trên hero, ví dụ cạnh badge "Chào mừng trở lại": **[Đa cấp]** **[Mới — chỉ A1]**.
-   - Khi `scenario === "newcomer"`: badge "Top 12% lớp" đổi thành "Người mới bắt đầu", `s.activeCourses` lấy từ `newcomerStats`.
-
-3. Không đụng `LevelCard` — component đã xử lý đúng `status: locked` (hiển thị "Đã khoá" + "Mở khoá khi hoàn thành <prev>").
-
-## Phạm vi không đụng
-
-- Routes con (`/levels/:level`, `/courses/:courseId`) giữ nguyên — chúng đọc qua `getLevel` / `getCourse` từ `levels` gốc; persona chỉ ảnh hưởng dashboard.
-- Không sửa style, layout, hay logic LevelCard.
-
-## Kết quả demo
-
-Sau khi build, vào `/`, bấm nút **"Mới — chỉ A1"** → dashboard hiển thị đúng trạng thái học viên mới: 1 cấp đang học, 5 cấp khoá theo thứ tự, hero "Tiếp tục học" trỏ A1 Foundation, thống kê tuần thấp, streak 3 ngày.
+## Lưu ý
+- Dữ liệu exam cũ trong localStorage vẫn đọc được vì giữ nguyên key & schema `SavedExam` (name/levelCode/duration/description/thumbnail/skills/totalQuestions/groups/savedAt). Trường mới (`structure`, `mode`, …) sẽ được thêm optional.
+- Không động chạm logic phê duyệt khoá học, không đổi nav học viên.

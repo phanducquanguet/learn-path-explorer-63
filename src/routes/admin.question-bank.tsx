@@ -179,7 +179,7 @@ const SKILL_COLOR: Record<QSkill, string> = {
 
 const TEACHER_BANK_KEY = "unicom.teacher.questionBank";
 
-export function BankPage({ scope = "admin" }: { scope?: "admin" | "teacher" } = {}) {
+export function BankPage({ scope = "admin", embedded = false }: { scope?: "admin" | "teacher"; embedded?: boolean } = {}) {
   const { role } = useRole();
   const [items, setItems] = useState<BankQuestion[]>(() => {
     if (scope === "teacher" && typeof window !== "undefined") {
@@ -261,24 +261,30 @@ export function BankPage({ scope = "admin" }: { scope?: "admin" | "teacher" } = 
   }, [items]);
 
   if (role !== scope) {
-    return (
-      <div className="min-h-screen bg-background">
-        <TopNav />
-        <div className="mx-auto max-w-3xl px-6 py-20 text-center">
-          <Library className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h1 className="mt-4 font-display text-2xl font-semibold">
-            {scope === "admin" ? "Chỉ Quản trị viên" : "Chỉ Giáo viên"}
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Trang Ngân hàng câu hỏi này chỉ dành cho {scope === "admin" ? "Quản trị viên" : "Giáo viên"}.
-          </p>
+    const block = (
+      <div className="mx-auto max-w-3xl px-6 py-20 text-center">
+        <Library className="mx-auto h-12 w-12 text-muted-foreground" />
+        <h1 className="mt-4 font-display text-2xl font-semibold">
+          {scope === "admin" ? "Chỉ Quản trị viên" : "Chỉ Giáo viên"}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Trang Ngân hàng câu hỏi này chỉ dành cho {scope === "admin" ? "Quản trị viên" : "Giáo viên"}.
+        </p>
+        {!embedded && (
           <Link
             to="/teacher"
             className="mt-6 inline-flex rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background"
           >
             Về Tổng quan
           </Link>
-        </div>
+        )}
+      </div>
+    );
+    if (embedded) return block;
+    return (
+      <div className="min-h-screen bg-background">
+        <TopNav />
+        {block}
       </div>
     );
   }
@@ -334,16 +340,17 @@ export function BankPage({ scope = "admin" }: { scope?: "admin" | "teacher" } = 
 
 
 
-  return (
-    <div className="min-h-screen bg-background">
-      <TopNav />
-      <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
+  const content = (
+    <>
+    <div className={embedded ? "" : "mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8"}>
+      {!embedded && (
         <Link
           to="/teacher"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" /> Trở lại
         </Link>
+      )}
 
         <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
           <div>
@@ -692,6 +699,15 @@ export function BankPage({ scope = "admin" }: { scope?: "admin" | "teacher" } = 
           }}
         />
       )}
+    </>
+  );
+
+
+  if (embedded) return content;
+  return (
+    <div className="min-h-screen bg-background">
+      <TopNav />
+      {content}
     </div>
   );
 }

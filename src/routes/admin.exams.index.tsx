@@ -5,6 +5,7 @@ import { EXAM_SKILLS } from "@/lib/teacher-data";
 import { useRole } from "@/contexts/RoleContext";
 import { usePublishStatus, STATUS_LABEL, type PublishStatus, type PublishEvent } from "@/lib/publish-status";
 import { confirmPublishAction } from "@/lib/publish-actions";
+import { BankPage } from "@/routes/admin.question-bank";
 import {
   ClipboardCheck,
   Plus,
@@ -17,6 +18,7 @@ import {
   MessageSquare,
   Send,
   FileEdit,
+  Library,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -80,6 +82,7 @@ const PUBLISH_SCOPE = (scope: "admin" | "teacher") =>
 export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } = {}) {
   const { role } = useRole();
   const canManage = scope === "admin" ? role === "admin" : role === "teacher";
+  const [tab, setTab] = useState<"exams" | "bank">("exams");
   const [exams, setExams] = useState<SavedExam[]>([]);
   const { getStatus, toggle, wasEverPublished } = usePublishStatus(
     PUBLISH_SCOPE(scope),
@@ -165,7 +168,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
             >
               <MessageSquare className="h-4 w-4" /> Hỏi đáp học viên
             </Link>
-            {canManage && (
+            {canManage && tab === "exams" && (
               <Link
                 to={scope === "teacher" ? "/teacher/exams/new" : "/admin/exams/new"}
                 className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
@@ -178,6 +181,37 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
           </div>
         </div>
 
+        {/* Tabs: Bài luyện thi | Ngân hàng câu hỏi */}
+        <div className="mt-6 inline-flex items-center gap-1 rounded-xl border border-border bg-surface p-1">
+          {([
+            { id: "exams" as const, label: "Bài luyện thi", icon: ClipboardCheck },
+            { id: "bank" as const, label: "Ngân hàng câu hỏi", icon: Library },
+          ]).map((t) => {
+            const Icon = t.icon;
+            const active = tab === t.id;
+            return (
+              <button
+                key={t.id}
+                onClick={() => setTab(t.id)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition",
+                  active
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Icon className="h-4 w-4" /> {t.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {tab === "bank" ? (
+          <div className="mt-6">
+            <BankPage scope={scope} embedded />
+          </div>
+        ) : (
+          <>
         {/* Stats */}
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <StatCard icon={ClipboardCheck} label="Tổng số bài thi" value={exams.length} />
@@ -386,6 +420,8 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
               );
             })}
           </div>
+        )}
+          </>
         )}
       </div>
     </div>
