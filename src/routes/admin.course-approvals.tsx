@@ -16,7 +16,9 @@ import {
 } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
 import { classes as allClasses } from "@/lib/teacher-data";
+import { orgs, classOrgMap, getOrg } from "@/lib/orgs";
 import { levels } from "@/lib/lms-data";
+import { Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
