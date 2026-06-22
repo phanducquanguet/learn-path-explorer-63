@@ -64,6 +64,7 @@ function UploadPage() {
     hours: 36,
     description: "",
     thumbnail: "",
+    teacherNote: "",
   });
   const [units, setUnits] = useState<UnitDraft[]>([
     { id: "u1", title: "Unit 1: Greetings & Introductions", desc: "", nodes: [] },
