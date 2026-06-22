@@ -158,7 +158,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
               <Sparkles className="h-3.5 w-3.5" /> Quản lý bài thi
             </span>
             <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Bài luyện thi
+              {scope === "teacher" ? "Bài tập & Kiểm tra" : "Bài luyện thi"}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {scope === "teacher"
