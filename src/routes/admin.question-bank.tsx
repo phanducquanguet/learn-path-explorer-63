@@ -179,7 +179,7 @@ const SKILL_COLOR: Record<QSkill, string> = {
 
 const TEACHER_BANK_KEY = "unicom.teacher.questionBank";
 
-export function BankPage({ scope = "admin" }: { scope?: "admin" | "teacher" } = {}) {
+export function BankPage({ scope = "admin", embedded = false }: { scope?: "admin" | "teacher"; embedded?: boolean } = {}) {
   const { role } = useRole();
   const [items, setItems] = useState<BankQuestion[]>(() => {
     if (scope === "teacher" && typeof window !== "undefined") {
