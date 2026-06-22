@@ -244,6 +244,11 @@ function TeacherCourseDetailPage() {
               <span>
                 {course.units.length} units • {course.hours}h
               </span>
+              {isTeacherDraft && (
+                <span className="inline-flex h-5 items-center gap-1 rounded-md bg-foreground/90 px-2 text-white">
+                  <UserCheck className="h-3 w-3" /> Tự tạo
+                </span>
+              )}
             </div>
             <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
               {course.title}
@@ -251,6 +256,15 @@ function TeacherCourseDetailPage() {
             <p className="mt-1 text-sm text-muted-foreground">{course.subtitle}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2 self-start">
+            {isTeacherDraft && (
+              <Link
+                to="/teacher/upload"
+                search={{ edit: course.id }}
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-foreground hover:bg-muted"
+              >
+                <Pencil className="h-3.5 w-3.5" /> Chỉnh sửa
+              </Link>
+            )}
             <Link
               to="/teacher/qa"
               search={{ courseId: course.id }}
@@ -258,6 +272,7 @@ function TeacherCourseDetailPage() {
             >
               <MessageSquare className="h-3.5 w-3.5" /> Hỏi đáp học viên
             </Link>
+
           </div>
         </div>
 
