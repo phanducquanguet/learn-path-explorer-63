@@ -82,6 +82,7 @@ const PUBLISH_SCOPE = (scope: "admin" | "teacher") =>
 export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } = {}) {
   const { role } = useRole();
   const canManage = scope === "admin" ? role === "admin" : role === "teacher";
+  const [tab, setTab] = useState<"exams" | "bank">("exams");
   const [exams, setExams] = useState<SavedExam[]>([]);
   const { getStatus, toggle, wasEverPublished } = usePublishStatus(
     PUBLISH_SCOPE(scope),
