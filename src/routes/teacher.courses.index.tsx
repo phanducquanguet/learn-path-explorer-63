@@ -395,6 +395,14 @@ function TeacherCourseCard({
           <Stat label="Học viên" value={studentCount} />
         </div>
 
+        {isTeacherOwn && publishedClassNames && publishedClassNames.length > 0 && (
+          <div className="rounded-xl bg-muted/40 px-3 py-2 text-[11px] text-muted-foreground">
+            <span className="font-semibold text-foreground">Đã publish:</span>{" "}
+            {publishedClassNames.join(", ")}
+          </div>
+        )}
+
+
         <div className="mt-auto">
           <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
             <span className="inline-flex items-center gap-1">
