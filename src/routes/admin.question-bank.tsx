@@ -341,6 +341,7 @@ export function BankPage({ scope = "admin", embedded = false }: { scope?: "admin
 
 
   const content = (
+    <>
     <div className={embedded ? "" : "mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8"}>
       {!embedded && (
         <Link
