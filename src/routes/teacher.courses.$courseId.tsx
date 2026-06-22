@@ -1,5 +1,5 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -22,14 +22,16 @@ import {
   ExternalLink,
   GraduationCap,
   Layers,
+  Pencil,
   Search,
   TrendingUp,
   Trophy,
+  UserCheck,
   Users,
   MessageSquare,
 } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
-import { getCourse } from "@/lib/lms-data";
+import { getCourse, levels, type Course, type Level } from "@/lib/lms-data";
 import { classes, students, type TeacherStudent } from "@/lib/teacher-data";
 import { cn } from "@/lib/utils";
 import { CourseContentViewer } from "@/components/CourseContentViewer";
@@ -46,10 +48,81 @@ export const Route = createFileRoute("/teacher/courses/$courseId")({
     meta: [{ title: `Quản trị khóa ${params.courseId} — UNICOM LMS` }],
   }),
   component: TeacherCourseDetailPage,
-  notFoundComponent: () => (
-    <div className="p-10 text-center text-muted-foreground">Không tìm thấy khóa học.</div>
-  ),
 });
+
+type DraftMeta = {
+  visibility?: "system" | "classes";
+  classIds?: string[];
+};
+
+function nodeKindToActivityType(kind?: string): "video" | "reading" | "quiz" | "speaking" | "writing" {
+  switch (kind) {
+    case "video":
+      return "video";
+    case "video-speaking":
+      return "speaking";
+    case "pdf":
+    case "pdf-audio":
+    case "scorm":
+    case "h5p":
+      return "reading";
+    case "practice":
+    case "group":
+      return "quiz";
+    default:
+      return "reading";
+  }
+}
+
+function loadDraftCourse(courseId: string): { course: Course; level: Level; draft: DraftMeta } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem("unicom.uploaded.courses");
+    if (!raw) return null;
+    const drafts = JSON.parse(raw) as Array<Record<string, unknown>>;
+    const d = drafts.find((x) => x.id === courseId);
+    if (!d) return null;
+    const lv =
+      levels.find((l) => l.code === (d.levelCode as string)) ?? levels[0];
+    const rawUnits = (d.units as Array<Record<string, unknown>>) ?? [];
+    const synthCourse: Course = {
+      id: courseId,
+      title: (d.title as string) || "Khóa học chưa đặt tên",
+      subtitle: (d.subtitle as string) || "",
+      level: lv.code,
+      hours: (d.hours as number) ?? 0,
+      progress: 0,
+      units: rawUnits.map((u, i) => {
+        const nodes = (u.nodes as Array<Record<string, unknown>>) ?? [];
+        return {
+          id: (u.id as string) || `u${i + 1}`,
+          index: i + 1,
+          title: (u.title as string) || `Unit ${i + 1}`,
+          description: (u.desc as string) || "",
+          activities: nodes
+            .filter((n) => (n.kind as string) !== "question")
+            .map((n, j) => ({
+              id: (n.id as string) || `${u.id}-a${j + 1}`,
+              title: (n.title as string) || "Hoạt động",
+              type: nodeKindToActivityType(n.kind as string),
+              duration: (n.duration as number) ?? 10,
+            })),
+        };
+      }),
+      classmates: [],
+    };
+    return {
+      course: synthCourse,
+      level: lv,
+      draft: {
+        visibility: d.visibility as DraftMeta["visibility"],
+        classIds: (d.classIds as string[]) ?? [],
+      },
+    };
+  } catch {
+    return null;
+  }
+}
 
 const SKILL_LABEL: Record<string, string> = {
   listening: "Nghe",
@@ -76,18 +149,36 @@ type TabKey = "content" | "students" | "scores" | "competence";
 
 function TeacherCourseDetailPage() {
   const { courseId } = Route.useParams();
-  const data = getCourse(courseId);
-  if (!data) throw notFound();
-  const { course, level } = data;
+  const systemData = getCourse(courseId);
+  const [draftData, setDraftData] = useState<ReturnType<typeof loadDraftCourse>>(null);
+  const [draftLoaded, setDraftLoaded] = useState(false);
 
-  const courseClasses = useMemo(
-    () => classes.filter((c) => c.levelCode === level.code),
-    [level.code],
-  );
+  useEffect(() => {
+    if (systemData) {
+      setDraftLoaded(true);
+      return;
+    }
+    setDraftData(loadDraftCourse(courseId));
+    setDraftLoaded(true);
+  }, [courseId, systemData]);
+
+  const data = systemData ?? draftData;
+  const isTeacherDraft = !systemData && !!draftData;
+  const draftMeta = draftData?.draft;
+
+  const fallbackLevelCode = data?.level.code ?? "A1";
+  const courseClasses = useMemo(() => {
+    if (!data) return [];
+    if (!isTeacherDraft) return classes.filter((c) => c.levelCode === data.level.code);
+    if (draftMeta?.visibility === "system")
+      return classes.filter((c) => c.levelCode === data.level.code);
+    return classes.filter((c) => (draftMeta?.classIds ?? []).includes(c.id));
+  }, [data, isTeacherDraft, draftMeta, fallbackLevelCode]);
   const courseStudents = useMemo(
     () => students.filter((s) => courseClasses.some((c) => c.id === s.classId)),
     [courseClasses],
   );
+
 
   const [tab, setTab] = useState<TabKey>("content");
   const [picked, setPicked] = useState<TeacherStudent | null>(null);
@@ -111,12 +202,25 @@ function TeacherCourseDetailPage() {
     : 0;
   const avgProgress = courseClasses.length
     ? Math.round(courseClasses.reduce((s, c) => s + c.avgProgress, 0) / courseClasses.length)
-    : course.progress;
+    : (data?.course.progress ?? 0);
+
+  if (!data) {
+    return (
+      <div className="min-h-screen bg-background">
+        <TopNav />
+        <div className="p-10 text-center text-muted-foreground">
+          {draftLoaded ? "Không tìm thấy khóa học." : "Đang tải…"}
+        </div>
+      </div>
+    );
+  }
+  const { course, level } = data;
 
   return (
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-8 sm:px-8">
+
         {/* Breadcrumb */}
         <Link
           to="/teacher/courses"
@@ -140,6 +244,11 @@ function TeacherCourseDetailPage() {
               <span>
                 {course.units.length} units • {course.hours}h
               </span>
+              {isTeacherDraft && (
+                <span className="inline-flex h-5 items-center gap-1 rounded-md bg-foreground/90 px-2 text-white">
+                  <UserCheck className="h-3 w-3" /> Tự tạo
+                </span>
+              )}
             </div>
             <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
               {course.title}
@@ -147,6 +256,15 @@ function TeacherCourseDetailPage() {
             <p className="mt-1 text-sm text-muted-foreground">{course.subtitle}</p>
           </div>
           <div className="flex flex-wrap items-center gap-2 self-start">
+            {isTeacherDraft && (
+              <Link
+                to="/teacher/upload"
+                search={{ edit: course.id }}
+                className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-surface px-3 text-xs font-semibold text-foreground hover:bg-muted"
+              >
+                <Pencil className="h-3.5 w-3.5" /> Chỉnh sửa
+              </Link>
+            )}
             <Link
               to="/teacher/qa"
               search={{ courseId: course.id }}
@@ -154,6 +272,7 @@ function TeacherCourseDetailPage() {
             >
               <MessageSquare className="h-3.5 w-3.5" /> Hỏi đáp học viên
             </Link>
+
           </div>
         </div>
 
