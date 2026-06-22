@@ -70,9 +70,59 @@ function skillLabel(id: string) {
   return EXAM_SKILLS.find((s) => s.id === id)?.label.replace(/\s*\(.*\)/, "") ?? id;
 }
 
+const TEACHER_DEMO: SavedExam[] = [
+  {
+    id: "demo-teacher-1",
+    name: "[Cô Mai Lan] Bài tập tuần 3 — Reading & Vocabulary",
+    levelCode: "B1",
+    duration: 30,
+    description:
+      "Bài tập tuần dành cho lớp B1 — Fastrack: 2 đoạn đọc ngắn + 15 câu từ vựng theo chủ đề Travel.",
+    skills: ["reading"],
+    totalQuestions: 22,
+    classIds: ["cls-b1-fastrack"],
+    savedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-teacher-2",
+    name: "[Cô Mai Lan] Listening Homework — Daily Talk",
+    levelCode: "A2",
+    duration: 20,
+    description:
+      "Bài tập nghe về hội thoại đời thường. Nộp trước buổi học tiếp theo để cô chữa trên lớp.",
+    skills: ["listening"],
+    totalQuestions: 12,
+    classIds: ["cls-a2-evening"],
+    savedAt: new Date(Date.now() - 1 * 86400000).toISOString(),
+  },
+  {
+    id: "demo-teacher-3",
+    name: "[Thầy Quang] Writing Practice — Short Email",
+    levelCode: "B1",
+    duration: 25,
+    description:
+      "Luyện viết email ngắn (~120 từ) trả lời lời mời. Có rubric chấm điểm chi tiết.",
+    skills: ["writing"],
+    totalQuestions: 1,
+    classIds: ["cls-b1-fastrack"],
+    savedAt: new Date(Date.now() - 5 * 3600000).toISOString(),
+  },
+];
+
 function loadItems(): Item[] {
   const adminExams = readJSON<SavedExam[]>(ADMIN_KEY, []);
-  const teacherExams = readJSON<SavedExam[]>(TEACHER_KEY, []);
+  let teacherExams = readJSON<SavedExam[]>(TEACHER_KEY, []);
+
+  // Seed demo nếu chưa có bài tập nào của giáo viên trong localStorage,
+  // để học viên thấy ngay sự khác biệt với bài do admin tạo.
+  const hasDemo = teacherExams.some((e) => e.id?.startsWith("demo-teacher-"));
+  if (!hasDemo) {
+    teacherExams = [...TEACHER_DEMO, ...teacherExams];
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem(TEACHER_KEY, JSON.stringify(teacherExams));
+    }
+  }
+
   const adminPub = readJSON<Record<string, "draft" | "published">>(
     PUBLISH_KEY("exams"),
     {},
@@ -92,6 +142,7 @@ function loadItems(): Item[] {
 
   return [...teacherItems, ...adminItems];
 }
+
 
 function PracticePage() {
   const [items, setItems] = useState<Item[]>([]);
