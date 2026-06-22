@@ -645,7 +645,7 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
   const thptClassIds = classesOf("org-thpt-abc");
 
   const pending: DraftCourse = {
-    id: `demo-pending-${now}`,
+    id: "demo-pending",
     title: "English for Daily Communication",
     subtitle: "Khóa giao tiếp tiếng Anh cho người đi làm — 6 tuần",
     description:
@@ -769,7 +769,7 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
   };
 
   const rejected: DraftCourse = {
-    id: `demo-rejected-${now}`,
+    id: "demo-rejected",
     title: "Business Writing Essentials",
     subtitle: "Viết email và báo cáo công việc hiệu quả",
     description:
@@ -829,7 +829,7 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
 
   // Khóa học hoàn chỉnh — đã phê duyệt, đầy đủ video/PDF/luyện nói/quiz/SCORM/H5P.
   const approved: DraftCourse = {
-    id: `demo-approved-${now}`,
+    id: "demo-approved",
     title: "IELTS Foundation B1 — Complete Course",
     subtitle: "Khóa học hoàn chỉnh chuẩn bị nền tảng IELTS từ B1",
     description:
