@@ -419,9 +419,23 @@ function TeacherCourseCard({
           </div>
         </div>
       </div>
+    </>
+  );
+  return isTeacherOwn ? (
+    <Link to="/teacher/upload" search={{ edit: course.id }} className={cardClass}>
+      {inner}
+    </Link>
+  ) : (
+    <Link
+      to="/teacher/courses/$courseId"
+      params={{ courseId: course.id }}
+      className={cardClass}
+    >
+      {inner}
     </Link>
   );
 }
+
 
 function Stat({
   label,
