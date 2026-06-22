@@ -104,7 +104,7 @@ const NODE_KIND_LABEL: Record<string, string> = {
 
 const STORAGE_KEY = "unicom.uploaded.courses";
 
-export const Route = createFileRoute("/admin/course-approvals")({
+export const Route = createFileRoute("/admin/course-approvals/")({
   head: () => ({
     meta: [
       { title: "Phê duyệt khóa học — UNICOM LMS" },
