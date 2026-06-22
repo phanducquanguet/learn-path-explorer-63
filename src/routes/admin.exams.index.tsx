@@ -38,6 +38,7 @@ type SavedExam = {
   skills: string[];
   totalQuestions?: number;
   groups?: Record<string, { questions: unknown[] }>;
+  classIds?: string[];
   savedAt: string;
 };
 
