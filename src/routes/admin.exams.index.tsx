@@ -5,6 +5,7 @@ import { EXAM_SKILLS } from "@/lib/teacher-data";
 import { useRole } from "@/contexts/RoleContext";
 import { usePublishStatus, STATUS_LABEL, type PublishStatus, type PublishEvent } from "@/lib/publish-status";
 import { confirmPublishAction } from "@/lib/publish-actions";
+import { BankPage } from "@/routes/admin.question-bank";
 import {
   ClipboardCheck,
   Plus,
@@ -17,6 +18,7 @@ import {
   MessageSquare,
   Send,
   FileEdit,
+  Library,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
