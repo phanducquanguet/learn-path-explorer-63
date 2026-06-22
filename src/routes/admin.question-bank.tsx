@@ -261,24 +261,30 @@ export function BankPage({ scope = "admin", embedded = false }: { scope?: "admin
   }, [items]);
 
   if (role !== scope) {
-    return (
-      <div className="min-h-screen bg-background">
-        <TopNav />
-        <div className="mx-auto max-w-3xl px-6 py-20 text-center">
-          <Library className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h1 className="mt-4 font-display text-2xl font-semibold">
-            {scope === "admin" ? "Chỉ Quản trị viên" : "Chỉ Giáo viên"}
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Trang Ngân hàng câu hỏi này chỉ dành cho {scope === "admin" ? "Quản trị viên" : "Giáo viên"}.
-          </p>
+    const block = (
+      <div className="mx-auto max-w-3xl px-6 py-20 text-center">
+        <Library className="mx-auto h-12 w-12 text-muted-foreground" />
+        <h1 className="mt-4 font-display text-2xl font-semibold">
+          {scope === "admin" ? "Chỉ Quản trị viên" : "Chỉ Giáo viên"}
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Trang Ngân hàng câu hỏi này chỉ dành cho {scope === "admin" ? "Quản trị viên" : "Giáo viên"}.
+        </p>
+        {!embedded && (
           <Link
             to="/teacher"
             className="mt-6 inline-flex rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background"
           >
             Về Tổng quan
           </Link>
-        </div>
+        )}
+      </div>
+    );
+    if (embedded) return block;
+    return (
+      <div className="min-h-screen bg-background">
+        <TopNav />
+        {block}
       </div>
     );
   }
