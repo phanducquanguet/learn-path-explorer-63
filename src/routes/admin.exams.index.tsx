@@ -167,13 +167,14 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
             </Link>
             {canManage && (
               <Link
-                to="/admin/exams/new"
+                to={scope === "teacher" ? "/teacher/exams/new" : "/admin/exams/new"}
                 className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
                 style={{ background: "var(--gradient-brand)" }}
               >
                 <Plus className="h-4 w-4" /> Tạo bài thi mới
               </Link>
             )}
+
           </div>
         </div>
 
