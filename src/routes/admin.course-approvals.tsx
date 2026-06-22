@@ -107,11 +107,20 @@ function ApprovalsPage() {
     if (typeof window === "undefined") return;
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
-      setDrafts(raw ? JSON.parse(raw) : []);
+      const existing: DraftCourse[] = raw ? JSON.parse(raw) : [];
+      const hasTeacherDraft = existing.some((d) => d.createdBy === "teacher");
+      if (!hasTeacherDraft) {
+        const seeded = [...existing, ...buildDemoTeacherDrafts()];
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+        setDrafts(seeded);
+      } else {
+        setDrafts(existing);
+      }
     } catch {
       setDrafts([]);
     }
   }, []);
+
 
   const persist = (next: DraftCourse[]) => {
     setDrafts(next);
