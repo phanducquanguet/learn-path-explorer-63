@@ -429,24 +429,31 @@ function ApprovalsPage() {
                   </p>
                 )}
               </div>
-              <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2 text-xs sm:grid-cols-3 lg:grid-cols-5">
+                <Meta
+                  icon={Building2}
+                  label="Đơn vị"
+                  value={getOrg(reviewing.orgId)?.name || "—"}
+                />
                 <Meta icon={Layers} label="Cấp độ" value={reviewing.levelCode || "—"} />
                 <Meta
                   icon={Users}
                   label="Số Units"
                   value={String(reviewing.units?.length ?? 0)}
                 />
-                <Meta
-                  icon={Clock}
-                  label="Giờ học"
-                  value={`${reviewing.hours ?? 0}h`}
-                />
+                <Meta icon={Clock} label="Giờ học" value={`${reviewing.hours ?? 0}h`} />
                 <Meta
                   icon={Sparkles}
                   label="Danh mục"
                   value={reviewing.category || "—"}
                 />
               </div>
+              {reviewing.teacherName && (
+                <div className="rounded-xl border border-border bg-background p-3 text-xs">
+                  <span className="font-semibold text-foreground">Giáo viên đề xuất:</span>{" "}
+                  <span className="text-muted-foreground">{reviewing.teacherName}</span>
+                </div>
+              )}
               <div className="rounded-xl border border-border bg-background p-3 text-xs">
                 <div className="font-semibold text-foreground">Đề xuất phạm vi publish</div>
                 <div className="mt-1 text-muted-foreground">{scopeSummary(reviewing)}</div>
