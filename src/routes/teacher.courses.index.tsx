@@ -156,19 +156,23 @@ function useTeacherCreatedRows(): CourseRow[] {
 }
 
 function TeacherCoursesPage() {
-  const rows = useCourseStats();
+  const systemRows = useCourseStats();
+  const teacherRows = useTeacherCreatedRows();
+  const rows = useMemo(() => [...teacherRows, ...systemRows], [teacherRows, systemRows]);
   const [query, setQuery] = useState("");
   const [levelFilter, setLevelFilter] = useState("all");
+  const [originFilter, setOriginFilter] = useState<"all" | "system" | "teacher">("all");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return rows.filter(({ course, level }) => {
+    return rows.filter(({ course, level, origin }) => {
       if (levelFilter !== "all" && level.code !== levelFilter) return false;
+      if (originFilter !== "all" && origin !== originFilter) return false;
       if (q && !`${course.title} ${course.subtitle} ${level.code}`.toLowerCase().includes(q))
         return false;
       return true;
     });
-  }, [rows, query, levelFilter]);
+  }, [rows, query, levelFilter, originFilter]);
 
   const totalStudents = rows.reduce((s, r) => s + r.studentCount, 0);
   const totalClasses = classes.length;
@@ -187,17 +191,27 @@ function TeacherCoursesPage() {
               Quản trị khóa học
             </h1>
             <p className="text-sm text-muted-foreground">
-              {rows.length} khóa học • {totalClasses} lớp đang dạy • {totalStudents} lượt
-              học viên
+              {rows.length} khóa học ({teacherRows.length} tự tạo) • {totalClasses} lớp đang dạy •{" "}
+              {totalStudents} lượt học viên
             </p>
           </div>
-          <Link
-            to="/teacher/qa"
-            className="inline-flex h-10 items-center gap-1.5 self-start rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-soft transition hover:bg-muted sm:self-end"
-          >
-            <MessageSquare className="h-4 w-4" /> Hỏi đáp học viên
-          </Link>
+          <div className="flex flex-wrap gap-2 sm:self-end">
+            <Link
+              to="/teacher/qa"
+              className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-soft transition hover:bg-muted"
+            >
+              <MessageSquare className="h-4 w-4" /> Hỏi đáp học viên
+            </Link>
+            <Link
+              to="/teacher/upload"
+              className="inline-flex h-10 items-center gap-1.5 rounded-xl px-4 text-sm font-semibold text-primary-foreground shadow-soft transition hover:opacity-90"
+              style={{ background: "var(--gradient-brand)" }}
+            >
+              <Plus className="h-4 w-4" /> Tạo khóa học mới
+            </Link>
+          </div>
         </div>
+
 
         {/* KPI strip */}
         <div className="mt-6 grid gap-3 sm:grid-cols-4">
