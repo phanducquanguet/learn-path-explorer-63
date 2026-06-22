@@ -76,6 +76,7 @@ type DraftCourse = {
   submittedAt?: string;
   reviewedAt?: string;
   reviewerNote?: string;
+  teacherNote?: string;
 };
 
 type CourseRow = {
