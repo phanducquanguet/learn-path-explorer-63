@@ -936,10 +936,14 @@ export function TestExamBuilder({
                 <Row label="Tên đề" value={name || "—"} />
                 <Row label="Cấp độ" value={level} />
                 <Row label="Thời lượng" value={`${duration} phút`} />
-                <Row label="Đơn vị" value={orgs.find((o) => o.id === orgId)?.name ?? "—"} />
-                <Row label="Lớp" value={classIds.length ? classIds.length + " lớp" : "—"} />
-                <Row label="Mở" value={openAt || "—"} />
-                <Row label="Đóng" value={closeAt || "—"} />
+                {!isExam && (
+                  <>
+                    <Row label="Đơn vị" value={orgs.find((o) => o.id === orgId)?.name ?? "—"} />
+                    <Row label="Lớp" value={classIds.length ? classIds.length + " lớp" : "—"} />
+                    <Row label="Mở" value={openAt || "—"} />
+                    <Row label="Đóng" value={closeAt || "—"} />
+                  </>
+                )}
                 <Row label="Tổng câu" value={String(totalQuestions)} />
                 <Row label="Chế độ" value={mode === "random" ? "Bốc ngẫu nhiên" : mode === "manual" ? "Tự soạn" : "Cố định"} />
                 <Row label="Thứ tự làm bài" value={enforceOrder ? "Bắt buộc theo flow" : "Tự do"} />
