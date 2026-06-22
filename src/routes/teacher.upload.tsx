@@ -443,7 +443,7 @@ function UploadPage() {
                 <div className="text-sm font-semibold text-foreground">Phạm vi hiển thị</div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {isTeacher
-                    ? "Khóa học của giáo viên chỉ hiển thị cho học viên thuộc các lớp được publish dưới đây."
+                    ? "Khóa học của giáo viên cần được admin phê duyệt trước khi học viên thấy. Chọn phạm vi đề xuất ở dưới và bấm 'Gửi duyệt'."
                     : "Khóa học hệ thống mặc định hiển thị cho mọi lớp đúng cấp độ. Bạn có thể giới hạn chỉ một số lớp nếu cần."}
                 </p>
               </div>
