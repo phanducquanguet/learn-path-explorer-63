@@ -287,7 +287,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
           )}
         </div>
 
-        {/* Bảng danh sách bài thi */}
+        {/* Bảng danh sách đề thi */}
         {exams.length === 0 ? (
           <div className="mt-8 rounded-3xl border border-dashed border-border bg-surface/40 p-16 text-center">
             <ClipboardCheck className="mx-auto h-10 w-10 text-muted-foreground" />
