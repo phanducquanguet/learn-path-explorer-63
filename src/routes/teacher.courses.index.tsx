@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Search,
   X,
@@ -12,6 +12,8 @@ import {
   Sparkles,
   ArrowRight,
   MessageSquare,
+  Plus,
+  UserCheck,
 } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
 import { levels, type Course, type Level } from "@/lib/lms-data";
@@ -50,6 +52,8 @@ type CourseRow = {
   studentCount: number;
   avgProgress: number;
   avgScore: number;
+  origin: "system" | "teacher";
+  publishedClassNames?: string[];
 };
 
 function useCourseStats(): CourseRow[] {
@@ -76,26 +80,99 @@ function useCourseStats(): CourseRow[] {
           studentCount: lvStudents.length,
           avgProgress,
           avgScore,
+          origin: "system",
         };
       }),
     );
   }, []);
 }
 
+type DraftCourse = {
+  id: string;
+  title?: string;
+  subtitle?: string;
+  levelCode?: string;
+  hours?: number;
+  units?: { id: string }[];
+  visibility?: "system" | "classes";
+  classIds?: string[];
+  createdBy?: "teacher" | "admin";
+};
+
+function useTeacherCreatedRows(): CourseRow[] {
+  const [drafts, setDrafts] = useState<DraftCourse[]>([]);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem("unicom.uploaded.courses");
+      setDrafts(raw ? JSON.parse(raw) : []);
+    } catch {
+      setDrafts([]);
+    }
+  }, []);
+
+  return useMemo(() => {
+    return drafts
+      .filter((d) => d.createdBy !== "admin") // chỉ khóa giáo viên tự tạo
+      .map<CourseRow | null>((d) => {
+        const lv = levels.find((l) => l.code === d.levelCode) ?? levels[0];
+        const publishedClassIds = d.visibility === "system"
+          ? classes.filter((c) => c.levelCode === lv.code).map((c) => c.id)
+          : (d.classIds ?? []);
+        const lvClasses = classes.filter((c) => publishedClassIds.includes(c.id));
+        if (lvClasses.length === 0) return null; // chưa publish thì không show
+        const lvStudents = students.filter((s) => lvClasses.some((c) => c.id === s.classId));
+        const fakeCourse: Course = {
+          id: d.id,
+          title: d.title || "Khóa học chưa đặt tên",
+          subtitle: d.subtitle || "",
+          level: lv.code,
+          hours: d.hours ?? 0,
+          progress: 0,
+          units: (d.units ?? []).map((u, i) => ({
+            id: u.id,
+            index: i + 1,
+            title: "",
+            description: "",
+            activities: [],
+          })),
+          classmates: [],
+        };
+        return {
+          course: fakeCourse,
+          level: lv,
+          classCount: lvClasses.length,
+          studentCount: lvStudents.length,
+          avgProgress: lvClasses.length
+            ? Math.round(lvClasses.reduce((s, c) => s + c.avgProgress, 0) / lvClasses.length)
+            : 0,
+          avgScore: 0,
+          origin: "teacher",
+          publishedClassNames: lvClasses.map((c) => c.name),
+        };
+      })
+      .filter((r): r is CourseRow => r !== null);
+  }, [drafts]);
+}
+
 function TeacherCoursesPage() {
-  const rows = useCourseStats();
+  const systemRows = useCourseStats();
+  const teacherRows = useTeacherCreatedRows();
+  const rows = useMemo(() => [...teacherRows, ...systemRows], [teacherRows, systemRows]);
   const [query, setQuery] = useState("");
   const [levelFilter, setLevelFilter] = useState("all");
+  const [originFilter, setOriginFilter] = useState<"all" | "system" | "teacher">("all");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return rows.filter(({ course, level }) => {
+    return rows.filter(({ course, level, origin }) => {
       if (levelFilter !== "all" && level.code !== levelFilter) return false;
+      if (originFilter !== "all" && origin !== originFilter) return false;
       if (q && !`${course.title} ${course.subtitle} ${level.code}`.toLowerCase().includes(q))
         return false;
       return true;
     });
-  }, [rows, query, levelFilter]);
+  }, [rows, query, levelFilter, originFilter]);
 
   const totalStudents = rows.reduce((s, r) => s + r.studentCount, 0);
   const totalClasses = classes.length;
@@ -114,17 +191,27 @@ function TeacherCoursesPage() {
               Quản trị khóa học
             </h1>
             <p className="text-sm text-muted-foreground">
-              {rows.length} khóa học • {totalClasses} lớp đang dạy • {totalStudents} lượt
-              học viên
+              {rows.length} khóa học ({teacherRows.length} tự tạo) • {totalClasses} lớp đang dạy •{" "}
+              {totalStudents} lượt học viên
             </p>
           </div>
-          <Link
-            to="/teacher/qa"
-            className="inline-flex h-10 items-center gap-1.5 self-start rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-soft transition hover:bg-muted sm:self-end"
-          >
-            <MessageSquare className="h-4 w-4" /> Hỏi đáp học viên
-          </Link>
+          <div className="flex flex-wrap gap-2 sm:self-end">
+            <Link
+              to="/teacher/qa"
+              className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-soft transition hover:bg-muted"
+            >
+              <MessageSquare className="h-4 w-4" /> Hỏi đáp học viên
+            </Link>
+            <Link
+              to="/teacher/upload"
+              className="inline-flex h-10 items-center gap-1.5 rounded-xl px-4 text-sm font-semibold text-primary-foreground shadow-soft transition hover:opacity-90"
+              style={{ background: "var(--gradient-brand)" }}
+            >
+              <Plus className="h-4 w-4" /> Tạo khóa học mới
+            </Link>
+          </div>
         </div>
+
 
         {/* KPI strip */}
         <div className="mt-6 grid gap-3 sm:grid-cols-4">
@@ -167,6 +254,18 @@ function TeacherCoursesPage() {
             <div className="flex items-center gap-2">
               <div className="relative">
                 <select
+                  value={originFilter}
+                  onChange={(e) => setOriginFilter(e.target.value as typeof originFilter)}
+                  className="h-9 appearance-none rounded-xl border border-border bg-background pl-3 pr-8 text-xs font-medium text-foreground outline-none transition hover:border-primary/40 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="all">Tất cả nguồn</option>
+                  <option value="system">Khóa hệ thống</option>
+                  <option value="teacher">Khóa tự tạo</option>
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              </div>
+              <div className="relative">
+                <select
                   value={levelFilter}
                   onChange={(e) => setLevelFilter(e.target.value)}
                   className="h-9 appearance-none rounded-xl border border-border bg-background pl-3 pr-8 text-xs font-medium text-foreground outline-none transition hover:border-primary/40 focus:border-primary focus:ring-2 focus:ring-primary/20"
@@ -181,6 +280,7 @@ function TeacherCoursesPage() {
                 <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               </div>
             </div>
+
           </div>
         </div>
 
@@ -233,15 +333,17 @@ function TeacherCourseCard({
   classCount,
   studentCount,
   avgProgress,
-  avgScore,
+  origin,
+  publishedClassNames,
 }: CourseRow) {
   const cover = COURSE_COVERS[course.id] ?? LEVEL_COVERS[level.code];
-  return (
-    <Link
-      to="/teacher/courses/$courseId"
-      params={{ courseId: course.id }}
-      className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated"
-    >
+  const isTeacherOwn = origin === "teacher";
+  const cardClass =
+    "group flex flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated";
+  const inner = (
+    <>
+
+
       <div
         className="relative h-44 w-full overflow-hidden"
         style={{
@@ -264,7 +366,13 @@ function TeacherCourseCard({
         >
           {level.code}
         </span>
+        {isTeacherOwn && (
+          <span className="absolute right-3 top-3 inline-flex h-6 items-center gap-1 rounded-md bg-foreground/90 px-2 text-[11px] font-semibold uppercase tracking-wider text-background shadow-soft">
+            <UserCheck className="h-3 w-3" /> Tự tạo
+          </span>
+        )}
       </div>
+
 
       <div className="flex flex-1 flex-col gap-4 p-5">
         <div className="flex items-start justify-between gap-3">
@@ -285,6 +393,14 @@ function TeacherCourseCard({
           <Stat label="Học viên" value={studentCount} />
         </div>
 
+        {isTeacherOwn && publishedClassNames && publishedClassNames.length > 0 && (
+          <div className="rounded-xl bg-muted/40 px-3 py-2 text-[11px] text-muted-foreground">
+            <span className="font-semibold text-foreground">Đã publish:</span>{" "}
+            {publishedClassNames.join(", ")}
+          </div>
+        )}
+
+
         <div className="mt-auto">
           <div className="flex items-center justify-between text-[11px] font-medium text-muted-foreground">
             <span className="inline-flex items-center gap-1">
@@ -303,9 +419,23 @@ function TeacherCourseCard({
           </div>
         </div>
       </div>
+    </>
+  );
+  return isTeacherOwn ? (
+    <Link to="/teacher/upload" search={{ edit: course.id }} className={cardClass}>
+      {inner}
+    </Link>
+  ) : (
+    <Link
+      to="/teacher/courses/$courseId"
+      params={{ courseId: course.id }}
+      className={cardClass}
+    >
+      {inner}
     </Link>
   );
 }
+
 
 function Stat({
   label,
