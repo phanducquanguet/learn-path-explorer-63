@@ -49,9 +49,9 @@ type SavedExamShape = {
   id: string;
   name: string;
   levelCode: string;
+  levelCodes?: string[];
   duration: number;
   description?: string;
-  thumbnail?: string;
   skills: string[];
   totalQuestions: number;
   groups: Record<string, { blocks: { id: string; kind: "single" | "group"; media: string; questions: unknown[] }[] }>;
