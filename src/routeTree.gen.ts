@@ -26,7 +26,6 @@ import { Route as LiveSessionIdRouteImport } from './routes/live.$sessionId'
 import { Route as LevelsLevelRouteImport } from './routes/levels.$level'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
 import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-bank'
-import { Route as AdminCourseApprovalsRouteImport } from './routes/admin.course-approvals'
 import { Route as TeacherTestsIndexRouteImport } from './routes/teacher.tests.index'
 import { Route as TeacherLiveIndexRouteImport } from './routes/teacher.live.index'
 import { Route as TeacherExamsIndexRouteImport } from './routes/teacher.exams.index'
@@ -34,6 +33,7 @@ import { Route as TeacherCoursesIndexRouteImport } from './routes/teacher.course
 import { Route as TeacherClassesIndexRouteImport } from './routes/teacher.classes.index'
 import { Route as AdminTestsIndexRouteImport } from './routes/admin.tests.index'
 import { Route as AdminExamsIndexRouteImport } from './routes/admin.exams.index'
+import { Route as AdminCourseApprovalsIndexRouteImport } from './routes/admin.course-approvals.index'
 import { Route as TeacherTestsTestIdRouteImport } from './routes/teacher.tests.$testId'
 import { Route as TeacherLiveSessionIdRouteImport } from './routes/teacher.live.$sessionId'
 import { Route as TeacherExamsNewRouteImport } from './routes/teacher.exams.new'
@@ -132,11 +132,6 @@ const AdminQuestionBankRoute = AdminQuestionBankRouteImport.update({
   path: '/admin/question-bank',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminCourseApprovalsRoute = AdminCourseApprovalsRouteImport.update({
-  id: '/admin/course-approvals',
-  path: '/admin/course-approvals',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const TeacherTestsIndexRoute = TeacherTestsIndexRouteImport.update({
   id: '/teacher/tests/',
   path: '/teacher/tests/',
@@ -172,6 +167,12 @@ const AdminExamsIndexRoute = AdminExamsIndexRouteImport.update({
   path: '/admin/exams/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminCourseApprovalsIndexRoute =
+  AdminCourseApprovalsIndexRouteImport.update({
+    id: '/admin/course-approvals/',
+    path: '/admin/course-approvals/',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const TeacherTestsTestIdRoute = TeacherTestsTestIdRouteImport.update({
   id: '/teacher/tests/$testId',
   path: '/teacher/tests/$testId',
@@ -224,9 +225,9 @@ const AdminExamsExamIdRoute = AdminExamsExamIdRouteImport.update({
 } as any)
 const AdminCourseApprovalsDraftIdRoute =
   AdminCourseApprovalsDraftIdRouteImport.update({
-    id: '/$draftId',
-    path: '/$draftId',
-    getParentRoute: () => AdminCourseApprovalsRoute,
+    id: '/admin/course-approvals/$draftId',
+    path: '/admin/course-approvals/$draftId',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const AdminExamsExamIdSubmissionsRoute =
   AdminExamsExamIdSubmissionsRouteImport.update({
@@ -241,7 +242,6 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
-  '/admin/course-approvals': typeof AdminCourseApprovalsRouteWithChildren
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -265,6 +265,7 @@ export interface FileRoutesByFullPath {
   '/teacher/exams/new': typeof TeacherExamsNewRoute
   '/teacher/live/$sessionId': typeof TeacherLiveSessionIdRoute
   '/teacher/tests/$testId': typeof TeacherTestsTestIdRoute
+  '/admin/course-approvals/': typeof AdminCourseApprovalsIndexRoute
   '/admin/exams/': typeof AdminExamsIndexRoute
   '/admin/tests/': typeof AdminTestsIndexRoute
   '/teacher/classes/': typeof TeacherClassesIndexRoute
@@ -279,7 +280,6 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
-  '/admin/course-approvals': typeof AdminCourseApprovalsRouteWithChildren
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -303,6 +303,7 @@ export interface FileRoutesByTo {
   '/teacher/exams/new': typeof TeacherExamsNewRoute
   '/teacher/live/$sessionId': typeof TeacherLiveSessionIdRoute
   '/teacher/tests/$testId': typeof TeacherTestsTestIdRoute
+  '/admin/course-approvals': typeof AdminCourseApprovalsIndexRoute
   '/admin/exams': typeof AdminExamsIndexRoute
   '/admin/tests': typeof AdminTestsIndexRoute
   '/teacher/classes': typeof TeacherClassesIndexRoute
@@ -319,7 +320,6 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
-  '/admin/course-approvals': typeof AdminCourseApprovalsRouteWithChildren
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -343,6 +343,7 @@ export interface FileRoutesById {
   '/teacher/exams/new': typeof TeacherExamsNewRoute
   '/teacher/live/$sessionId': typeof TeacherLiveSessionIdRoute
   '/teacher/tests/$testId': typeof TeacherTestsTestIdRoute
+  '/admin/course-approvals/': typeof AdminCourseApprovalsIndexRoute
   '/admin/exams/': typeof AdminExamsIndexRoute
   '/admin/tests/': typeof AdminTestsIndexRoute
   '/teacher/classes/': typeof TeacherClassesIndexRoute
@@ -360,7 +361,6 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/practice'
-    | '/admin/course-approvals'
     | '/admin/question-bank'
     | '/courses/$courseId'
     | '/levels/$level'
@@ -384,6 +384,7 @@ export interface FileRouteTypes {
     | '/teacher/exams/new'
     | '/teacher/live/$sessionId'
     | '/teacher/tests/$testId'
+    | '/admin/course-approvals/'
     | '/admin/exams/'
     | '/admin/tests/'
     | '/teacher/classes/'
@@ -398,7 +399,6 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/practice'
-    | '/admin/course-approvals'
     | '/admin/question-bank'
     | '/courses/$courseId'
     | '/levels/$level'
@@ -422,6 +422,7 @@ export interface FileRouteTypes {
     | '/teacher/exams/new'
     | '/teacher/live/$sessionId'
     | '/teacher/tests/$testId'
+    | '/admin/course-approvals'
     | '/admin/exams'
     | '/admin/tests'
     | '/teacher/classes'
@@ -437,7 +438,6 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/practice'
-    | '/admin/course-approvals'
     | '/admin/question-bank'
     | '/courses/$courseId'
     | '/levels/$level'
@@ -461,6 +461,7 @@ export interface FileRouteTypes {
     | '/teacher/exams/new'
     | '/teacher/live/$sessionId'
     | '/teacher/tests/$testId'
+    | '/admin/course-approvals/'
     | '/admin/exams/'
     | '/admin/tests/'
     | '/teacher/classes/'
@@ -477,7 +478,6 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   PracticeRoute: typeof PracticeRoute
-  AdminCourseApprovalsRoute: typeof AdminCourseApprovalsRouteWithChildren
   AdminQuestionBankRoute: typeof AdminQuestionBankRoute
   CoursesCourseIdRoute: typeof CoursesCourseIdRoute
   LevelsLevelRoute: typeof LevelsLevelRoute
@@ -489,6 +489,7 @@ export interface RootRouteChildren {
   CoursesIndexRoute: typeof CoursesIndexRoute
   LiveIndexRoute: typeof LiveIndexRoute
   TeacherIndexRoute: typeof TeacherIndexRoute
+  AdminCourseApprovalsDraftIdRoute: typeof AdminCourseApprovalsDraftIdRoute
   AdminExamsExamIdRoute: typeof AdminExamsExamIdRouteWithChildren
   AdminExamsNewRoute: typeof AdminExamsNewRoute
   AdminTestsNewRoute: typeof AdminTestsNewRoute
@@ -498,6 +499,7 @@ export interface RootRouteChildren {
   TeacherExamsNewRoute: typeof TeacherExamsNewRoute
   TeacherLiveSessionIdRoute: typeof TeacherLiveSessionIdRoute
   TeacherTestsTestIdRoute: typeof TeacherTestsTestIdRoute
+  AdminCourseApprovalsIndexRoute: typeof AdminCourseApprovalsIndexRoute
   AdminExamsIndexRoute: typeof AdminExamsIndexRoute
   AdminTestsIndexRoute: typeof AdminTestsIndexRoute
   TeacherClassesIndexRoute: typeof TeacherClassesIndexRoute
@@ -628,13 +630,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminQuestionBankRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/course-approvals': {
-      id: '/admin/course-approvals'
-      path: '/admin/course-approvals'
-      fullPath: '/admin/course-approvals'
-      preLoaderRoute: typeof AdminCourseApprovalsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/teacher/tests/': {
       id: '/teacher/tests/'
       path: '/teacher/tests'
@@ -682,6 +677,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/exams'
       fullPath: '/admin/exams/'
       preLoaderRoute: typeof AdminExamsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/course-approvals/': {
+      id: '/admin/course-approvals/'
+      path: '/admin/course-approvals'
+      fullPath: '/admin/course-approvals/'
+      preLoaderRoute: typeof AdminCourseApprovalsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teacher/tests/$testId': {
@@ -756,10 +758,10 @@ declare module '@tanstack/react-router' {
     }
     '/admin/course-approvals/$draftId': {
       id: '/admin/course-approvals/$draftId'
-      path: '/$draftId'
+      path: '/admin/course-approvals/$draftId'
       fullPath: '/admin/course-approvals/$draftId'
       preLoaderRoute: typeof AdminCourseApprovalsDraftIdRouteImport
-      parentRoute: typeof AdminCourseApprovalsRoute
+      parentRoute: typeof rootRouteImport
     }
     '/admin/exams/$examId/submissions': {
       id: '/admin/exams/$examId/submissions'
@@ -783,17 +785,6 @@ const ExamsRouteChildren: ExamsRouteChildren = {
 
 const ExamsRouteWithChildren = ExamsRoute._addFileChildren(ExamsRouteChildren)
 
-interface AdminCourseApprovalsRouteChildren {
-  AdminCourseApprovalsDraftIdRoute: typeof AdminCourseApprovalsDraftIdRoute
-}
-
-const AdminCourseApprovalsRouteChildren: AdminCourseApprovalsRouteChildren = {
-  AdminCourseApprovalsDraftIdRoute: AdminCourseApprovalsDraftIdRoute,
-}
-
-const AdminCourseApprovalsRouteWithChildren =
-  AdminCourseApprovalsRoute._addFileChildren(AdminCourseApprovalsRouteChildren)
-
 interface AdminExamsExamIdRouteChildren {
   AdminExamsExamIdSubmissionsRoute: typeof AdminExamsExamIdSubmissionsRoute
 }
@@ -811,7 +802,6 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   PracticeRoute: PracticeRoute,
-  AdminCourseApprovalsRoute: AdminCourseApprovalsRouteWithChildren,
   AdminQuestionBankRoute: AdminQuestionBankRoute,
   CoursesCourseIdRoute: CoursesCourseIdRoute,
   LevelsLevelRoute: LevelsLevelRoute,
@@ -823,6 +813,7 @@ const rootRouteChildren: RootRouteChildren = {
   CoursesIndexRoute: CoursesIndexRoute,
   LiveIndexRoute: LiveIndexRoute,
   TeacherIndexRoute: TeacherIndexRoute,
+  AdminCourseApprovalsDraftIdRoute: AdminCourseApprovalsDraftIdRoute,
   AdminExamsExamIdRoute: AdminExamsExamIdRouteWithChildren,
   AdminExamsNewRoute: AdminExamsNewRoute,
   AdminTestsNewRoute: AdminTestsNewRoute,
@@ -832,6 +823,7 @@ const rootRouteChildren: RootRouteChildren = {
   TeacherExamsNewRoute: TeacherExamsNewRoute,
   TeacherLiveSessionIdRoute: TeacherLiveSessionIdRoute,
   TeacherTestsTestIdRoute: TeacherTestsTestIdRoute,
+  AdminCourseApprovalsIndexRoute: AdminCourseApprovalsIndexRoute,
   AdminExamsIndexRoute: AdminExamsIndexRoute,
   AdminTestsIndexRoute: AdminTestsIndexRoute,
   TeacherClassesIndexRoute: TeacherClassesIndexRoute,
