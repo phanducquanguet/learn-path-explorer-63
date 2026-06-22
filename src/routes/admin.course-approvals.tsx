@@ -115,14 +115,12 @@ function ApprovalsPage() {
     try {
       const raw = window.localStorage.getItem(STORAGE_KEY);
       const existing: DraftCourse[] = raw ? JSON.parse(raw) : [];
-      const hasTeacherDraft = existing.some((d) => d.createdBy === "teacher");
-      if (!hasTeacherDraft) {
-        const seeded = [...existing, ...buildDemoTeacherDrafts()];
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
-        setDrafts(seeded);
-      } else {
-        setDrafts(existing);
-      }
+      // Loại bỏ các bản demo cũ (thiếu orgId / thiếu bản "approved") và seed lại
+      // để các trường mới (đơn vị, giáo viên, khóa hoàn chỉnh) xuất hiện.
+      const withoutDemo = existing.filter((d) => !d.id?.startsWith("demo-"));
+      const seeded = [...withoutDemo, ...buildDemoTeacherDrafts()];
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(seeded));
+      setDrafts(seeded);
     } catch {
       setDrafts([]);
     }
