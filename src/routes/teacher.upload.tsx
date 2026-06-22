@@ -144,14 +144,29 @@ function UploadPage() {
   const save = () => {
     if (typeof window !== "undefined") {
       const drafts = JSON.parse(window.localStorage.getItem("unicom.uploaded.courses") || "[]");
-      const payload = {
+      const basePayload = {
         ...course,
         units,
-        visibility,
-        classIds: visibility === "classes" ? classIds : [],
         createdBy: isTeacher ? "teacher" : "admin",
         savedAt: new Date().toISOString(),
       };
+      // GV: phạm vi đi qua phê duyệt — lưu vào pending*, giữ nguyên visibility/classIds cho đến khi admin duyệt.
+      // Admin: publish trực tiếp như cũ.
+      const payload = isTeacher
+        ? {
+            ...basePayload,
+            pendingVisibility: visibility,
+            pendingClassIds: visibility === "classes" ? classIds : [],
+            approvalStatus: "pending",
+            submittedAt: new Date().toISOString(),
+            reviewerNote: undefined,
+          }
+        : {
+            ...basePayload,
+            visibility,
+            classIds: visibility === "classes" ? classIds : [],
+            approvalStatus: "approved",
+          };
 
       if (isEdit) {
         const idx = drafts.findIndex((x: { id?: string }) => x.id === edit);
