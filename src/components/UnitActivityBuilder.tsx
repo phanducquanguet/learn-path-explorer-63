@@ -1062,17 +1062,136 @@ function PdfEditor({ node, onChange }: { node: PdfNode; onChange: (p: Partial<Pd
 }
 
 function PdfAudioEditor({ node, onChange }: { node: PdfAudioNode; onChange: (p: Partial<PdfAudioNode>) => void }) {
+  // Khởi tạo tracks từ legacy audioFileName nếu cần.
+  const tracks: PdfAudioTrack[] =
+    node.audioTracks ??
+    (node.audioFileName
+      ? [{ id: uid(), fileName: node.audioFileName, fromPage: 1, label: "Toàn bộ tài liệu" }]
+      : []);
+
+  const updateTracks = (next: PdfAudioTrack[]) =>
+    onChange({ audioTracks: next, audioFileName: undefined });
+
+  const addTrack = () => {
+    const lastTo = tracks.length ? (tracks[tracks.length - 1].toPage ?? tracks[tracks.length - 1].fromPage) : 0;
+    updateTracks([
+      ...tracks,
+      { id: uid(), fileName: "", fromPage: lastTo + 1 || 1, label: "" },
+    ]);
+  };
+
+  const patchTrack = (id: string, patch: Partial<PdfAudioTrack>) =>
+    updateTracks(tracks.map((t) => (t.id === id ? { ...t, ...patch } : t)));
+
+  const removeTrack = (id: string) => updateTracks(tracks.filter((t) => t.id !== id));
+
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Row label="Tệp PDF">
-          <FileBox icon={FileText} label="Tải lên PDF" fileName={node.fileName} onChange={(fileName) => onChange({ fileName })} accept=".pdf" />
-        </Row>
-        <Row label="Tệp audio đi kèm">
-          <FileBox icon={Music2} label="Tải lên audio" fileName={node.audioFileName} onChange={(audioFileName) => onChange({ audioFileName })} accept="audio/*" />
-        </Row>
+      <Row label="Tệp PDF">
+        <FileBox icon={FileText} label="Tải lên PDF" fileName={node.fileName} onChange={(fileName) => onChange({ fileName })} accept=".pdf" />
+      </Row>
+
+      <div className="rounded-2xl border border-border bg-background p-4">
+        <div className="mb-2 flex items-center justify-between">
+          <div>
+            <div className="text-sm font-semibold text-foreground">Audio theo trang</div>
+            <p className="text-[11px] text-muted-foreground">
+              Gán mỗi audio với khoảng trang trong PDF. Khi học viên kéo đến trang tương ứng, audio sẽ tự chuyển sang track đó.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={addTrack}
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 text-xs font-semibold text-foreground hover:border-primary hover:text-primary"
+          >
+            <Plus className="h-3.5 w-3.5" /> Thêm track
+          </button>
+        </div>
+
+        {tracks.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
+            Chưa có audio nào. Bấm "Thêm track" để gán audio cho khoảng trang đầu tiên.
+          </div>
+        ) : (
+          <ul className="space-y-2">
+            {tracks.map((t, idx) => (
+              <li
+                key={t.id}
+                className="grid items-end gap-2 rounded-xl border border-border bg-surface/40 p-3 sm:grid-cols-[minmax(0,1fr)_72px_72px_minmax(0,1fr)_auto]"
+              >
+                <div>
+                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Track {idx + 1}
+                  </div>
+                  <FileBox
+                    icon={Music2}
+                    label="Tải audio"
+                    fileName={t.fileName}
+                    onChange={(fileName) => patchTrack(t.id, { fileName })}
+                    accept="audio/*"
+                  />
+                </div>
+                <div>
+                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Từ trang
+                  </div>
+                  <input
+                    type="number"
+                    min={1}
+                    value={t.fromPage}
+                    onChange={(e) => patchTrack(t.id, { fromPage: Math.max(1, Number(e.target.value) || 1) })}
+                    className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <div>
+                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Đến trang
+                  </div>
+                  <input
+                    type="number"
+                    min={t.fromPage}
+                    value={t.toPage ?? ""}
+                    placeholder="—"
+                    onChange={(e) =>
+                      patchTrack(t.id, {
+                        toPage: e.target.value === "" ? undefined : Math.max(t.fromPage, Number(e.target.value) || t.fromPage),
+                      })
+                    }
+                    className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <div>
+                  <div className="mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Nhãn (tuỳ chọn)
+                  </div>
+                  <input
+                    type="text"
+                    value={t.label ?? ""}
+                    placeholder="VD: Bài 1.72"
+                    onChange={(e) => patchTrack(t.id, { label: e.target.value })}
+                    className="h-9 w-full rounded-lg border border-border bg-background px-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeTrack(t.id)}
+                  className="rounded-lg p-2 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  title="Xoá track"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
-      <PdfStudentPreview title={node.title} description={node.description} fileName={node.fileName} audioFileName={node.audioFileName} />
+
+      <PdfStudentPreview
+        title={node.title}
+        description={node.description}
+        fileName={node.fileName}
+        audioTracks={tracks}
+      />
       <HiddenFromStudentsToggle checked={!!node.hiddenFromStudents} onChange={(v) => onChange({ hiddenFromStudents: v })} />
     </div>
   );
@@ -1083,13 +1202,17 @@ function PdfStudentPreview({
   description,
   fileName,
   audioFileName,
+  audioTracks,
 }: {
   title?: string;
   description?: string;
   fileName?: string;
   audioFileName?: string;
+  audioTracks?: PdfAudioTrack[];
 }) {
   const hasDesc = !!(description && description.trim().length > 0);
+  const tracks = audioTracks ?? (audioFileName ? [{ id: "legacy", fileName: audioFileName, fromPage: 1 } as PdfAudioTrack] : []);
+  const hasAudio = tracks.length > 0;
   return (
     <div className="rounded-2xl border border-dashed border-primary/30 bg-primary/[0.03] p-4">
       <div className="mb-2 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-primary">
@@ -1103,7 +1226,7 @@ function PdfStudentPreview({
           </div>
           <div className="min-w-0 flex-1">
             <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
-              Tài liệu PDF{audioFileName ? " + Audio" : ""}
+              Tài liệu PDF{hasAudio ? " + Audio theo trang" : ""}
             </div>
             <div className="truncate text-base font-semibold text-foreground">
               {title || "Tài liệu PDF"}
@@ -1129,13 +1252,32 @@ function PdfStudentPreview({
             <FileText className="h-3.5 w-3.5" />
             {fileName || "Chưa tải tệp PDF"}
           </span>
-          {audioFileName && (
-            <span className="inline-flex items-center gap-1.5 rounded-lg bg-muted px-2.5 py-1 text-muted-foreground">
-              <Music2 className="h-3.5 w-3.5" />
-              {audioFileName}
-            </span>
-          )}
         </div>
+
+        {hasAudio && (
+          <div className="mt-3 rounded-xl border border-border bg-muted/20 p-3">
+            <div className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              <Headphones className="h-3.5 w-3.5" /> {tracks.length} audio track theo trang
+            </div>
+            <ul className="space-y-1 text-xs">
+              {tracks.map((t, i) => (
+                <li key={t.id} className="flex items-center gap-2">
+                  <span className="inline-flex h-5 min-w-[44px] items-center justify-center rounded-md bg-primary/10 px-1.5 text-[10px] font-semibold text-primary">
+                    {t.toPage && t.toPage !== t.fromPage ? `p.${t.fromPage}–${t.toPage}` : `p.${t.fromPage}+`}
+                  </span>
+                  <Music2 className="h-3 w-3 text-muted-foreground" />
+                  <span className="truncate text-foreground">
+                    {t.label ? <span className="font-medium">{t.label}</span> : <span className="italic text-muted-foreground">Track {i + 1}</span>}
+                    {t.fileName ? <span className="text-muted-foreground"> · {t.fileName}</span> : <span className="text-muted-foreground"> · chưa tải audio</span>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-2 text-[11px] italic text-muted-foreground">
+              Khi học viên kéo đến trang trong khoảng trên, audio tương ứng sẽ được phát.
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
