@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { levels, getCourse } from "@/lib/lms-data";
+import { classes as teacherClasses } from "@/lib/teacher-data";
 import { useCategories, categoryOf, type Category } from "@/lib/course-categories";
 import {
   Upload,
@@ -15,6 +16,9 @@ import {
   CheckCircle2,
   Sparkles,
   Settings2,
+  Users,
+  Globe2,
+  Lock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CategoriesManager } from "@/components/CategoriesManager";
@@ -31,6 +35,7 @@ export const Route = createFileRoute("/teacher/upload")({
   head: () => ({ meta: [{ title: "Quản lý khóa học — UNICOM LMS" }] }),
   validateSearch: (s: Record<string, unknown>) => ({
     edit: typeof s.edit === "string" ? s.edit : undefined,
+    mode: s.mode === "admin" ? ("admin" as const) : ("teacher" as const),
   }),
   component: UploadPage,
 });
