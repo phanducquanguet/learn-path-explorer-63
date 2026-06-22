@@ -254,6 +254,18 @@ function TeacherCoursesPage() {
             <div className="flex items-center gap-2">
               <div className="relative">
                 <select
+                  value={originFilter}
+                  onChange={(e) => setOriginFilter(e.target.value as typeof originFilter)}
+                  className="h-9 appearance-none rounded-xl border border-border bg-background pl-3 pr-8 text-xs font-medium text-foreground outline-none transition hover:border-primary/40 focus:border-primary focus:ring-2 focus:ring-primary/20"
+                >
+                  <option value="all">Tất cả nguồn</option>
+                  <option value="system">Khóa hệ thống</option>
+                  <option value="teacher">Khóa tự tạo</option>
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+              </div>
+              <div className="relative">
+                <select
                   value={levelFilter}
                   onChange={(e) => setLevelFilter(e.target.value)}
                   className="h-9 appearance-none rounded-xl border border-border bg-background pl-3 pr-8 text-xs font-medium text-foreground outline-none transition hover:border-primary/40 focus:border-primary focus:ring-2 focus:ring-primary/20"
@@ -268,6 +280,7 @@ function TeacherCoursesPage() {
                 <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
               </div>
             </div>
+
           </div>
         </div>
 
