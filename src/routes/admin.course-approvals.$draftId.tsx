@@ -318,7 +318,66 @@ function DraftDetailPage() {
               <span className="font-semibold">Lý do từ chối:</span> {draft.reviewerNote}
             </div>
           )}
+
+        {/* Sender info */}
+        <div className="mt-4 rounded-2xl border border-border bg-surface p-5 shadow-soft">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-base font-semibold text-primary">
+                {(draft.teacherName || "GV")
+                  .split(" ")
+                  .slice(-2)
+                  .map((w) => w[0])
+                  .join("")
+                  .toUpperCase()}
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Người gửi
+                </div>
+                <div className="text-sm font-semibold text-foreground">
+                  {draft.teacherName || "—"}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  {org?.name || "—"}
+                  {draft.teacherEmail && <> • {draft.teacherEmail}</>}
+                  {draft.teacherPhone && <> • {draft.teacherPhone}</>}
+                </div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-xs sm:flex sm:items-center sm:gap-6">
+              <div>
+                <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Ngày gửi
+                </div>
+                <div className="text-foreground">
+                  {draft.submittedAt
+                    ? new Date(draft.submittedAt).toLocaleString("vi-VN")
+                    : "—"}
+                </div>
+              </div>
+              {draft.reviewedAt && (
+                <div>
+                  <div className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Ngày xử lý
+                  </div>
+                  <div className="text-foreground">
+                    {new Date(draft.reviewedAt).toLocaleString("vi-VN")}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          {draft.teacherNote && (
+            <div className="mt-4 rounded-xl border border-border bg-background p-3 text-xs">
+              <div className="font-semibold text-foreground">Lời nhắn của giáo viên</div>
+              <p className="mt-1 whitespace-pre-line text-muted-foreground">
+                {draft.teacherNote}
+              </p>
+            </div>
+          )}
         </div>
+
 
         {/* Body: sidebar + preview */}
         <div className="mt-6 grid gap-4 lg:grid-cols-[340px_1fr]">
