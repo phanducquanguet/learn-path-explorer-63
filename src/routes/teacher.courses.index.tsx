@@ -538,7 +538,8 @@ function TeacherCourseCard({
   reviewerNote,
   onPublish,
   onDelete,
-}: CourseRow & { onPublish: () => void; onDelete: () => void }) {
+  onViewNote,
+}: CourseRow & { onPublish: () => void; onDelete: () => void; onViewNote: () => void }) {
   const cover = COURSE_COVERS[course.id] ?? LEVEL_COVERS[level.code];
   const isTeacherOwn = origin === "teacher";
   const cardClass =
