@@ -304,7 +304,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <tr>
-                    <th className="px-4 py-3">Tên bài thi</th>
+                    <th className="px-4 py-3">Tên đề thi</th>
                     <th className="px-4 py-3">Cấp độ</th>
                     <th className="px-4 py-3">Kỹ năng</th>
                     {scope === "teacher" && <th className="px-4 py-3">Lớp áp dụng</th>}
