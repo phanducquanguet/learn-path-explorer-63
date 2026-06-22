@@ -112,7 +112,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
     } else {
       try {
         const parsed: SavedExam[] = JSON.parse(raw);
-        // Strip any legacy org/class fields that may still be persisted.
+        // Strip org-only fields. Keep classIds for teacher scope.
         const cleaned = parsed.map(({ ...e }) => {
           const copy = { ...e } as SavedExam & {
             orgId?: string;
@@ -120,7 +120,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
             copiedFromId?: string;
           };
           delete copy.orgId;
-          delete copy.classIds;
+          if (scope !== "teacher") delete copy.classIds;
           delete copy.copiedFromId;
           return copy;
         });
