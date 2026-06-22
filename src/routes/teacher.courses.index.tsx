@@ -341,6 +341,8 @@ function TeacherCourseCard({
   const cardClass =
     "group flex flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated";
   const inner = (
+    <>
+
 
       <div
         className="relative h-44 w-full overflow-hidden"
