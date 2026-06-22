@@ -10,7 +10,6 @@ import {
   ClipboardCheck,
   Plus,
   Sparkles,
-  Clock,
   Layers,
   Trash2,
   FileQuestion,
@@ -19,7 +18,6 @@ import {
   Send,
   FileEdit,
   Library,
-  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
