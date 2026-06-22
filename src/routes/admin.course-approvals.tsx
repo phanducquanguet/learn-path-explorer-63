@@ -39,7 +39,21 @@ type DraftNode = {
   fileName?: string;
   duration?: number;
   children?: DraftNode[];
-  questions?: unknown[];
+  questions?: Array<{
+    q?: string;
+    options?: string[];
+    answer?: number;
+    explain?: string;
+  }>;
+  videoUrl?: string;
+  thumbnail?: string;
+  transcript?: string;
+  pages?: Array<{ page: number; heading?: string; body?: string }>;
+  audioUrl?: string;
+  prompt?: string;
+  tips?: string[];
+  sampleAnswer?: string;
+  embedUrl?: string;
 };
 
 type DraftUnit = {
@@ -61,10 +75,11 @@ type DraftCourse = {
   units?: DraftUnit[];
   visibility?: "system" | "classes";
   classIds?: string[];
-  /** Đơn vị (trường / trung tâm) mà giáo viên thuộc về. */
   orgId?: string;
-  /** Tên giáo viên đề xuất khóa học (hiển thị tham khảo). */
   teacherName?: string;
+  teacherEmail?: string;
+  teacherPhone?: string;
+  teacherNote?: string;
   createdBy?: "teacher" | "admin";
   approvalStatus?: ApprovalStatus;
   pendingVisibility?: "system" | "classes";
@@ -73,6 +88,7 @@ type DraftCourse = {
   reviewedAt?: string;
   reviewerNote?: string;
 };
+
 
 const NODE_KIND_LABEL: Record<string, string> = {
   group: "Nhóm",
