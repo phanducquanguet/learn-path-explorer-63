@@ -338,14 +338,10 @@ function TeacherCourseCard({
 }: CourseRow) {
   const cover = COURSE_COVERS[course.id] ?? LEVEL_COVERS[level.code];
   const isTeacherOwn = origin === "teacher";
-  const linkProps = isTeacherOwn
-    ? ({ to: "/teacher/upload", search: { edit: course.id } } as const)
-    : ({ to: "/teacher/courses/$courseId", params: { courseId: course.id } } as const);
-  return (
-    <Link
-      {...linkProps}
-      className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated"
-    >
+  const cardClass =
+    "group flex flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated";
+  const inner = (
+
       <div
         className="relative h-44 w-full overflow-hidden"
         style={{
