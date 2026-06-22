@@ -66,8 +66,8 @@ function buildExamPayload(input: {
   name: string;
   desc: string;
   level: QLevel;
+  levels: QLevel[];
   duration: number;
-  thumbnail: string;
   mode: "fixed" | "random" | "manual";
   enforceOrder: boolean;
   structure: StructureItem[];
@@ -92,9 +92,9 @@ function buildExamPayload(input: {
     id: `e-${Date.now()}`,
     name: input.name,
     levelCode: input.level,
+    levelCodes: input.levels,
     duration: input.duration,
     description: input.desc,
-    thumbnail: input.thumbnail,
     skills,
     totalQuestions,
     groups,
