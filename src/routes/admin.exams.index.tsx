@@ -165,7 +165,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
             >
               <MessageSquare className="h-4 w-4" /> Hỏi đáp học viên
             </Link>
-            {isAdmin && (
+            {canManage && (
               <Link
                 to="/admin/exams/new"
                 className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
@@ -193,7 +193,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
         </div>
 
         {/* Filter trạng thái xuất bản (chỉ admin) */}
-        {isAdmin && (
+        {canManage && (
           <div className="mt-6 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3">
             <span className="text-xs font-semibold text-muted-foreground">Trạng thái:</span>
             {([
@@ -239,7 +239,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
             {exams
               .filter((e) => {
                 const st = getStatus(e.id ?? "");
-                if (!isAdmin) return st === "published";
+                if (!canManage) return st === "published";
                 if (statusFilter === "all") return true;
                 return st === statusFilter;
               })
@@ -294,7 +294,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
                           {STATUS_LABEL[status]}
                         </span>
                       </div>
-                      {isAdmin && (
+                      {canManage && (
                         <div className="absolute right-3 top-3 flex gap-1.5">
                           <button
                             onClick={(e) => {
@@ -346,7 +346,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
                   </Link>
 
                   <div className="flex flex-wrap gap-2 px-5 pb-5">
-                    {isAdmin && (
+                    {canManage && (
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
@@ -371,7 +371,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
                         )}
                       </button>
                     )}
-                    {isAdmin && (
+                    {canManage && (
                       <button
                         onClick={(e) => e.stopPropagation()}
                         className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-border bg-background px-3 py-2 text-xs font-semibold text-foreground hover:bg-muted"
