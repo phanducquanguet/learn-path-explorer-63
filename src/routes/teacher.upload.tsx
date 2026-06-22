@@ -96,6 +96,7 @@ function UploadPage() {
         hours: found.course.hours,
         description: "",
         thumbnail: "",
+        teacherNote: "",
       });
       setUnits(
         found.course.units.map((u) => ({
