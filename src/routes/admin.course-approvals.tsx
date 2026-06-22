@@ -493,6 +493,73 @@ function scopeSummary(d: DraftCourse) {
   return `${names.length} lớp: ${names.join(", ")}`;
 }
 
+function countNodes(nodes: DraftNode[]): number {
+  let n = 0;
+  for (const node of nodes) {
+    if (node.kind === "group") {
+      n += countNodes(node.children ?? []);
+    } else {
+      n += 1;
+    }
+  }
+  return n;
+}
+
+function NodeRow({ node, depth }: { node: DraftNode; depth: number }) {
+  const label = NODE_KIND_LABEL[node.kind] ?? node.kind;
+  const isGroup = node.kind === "group";
+  const isPractice = node.kind === "practice";
+  const childCount = isGroup
+    ? (node.children?.length ?? 0)
+    : isPractice
+      ? (node.questions?.length ?? 0)
+      : 0;
+  return (
+    <li>
+      <div
+        className="flex items-start gap-2 rounded-lg border border-border/60 bg-muted/30 px-2.5 py-1.5"
+        style={{ marginLeft: depth * 14 }}
+      >
+        <span className="mt-0.5 inline-flex h-5 shrink-0 items-center rounded-md bg-primary/10 px-1.5 text-[10px] font-semibold uppercase tracking-wider text-primary">
+          {label}
+        </span>
+        <div className="min-w-0 flex-1">
+          <div className="truncate text-xs font-medium text-foreground">
+            {node.title || "(không tên)"}
+          </div>
+          {node.description && (
+            <div className="line-clamp-1 text-[11px] text-muted-foreground">
+              {node.description}
+            </div>
+          )}
+        </div>
+        {node.fileName && (
+          <span className="shrink-0 truncate text-[10px] text-muted-foreground">
+            {node.fileName}
+          </span>
+        )}
+        {isPractice && (
+          <span className="shrink-0 text-[10px] text-muted-foreground">
+            {childCount} câu hỏi
+          </span>
+        )}
+        {typeof node.duration === "number" && !isGroup && !isPractice && (
+          <span className="shrink-0 text-[10px] text-muted-foreground">
+            {node.duration}'
+          </span>
+        )}
+      </div>
+      {isGroup && node.children && node.children.length > 0 && (
+        <ul className="mt-1 space-y-1">
+          {node.children.map((c) => (
+            <NodeRow key={c.id} node={c} depth={depth + 1} />
+          ))}
+        </ul>
+      )}
+    </li>
+  );
+
+
 function StatusBadge({ status }: { status: ApprovalStatus }) {
   const map: Record<ApprovalStatus, { label: string; cls: string }> = {
     draft: { label: "Bản nháp", cls: "bg-slate-100 text-slate-700" },
