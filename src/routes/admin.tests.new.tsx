@@ -72,7 +72,8 @@ function buildExamPayload(input: {
   enforceOrder: boolean;
   structure: StructureItem[];
   resolved: { item: StructureItem; questions: BankQuestion[] }[];
-}): SavedExamShape {
+  classIds?: string[];
+}): SavedExamShape & { classIds?: string[] } {
   const skills = Array.from(new Set(input.structure.filter((s) => s.count > 0).map((s) => s.skill)));
   const groups: SavedExamShape["groups"] = {};
   for (const sk of skills) {
@@ -100,6 +101,7 @@ function buildExamPayload(input: {
     mode: input.mode,
     enforceOrder: input.enforceOrder,
     structure: input.structure,
+    classIds: input.classIds,
     savedAt: new Date().toISOString(),
   };
 }
@@ -255,6 +257,7 @@ export function TestExamBuilder({
           enforceOrder,
           structure,
           resolved,
+          classIds: scope === "teacher" ? classIds : undefined,
         });
         prev.push(payload);
         window.localStorage.setItem(key, JSON.stringify(prev));
@@ -466,6 +469,45 @@ export function TestExamBuilder({
                 Học sinh vào trước giờ mở sẽ không thể bắt đầu làm bài.
               </p>
                 </>
+              )}
+              {isExam && scope === "teacher" && (
+                <Field label="Lớp áp dụng (lớp bạn đang phụ trách)">
+                  {classes.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-center text-xs text-muted-foreground">
+                      Bạn chưa được thêm vào lớp nào.
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2">
+                      {classes.map((c) => {
+                        const on = classIds.includes(c.id);
+                        return (
+                          <button
+                            key={c.id}
+                            onClick={() =>
+                              setClassIds((p) =>
+                                on ? p.filter((x) => x !== c.id) : [...p, c.id],
+                              )
+                            }
+                            className={cn(
+                              "rounded-xl border px-3 py-2 text-left text-xs font-semibold transition",
+                              on
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border bg-background hover:bg-muted",
+                            )}
+                          >
+                            {c.name}
+                            <div className="text-[10px] font-normal text-muted-foreground">
+                              {c.studentCount} HS • {c.levelCode} • {c.schedule}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Bài luyện thi sẽ chỉ hiển thị cho học viên thuộc các lớp được chọn.
+                  </p>
+                </Field>
               )}
               {isExam && (
                 <Field label="Ảnh bìa (URL, tuỳ chọn)">

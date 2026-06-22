@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { TopNav } from "@/components/TopNav";
-import { EXAM_SKILLS } from "@/lib/teacher-data";
+import { EXAM_SKILLS, classes as teacherClasses } from "@/lib/teacher-data";
 import { useRole } from "@/contexts/RoleContext";
 import { usePublishStatus, STATUS_LABEL, type PublishStatus, type PublishEvent } from "@/lib/publish-status";
 import { confirmPublishAction } from "@/lib/publish-actions";
@@ -19,6 +19,7 @@ import {
   Send,
   FileEdit,
   Library,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +39,7 @@ type SavedExam = {
   skills: string[];
   totalQuestions?: number;
   groups?: Record<string, { questions: unknown[] }>;
+  classIds?: string[];
   savedAt: string;
 };
 
@@ -99,6 +101,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
     toggle(id);
   };
   const [statusFilter, setStatusFilter] = useState<"all" | "draft" | "published">("all");
+  const [classFilter, setClassFilter] = useState<string>("all");
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -111,7 +114,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
     } else {
       try {
         const parsed: SavedExam[] = JSON.parse(raw);
-        // Strip any legacy org/class fields that may still be persisted.
+        // Strip org-only fields. Keep classIds for teacher scope.
         const cleaned = parsed.map(({ ...e }) => {
           const copy = { ...e } as SavedExam & {
             orgId?: string;
@@ -119,7 +122,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
             copiedFromId?: string;
           };
           delete copy.orgId;
-          delete copy.classIds;
+          if (scope !== "teacher") delete copy.classIds;
           delete copy.copiedFromId;
           return copy;
         });
@@ -158,7 +161,9 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
               Bài luyện thi
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Bài thi được phân loại theo cấp độ (A1–C2) và dùng chung cho mọi học viên cùng cấp.
+              {scope === "teacher"
+                ? "Tạo bài kiểm tra và luyện tập cho học viên trong các lớp bạn được phân công."
+                : "Bài thi được phân loại theo cấp độ (A1–C2) và dùng chung cho mọi học viên cùng cấp."}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -262,6 +267,41 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
           </div>
         )}
 
+        {/* Filter theo lớp (chỉ giáo viên) */}
+        {scope === "teacher" && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3">
+            <span className="text-xs font-semibold text-muted-foreground">Lớp:</span>
+            <button
+              onClick={() => setClassFilter("all")}
+              className={cn(
+                "rounded-lg px-2.5 py-1 text-xs font-semibold transition",
+                classFilter === "all"
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Tất cả lớp ({exams.length})
+            </button>
+            {teacherClasses.map((c) => {
+              const count = exams.filter((e) => (e.classIds ?? []).includes(c.id)).length;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setClassFilter(c.id)}
+                  className={cn(
+                    "rounded-lg px-2.5 py-1 text-xs font-semibold transition",
+                    classFilter === c.id
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {c.name} ({count})
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* List */}
         {exams.length === 0 ? (
           <div className="mt-8 rounded-3xl border border-dashed border-border bg-surface/40 p-16 text-center">
@@ -279,8 +319,11 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
               .filter((e) => {
                 const st = getStatus(e.id ?? "");
                 if (!canManage) return st === "published";
-                if (statusFilter === "all") return true;
-                return st === statusFilter;
+                if (statusFilter !== "all" && st !== statusFilter) return false;
+                if (scope === "teacher" && classFilter !== "all") {
+                  if (!(e.classIds ?? []).includes(classFilter)) return false;
+                }
+                return true;
               })
               .map((exam) => {
               const id = exam.id ?? "";
@@ -370,6 +413,24 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
                           </span>
                         ))}
                       </div>
+
+                      {scope === "teacher" && (exam.classIds?.length ?? 0) > 0 && (
+                        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                          <Users className="h-3 w-3 text-muted-foreground" />
+                          {(exam.classIds ?? []).map((cid) => {
+                            const c = teacherClasses.find((x) => x.id === cid);
+                            return (
+                              <span
+                                key={cid}
+                                className="rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary"
+                              >
+                                {c?.name ?? cid}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      )}
+
 
                       <div className="mt-4 flex items-center gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
                         <span className="inline-flex items-center gap-1">
