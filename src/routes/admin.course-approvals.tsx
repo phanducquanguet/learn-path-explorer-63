@@ -370,12 +370,14 @@ function ApprovalsPage() {
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex justify-end gap-1.5">
-                        <button
-                          onClick={() => setReviewing(d)}
+                        <Link
+                          to="/admin/course-approvals/$draftId"
+                          params={{ draftId: d.id }}
                           className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-surface px-2.5 text-xs font-semibold text-foreground hover:bg-muted"
                         >
-                          <Eye className="h-3 w-3" /> Xem
-                        </button>
+                          <Eye className="h-3 w-3" /> Xem chi tiết
+                        </Link>
+
                         {status === "pending" && (
                           <>
                             <button
