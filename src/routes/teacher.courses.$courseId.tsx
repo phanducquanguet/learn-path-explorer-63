@@ -149,18 +149,36 @@ type TabKey = "content" | "students" | "scores" | "competence";
 
 function TeacherCourseDetailPage() {
   const { courseId } = Route.useParams();
-  const data = getCourse(courseId);
-  if (!data) throw notFound();
-  const { course, level } = data;
+  const systemData = getCourse(courseId);
+  const [draftData, setDraftData] = useState<ReturnType<typeof loadDraftCourse>>(null);
+  const [draftLoaded, setDraftLoaded] = useState(false);
 
-  const courseClasses = useMemo(
-    () => classes.filter((c) => c.levelCode === level.code),
-    [level.code],
-  );
+  useEffect(() => {
+    if (systemData) {
+      setDraftLoaded(true);
+      return;
+    }
+    setDraftData(loadDraftCourse(courseId));
+    setDraftLoaded(true);
+  }, [courseId, systemData]);
+
+  const data = systemData ?? draftData;
+  const isTeacherDraft = !systemData && !!draftData;
+  const draftMeta = draftData?.draft;
+
+  const fallbackLevelCode = data?.level.code ?? "A1";
+  const courseClasses = useMemo(() => {
+    if (!data) return [];
+    if (!isTeacherDraft) return classes.filter((c) => c.levelCode === data.level.code);
+    if (draftMeta?.visibility === "system")
+      return classes.filter((c) => c.levelCode === data.level.code);
+    return classes.filter((c) => (draftMeta?.classIds ?? []).includes(c.id));
+  }, [data, isTeacherDraft, draftMeta, fallbackLevelCode]);
   const courseStudents = useMemo(
     () => students.filter((s) => courseClasses.some((c) => c.id === s.classId)),
     [courseClasses],
   );
+
 
   const [tab, setTab] = useState<TabKey>("content");
   const [picked, setPicked] = useState<TeacherStudent | null>(null);
