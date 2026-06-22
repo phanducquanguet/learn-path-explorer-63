@@ -418,8 +418,28 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
                               </span>
                             </td>
                           )}
-                          <td className="px-4 py-3 text-xs text-muted-foreground">
-                            {new Date(exam.savedAt).toLocaleDateString("vi-VN")}
+                          <td className="px-4 py-3 text-center">
+                            {(() => {
+                              const pending = getSubmissionsByExam(id).filter(
+                                (s) => s.status === "pending",
+                              ).length;
+                              if (pending === 0)
+                                return <span className="text-xs text-muted-foreground">—</span>;
+                              return (
+                                <Link
+                                  to={
+                                    scope === "teacher"
+                                      ? "/teacher/exams/$examId"
+                                      : "/admin/exams/$examId"
+                                  }
+                                  params={{ examId: id }}
+                                  className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800 hover:bg-amber-200"
+                                  title="Mở để chấm bài"
+                                >
+                                  {pending} bài
+                                </Link>
+                              );
+                            })()}
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center justify-end gap-1">
