@@ -906,9 +906,6 @@ function PublishDialog({
             disabled={visibility === "classes" && selected.length === 0}
             className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            disabled={visibility === "classes" && selected.length === 0}
-            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-          >
             <Send className="h-3.5 w-3.5" /> Gửi yêu cầu duyệt
           </button>
         </DialogFooter>
