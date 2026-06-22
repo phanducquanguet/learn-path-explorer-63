@@ -414,14 +414,146 @@ function UploadPage() {
                   />
                 </div>
               ))}
+              {saved && step === 2 && (
+                <div className="rounded-xl bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-700">
+                  ✓ Đã lưu khóa học vào bản nháp.
+                </div>
+              )}
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-5">
+              <div>
+                <div className="text-sm font-semibold text-foreground">Phạm vi hiển thị</div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {isTeacher
+                    ? "Khóa học của giáo viên chỉ hiển thị cho học viên thuộc các lớp được publish dưới đây."
+                    : "Khóa học hệ thống mặc định hiển thị cho mọi lớp đúng cấp độ. Bạn có thể giới hạn chỉ một số lớp nếu cần."}
+                </p>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={() => setVisibility("system")}
+                  disabled={isTeacher}
+                  className={cn(
+                    "flex items-start gap-3 rounded-2xl border p-4 text-left transition",
+                    visibility === "system"
+                      ? "border-primary bg-primary/5"
+                      : "border-border bg-background hover:border-primary/40",
+                    isTeacher && "cursor-not-allowed opacity-50",
+                  )}
+                >
+                  <Globe2 className="mt-0.5 h-5 w-5 text-primary" />
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold text-foreground">Toàn hệ thống</div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      Mọi lớp đúng cấp độ {course.levelCode} đều thấy khóa học này.
+                      {isTeacher && " (Chỉ admin mới publish ở phạm vi này.)"}
+                    </div>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setVisibility("classes")}
+                  className={cn(
+                    "flex items-start gap-3 rounded-2xl border p-4 text-left transition",
+                    visibility === "classes"
+                      ? "border-primary bg-primary/5"
+                      : "border-border bg-background hover:border-primary/40",
+                  )}
+                >
+                  <Lock className="mt-0.5 h-5 w-5 text-primary" />
+                  <div className="flex-1">
+                    <div className="text-sm font-semibold text-foreground">Chỉ các lớp đã chọn</div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      Học viên ở các lớp khác — kể cả cùng cấp độ — sẽ không nhìn thấy.
+                    </div>
+                  </div>
+                </button>
+              </div>
+
+              {visibility === "classes" && (
+                <div className="rounded-2xl border border-border bg-background p-4">
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                      Lớp được publish ({classIds.length} lớp)
+                    </div>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setClassIds(eligibleClasses.map((c) => c.id))}
+                        className="text-xs font-medium text-primary hover:underline"
+                      >
+                        Chọn tất cả
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setClassIds([])}
+                        className="text-xs font-medium text-muted-foreground hover:underline"
+                      >
+                        Bỏ chọn
+                      </button>
+                    </div>
+                  </div>
+                  {eligibleClasses.length === 0 ? (
+                    <div className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">
+                      Bạn chưa có lớp nào ở cấp độ {course.levelCode}.
+                    </div>
+                  ) : (
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {eligibleClasses.map((c) => {
+                        const checked = classIds.includes(c.id);
+                        return (
+                          <label
+                            key={c.id}
+                            className={cn(
+                              "flex cursor-pointer items-start gap-3 rounded-xl border px-3 py-2.5 transition",
+                              checked
+                                ? "border-primary bg-primary/5"
+                                : "border-border bg-surface/40 hover:border-primary/40",
+                            )}
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={(e) =>
+                                setClassIds((prev) =>
+                                  e.target.checked
+                                    ? [...prev, c.id]
+                                    : prev.filter((x) => x !== c.id),
+                                )
+                              }
+                              className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+                            />
+                            <div className="flex-1">
+                              <div className="text-sm font-semibold text-foreground">{c.name}</div>
+                              <div className="text-[11px] text-muted-foreground">
+                                {c.schedule} • {c.studentCount} học viên
+                              </div>
+                            </div>
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {saved && (
                 <div className="rounded-xl bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-700">
-                  ✓ Đã lưu khóa học vào bản nháp. Học viên sẽ thấy trên giao diện học tập.
+                  ✓ Đã lưu & publish khóa học. Học viên thuộc{" "}
+                  {visibility === "system" ? "mọi lớp" : `${classIds.length} lớp đã chọn`} sẽ thấy
+                  trên giao diện học tập.
                 </div>
               )}
             </div>
           )}
         </div>
+
 
         <div className="mt-5 flex items-center justify-between">
           <button
