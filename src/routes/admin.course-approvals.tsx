@@ -767,10 +767,18 @@ function RejectDialog({
 function buildDemoTeacherDrafts(): DraftCourse[] {
   const now = Date.now();
   const submittedPending = new Date(now - 1000 * 60 * 60 * 6).toISOString(); // 6h trước
+  const submittedApproved = new Date(now - 1000 * 60 * 60 * 24 * 5).toISOString(); // 5 ngày trước
+  const reviewedApproved = new Date(now - 1000 * 60 * 60 * 24 * 4).toISOString();
   const submittedRejected = new Date(now - 1000 * 60 * 60 * 48).toISOString(); // 2 ngày trước
   const reviewedRejected = new Date(now - 1000 * 60 * 60 * 24).toISOString();
 
-  const demoClassIds = allClasses.slice(0, 2).map((c) => c.id);
+  // Lấy lớp theo từng đơn vị để demo phân bổ đa đơn vị.
+  const classesOf = (orgId: string) =>
+    allClasses.filter((c) => classOrgMap[c.id] === orgId).map((c) => c.id);
+
+  const hnClassIds = classesOf("org-unicom-hn");
+  const hcmClassIds = classesOf("org-unicom-hcm");
+  const thptClassIds = classesOf("org-thpt-abc");
 
   const pending: DraftCourse = {
     id: `demo-pending-${now}`,
@@ -781,13 +789,15 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
     category: "Empower",
     levelCode: "A2",
     hours: 24,
+    orgId: "org-unicom-hn",
+    teacherName: "Cô Mai Lan",
     createdBy: "teacher",
     approvalStatus: "pending",
     submittedAt: submittedPending,
     pendingVisibility: "classes",
-    pendingClassIds: demoClassIds,
+    pendingClassIds: hnClassIds,
     visibility: "classes",
-    classIds: demoClassIds,
+    classIds: hnClassIds,
     units: [
       {
         id: "demo-u1",
