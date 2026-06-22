@@ -148,60 +148,6 @@ function rollRandom(s: StructureItem, seed = 0): BankQuestion[] {
   return shuffled.slice(0, s.count);
 }
 
-function NewTestPage() {
-  const { role } = useRole();
-  const navigate = useNavigate();
-  const [step, setStep] = useState(1);
-  const [name, setName] = useState("");
-  const [desc, setDesc] = useState("");
-  const [level, setLevel] = useState<QLevel>("B1");
-  const [orgId, setOrgId] = useState<string>(orgs[0]?.id ?? "");
-  const [classIds, setClassIds] = useState<string[]>([]);
-  const [duration, setDuration] = useState(60);
-  const [openAt, setOpenAt] = useState("");
-  const [closeAt, setCloseAt] = useState("");
-  const [structure, setStructure] = useState<StructureItem[]>([
-    { skill: "listening", type: "mcq", level: "B1", difficulty: "mixed", count: 10, sectionDurationMinutes: 15, pickedIds: [] },
-    { skill: "reading", type: "mcq", level: "B1", difficulty: "mixed", count: 10, sectionDurationMinutes: 20, pickedIds: [] },
-    { skill: "speaking", type: "short", level: "B1", difficulty: "mixed", count: 3, sectionDurationMinutes: 10, pickedIds: [] },
-    { skill: "writing", type: "essay", level: "B1", difficulty: "mixed", count: 2, sectionDurationMinutes: 25, pickedIds: [] },
-  ]);
-  const [mode, setMode] = useState<"fixed" | "random" | "manual">("random");
-  const [enforceOrder, setEnforceOrder] = useState(false);
-  const [previewing, setPreviewing] = useState(false);
-
-  const totalQuestions = structure.reduce((s, x) => s + x.count, 0);
-
-  // Auto-fill random picks when entering step 4 in random mode (only for groups still empty).
-  useEffect(() => {
-    if (step !== 4 || mode !== "random") return;
-    setStructure((prev) => {
-      let changed = false;
-      const next = prev.map((it) => {
-        if (it.count <= 0) return it;
-        if (it.pickedIds && it.pickedIds.length > 0) return it;
-        const picks = rollRandom(it).map((q) => q.id);
-        if (picks.length === 0) return it;
-        changed = true;
-        return { ...it, pickedIds: picks };
-      });
-      return changed ? next : prev;
-    });
-  }, [step, mode]);
-
-  // Resolve final question list per group. Manual mode uses customBank; otherwise pickedIds.
-  const resolved: { item: StructureItem; questions: BankQuestion[] }[] = useMemo(() => {
-    return structure.map((it) => {
-      if (mode === "manual") {
-        return { item: it, questions: it.customBank ?? [] };
-      }
-      const ids = it.pickedIds ?? [];
-      const qs = ids
-        .map((id) => questionBank.find((q) => q.id === id))
-        .filter((q): q is BankQuestion => !!q);
-      return { item: it, questions: qs };
-    });
-  }, [structure, mode]);
 
 function NewTestPage() {
 
