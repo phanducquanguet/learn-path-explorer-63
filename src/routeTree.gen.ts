@@ -25,6 +25,7 @@ import { Route as LiveSessionIdRouteImport } from './routes/live.$sessionId'
 import { Route as LevelsLevelRouteImport } from './routes/levels.$level'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
 import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-bank'
+import { Route as AdminCourseApprovalsRouteImport } from './routes/admin.course-approvals'
 import { Route as TeacherTestsIndexRouteImport } from './routes/teacher.tests.index'
 import { Route as TeacherLiveIndexRouteImport } from './routes/teacher.live.index'
 import { Route as TeacherCoursesIndexRouteImport } from './routes/teacher.courses.index'
@@ -120,6 +121,11 @@ const AdminQuestionBankRoute = AdminQuestionBankRouteImport.update({
   path: '/admin/question-bank',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminCourseApprovalsRoute = AdminCourseApprovalsRouteImport.update({
+  id: '/admin/course-approvals',
+  path: '/admin/course-approvals',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TeacherTestsIndexRoute = TeacherTestsIndexRouteImport.update({
   id: '/teacher/tests/',
   path: '/teacher/tests/',
@@ -198,6 +204,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
+  '/admin/course-approvals': typeof AdminCourseApprovalsRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -229,6 +236,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
+  '/admin/course-approvals': typeof AdminCourseApprovalsRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -262,6 +270,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
+  '/admin/course-approvals': typeof AdminCourseApprovalsRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -296,6 +305,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/practice'
+    | '/admin/course-approvals'
     | '/admin/question-bank'
     | '/courses/$courseId'
     | '/levels/$level'
@@ -327,6 +337,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/practice'
+    | '/admin/course-approvals'
     | '/admin/question-bank'
     | '/courses/$courseId'
     | '/levels/$level'
@@ -359,6 +370,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/practice'
+    | '/admin/course-approvals'
     | '/admin/question-bank'
     | '/courses/$courseId'
     | '/levels/$level'
@@ -392,6 +404,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   PracticeRoute: typeof PracticeRoute
+  AdminCourseApprovalsRoute: typeof AdminCourseApprovalsRoute
   AdminQuestionBankRoute: typeof AdminQuestionBankRoute
   CoursesCourseIdRoute: typeof CoursesCourseIdRoute
   LevelsLevelRoute: typeof LevelsLevelRoute
@@ -530,6 +543,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminQuestionBankRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/course-approvals': {
+      id: '/admin/course-approvals'
+      path: '/admin/course-approvals'
+      fullPath: '/admin/course-approvals'
+      preLoaderRoute: typeof AdminCourseApprovalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teacher/tests/': {
       id: '/teacher/tests/'
       path: '/teacher/tests'
@@ -660,6 +680,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   PracticeRoute: PracticeRoute,
+  AdminCourseApprovalsRoute: AdminCourseApprovalsRoute,
   AdminQuestionBankRoute: AdminQuestionBankRoute,
   CoursesCourseIdRoute: CoursesCourseIdRoute,
   LevelsLevelRoute: LevelsLevelRoute,
