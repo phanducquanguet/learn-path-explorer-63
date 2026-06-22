@@ -52,6 +52,8 @@ type CourseRow = {
   studentCount: number;
   avgProgress: number;
   avgScore: number;
+  origin: "system" | "teacher";
+  publishedClassNames?: string[];
 };
 
 function useCourseStats(): CourseRow[] {
@@ -78,10 +80,79 @@ function useCourseStats(): CourseRow[] {
           studentCount: lvStudents.length,
           avgProgress,
           avgScore,
+          origin: "system",
         };
       }),
     );
   }, []);
+}
+
+type DraftCourse = {
+  id: string;
+  title?: string;
+  subtitle?: string;
+  levelCode?: string;
+  hours?: number;
+  units?: { id: string }[];
+  visibility?: "system" | "classes";
+  classIds?: string[];
+  createdBy?: "teacher" | "admin";
+};
+
+function useTeacherCreatedRows(): CourseRow[] {
+  const [drafts, setDrafts] = useState<DraftCourse[]>([]);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem("unicom.uploaded.courses");
+      setDrafts(raw ? JSON.parse(raw) : []);
+    } catch {
+      setDrafts([]);
+    }
+  }, []);
+
+  return useMemo(() => {
+    return drafts
+      .filter((d) => d.createdBy !== "admin") // chỉ khóa giáo viên tự tạo
+      .map<CourseRow | null>((d) => {
+        const lv = levels.find((l) => l.code === d.levelCode) ?? levels[0];
+        const publishedClassIds = d.visibility === "system"
+          ? classes.filter((c) => c.levelCode === lv.code).map((c) => c.id)
+          : (d.classIds ?? []);
+        const lvClasses = classes.filter((c) => publishedClassIds.includes(c.id));
+        if (lvClasses.length === 0) return null; // chưa publish thì không show
+        const lvStudents = students.filter((s) => lvClasses.some((c) => c.id === s.classId));
+        const fakeCourse: Course = {
+          id: d.id,
+          title: d.title || "Khóa học chưa đặt tên",
+          subtitle: d.subtitle || "",
+          level: lv.code,
+          hours: d.hours ?? 0,
+          progress: 0,
+          units: (d.units ?? []).map((u, i) => ({
+            id: u.id,
+            index: i + 1,
+            title: "",
+            description: "",
+            activities: [],
+          })),
+          classmates: [],
+        };
+        return {
+          course: fakeCourse,
+          level: lv,
+          classCount: lvClasses.length,
+          studentCount: lvStudents.length,
+          avgProgress: lvClasses.length
+            ? Math.round(lvClasses.reduce((s, c) => s + c.avgProgress, 0) / lvClasses.length)
+            : 0,
+          avgScore: 0,
+          origin: "teacher",
+          publishedClassNames: lvClasses.map((c) => c.name),
+        };
+      })
+      .filter((r): r is CourseRow => r !== null);
+  }, [drafts]);
 }
 
 function TeacherCoursesPage() {
