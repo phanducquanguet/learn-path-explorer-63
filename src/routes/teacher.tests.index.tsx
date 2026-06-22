@@ -39,7 +39,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export const Route = createFileRoute("/teacher/tests/")({
-  head: () => ({ meta: [{ title: "Thi cử — UNICOM LMS" }] }),
+  head: () => ({ meta: [{ title: "Chấm thi — UNICOM LMS" }] }),
   component: TestsList,
 });
 
