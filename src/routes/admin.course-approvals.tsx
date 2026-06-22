@@ -106,6 +106,7 @@ function ApprovalsPage() {
   const [drafts, setDrafts] = useState<DraftCourse[]>([]);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"pending" | "approved" | "rejected" | "all">("pending");
+  const [orgFilter, setOrgFilter] = useState<string>("all");
   const [reviewing, setReviewing] = useState<DraftCourse | null>(null);
   const [rejecting, setRejecting] = useState<DraftCourse | null>(null);
 
