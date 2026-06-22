@@ -908,10 +908,13 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
     id: `demo-rejected-${now}`,
     title: "Business Writing Essentials",
     subtitle: "Viết email và báo cáo công việc hiệu quả",
-    description: "Khóa học cô đọng kỹ năng viết email, memo và báo cáo trong môi trường doanh nghiệp.",
+    description:
+      "Khóa học cô đọng kỹ năng viết email, memo và báo cáo trong môi trường doanh nghiệp.",
     category: "Empower",
     levelCode: "B1",
     hours: 16,
+    orgId: "org-thpt-abc",
+    teacherName: "Thầy Nguyễn Tuấn",
     createdBy: "teacher",
     approvalStatus: "rejected",
     submittedAt: submittedRejected,
@@ -919,9 +922,9 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
     reviewerNote:
       "Nội dung Unit 2 còn thiếu phần bài tập thực hành. Vui lòng bổ sung quiz cuối bài trước khi gửi lại.",
     pendingVisibility: "classes",
-    pendingClassIds: demoClassIds,
+    pendingClassIds: thptClassIds,
     visibility: "classes",
-    classIds: demoClassIds,
+    classIds: thptClassIds,
     units: [
       {
         id: "demo-r-u1",
@@ -960,6 +963,177 @@ function buildDemoTeacherDrafts(): DraftCourse[] {
     ],
   };
 
-  return [pending, rejected];
+  // Khóa học hoàn chỉnh — đã phê duyệt, đầy đủ video/PDF/luyện nói/quiz/SCORM/H5P.
+  const approved: DraftCourse = {
+    id: `demo-approved-${now}`,
+    title: "IELTS Foundation B1 — Complete Course",
+    subtitle: "Khóa học hoàn chỉnh chuẩn bị nền tảng IELTS từ B1",
+    description:
+      "Khóa học 12 tuần được biên soạn đầy đủ 4 kỹ năng, mỗi unit gồm video bài giảng, tài liệu PDF kèm audio, phòng luyện nói, bài tập tương tác H5P, gói SCORM mô phỏng phòng thi và quiz đánh giá cuối bài. Đã được trung tâm phê duyệt và publish toàn hệ thống cho học viên cấp B1.",
+    category: "Empower",
+    levelCode: "B1",
+    hours: 48,
+    orgId: "org-unicom-hcm",
+    teacherName: "Cô Trần Hồng Nhung",
+    createdBy: "teacher",
+    approvalStatus: "approved",
+    submittedAt: submittedApproved,
+    reviewedAt: reviewedApproved,
+    visibility: "system",
+    classIds: hcmClassIds,
+    pendingVisibility: undefined,
+    pendingClassIds: undefined,
+    units: [
+      {
+        id: "demo-a-u1",
+        title: "Unit 1: IELTS Listening — Part 1 & 2",
+        desc: "Làm quen format đề và luyện nghe các tình huống đời sống.",
+        nodes: [
+          {
+            id: "demo-a-u1-n1",
+            kind: "video",
+            title: "Video: Tổng quan IELTS Listening",
+            description: "Giới thiệu format, scoring và chiến lược làm bài.",
+            duration: 15,
+            fileName: "a-u1-overview.mp4",
+          },
+          {
+            id: "demo-a-u1-n2",
+            kind: "pdf-audio",
+            title: "Tài liệu PDF + Audio: Part 1 practice",
+            description: "10 bài luyện nghe Part 1 kèm transcript.",
+            fileName: "a-u1-part1.pdf",
+          },
+          {
+            id: "demo-a-u1-n3",
+            kind: "h5p",
+            title: "Tương tác H5P: Fill in the blanks",
+            fileName: "a-u1-h5p.h5p",
+          },
+          {
+            id: "demo-a-u1-n4",
+            kind: "practice",
+            title: "Quiz Listening Unit 1",
+            questions: Array.from({ length: 15 }, () => ({})),
+          },
+        ],
+      },
+      {
+        id: "demo-a-u2",
+        title: "Unit 2: IELTS Reading — True/False/Not Given",
+        desc: "Nắm vững dạng câu hỏi T/F/NG và chiến lược skim/scan.",
+        nodes: [
+          {
+            id: "demo-a-u2-n1",
+            kind: "video",
+            title: "Video: Chiến lược True/False/Not Given",
+            duration: 18,
+            fileName: "a-u2-strategy.mp4",
+          },
+          {
+            id: "demo-a-u2-g1",
+            kind: "group",
+            title: "Tài liệu luyện đọc",
+            children: [
+              {
+                id: "demo-a-u2-g1-n1",
+                kind: "pdf",
+                title: "PDF: 5 passages B1",
+                fileName: "a-u2-passages.pdf",
+              },
+              {
+                id: "demo-a-u2-g1-n2",
+                kind: "pdf",
+                title: "PDF: Đáp án và giải thích",
+                fileName: "a-u2-answers.pdf",
+              },
+            ],
+          },
+          {
+            id: "demo-a-u2-n3",
+            kind: "practice",
+            title: "Quiz Reading Unit 2",
+            questions: Array.from({ length: 20 }, () => ({})),
+          },
+        ],
+      },
+      {
+        id: "demo-a-u3",
+        title: "Unit 3: IELTS Speaking — Part 1 Q&A",
+        desc: "Luyện trả lời các câu hỏi quen thuộc trong Part 1.",
+        nodes: [
+          {
+            id: "demo-a-u3-n1",
+            kind: "video",
+            title: "Video: 50 câu hỏi Part 1 thường gặp",
+            duration: 22,
+            fileName: "a-u3-questions.mp4",
+          },
+          {
+            id: "demo-a-u3-n2",
+            kind: "video-speaking",
+            title: "Luyện nói: Self-recording 10 chủ đề",
+            description: "Học viên ghi âm và nhận nhận xét tự động từ AI.",
+            duration: 30,
+          },
+          {
+            id: "demo-a-u3-n3",
+            kind: "scorm",
+            title: "Gói SCORM: Mô phỏng phòng thi Speaking",
+            fileName: "a-u3-scorm.zip",
+          },
+        ],
+      },
+      {
+        id: "demo-a-u4",
+        title: "Unit 4: IELTS Writing — Task 1 Overview",
+        desc: "Phân tích biểu đồ và viết overview chuẩn.",
+        nodes: [
+          {
+            id: "demo-a-u4-n1",
+            kind: "video",
+            title: "Video: Cấu trúc Task 1",
+            duration: 16,
+            fileName: "a-u4-task1.mp4",
+          },
+          {
+            id: "demo-a-u4-n2",
+            kind: "pdf",
+            title: "PDF: 20 sample answers band 6.5+",
+            fileName: "a-u4-samples.pdf",
+          },
+          {
+            id: "demo-a-u4-n3",
+            kind: "practice",
+            title: "Bài viết Task 1 — Nộp bài chấm tự luận",
+            questions: Array.from({ length: 3 }, () => ({})),
+          },
+        ],
+      },
+      {
+        id: "demo-a-u5",
+        title: "Unit 5: Mock Test & Tổng kết",
+        desc: "Bài thi thử toàn diện 4 kỹ năng và review.",
+        nodes: [
+          {
+            id: "demo-a-u5-n1",
+            kind: "scorm",
+            title: "Mock Test SCORM — 4 kỹ năng",
+            fileName: "a-u5-mock.zip",
+            duration: 165,
+          },
+          {
+            id: "demo-a-u5-n2",
+            kind: "video",
+            title: "Video: Phân tích kết quả & lộ trình B2",
+            duration: 20,
+            fileName: "a-u5-review.mp4",
+          },
+        ],
+      },
+    ],
+  };
+
+  return [pending, approved, rejected];
 }
 
