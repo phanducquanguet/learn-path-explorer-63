@@ -446,7 +446,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
                               {canManage && (
                                 <>
                                   <button
-                                    onClick={() => handleTogglePublish(id, exam.name || "Bài thi chưa đặt tên")}
+                                    onClick={() => handleTogglePublish(id, exam.name || "Đề thi chưa đặt tên")}
                                     className={cn(
                                       "inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold transition",
                                       isDraft
