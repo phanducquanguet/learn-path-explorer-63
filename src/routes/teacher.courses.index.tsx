@@ -398,6 +398,7 @@ function TeacherCoursesPage() {
               {...row}
               onPublish={() => setPublishingId(row.course.id)}
               onDelete={() => setConfirmDeleteId(row.course.id)}
+              onViewNote={() => setViewingNoteId(row.course.id)}
             />
           ))}
           {filtered.length === 0 && (
