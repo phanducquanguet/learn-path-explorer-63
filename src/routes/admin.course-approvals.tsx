@@ -107,8 +107,8 @@ function ApprovalsPage() {
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"pending" | "approved" | "rejected" | "all">("pending");
   const [orgFilter, setOrgFilter] = useState<string>("all");
-  const [reviewing, setReviewing] = useState<DraftCourse | null>(null);
   const [rejecting, setRejecting] = useState<DraftCourse | null>(null);
+
 
   useEffect(() => {
     if (typeof window === "undefined") return;
