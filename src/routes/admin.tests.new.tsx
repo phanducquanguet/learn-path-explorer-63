@@ -203,12 +203,8 @@ function NewTestPage() {
     });
   }, [structure, mode]);
 
-  if (role !== "admin") {
-    return (
-      <div className="min-h-screen bg-background">
-        <TopNav />
-        <div className="mx-auto max-w-3xl px-6 py-20 text-center">
 function NewTestPage() {
+
   return <TestExamBuilder kind="test" scope="admin" />;
 }
 
