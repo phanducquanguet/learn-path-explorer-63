@@ -318,8 +318,11 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
               .filter((e) => {
                 const st = getStatus(e.id ?? "");
                 if (!canManage) return st === "published";
-                if (statusFilter === "all") return true;
-                return st === statusFilter;
+                if (statusFilter !== "all" && st !== statusFilter) return false;
+                if (scope === "teacher" && classFilter !== "all") {
+                  if (!(e.classIds ?? []).includes(classFilter)) return false;
+                }
+                return true;
               })
               .map((exam) => {
               const id = exam.id ?? "";
