@@ -80,7 +80,7 @@ const TEACHER_DEMO: SavedExam[] = [
       "Bài tập tuần dành cho lớp B1 — Fastrack: 2 đoạn đọc ngắn + 15 câu từ vựng theo chủ đề Travel.",
     skills: ["reading"],
     totalQuestions: 22,
-    classIds: ["cls-b1-fastrack"],
+    classIds: ["cls-b1-fast"],
     savedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
   },
   {
@@ -92,7 +92,7 @@ const TEACHER_DEMO: SavedExam[] = [
       "Bài tập nghe về hội thoại đời thường. Nộp trước buổi học tiếp theo để cô chữa trên lớp.",
     skills: ["listening"],
     totalQuestions: 12,
-    classIds: ["cls-a2-evening"],
+    classIds: ["cls-a2-weekend"],
     savedAt: new Date(Date.now() - 1 * 86400000).toISOString(),
   },
   {
@@ -104,7 +104,7 @@ const TEACHER_DEMO: SavedExam[] = [
       "Luyện viết email ngắn (~120 từ) trả lời lời mời. Có rubric chấm điểm chi tiết.",
     skills: ["writing"],
     totalQuestions: 1,
-    classIds: ["cls-b1-fastrack"],
+    classIds: ["cls-b1-fast"],
     savedAt: new Date(Date.now() - 5 * 3600000).toISOString(),
   },
 ];
