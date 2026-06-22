@@ -122,6 +122,8 @@ function UploadPage() {
           thumbnail: d.thumbnail || "",
         });
         if (Array.isArray(d.units)) setUnits(d.units);
+        if (d.visibility === "system" || d.visibility === "classes") setVisibility(d.visibility);
+        if (Array.isArray(d.classIds)) setClassIds(d.classIds);
       }
     }
   }, [edit]);
@@ -130,6 +132,7 @@ function UploadPage() {
     { label: "Khóa học", icon: BookOpen },
     { label: "Units", icon: Layers },
     { label: "Activities", icon: ListChecks },
+    { label: "Phân phối", icon: Users },
   ];
 
   const addUnit = () =>
@@ -141,7 +144,15 @@ function UploadPage() {
   const save = () => {
     if (typeof window !== "undefined") {
       const drafts = JSON.parse(window.localStorage.getItem("unicom.uploaded.courses") || "[]");
-      const payload = { ...course, units, savedAt: new Date().toISOString() };
+      const payload = {
+        ...course,
+        units,
+        visibility,
+        classIds: visibility === "classes" ? classIds : [],
+        createdBy: isTeacher ? "teacher" : "admin",
+        savedAt: new Date().toISOString(),
+      };
+
       if (isEdit) {
         const idx = drafts.findIndex((x: { id?: string }) => x.id === edit);
         if (idx >= 0) drafts[idx] = { ...drafts[idx], ...payload };
