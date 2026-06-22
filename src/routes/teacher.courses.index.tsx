@@ -451,6 +451,52 @@ function TeacherCoursesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* View admin rejection note */}
+      <Dialog open={!!viewingNoteId} onOpenChange={(o) => !o && setViewingNoteId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nhận xét từ admin</DialogTitle>
+            <DialogDescription>
+              Khóa học "{viewingNoteDraft?.title || "Chưa đặt tên"}" đã bị từ chối publish.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 text-sm">
+            <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-red-700 dark:border-red-900/40 dark:bg-red-950/30">
+              <div className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider">
+                <MessageSquare className="h-3 w-3" /> Lý do từ chối
+              </div>
+              <div className="mt-1.5 text-sm leading-relaxed">
+                {viewingNoteDraft?.reviewerNote || "Admin chưa để lại nhận xét cụ thể."}
+              </div>
+            </div>
+            {viewingNoteDraft?.reviewedAt && (
+              <div className="text-[11px] text-muted-foreground">
+                Đánh giá lúc:{" "}
+                {new Date(viewingNoteDraft.reviewedAt).toLocaleString("vi-VN")}
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <button
+              onClick={() => setViewingNoteId(null)}
+              className="inline-flex h-9 items-center rounded-lg border border-border bg-surface px-3 text-sm font-medium hover:bg-muted"
+            >
+              Đóng
+            </button>
+            <button
+              onClick={() => {
+                const id = viewingNoteId;
+                setViewingNoteId(null);
+                if (id) setPublishingId(id);
+              }}
+              className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground hover:opacity-90"
+            >
+              <Send className="h-3.5 w-3.5" /> Chỉnh sửa & gửi lại
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
