@@ -311,6 +311,7 @@ function ApprovalsPage() {
             <thead className="bg-muted/40 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               <tr>
                 <th className="px-4 py-3">Khóa học</th>
+                <th className="px-4 py-3">Đơn vị</th>
                 <th className="px-4 py-3">Cấp độ</th>
                 <th className="px-4 py-3">Đề xuất phạm vi</th>
                 <th className="px-4 py-3">Gửi lúc</th>
@@ -321,7 +322,7 @@ function ApprovalsPage() {
             <tbody>
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                  <td colSpan={7} className="px-4 py-12 text-center text-sm text-muted-foreground">
                     Không có khóa học phù hợp.
                   </td>
                 </tr>
@@ -330,6 +331,7 @@ function ApprovalsPage() {
                 const lv = levels.find((l) => l.code === d.levelCode);
                 const status = (d.approvalStatus ?? "draft") as ApprovalStatus;
                 const scope = scopeSummary(d);
+                const org = getOrg(d.orgId);
                 return (
                   <tr key={d.id} className="border-t border-border">
                     <td className="px-4 py-3">
@@ -339,6 +341,20 @@ function ApprovalsPage() {
                       <div className="line-clamp-1 text-xs text-muted-foreground">
                         {d.subtitle || "—"}
                       </div>
+                      {d.teacherName && (
+                        <div className="mt-0.5 text-[11px] text-muted-foreground">
+                          GV: {d.teacherName}
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      {org ? (
+                        <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                          <Building2 className="h-3 w-3" /> {org.shortName}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
                     </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">
                       {lv ? lv.code : d.levelCode || "—"}
