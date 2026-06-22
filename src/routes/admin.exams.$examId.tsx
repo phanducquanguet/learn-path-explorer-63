@@ -5,15 +5,17 @@ import { EXAM_SKILLS } from "@/lib/teacher-data";
 import type { CustomQuestion } from "@/lib/tests-data";
 import type { QSkill } from "@/lib/question-bank";
 import { SKILL_LABEL } from "@/lib/question-bank";
+import { SubmissionsView } from "@/routes/admin.exams.$examId.submissions";
+import { getSubmissionsByExam } from "@/lib/exam-submissions";
 import {
   ArrowLeft,
   Clock,
   FileQuestion,
   BarChart3,
   HelpCircle,
-  Eye,
   FileAudio,
   FileText as FileTextIcon,
+  ClipboardCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -60,7 +62,11 @@ export function ExamDetail({
   scope?: "admin" | "teacher";
 }) {
   const [exam, setExam] = useState<SavedExam | null>(null);
-  const [tab, setTab] = useState<"overview" | "questions">("overview");
+  const [tab, setTab] = useState<"overview" | "questions" | "results">("overview");
+  const pendingCount = useMemo(
+    () => getSubmissionsByExam(examId).filter((s) => s.status === "pending").length,
+    [examId],
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -148,20 +154,34 @@ export function ExamDetail({
               <p className="mt-1 text-sm text-muted-foreground">{exam.description}</p>
             )}
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <Mini icon={Clock} label="Thời lượng" value={`${exam.duration}'`} />
             <Mini
               icon={FileQuestion}
               label="Số câu"
               value={String(exam.totalQuestions ?? totalFromGroups)}
             />
-            <Link
-              to="/admin/exams/$examId/submissions"
-              params={{ examId: exam.id ?? examId }}
-              className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-foreground px-3 py-2 text-xs font-semibold text-background hover:opacity-90"
+            <button
+              onClick={() => setTab("results")}
+              className={cn(
+                "rounded-xl border px-3 py-2 text-left transition",
+                pendingCount > 0
+                  ? "border-amber-300 bg-amber-50 hover:bg-amber-100"
+                  : "border-border bg-surface hover:bg-muted",
+              )}
             >
-              <Eye className="h-3.5 w-3.5" /> Xem bài làm
-            </Link>
+              <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                <ClipboardCheck className="h-3 w-3" /> Cần chấm
+              </div>
+              <div
+                className={cn(
+                  "mt-0.5 text-sm font-semibold",
+                  pendingCount > 0 ? "text-amber-700" : "text-foreground",
+                )}
+              >
+                {pendingCount} bài
+              </div>
+            </button>
           </div>
         </div>
 
@@ -170,6 +190,7 @@ export function ExamDetail({
             [
               { id: "overview", label: "Tổng quan", icon: BarChart3 },
               { id: "questions", label: "Câu hỏi", icon: HelpCircle },
+              { id: "results", label: "Kết quả học viên", icon: ClipboardCheck },
             ] as const
           ).map((t) => {
             const I = t.icon;
@@ -185,6 +206,11 @@ export function ExamDetail({
                 )}
               >
                 <I className="h-4 w-4" /> {t.label}
+                {t.id === "results" && pendingCount > 0 && (
+                  <span className="rounded-full bg-amber-500 px-1.5 text-[10px] font-bold text-white">
+                    {pendingCount}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -242,6 +268,12 @@ export function ExamDetail({
             skills={exam.skills as QSkill[]}
             groups={exam.groups}
           />
+        )}
+
+        {tab === "results" && (
+          <div className="mt-6">
+            <SubmissionsView examId={exam.id ?? examId} />
+          </div>
         )}
       </div>
     </div>

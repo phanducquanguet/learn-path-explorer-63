@@ -1,10 +1,13 @@
 export type ExamAnswer = {
   questionId: string;
   question: string;
-  type: "mcq" | "essay" | "short";
+  type: "mcq" | "essay" | "short" | "speaking";
   studentAnswer: string;
+  audioUrl?: string;
   correctAnswer?: string;
   autoScore?: number;
+  autoMax?: number;
+  autoFeedback?: string;
   manualScore?: number;
   feedback?: string;
 };
@@ -45,6 +48,22 @@ const baseAnswers: ExamAnswer[] = [
     type: "essay",
     studentAnswer:
       "Last summer I visited Da Nang with my family. We swam at My Khe beach, ate seafood and watched the dragon bridge breathe fire on Saturday night. The weather was hot but the sea breeze made it pleasant. I want to come back next year.",
+    autoScore: 3.5,
+    autoMax: 5,
+    autoFeedback:
+      "AI: Ngữ pháp tốt, từ vựng phong phú. Cấu trúc đoạn rõ ràng. Cần đa dạng câu phức hơn và bổ sung kết luận.",
+  },
+  {
+    questionId: "q4",
+    question: "Speaking: Describe your hometown in about 1 minute.",
+    type: "speaking",
+    studentAnswer:
+      "(Bản chép tự động) My hometown is Hai Phong, a port city in northern Vietnam. It is famous for seafood, especially crab noodle soup...",
+    audioUrl: "https://www.w3schools.com/html/horse.mp3",
+    autoScore: 4,
+    autoMax: 5,
+    autoFeedback:
+      "AI: Phát âm rõ, ngữ điệu tự nhiên. Một số chỗ nói nhanh khiến trọng âm chưa chuẩn.",
   },
 ];
 
