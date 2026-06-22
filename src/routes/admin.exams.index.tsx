@@ -6,6 +6,7 @@ import { useRole } from "@/contexts/RoleContext";
 import { usePublishStatus, STATUS_LABEL, type PublishStatus, type PublishEvent } from "@/lib/publish-status";
 import { confirmPublishAction } from "@/lib/publish-actions";
 import { BankPage } from "@/routes/admin.question-bank";
+import { getSubmissionsByExam } from "@/lib/exam-submissions";
 import {
   ClipboardCheck,
   Plus,
