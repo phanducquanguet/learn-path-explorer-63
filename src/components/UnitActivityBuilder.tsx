@@ -69,10 +69,22 @@ export type PdfNode = Common & {
   fileName?: string;
   hiddenFromStudents?: boolean;
 };
+export type PdfAudioTrack = {
+  id: string;
+  fileName: string;
+  /** Trang bắt đầu (1-indexed) mà audio này áp dụng. */
+  fromPage: number;
+  /** Trang kết thúc (1-indexed, inclusive). Bỏ trống = áp dụng đến hết. */
+  toPage?: number;
+  /** Nhãn tuỳ chọn (VD: "Bài 1.72", "Pronunciation"). */
+  label?: string;
+};
 export type PdfAudioNode = Common & {
   kind: "pdf-audio";
   fileName?: string;
+  /** @deprecated giữ lại để tương thích; dùng audioTracks thay thế. */
   audioFileName?: string;
+  audioTracks?: PdfAudioTrack[];
   hiddenFromStudents?: boolean;
 };
 export type PracticeNode = Common & {
