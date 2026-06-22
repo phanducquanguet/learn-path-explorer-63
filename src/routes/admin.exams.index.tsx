@@ -421,6 +421,8 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
             })}
           </div>
         )}
+          </>
+        )}
       </div>
     </div>
   );
