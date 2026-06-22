@@ -6,7 +6,7 @@ import { useRole } from "@/contexts/RoleContext";
 import { usePublishStatus, STATUS_LABEL, type PublishStatus, type PublishEvent } from "@/lib/publish-status";
 import { confirmPublishAction } from "@/lib/publish-actions";
 import { BankPage } from "@/routes/admin.question-bank";
-import { getSubmissionsByExam } from "@/lib/exam-submissions";
+import { getSubmissionsByExam, examSubmissions } from "@/lib/exam-submissions";
 import {
   ClipboardCheck,
   Plus,
@@ -24,7 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/exams/")({
-  head: () => ({ meta: [{ title: "Bài luyện thi — UNICOM LMS" }] }),
+  head: () => ({ meta: [{ title: "Đề luyện tập — UNICOM LMS" }] }),
   component: () => <ExamsList scope="admin" />,
 });
 
@@ -162,15 +162,15 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <Sparkles className="h-3.5 w-3.5" /> Quản lý bài thi
+              <Sparkles className="h-3.5 w-3.5" /> Quản lý đề thi
             </span>
             <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              {scope === "teacher" ? "Bài tập & Kiểm tra" : "Bài luyện thi"}
+              {scope === "teacher" ? "Bài tập & Kiểm tra" : "Đề luyện tập"}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {scope === "teacher"
                 ? "Tạo bài kiểm tra và luyện tập cho học viên trong các lớp bạn được phân công."
-                : "Bài thi được phân loại theo cấp độ (A1–C2) và dùng chung cho mọi học viên cùng cấp."}
+                : "Đề thi được phân loại theo cấp độ (A1–C2) và dùng chung cho mọi học viên cùng cấp."}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -188,7 +188,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
                 className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
                 style={{ background: "var(--gradient-brand)" }}
               >
-                <Plus className="h-4 w-4" /> Tạo bài thi mới
+                <Plus className="h-4 w-4" /> Tạo đề thi mới
               </Link>
             )}
 
@@ -230,16 +230,16 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
           <>
         {/* Stats */}
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <StatCard icon={ClipboardCheck} label="Tổng số bài thi" value={exams.length} />
+          <StatCard icon={ClipboardCheck} label="Tổng số đề thi" value={exams.length} />
           <StatCard
             icon={FileQuestion}
             label="Tổng số câu hỏi"
             value={exams.reduce((s, e) => s + (e.totalQuestions ?? 0), 0)}
           />
           <StatCard
-            icon={Layers}
-            label="Cấp độ có bài thi"
-            value={new Set(exams.map((e) => e.levelCode)).size}
+            icon={FileEdit}
+            label="Cần chấm"
+            value={examSubmissions.filter((s) => s.status === "pending").length}
           />
         </div>
 
@@ -287,15 +287,15 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
           )}
         </div>
 
-        {/* Bảng danh sách bài thi */}
+        {/* Bảng danh sách đề thi */}
         {exams.length === 0 ? (
           <div className="mt-8 rounded-3xl border border-dashed border-border bg-surface/40 p-16 text-center">
             <ClipboardCheck className="mx-auto h-10 w-10 text-muted-foreground" />
             <div className="mt-3 font-display text-lg font-semibold text-foreground">
-              Chưa có bài thi nào
+              Chưa có đề thi nào
             </div>
             <p className="mt-1 text-sm text-muted-foreground">
-              Tạo bài thi đầu tiên để học viên bắt đầu luyện tập.
+              Tạo đề thi đầu tiên để học viên bắt đầu luyện tập.
             </p>
           </div>
         ) : (
@@ -304,7 +304,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
               <table className="w-full text-sm">
                 <thead className="bg-muted/50 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                   <tr>
-                    <th className="px-4 py-3">Tên bài thi</th>
+                    <th className="px-4 py-3">Tên đề thi</th>
                     <th className="px-4 py-3">Cấp độ</th>
                     <th className="px-4 py-3">Kỹ năng</th>
                     {scope === "teacher" && <th className="px-4 py-3">Lớp áp dụng</th>}
@@ -446,7 +446,7 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
                               {canManage && (
                                 <>
                                   <button
-                                    onClick={() => handleTogglePublish(id, exam.name || "Bài thi chưa đặt tên")}
+                                    onClick={() => handleTogglePublish(id, exam.name || "Đề thi chưa đặt tên")}
                                     className={cn(
                                       "inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold transition",
                                       isDraft
