@@ -333,13 +333,17 @@ function TeacherCourseCard({
   classCount,
   studentCount,
   avgProgress,
-  avgScore,
+  origin,
+  publishedClassNames,
 }: CourseRow) {
   const cover = COURSE_COVERS[course.id] ?? LEVEL_COVERS[level.code];
+  const isTeacherOwn = origin === "teacher";
+  const linkProps = isTeacherOwn
+    ? ({ to: "/teacher/upload", search: { edit: course.id } } as const)
+    : ({ to: "/teacher/courses/$courseId", params: { courseId: course.id } } as const);
   return (
     <Link
-      to="/teacher/courses/$courseId"
-      params={{ courseId: course.id }}
+      {...linkProps}
       className="group flex flex-col overflow-hidden rounded-3xl border border-border bg-surface shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated"
     >
       <div
@@ -364,7 +368,13 @@ function TeacherCourseCard({
         >
           {level.code}
         </span>
+        {isTeacherOwn && (
+          <span className="absolute right-3 top-3 inline-flex h-6 items-center gap-1 rounded-md bg-foreground/90 px-2 text-[11px] font-semibold uppercase tracking-wider text-background shadow-soft">
+            <UserCheck className="h-3 w-3" /> Tự tạo
+          </span>
+        )}
       </div>
+
 
       <div className="flex flex-1 flex-col gap-4 p-5">
         <div className="flex items-start justify-between gap-3">
