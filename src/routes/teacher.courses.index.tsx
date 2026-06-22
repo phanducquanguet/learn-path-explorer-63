@@ -57,6 +57,8 @@ export const Route = createFileRoute("/teacher/courses/")({
   component: TeacherCoursesPage,
 });
 
+type ApprovalStatus = "draft" | "pending" | "approved" | "rejected";
+
 type DraftCourse = {
   id: string;
   title?: string;
@@ -67,6 +69,13 @@ type DraftCourse = {
   visibility?: "system" | "classes";
   classIds?: string[];
   createdBy?: "teacher" | "admin";
+  // Phê duyệt
+  approvalStatus?: ApprovalStatus;
+  pendingVisibility?: "system" | "classes";
+  pendingClassIds?: string[];
+  submittedAt?: string;
+  reviewedAt?: string;
+  reviewerNote?: string;
 };
 
 type CourseRow = {
@@ -79,6 +88,8 @@ type CourseRow = {
   origin: "system" | "teacher";
   publishedClassNames?: string[];
   isPublished?: boolean;
+  approvalStatus?: ApprovalStatus;
+  reviewerNote?: string;
   draft?: DraftCourse;
 };
 
@@ -144,10 +155,14 @@ function TeacherCoursesPage() {
       .filter((d) => d.createdBy !== "admin")
       .map<CourseRow>((d) => {
         const lv = levels.find((l) => l.code === d.levelCode) ?? levels[0];
+        const approved = d.approvalStatus === "approved";
+        // Chỉ tính publish khi đã được admin duyệt
+        const effectiveVisibility = approved ? d.visibility : undefined;
+        const effectiveClassIds = approved ? (d.classIds ?? []) : [];
         const publishedClassIds =
-          d.visibility === "system"
+          effectiveVisibility === "system"
             ? classes.filter((c) => c.levelCode === lv.code).map((c) => c.id)
-            : (d.classIds ?? []);
+            : effectiveClassIds;
         const lvClasses = classes.filter((c) => publishedClassIds.includes(c.id));
         const lvStudents = students.filter((s) =>
           lvClasses.some((c) => c.id === s.classId),
@@ -181,7 +196,9 @@ function TeacherCoursesPage() {
           avgScore: 0,
           origin: "teacher",
           publishedClassNames: lvClasses.map((c) => c.name),
-          isPublished: !!d.visibility && lvClasses.length > 0,
+          isPublished: approved && lvClasses.length > 0,
+          approvalStatus: d.approvalStatus ?? "draft",
+          reviewerNote: d.reviewerNote,
           draft: d,
         };
       });
@@ -413,6 +430,8 @@ function TeacherCourseCard({
   origin,
   publishedClassNames,
   isPublished,
+  approvalStatus,
+  reviewerNote,
   onPublish,
   onDelete,
 }: CourseRow & { onPublish: () => void; onDelete: () => void }) {
@@ -455,16 +474,29 @@ function TeacherCourseCard({
             <span className="inline-flex h-6 items-center gap-1 rounded-md bg-foreground/90 px-2 text-[11px] font-semibold uppercase tracking-wider text-background shadow-soft">
               <UserCheck className="h-3 w-3" /> Tự tạo
             </span>
-            <span
-              className={cn(
-                "inline-flex h-5 items-center rounded-md px-2 text-[10px] font-semibold uppercase tracking-wider shadow-soft",
-                isPublished
-                  ? "bg-emerald-600/90 text-white"
-                  : "bg-amber-500/90 text-white",
-              )}
-            >
-              {isPublished ? "Đã publish" : "Chưa publish"}
-            </span>
+            {(() => {
+              const status: ApprovalStatus = approvalStatus ?? "draft";
+              const map: Record<ApprovalStatus, { label: string; cls: string }> = {
+                draft: { label: "Chưa gửi duyệt", cls: "bg-slate-500/90 text-white" },
+                pending: { label: "Chờ duyệt", cls: "bg-amber-500/90 text-white" },
+                approved: {
+                  label: isPublished ? "Đã duyệt · publish" : "Đã duyệt",
+                  cls: "bg-emerald-600/90 text-white",
+                },
+                rejected: { label: "Bị từ chối", cls: "bg-red-600/90 text-white" },
+              };
+              const s = map[status];
+              return (
+                <span
+                  className={cn(
+                    "inline-flex h-5 items-center rounded-md px-2 text-[10px] font-semibold uppercase tracking-wider shadow-soft",
+                    s.cls,
+                  )}
+                >
+                  {s.label}
+                </span>
+              );
+            })()}
           </div>
         )}
       </div>
@@ -487,6 +519,18 @@ function TeacherCourseCard({
           <Stat label="Lớp" value={classCount} />
           <Stat label="Học viên" value={studentCount} />
         </div>
+
+        {isTeacherOwn && approvalStatus === "rejected" && reviewerNote && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] text-red-700 dark:border-red-900/40 dark:bg-red-950/30">
+            <span className="font-semibold">Admin từ chối:</span> {reviewerNote}
+          </div>
+        )}
+
+        {isTeacherOwn && approvalStatus === "pending" && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-700 dark:border-amber-900/40 dark:bg-amber-950/30">
+            Yêu cầu publish đang chờ admin phê duyệt.
+          </div>
+        )}
 
         {isTeacherOwn && publishedClassNames && publishedClassNames.length > 0 && (
           <div className="rounded-xl bg-muted/40 px-3 py-2 text-[11px] text-muted-foreground">
@@ -515,15 +559,35 @@ function TeacherCourseCard({
 
         {isTeacherOwn && (
           <div className="-mx-1 flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
-            <button
-              onClick={(e) => {
-                stop(e);
-                onPublish();
-              }}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-2.5 text-xs font-semibold text-primary-foreground hover:opacity-90"
-            >
-              <Send className="h-3 w-3" /> Publish
-            </button>
+            {(() => {
+              const status: ApprovalStatus = approvalStatus ?? "draft";
+              const isPending = status === "pending";
+              const label =
+                status === "approved"
+                  ? "Gửi duyệt lại"
+                  : status === "rejected"
+                    ? "Gửi lại"
+                    : status === "pending"
+                      ? "Đang chờ duyệt"
+                      : "Gửi duyệt";
+              return (
+                <button
+                  onClick={(e) => {
+                    stop(e);
+                    if (!isPending) onPublish();
+                  }}
+                  disabled={isPending}
+                  className={cn(
+                    "inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold",
+                    isPending
+                      ? "cursor-not-allowed bg-muted text-muted-foreground"
+                      : "bg-primary text-primary-foreground hover:opacity-90",
+                  )}
+                >
+                  <Send className="h-3 w-3" /> {label}
+                </button>
+              );
+            })()}
             <Link
               to="/teacher/upload"
               search={{ edit: course.id }}
@@ -599,8 +663,10 @@ function PublishDialog({
 
   useEffect(() => {
     if (draft) {
-      setVisibility(draft.visibility === "system" ? "system" : "classes");
-      setSelected(draft.classIds ?? []);
+      const v =
+        draft.pendingVisibility ?? draft.visibility ?? "classes";
+      setVisibility(v === "system" ? "system" : "classes");
+      setSelected(draft.pendingClassIds ?? draft.classIds ?? []);
     }
   }, [draft?.id]);
 
@@ -614,10 +680,10 @@ function PublishDialog({
     <Dialog open={!!draft} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Publish khóa học</DialogTitle>
+          <DialogTitle>Gửi yêu cầu publish</DialogTitle>
           <DialogDescription>
-            Chọn phạm vi để học viên có thể nhìn thấy khóa "{draft?.title || "Chưa đặt tên"}" (cấp
-            độ {levelCode}).
+            Chọn phạm vi muốn publish cho khóa "{draft?.title || "Chưa đặt tên"}" (cấp độ{" "}
+            {levelCode}). Yêu cầu sẽ được gửi tới admin để phê duyệt trước khi học viên thấy.
           </DialogDescription>
         </DialogHeader>
 
@@ -694,14 +760,17 @@ function PublishDialog({
           <button
             onClick={() =>
               onSave({
-                visibility,
-                classIds: visibility === "classes" ? selected : [],
+                pendingVisibility: visibility,
+                pendingClassIds: visibility === "classes" ? selected : [],
+                approvalStatus: "pending",
+                submittedAt: new Date().toISOString(),
+                reviewerNote: undefined,
               })
             }
             disabled={visibility === "classes" && selected.length === 0}
             className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <Send className="h-3.5 w-3.5" /> Lưu publish
+            <Send className="h-3.5 w-3.5" /> Gửi yêu cầu duyệt
           </button>
         </DialogFooter>
       </DialogContent>

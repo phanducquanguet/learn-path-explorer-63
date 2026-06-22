@@ -144,14 +144,29 @@ function UploadPage() {
   const save = () => {
     if (typeof window !== "undefined") {
       const drafts = JSON.parse(window.localStorage.getItem("unicom.uploaded.courses") || "[]");
-      const payload = {
+      const basePayload = {
         ...course,
         units,
-        visibility,
-        classIds: visibility === "classes" ? classIds : [],
         createdBy: isTeacher ? "teacher" : "admin",
         savedAt: new Date().toISOString(),
       };
+      // GV: phạm vi đi qua phê duyệt — lưu vào pending*, giữ nguyên visibility/classIds cho đến khi admin duyệt.
+      // Admin: publish trực tiếp như cũ.
+      const payload = isTeacher
+        ? {
+            ...basePayload,
+            pendingVisibility: visibility,
+            pendingClassIds: visibility === "classes" ? classIds : [],
+            approvalStatus: "pending",
+            submittedAt: new Date().toISOString(),
+            reviewerNote: undefined,
+          }
+        : {
+            ...basePayload,
+            visibility,
+            classIds: visibility === "classes" ? classIds : [],
+            approvalStatus: "approved",
+          };
 
       if (isEdit) {
         const idx = drafts.findIndex((x: { id?: string }) => x.id === edit);
@@ -428,7 +443,7 @@ function UploadPage() {
                 <div className="text-sm font-semibold text-foreground">Phạm vi hiển thị</div>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {isTeacher
-                    ? "Khóa học của giáo viên chỉ hiển thị cho học viên thuộc các lớp được publish dưới đây."
+                    ? "Khóa học của giáo viên cần được admin phê duyệt trước khi học viên thấy. Chọn phạm vi đề xuất ở dưới và bấm 'Gửi duyệt'."
                     : "Khóa học hệ thống mặc định hiển thị cho mọi lớp đúng cấp độ. Bạn có thể giới hạn chỉ một số lớp nếu cần."}
                 </p>
               </div>
@@ -545,9 +560,9 @@ function UploadPage() {
 
               {saved && (
                 <div className="rounded-xl bg-emerald-500/10 px-4 py-3 text-sm font-medium text-emerald-700">
-                  ✓ Đã lưu & publish khóa học. Học viên thuộc{" "}
-                  {visibility === "system" ? "mọi lớp" : `${classIds.length} lớp đã chọn`} sẽ thấy
-                  trên giao diện học tập.
+                  {isTeacher
+                    ? `✓ Đã lưu & gửi yêu cầu phê duyệt tới admin (${visibility === "system" ? "toàn cấp độ" : `${classIds.length} lớp`}). Khóa học chỉ hiển thị cho học viên sau khi được admin duyệt.`
+                    : `✓ Đã lưu & publish khóa học. Học viên thuộc ${visibility === "system" ? "mọi lớp" : `${classIds.length} lớp đã chọn`} sẽ thấy trên giao diện học tập.`}
                 </div>
               )}
             </div>
@@ -576,7 +591,8 @@ function UploadPage() {
               className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
               style={{ background: "var(--gradient-brand)" }}
             >
-              <CheckCircle2 className="h-4 w-4" /> Lưu khóa học
+              <CheckCircle2 className="h-4 w-4" />{" "}
+              {isTeacher ? "Lưu & gửi duyệt" : "Lưu khóa học"}
             </button>
           )}
         </div>
