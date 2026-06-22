@@ -72,7 +72,8 @@ function buildExamPayload(input: {
   enforceOrder: boolean;
   structure: StructureItem[];
   resolved: { item: StructureItem; questions: BankQuestion[] }[];
-}): SavedExamShape {
+  classIds?: string[];
+}): SavedExamShape & { classIds?: string[] } {
   const skills = Array.from(new Set(input.structure.filter((s) => s.count > 0).map((s) => s.skill)));
   const groups: SavedExamShape["groups"] = {};
   for (const sk of skills) {
