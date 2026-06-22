@@ -474,16 +474,29 @@ function TeacherCourseCard({
             <span className="inline-flex h-6 items-center gap-1 rounded-md bg-foreground/90 px-2 text-[11px] font-semibold uppercase tracking-wider text-background shadow-soft">
               <UserCheck className="h-3 w-3" /> Tự tạo
             </span>
-            <span
-              className={cn(
-                "inline-flex h-5 items-center rounded-md px-2 text-[10px] font-semibold uppercase tracking-wider shadow-soft",
-                isPublished
-                  ? "bg-emerald-600/90 text-white"
-                  : "bg-amber-500/90 text-white",
-              )}
-            >
-              {isPublished ? "Đã publish" : "Chưa publish"}
-            </span>
+            {(() => {
+              const status: ApprovalStatus = approvalStatus ?? "draft";
+              const map: Record<ApprovalStatus, { label: string; cls: string }> = {
+                draft: { label: "Chưa gửi duyệt", cls: "bg-slate-500/90 text-white" },
+                pending: { label: "Chờ duyệt", cls: "bg-amber-500/90 text-white" },
+                approved: {
+                  label: isPublished ? "Đã duyệt · publish" : "Đã duyệt",
+                  cls: "bg-emerald-600/90 text-white",
+                },
+                rejected: { label: "Bị từ chối", cls: "bg-red-600/90 text-white" },
+              };
+              const s = map[status];
+              return (
+                <span
+                  className={cn(
+                    "inline-flex h-5 items-center rounded-md px-2 text-[10px] font-semibold uppercase tracking-wider shadow-soft",
+                    s.cls,
+                  )}
+                >
+                  {s.label}
+                </span>
+              );
+            })()}
           </div>
         )}
       </div>
