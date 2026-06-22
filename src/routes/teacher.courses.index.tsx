@@ -241,8 +241,10 @@ function TeacherCoursesPage() {
 
   const [publishingId, setPublishingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [viewingNoteId, setViewingNoteId] = useState<string | null>(null);
   const publishingDraft = drafts.find((d) => d.id === publishingId) ?? null;
   const deletingDraft = drafts.find((d) => d.id === confirmDeleteId) ?? null;
+  const viewingNoteDraft = drafts.find((d) => d.id === viewingNoteId) ?? null;
 
   return (
     <div className="min-h-screen bg-background">
