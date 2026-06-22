@@ -256,10 +256,11 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
                   )}
                 >
                   <Link
-                    to="/admin/exams/$examId"
+                    to={scope === "teacher" ? "/teacher/exams/$examId" : "/admin/exams/$examId"}
                     params={{ examId: id }}
                     className="flex flex-1 flex-col"
                   >
+
                     <div className="relative aspect-[16/9] w-full overflow-hidden bg-muted">
                       {exam.thumbnail ? (
                         <img
