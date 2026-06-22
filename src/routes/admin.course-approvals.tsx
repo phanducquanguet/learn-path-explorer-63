@@ -158,14 +158,15 @@ function ApprovalsPage() {
     const q = query.trim().toLowerCase();
     return teacherDrafts
       .filter((d) => (tab === "all" ? true : (d.approvalStatus ?? "draft") === tab))
+      .filter((d) => (orgFilter === "all" ? true : d.orgId === orgFilter))
       .filter((d) => {
         if (!q) return true;
-        return `${d.title ?? ""} ${d.subtitle ?? ""} ${d.levelCode ?? ""}`
+        return `${d.title ?? ""} ${d.subtitle ?? ""} ${d.levelCode ?? ""} ${d.teacherName ?? ""}`
           .toLowerCase()
           .includes(q);
       })
       .sort((a, b) => (b.submittedAt ?? "").localeCompare(a.submittedAt ?? ""));
-  }, [teacherDrafts, tab, query]);
+  }, [teacherDrafts, tab, query, orgFilter]);
 
   const approve = (d: DraftCourse) => {
     const visibility = d.pendingVisibility ?? d.visibility ?? "classes";
