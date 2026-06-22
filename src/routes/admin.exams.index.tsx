@@ -266,6 +266,41 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
           </div>
         )}
 
+        {/* Filter theo lớp (chỉ giáo viên) */}
+        {scope === "teacher" && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3">
+            <span className="text-xs font-semibold text-muted-foreground">Lớp:</span>
+            <button
+              onClick={() => setClassFilter("all")}
+              className={cn(
+                "rounded-lg px-2.5 py-1 text-xs font-semibold transition",
+                classFilter === "all"
+                  ? "bg-foreground text-background"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              Tất cả lớp ({exams.length})
+            </button>
+            {teacherClasses.map((c) => {
+              const count = exams.filter((e) => (e.classIds ?? []).includes(c.id)).length;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setClassFilter(c.id)}
+                  className={cn(
+                    "rounded-lg px-2.5 py-1 text-xs font-semibold transition",
+                    classFilter === c.id
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {c.name} ({count})
+                </button>
+              );
+            })}
+          </div>
+        )}
+
         {/* List */}
         {exams.length === 0 ? (
           <div className="mt-8 rounded-3xl border border-dashed border-border bg-surface/40 p-16 text-center">
