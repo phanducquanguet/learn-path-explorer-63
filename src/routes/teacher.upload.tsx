@@ -122,6 +122,7 @@ function UploadPage() {
           hours: d.hours || 36,
           description: d.description || "",
           thumbnail: d.thumbnail || "",
+          teacherNote: d.teacherNote || "",
         });
         if (Array.isArray(d.units)) setUnits(d.units);
         if (d.visibility === "system" || d.visibility === "classes") setVisibility(d.visibility);
