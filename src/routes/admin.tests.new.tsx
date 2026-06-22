@@ -488,52 +488,48 @@ export function TestExamBuilder({
                 </>
               )}
               {isExam && scope === "teacher" && (
-                <Field label="Lớp áp dụng (lớp bạn đang phụ trách)">
-                  {classes.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-center text-xs text-muted-foreground">
-                      Bạn chưa được thêm vào lớp nào.
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-2">
-                      {classes.map((c) => {
-                        const on = classIds.includes(c.id);
-                        return (
-                          <button
-                            key={c.id}
-                            onClick={() =>
-                              setClassIds((p) =>
-                                on ? p.filter((x) => x !== c.id) : [...p, c.id],
-                              )
-                            }
-                            className={cn(
-                              "rounded-xl border px-3 py-2 text-left text-xs font-semibold transition",
-                              on
-                                ? "border-primary bg-primary/10 text-primary"
-                                : "border-border bg-background hover:bg-muted",
-                            )}
-                          >
-                            {c.name}
-                            <div className="text-[10px] font-normal text-muted-foreground">
-                              {c.studentCount} HS • {c.levelCode} • {c.schedule}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+                <Field label="Lớp áp dụng (lọc theo cấp độ đã chọn)">
+                  {(() => {
+                    const eligible = classes.filter((c) => levels.includes(c.levelCode as QLevel));
+                    if (eligible.length === 0) {
+                      return (
+                        <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-center text-xs text-muted-foreground">
+                          Không có lớp nào thuộc cấp độ {levels.join(", ")}.
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="grid grid-cols-2 gap-2">
+                        {eligible.map((c) => {
+                          const on = classIds.includes(c.id);
+                          return (
+                            <button
+                              key={c.id}
+                              onClick={() =>
+                                setClassIds((p) =>
+                                  on ? p.filter((x) => x !== c.id) : [...p, c.id],
+                                )
+                              }
+                              className={cn(
+                                "rounded-xl border px-3 py-2 text-left text-xs font-semibold transition",
+                                on
+                                  ? "border-primary bg-primary/10 text-primary"
+                                  : "border-border bg-background hover:bg-muted",
+                              )}
+                            >
+                              {c.name}
+                              <div className="text-[10px] font-normal text-muted-foreground">
+                                {c.studentCount} HS • {c.levelCode} • {c.schedule}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                   <p className="mt-1 text-[11px] text-muted-foreground">
                     Bài luyện thi sẽ chỉ hiển thị cho học viên thuộc các lớp được chọn.
                   </p>
-                </Field>
-              )}
-              {isExam && (
-                <Field label="Ảnh bìa (URL, tuỳ chọn)">
-                  <input
-                    value={thumbnail}
-                    onChange={(e) => setThumbnail(e.target.value)}
-                    placeholder="https://..."
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-                  />
                 </Field>
               )}
 
