@@ -34,6 +34,15 @@ import {
 
 type ApprovalStatus = "draft" | "pending" | "approved" | "rejected";
 
+type QuizQuestion = {
+  q?: string;
+  options?: string[];
+  answer?: number;
+  explain?: string;
+};
+
+type PdfPage = { page: number; heading?: string; body?: string };
+
 type DraftNode = {
   id: string;
   kind: string;
@@ -42,7 +51,17 @@ type DraftNode = {
   fileName?: string;
   duration?: number;
   children?: DraftNode[];
-  questions?: unknown[];
+  questions?: QuizQuestion[];
+  // Nội dung học liệu thật do giáo viên upload
+  videoUrl?: string;
+  thumbnail?: string;
+  transcript?: string;
+  pages?: PdfPage[];
+  audioUrl?: string;
+  prompt?: string;
+  tips?: string[];
+  sampleAnswer?: string;
+  embedUrl?: string;
 };
 
 type DraftUnit = {
@@ -66,6 +85,9 @@ type DraftCourse = {
   classIds?: string[];
   orgId?: string;
   teacherName?: string;
+  teacherEmail?: string;
+  teacherPhone?: string;
+  teacherNote?: string;
   createdBy?: "teacher" | "admin";
   approvalStatus?: ApprovalStatus;
   pendingVisibility?: "system" | "classes";
@@ -74,6 +96,7 @@ type DraftCourse = {
   reviewedAt?: string;
   reviewerNote?: string;
 };
+
 
 const STORAGE_KEY = "unicom.uploaded.courses";
 
