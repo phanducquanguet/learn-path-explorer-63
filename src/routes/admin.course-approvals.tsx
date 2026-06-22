@@ -271,6 +271,41 @@ function ApprovalsPage() {
           </div>
         </div>
 
+        {/* Org filter */}
+        <div className="mt-3 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3">
+          <div className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+            <Building2 className="h-3.5 w-3.5" /> Đơn vị:
+          </div>
+          <button
+            onClick={() => setOrgFilter("all")}
+            className={cn(
+              "rounded-lg px-2.5 py-1 text-xs font-semibold transition",
+              orgFilter === "all"
+                ? "bg-foreground text-background"
+                : "text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Tất cả ({teacherDrafts.length})
+          </button>
+          {orgs.map((o) => {
+            const count = teacherDrafts.filter((d) => d.orgId === o.id).length;
+            return (
+              <button
+                key={o.id}
+                onClick={() => setOrgFilter(o.id)}
+                className={cn(
+                  "rounded-lg px-2.5 py-1 text-xs font-semibold transition",
+                  orgFilter === o.id
+                    ? "bg-foreground text-background"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {o.shortName} ({count})
+              </button>
+            );
+          })}
+        </div>
+
         <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
           <table className="w-full text-sm">
             <thead className="bg-muted/40 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
