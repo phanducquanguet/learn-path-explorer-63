@@ -780,6 +780,7 @@ function PublishDialog({
 }) {
   const [visibility, setVisibility] = useState<"system" | "classes">("classes");
   const [selected, setSelected] = useState<string[]>([]);
+  const [teacherNote, setTeacherNote] = useState("");
 
   useEffect(() => {
     if (draft) {
@@ -787,6 +788,7 @@ function PublishDialog({
         draft.pendingVisibility ?? draft.visibility ?? "classes";
       setVisibility(v === "system" ? "system" : "classes");
       setSelected(draft.pendingClassIds ?? draft.classIds ?? []);
+      setTeacherNote(draft.teacherNote || "");
     }
   }, [draft?.id]);
 
