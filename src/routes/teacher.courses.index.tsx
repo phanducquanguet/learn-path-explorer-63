@@ -76,6 +76,7 @@ type DraftCourse = {
   submittedAt?: string;
   reviewedAt?: string;
   reviewerNote?: string;
+  teacherNote?: string;
 };
 
 type CourseRow = {
@@ -779,6 +780,7 @@ function PublishDialog({
 }) {
   const [visibility, setVisibility] = useState<"system" | "classes">("classes");
   const [selected, setSelected] = useState<string[]>([]);
+  const [teacherNote, setTeacherNote] = useState("");
 
   useEffect(() => {
     if (draft) {
@@ -786,6 +788,7 @@ function PublishDialog({
         draft.pendingVisibility ?? draft.visibility ?? "classes";
       setVisibility(v === "system" ? "system" : "classes");
       setSelected(draft.pendingClassIds ?? draft.classIds ?? []);
+      setTeacherNote(draft.teacherNote || "");
     }
   }, [draft?.id]);
 
@@ -867,6 +870,19 @@ function PublishDialog({
               </div>
             </div>
           </label>
+
+          <div className="rounded-xl border border-border bg-surface p-3">
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Lời nhắn cho admin (nếu có)
+            </label>
+            <textarea
+              value={teacherNote}
+              onChange={(e) => setTeacherNote(e.target.value)}
+              placeholder="VD: Khóa học này cần được duyệt gấp cho lớp A1-01 tuần sau..."
+              rows={3}
+              className="mt-2 w-full rounded-lg border border-border bg-background p-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
         </div>
 
         <DialogFooter>
@@ -884,6 +900,7 @@ function PublishDialog({
                 approvalStatus: "pending",
                 submittedAt: new Date().toISOString(),
                 reviewerNote: undefined,
+                teacherNote: teacherNote.trim() || undefined,
               })
             }
             disabled={visibility === "classes" && selected.length === 0}
