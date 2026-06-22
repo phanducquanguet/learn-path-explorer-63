@@ -870,6 +870,19 @@ function PublishDialog({
               </div>
             </div>
           </label>
+
+          <div className="rounded-xl border border-border bg-surface p-3">
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Lời nhắn cho admin (nếu có)
+            </label>
+            <textarea
+              value={teacherNote}
+              onChange={(e) => setTeacherNote(e.target.value)}
+              placeholder="VD: Khóa học này cần được duyệt gấp cho lớp A1-01 tuần sau..."
+              rows={3}
+              className="mt-2 w-full rounded-lg border border-border bg-background p-2.5 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+          </div>
         </div>
 
         <DialogFooter>
@@ -887,8 +900,12 @@ function PublishDialog({
                 approvalStatus: "pending",
                 submittedAt: new Date().toISOString(),
                 reviewerNote: undefined,
+                teacherNote: teacherNote.trim() || undefined,
               })
             }
+            disabled={visibility === "classes" && selected.length === 0}
+            className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
             disabled={visibility === "classes" && selected.length === 0}
             className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-3 text-sm font-semibold text-primary-foreground hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
