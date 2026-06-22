@@ -161,7 +161,7 @@ export function makeDefaultBankQuestion(type: QType, base: Partial<BankQuestion>
 
 export const Route = createFileRoute("/admin/question-bank")({
   head: () => ({ meta: [{ title: "Ngân hàng câu hỏi — UNICOM LMS" }] }),
-  component: BankPage,
+  component: () => <BankPage scope="admin" />,
 });
 
 const SKILLS: QSkill[] = ["listening", "reading", "writing", "speaking"];
@@ -177,9 +177,26 @@ const SKILL_COLOR: Record<QSkill, string> = {
   speaking: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
 };
 
-function BankPage() {
+const TEACHER_BANK_KEY = "unicom.teacher.questionBank";
+
+export function BankPage({ scope = "admin" }: { scope?: "admin" | "teacher" } = {}) {
   const { role } = useRole();
-  const [items, setItems] = useState<BankQuestion[]>(questionBank);
+  const [items, setItems] = useState<BankQuestion[]>(() => {
+    if (scope === "teacher" && typeof window !== "undefined") {
+      try {
+        const raw = window.localStorage.getItem(TEACHER_BANK_KEY);
+        if (raw) return JSON.parse(raw) as BankQuestion[];
+      } catch { /* noop */ }
+      return [];
+    }
+    return questionBank;
+  });
+  useEffect(() => {
+    if (scope !== "teacher" || typeof window === "undefined") return;
+    try {
+      window.localStorage.setItem(TEACHER_BANK_KEY, JSON.stringify(items));
+    } catch { /* noop */ }
+  }, [items, scope]);
   const [skill, setSkill] = useState<QSkill | "all">("all");
   const [level, setLevel] = useState<QLevel | "all">("all");
   const [type, setType] = useState<QType | "all">("all");
@@ -194,6 +211,7 @@ function BankPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [page, setPage] = useState(1);
   const [tagFilter, setTagFilter] = useState<string[]>([]);
+
 
   const allTags = useMemo(() => {
     const s = new Set<string>();
