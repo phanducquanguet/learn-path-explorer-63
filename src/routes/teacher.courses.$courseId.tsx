@@ -1,5 +1,5 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useEffect, useMemo, useState } from "react";
 import {
   Bar,
   BarChart,
@@ -22,14 +22,16 @@ import {
   ExternalLink,
   GraduationCap,
   Layers,
+  Pencil,
   Search,
   TrendingUp,
   Trophy,
+  UserCheck,
   Users,
   MessageSquare,
 } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
-import { getCourse } from "@/lib/lms-data";
+import { getCourse, levels, type Course, type Level } from "@/lib/lms-data";
 import { classes, students, type TeacherStudent } from "@/lib/teacher-data";
 import { cn } from "@/lib/utils";
 import { CourseContentViewer } from "@/components/CourseContentViewer";
@@ -46,10 +48,81 @@ export const Route = createFileRoute("/teacher/courses/$courseId")({
     meta: [{ title: `Quản trị khóa ${params.courseId} — UNICOM LMS` }],
   }),
   component: TeacherCourseDetailPage,
-  notFoundComponent: () => (
-    <div className="p-10 text-center text-muted-foreground">Không tìm thấy khóa học.</div>
-  ),
 });
+
+type DraftMeta = {
+  visibility?: "system" | "classes";
+  classIds?: string[];
+};
+
+function nodeKindToActivityType(kind?: string): "video" | "reading" | "quiz" | "speaking" | "writing" {
+  switch (kind) {
+    case "video":
+      return "video";
+    case "video-speaking":
+      return "speaking";
+    case "pdf":
+    case "pdf-audio":
+    case "scorm":
+    case "h5p":
+      return "reading";
+    case "practice":
+    case "group":
+      return "quiz";
+    default:
+      return "reading";
+  }
+}
+
+function loadDraftCourse(courseId: string): { course: Course; level: Level; draft: DraftMeta } | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem("unicom.uploaded.courses");
+    if (!raw) return null;
+    const drafts = JSON.parse(raw) as Array<Record<string, unknown>>;
+    const d = drafts.find((x) => x.id === courseId);
+    if (!d) return null;
+    const lv =
+      levels.find((l) => l.code === (d.levelCode as string)) ?? levels[0];
+    const rawUnits = (d.units as Array<Record<string, unknown>>) ?? [];
+    const synthCourse: Course = {
+      id: courseId,
+      title: (d.title as string) || "Khóa học chưa đặt tên",
+      subtitle: (d.subtitle as string) || "",
+      level: lv.code,
+      hours: (d.hours as number) ?? 0,
+      progress: 0,
+      units: rawUnits.map((u, i) => {
+        const nodes = (u.nodes as Array<Record<string, unknown>>) ?? [];
+        return {
+          id: (u.id as string) || `u${i + 1}`,
+          index: i + 1,
+          title: (u.title as string) || `Unit ${i + 1}`,
+          description: (u.desc as string) || "",
+          activities: nodes
+            .filter((n) => (n.kind as string) !== "question")
+            .map((n, j) => ({
+              id: (n.id as string) || `${u.id}-a${j + 1}`,
+              title: (n.title as string) || "Hoạt động",
+              type: nodeKindToActivityType(n.kind as string),
+              duration: (n.duration as number) ?? 10,
+            })),
+        };
+      }),
+      classmates: [],
+    };
+    return {
+      course: synthCourse,
+      level: lv,
+      draft: {
+        visibility: d.visibility as DraftMeta["visibility"],
+        classIds: (d.classIds as string[]) ?? [],
+      },
+    };
+  } catch {
+    return null;
+  }
+}
 
 const SKILL_LABEL: Record<string, string> = {
   listening: "Nghe",
