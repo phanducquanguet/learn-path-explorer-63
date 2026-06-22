@@ -171,7 +171,7 @@ export function TestExamBuilder({
     : "/teacher/tests";
   const backLabel = isExam ? "Trở lại Luyện thi" : "Trở lại Thi cử";
   const pageTitle = isExam ? "Tạo bài luyện thi mới" : "Tạo bài tập mới";
-  const submitLabel = isExam ? "Tạo bài luyện thi" : "Tạo đề thi";
+  const submitLabel = isExam ? "Tạo bài luyện thi" : "Tạo bài tập";
 
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
