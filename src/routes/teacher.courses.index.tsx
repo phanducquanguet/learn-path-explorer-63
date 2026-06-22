@@ -520,6 +520,18 @@ function TeacherCourseCard({
           <Stat label="Học viên" value={studentCount} />
         </div>
 
+        {isTeacherOwn && approvalStatus === "rejected" && reviewerNote && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] text-red-700 dark:border-red-900/40 dark:bg-red-950/30">
+            <span className="font-semibold">Admin từ chối:</span> {reviewerNote}
+          </div>
+        )}
+
+        {isTeacherOwn && approvalStatus === "pending" && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-700 dark:border-amber-900/40 dark:bg-amber-950/30">
+            Yêu cầu publish đang chờ admin phê duyệt.
+          </div>
+        )}
+
         {isTeacherOwn && publishedClassNames && publishedClassNames.length > 0 && (
           <div className="rounded-xl bg-muted/40 px-3 py-2 text-[11px] text-muted-foreground">
             <span className="font-semibold text-foreground">Đã publish:</span>{" "}
@@ -547,15 +559,35 @@ function TeacherCourseCard({
 
         {isTeacherOwn && (
           <div className="-mx-1 flex flex-wrap items-center gap-1.5 border-t border-border pt-3">
-            <button
-              onClick={(e) => {
-                stop(e);
-                onPublish();
-              }}
-              className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-primary px-2.5 text-xs font-semibold text-primary-foreground hover:opacity-90"
-            >
-              <Send className="h-3 w-3" /> Publish
-            </button>
+            {(() => {
+              const status: ApprovalStatus = approvalStatus ?? "draft";
+              const isPending = status === "pending";
+              const label =
+                status === "approved"
+                  ? "Gửi duyệt lại"
+                  : status === "rejected"
+                    ? "Gửi lại"
+                    : status === "pending"
+                      ? "Đang chờ duyệt"
+                      : "Gửi duyệt";
+              return (
+                <button
+                  onClick={(e) => {
+                    stop(e);
+                    if (!isPending) onPublish();
+                  }}
+                  disabled={isPending}
+                  className={cn(
+                    "inline-flex h-8 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold",
+                    isPending
+                      ? "cursor-not-allowed bg-muted text-muted-foreground"
+                      : "bg-primary text-primary-foreground hover:opacity-90",
+                  )}
+                >
+                  <Send className="h-3 w-3" /> {label}
+                </button>
+              );
+            })()}
             <Link
               to="/teacher/upload"
               search={{ edit: course.id }}
