@@ -591,7 +591,8 @@ function UploadPage() {
               className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
               style={{ background: "var(--gradient-brand)" }}
             >
-              <CheckCircle2 className="h-4 w-4" /> Lưu khóa học
+              <CheckCircle2 className="h-4 w-4" />{" "}
+              {isTeacher ? "Lưu & gửi duyệt" : "Lưu khóa học"}
             </button>
           )}
         </div>
