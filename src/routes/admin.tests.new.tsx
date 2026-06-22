@@ -208,10 +208,90 @@ function NewTestPage() {
       <div className="min-h-screen bg-background">
         <TopNav />
         <div className="mx-auto max-w-3xl px-6 py-20 text-center">
+function NewTestPage() {
+  return <TestExamBuilder kind="test" scope="admin" />;
+}
+
+export function TestExamBuilder({
+  kind = "test",
+  scope = "admin",
+}: { kind?: BuilderKind; scope?: BuilderScope } = {}) {
+  const { role } = useRole();
+  const navigate = useNavigate();
+  const isExam = kind === "exam";
+  const allowedRole: "admin" | "teacher" = scope;
+  const backTo = isExam
+    ? scope === "teacher"
+      ? "/teacher/exams"
+      : "/admin/exams"
+    : "/teacher/tests";
+  const backLabel = isExam ? "Trở lại Luyện thi" : "Trở lại Thi cử";
+  const pageTitle = isExam ? "Tạo bài luyện thi mới" : "Tạo đề thi mới";
+  const submitLabel = isExam ? "Tạo bài luyện thi" : "Tạo đề thi";
+
+  const [step, setStep] = useState(1);
+  const [name, setName] = useState("");
+  const [desc, setDesc] = useState("");
+  const [level, setLevel] = useState<QLevel>("B1");
+  const [orgId, setOrgId] = useState<string>(orgs[0]?.id ?? "");
+  const [classIds, setClassIds] = useState<string[]>([]);
+  const [duration, setDuration] = useState(isExam ? 90 : 60);
+  const [openAt, setOpenAt] = useState("");
+  const [closeAt, setCloseAt] = useState("");
+  const [thumbnail, setThumbnail] = useState<string>("");
+  const [structure, setStructure] = useState<StructureItem[]>([
+    { skill: "listening", type: "mcq", level: "B1", difficulty: "mixed", count: 10, sectionDurationMinutes: 15, pickedIds: [] },
+    { skill: "reading", type: "mcq", level: "B1", difficulty: "mixed", count: 10, sectionDurationMinutes: 20, pickedIds: [] },
+    { skill: "speaking", type: "short", level: "B1", difficulty: "mixed", count: 3, sectionDurationMinutes: 10, pickedIds: [] },
+    { skill: "writing", type: "essay", level: "B1", difficulty: "mixed", count: 2, sectionDurationMinutes: 25, pickedIds: [] },
+  ]);
+  const [mode, setMode] = useState<"fixed" | "random" | "manual">("random");
+  const [enforceOrder, setEnforceOrder] = useState(false);
+  const [previewing, setPreviewing] = useState(false);
+
+  const totalQuestions = structure.reduce((s, x) => s + x.count, 0);
+
+  // Auto-fill random picks when entering step 4 in random mode (only for groups still empty).
+  useEffect(() => {
+    if (step !== 4 || mode !== "random") return;
+    setStructure((prev) => {
+      let changed = false;
+      const next = prev.map((it) => {
+        if (it.count <= 0) return it;
+        if (it.pickedIds && it.pickedIds.length > 0) return it;
+        const picks = rollRandom(it).map((q) => q.id);
+        if (picks.length === 0) return it;
+        changed = true;
+        return { ...it, pickedIds: picks };
+      });
+      return changed ? next : prev;
+    });
+  }, [step, mode]);
+
+  // Resolve final question list per group. Manual mode uses customBank; otherwise pickedIds.
+  const resolved: { item: StructureItem; questions: BankQuestion[] }[] = useMemo(() => {
+    return structure.map((it) => {
+      if (mode === "manual") {
+        return { item: it, questions: it.customBank ?? [] };
+      }
+      const ids = it.pickedIds ?? [];
+      const qs = ids
+        .map((id) => questionBank.find((q) => q.id === id))
+        .filter((q): q is BankQuestion => !!q);
+      return { item: it, questions: qs };
+    });
+  }, [structure, mode]);
+
+  if (role !== allowedRole) {
+    const who = allowedRole === "admin" ? "Quản trị viên" : "Giáo viên";
+    return (
+      <div className="min-h-screen bg-background">
+        <TopNav />
+        <div className="mx-auto max-w-3xl px-6 py-20 text-center">
           <ScrollText className="mx-auto h-12 w-12 text-muted-foreground" />
-          <h1 className="mt-4 font-display text-2xl font-semibold">Chỉ Quản trị viên</h1>
+          <h1 className="mt-4 font-display text-2xl font-semibold">Chỉ {who}</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Chỉ Quản trị viên mới có thể tạo đề thi.
+            Chỉ {who} mới có thể tạo {isExam ? "bài luyện thi" : "đề thi"}.
           </p>
         </div>
       </div>
@@ -220,26 +300,44 @@ function NewTestPage() {
 
   const submit = () => {
     if (typeof window !== "undefined") {
-      const key = "unicom.admin.tests";
-      const prev = JSON.parse(window.localStorage.getItem(key) ?? "[]");
-      prev.push({
-        id: `t-${Date.now()}`,
-        name,
-        description: desc,
-        level,
-        orgId,
-        classIds,
-        durationMinutes: duration,
-        openAt,
-        closeAt,
-        mode,
-        enforceOrder,
-        structure,
-        createdAt: new Date().toISOString(),
-      });
-      window.localStorage.setItem(key, JSON.stringify(prev));
+      if (isExam) {
+        const key = scope === "teacher" ? "unicom.teacher.exams" : "unicom.exams";
+        const prev = JSON.parse(window.localStorage.getItem(key) ?? "[]");
+        const payload = buildExamPayload({
+          name,
+          desc,
+          level,
+          duration,
+          thumbnail,
+          mode,
+          enforceOrder,
+          structure,
+          resolved,
+        });
+        prev.push(payload);
+        window.localStorage.setItem(key, JSON.stringify(prev));
+      } else {
+        const key = "unicom.admin.tests";
+        const prev = JSON.parse(window.localStorage.getItem(key) ?? "[]");
+        prev.push({
+          id: `t-${Date.now()}`,
+          name,
+          description: desc,
+          level,
+          orgId,
+          classIds,
+          durationMinutes: duration,
+          openAt,
+          closeAt,
+          mode,
+          enforceOrder,
+          structure,
+          createdAt: new Date().toISOString(),
+        });
+        window.localStorage.setItem(key, JSON.stringify(prev));
+      }
     }
-    navigate({ to: "/teacher/tests" });
+    navigate({ to: backTo });
   };
 
   const canNext = (() => {
@@ -264,15 +362,16 @@ function NewTestPage() {
       <TopNav />
       <div className="mx-auto max-w-5xl px-6 pb-20 pt-10 sm:px-8">
         <Link
-          to="/teacher/tests"
+          to={backTo}
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" /> Trở lại Thi cử
+          <ArrowLeft className="h-4 w-4" /> {backLabel}
         </Link>
 
         <h1 className="mt-4 font-display text-3xl font-semibold tracking-tight">
-          Tạo đề thi mới
+          {pageTitle}
         </h1>
+
 
         {/* Steps */}
         <div className="mt-6 flex flex-wrap items-center gap-2">
