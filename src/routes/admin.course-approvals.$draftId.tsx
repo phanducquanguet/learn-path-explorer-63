@@ -318,8 +318,10 @@ function DraftDetailPage() {
               <span className="font-semibold">Lý do từ chối:</span> {draft.reviewerNote}
             </div>
           )}
+        </div>
 
         {/* Sender info */}
+
         <div className="mt-4 rounded-2xl border border-border bg-surface p-5 shadow-soft">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
