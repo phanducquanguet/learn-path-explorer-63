@@ -381,6 +381,8 @@ export function TestExamBuilder({
                   />
                 </Field>
               </div>
+              {!isExam && (
+                <>
               <Field label="Đơn vị (trường / trung tâm)">
                 <select
                   value={orgId}
@@ -463,6 +465,19 @@ export function TestExamBuilder({
               <p className="rounded-lg bg-amber-50 p-3 text-xs text-amber-900">
                 Học sinh vào trước giờ mở sẽ không thể bắt đầu làm bài.
               </p>
+                </>
+              )}
+              {isExam && (
+                <Field label="Ảnh bìa (URL, tuỳ chọn)">
+                  <input
+                    value={thumbnail}
+                    onChange={(e) => setThumbnail(e.target.value)}
+                    placeholder="https://..."
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                  />
+                </Field>
+              )}
+
             </div>
           )}
 
