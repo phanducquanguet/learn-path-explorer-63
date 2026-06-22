@@ -178,6 +178,14 @@ export function TestExamBuilder({
   const [desc, setDesc] = useState("");
   const [levels, setLevels] = useState<QLevel[]>(["B1"]);
   const level: QLevel = levels[0] ?? "B1";
+  useEffect(() => {
+    setClassIds((prev) =>
+      prev.filter((cid) => {
+        const c = classes.find((x) => x.id === cid);
+        return c ? levels.includes(c.levelCode as QLevel) : false;
+      }),
+    );
+  }, [levels]);
   const [orgId, setOrgId] = useState<string>(orgs[0]?.id ?? "");
   const [classIds, setClassIds] = useState<string[]>([]);
   const [duration, setDuration] = useState(isExam ? 90 : 60);
