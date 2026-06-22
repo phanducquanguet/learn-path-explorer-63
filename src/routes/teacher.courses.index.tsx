@@ -349,6 +349,45 @@ function TeacherCoursesPage() {
           </div>
         </div>
 
+        {/* Approval status tabs (cho khóa tự tạo) */}
+        <div className="mt-4 flex flex-wrap items-center gap-1 rounded-xl bg-muted/40 p-1">
+          {([
+            { key: "all", label: "Tất cả", count: teacherCounts.all + (originFilter === "teacher" ? 0 : systemRows.length) },
+            { key: "pending", label: "Chờ duyệt", count: teacherCounts.pending },
+            { key: "approved", label: "Đã duyệt", count: teacherCounts.approved },
+            { key: "rejected", label: "Bị từ chối", count: teacherCounts.rejected },
+          ] as const).map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setStatusFilter(t.key)}
+              className={cn(
+                "inline-flex h-8 items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition",
+                statusFilter === t.key
+                  ? "bg-surface text-foreground shadow-soft"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {t.label}
+              <span
+                className={cn(
+                  "inline-flex h-5 min-w-[20px] items-center justify-center rounded-md px-1 text-[10px] font-bold",
+                  statusFilter === t.key
+                    ? "bg-primary/10 text-primary"
+                    : "bg-muted text-muted-foreground",
+                )}
+              >
+                {t.count}
+              </span>
+            </button>
+          ))}
+          {statusFilter !== "all" && (
+            <span className="ml-2 text-[11px] text-muted-foreground">
+              (lọc trên khóa do bạn tạo)
+            </span>
+          )}
+        </div>
+
+
         {/* Rows */}
         <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {filtered.map((row) => (
