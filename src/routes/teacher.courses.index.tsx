@@ -155,10 +155,14 @@ function TeacherCoursesPage() {
       .filter((d) => d.createdBy !== "admin")
       .map<CourseRow>((d) => {
         const lv = levels.find((l) => l.code === d.levelCode) ?? levels[0];
+        const approved = d.approvalStatus === "approved";
+        // Chỉ tính publish khi đã được admin duyệt
+        const effectiveVisibility = approved ? d.visibility : undefined;
+        const effectiveClassIds = approved ? (d.classIds ?? []) : [];
         const publishedClassIds =
-          d.visibility === "system"
+          effectiveVisibility === "system"
             ? classes.filter((c) => c.levelCode === lv.code).map((c) => c.id)
-            : (d.classIds ?? []);
+            : effectiveClassIds;
         const lvClasses = classes.filter((c) => publishedClassIds.includes(c.id));
         const lvStudents = students.filter((s) =>
           lvClasses.some((c) => c.id === s.classId),
@@ -192,7 +196,9 @@ function TeacherCoursesPage() {
           avgScore: 0,
           origin: "teacher",
           publishedClassNames: lvClasses.map((c) => c.name),
-          isPublished: !!d.visibility && lvClasses.length > 0,
+          isPublished: approved && lvClasses.length > 0,
+          approvalStatus: d.approvalStatus ?? "draft",
+          reviewerNote: d.reviewerNote,
           draft: d,
         };
       });
