@@ -49,9 +49,9 @@ type SavedExamShape = {
   id: string;
   name: string;
   levelCode: string;
+  levelCodes?: string[];
   duration: number;
   description?: string;
-  thumbnail?: string;
   skills: string[];
   totalQuestions: number;
   groups: Record<string, { blocks: { id: string; kind: "single" | "group"; media: string; questions: unknown[] }[] }>;
@@ -66,8 +66,8 @@ function buildExamPayload(input: {
   name: string;
   desc: string;
   level: QLevel;
+  levels: QLevel[];
   duration: number;
-  thumbnail: string;
   mode: "fixed" | "random" | "manual";
   enforceOrder: boolean;
   structure: StructureItem[];
@@ -92,9 +92,9 @@ function buildExamPayload(input: {
     id: `e-${Date.now()}`,
     name: input.name,
     levelCode: input.level,
+    levelCodes: input.levels,
     duration: input.duration,
     description: input.desc,
-    thumbnail: input.thumbnail,
     skills,
     totalQuestions,
     groups,
@@ -176,13 +176,21 @@ export function TestExamBuilder({
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
-  const [level, setLevel] = useState<QLevel>("B1");
+  const [levels, setLevels] = useState<QLevel[]>(["B1"]);
+  const level: QLevel = levels[0] ?? "B1";
+  useEffect(() => {
+    setClassIds((prev) =>
+      prev.filter((cid) => {
+        const c = classes.find((x) => x.id === cid);
+        return c ? levels.includes(c.levelCode as QLevel) : false;
+      }),
+    );
+  }, [levels]);
   const [orgId, setOrgId] = useState<string>(orgs[0]?.id ?? "");
   const [classIds, setClassIds] = useState<string[]>([]);
   const [duration, setDuration] = useState(isExam ? 90 : 60);
   const [openAt, setOpenAt] = useState("");
   const [closeAt, setCloseAt] = useState("");
-  const [thumbnail, setThumbnail] = useState<string>("");
   const [structure, setStructure] = useState<StructureItem[]>([
     { skill: "listening", type: "mcq", level: "B1", difficulty: "mixed", count: 10, sectionDurationMinutes: 15, pickedIds: [] },
     { skill: "reading", type: "mcq", level: "B1", difficulty: "mixed", count: 10, sectionDurationMinutes: 20, pickedIds: [] },
@@ -251,8 +259,8 @@ export function TestExamBuilder({
           name,
           desc,
           level,
+          levels,
           duration,
-          thumbnail,
           mode,
           enforceOrder,
           structure,
@@ -363,27 +371,44 @@ export function TestExamBuilder({
                   className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
                 />
               </Field>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field label="Cấp độ">
-                  <select
-                    value={level}
-                    onChange={(e) => setLevel(e.target.value as QLevel)}
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-                  >
-                    {LEVELS.map((l) => (
-                      <option key={l}>{l}</option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="Thời lượng (phút)">
-                  <input
-                    type="number"
-                    value={duration}
-                    onChange={(e) => setDuration(Number(e.target.value))}
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-                  />
-                </Field>
-              </div>
+              <Field label="Cấp độ (chọn 1 hoặc nhiều để phân hoá học viên)">
+                <div className="flex flex-wrap gap-1.5">
+                  {LEVELS.map((l) => {
+                    const on = levels.includes(l);
+                    return (
+                      <button
+                        key={l}
+                        type="button"
+                        onClick={() =>
+                          setLevels((p) => {
+                            const next = on ? p.filter((x) => x !== l) : [...p, l];
+                            return next.length === 0 ? [l] : next;
+                          })
+                        }
+                        className={cn(
+                          "rounded-lg border px-2.5 py-1 text-xs font-bold uppercase tracking-wider transition",
+                          on
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-foreground hover:bg-muted",
+                        )}
+                      >
+                        {l}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-1 text-[11px] text-muted-foreground">
+                  Lớp áp dụng phía dưới sẽ được lọc theo các cấp độ đã chọn.
+                </p>
+              </Field>
+              <Field label="Thời lượng (phút)">
+                <input
+                  type="number"
+                  value={duration}
+                  onChange={(e) => setDuration(Number(e.target.value))}
+                  className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
+                />
+              </Field>
               {!isExam && (
                 <>
               <Field label="Đơn vị (trường / trung tâm)">
@@ -471,52 +496,48 @@ export function TestExamBuilder({
                 </>
               )}
               {isExam && scope === "teacher" && (
-                <Field label="Lớp áp dụng (lớp bạn đang phụ trách)">
-                  {classes.length === 0 ? (
-                    <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-center text-xs text-muted-foreground">
-                      Bạn chưa được thêm vào lớp nào.
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-2">
-                      {classes.map((c) => {
-                        const on = classIds.includes(c.id);
-                        return (
-                          <button
-                            key={c.id}
-                            onClick={() =>
-                              setClassIds((p) =>
-                                on ? p.filter((x) => x !== c.id) : [...p, c.id],
-                              )
-                            }
-                            className={cn(
-                              "rounded-xl border px-3 py-2 text-left text-xs font-semibold transition",
-                              on
-                                ? "border-primary bg-primary/10 text-primary"
-                                : "border-border bg-background hover:bg-muted",
-                            )}
-                          >
-                            {c.name}
-                            <div className="text-[10px] font-normal text-muted-foreground">
-                              {c.studentCount} HS • {c.levelCode} • {c.schedule}
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+                <Field label="Lớp áp dụng (lọc theo cấp độ đã chọn)">
+                  {(() => {
+                    const eligible = classes.filter((c) => levels.includes(c.levelCode as QLevel));
+                    if (eligible.length === 0) {
+                      return (
+                        <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4 text-center text-xs text-muted-foreground">
+                          Không có lớp nào thuộc cấp độ {levels.join(", ")}.
+                        </div>
+                      );
+                    }
+                    return (
+                      <div className="grid grid-cols-2 gap-2">
+                        {eligible.map((c) => {
+                          const on = classIds.includes(c.id);
+                          return (
+                            <button
+                              key={c.id}
+                              onClick={() =>
+                                setClassIds((p) =>
+                                  on ? p.filter((x) => x !== c.id) : [...p, c.id],
+                                )
+                              }
+                              className={cn(
+                                "rounded-xl border px-3 py-2 text-left text-xs font-semibold transition",
+                                on
+                                  ? "border-primary bg-primary/10 text-primary"
+                                  : "border-border bg-background hover:bg-muted",
+                              )}
+                            >
+                              {c.name}
+                              <div className="text-[10px] font-normal text-muted-foreground">
+                                {c.studentCount} HS • {c.levelCode} • {c.schedule}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
                   <p className="mt-1 text-[11px] text-muted-foreground">
                     Bài luyện thi sẽ chỉ hiển thị cho học viên thuộc các lớp được chọn.
                   </p>
-                </Field>
-              )}
-              {isExam && (
-                <Field label="Ảnh bìa (URL, tuỳ chọn)">
-                  <input
-                    value={thumbnail}
-                    onChange={(e) => setThumbnail(e.target.value)}
-                    placeholder="https://..."
-                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
-                  />
                 </Field>
               )}
 
@@ -976,7 +997,7 @@ export function TestExamBuilder({
             <div className="space-y-4 text-sm">
               <div className="grid gap-2 sm:grid-cols-2">
                 <Row label="Tên đề" value={name || "—"} />
-                <Row label="Cấp độ" value={level} />
+                <Row label="Cấp độ" value={levels.join(", ")} />
                 <Row label="Thời lượng" value={`${duration} phút`} />
                 {!isExam && (
                   <>
