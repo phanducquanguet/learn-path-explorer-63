@@ -208,17 +208,33 @@ function TeacherCoursesPage() {
   const [query, setQuery] = useState("");
   const [levelFilter, setLevelFilter] = useState("all");
   const [originFilter, setOriginFilter] = useState<"all" | "system" | "teacher">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | ApprovalStatus>("all");
+
+  const teacherCounts = useMemo(
+    () => ({
+      all: teacherRows.length,
+      pending: teacherRows.filter((r) => (r.approvalStatus ?? "draft") === "pending").length,
+      approved: teacherRows.filter((r) => (r.approvalStatus ?? "draft") === "approved").length,
+      rejected: teacherRows.filter((r) => (r.approvalStatus ?? "draft") === "rejected").length,
+      draft: teacherRows.filter((r) => (r.approvalStatus ?? "draft") === "draft").length,
+    }),
+    [teacherRows],
+  );
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return rows.filter(({ course, level, origin }) => {
+    return rows.filter(({ course, level, origin, approvalStatus }) => {
       if (levelFilter !== "all" && level.code !== levelFilter) return false;
       if (originFilter !== "all" && origin !== originFilter) return false;
+      if (statusFilter !== "all") {
+        if (origin !== "teacher") return false;
+        if ((approvalStatus ?? "draft") !== statusFilter) return false;
+      }
       if (q && !`${course.title} ${course.subtitle} ${level.code}`.toLowerCase().includes(q))
         return false;
       return true;
     });
-  }, [rows, query, levelFilter, originFilter]);
+  }, [rows, query, levelFilter, originFilter, statusFilter]);
 
   const totalStudents = rows.reduce((s, r) => s + r.studentCount, 0);
   const totalClasses = classes.length;
