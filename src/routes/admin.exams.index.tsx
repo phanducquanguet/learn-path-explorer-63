@@ -230,16 +230,16 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
           <>
         {/* Stats */}
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
-          <StatCard icon={ClipboardCheck} label="Tổng số bài thi" value={exams.length} />
+          <StatCard icon={ClipboardCheck} label="Tổng số đề thi" value={exams.length} />
           <StatCard
             icon={FileQuestion}
             label="Tổng số câu hỏi"
             value={exams.reduce((s, e) => s + (e.totalQuestions ?? 0), 0)}
           />
           <StatCard
-            icon={Layers}
-            label="Cấp độ có bài thi"
-            value={new Set(exams.map((e) => e.levelCode)).size}
+            icon={FileEdit}
+            label="Cần chấm"
+            value={examSubmissions.filter((s) => s.status === "pending").length}
           />
         </div>
 
