@@ -18,6 +18,7 @@ import {
   Send,
   FileEdit,
   Library,
+  Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
