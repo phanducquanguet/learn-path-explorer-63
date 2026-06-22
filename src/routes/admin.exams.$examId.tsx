@@ -62,7 +62,11 @@ export function ExamDetail({
   scope?: "admin" | "teacher";
 }) {
   const [exam, setExam] = useState<SavedExam | null>(null);
-  const [tab, setTab] = useState<"overview" | "questions">("overview");
+  const [tab, setTab] = useState<"overview" | "questions" | "results">("overview");
+  const pendingCount = useMemo(
+    () => getSubmissionsByExam(examId).filter((s) => s.status === "pending").length,
+    [examId],
+  );
 
   useEffect(() => {
     if (typeof window === "undefined") return;
