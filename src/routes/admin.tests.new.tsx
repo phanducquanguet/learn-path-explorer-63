@@ -39,8 +39,70 @@ import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/tests/new")({
   head: () => ({ meta: [{ title: "Tạo đề thi mới — UNICOM LMS" }] }),
-  component: NewTestPage,
+  component: () => <TestExamBuilder kind="test" scope="admin" />,
 });
+
+type BuilderKind = "test" | "exam";
+type BuilderScope = "admin" | "teacher";
+
+type SavedExamShape = {
+  id: string;
+  name: string;
+  levelCode: string;
+  duration: number;
+  description?: string;
+  thumbnail?: string;
+  skills: string[];
+  totalQuestions: number;
+  groups: Record<string, { blocks: { id: string; kind: "single" | "group"; media: string; questions: unknown[] }[] }>;
+  // Wizard payload kept for later editing.
+  mode: "fixed" | "random" | "manual";
+  enforceOrder: boolean;
+  structure: StructureItem[];
+  savedAt: string;
+};
+
+function buildExamPayload(input: {
+  name: string;
+  desc: string;
+  level: QLevel;
+  duration: number;
+  thumbnail: string;
+  mode: "fixed" | "random" | "manual";
+  enforceOrder: boolean;
+  structure: StructureItem[];
+  resolved: { item: StructureItem; questions: BankQuestion[] }[];
+}): SavedExamShape {
+  const skills = Array.from(new Set(input.structure.filter((s) => s.count > 0).map((s) => s.skill)));
+  const groups: SavedExamShape["groups"] = {};
+  for (const sk of skills) {
+    const blocks = input.resolved
+      .filter((r) => r.item.skill === sk && r.questions.length > 0)
+      .map((r) => ({
+        id: `B-${Math.random().toString(36).slice(2, 8)}`,
+        kind: "group" as const,
+        media: "",
+        questions: r.questions as unknown[],
+      }));
+    groups[sk] = { blocks };
+  }
+  const totalQuestions = input.resolved.reduce((a, r) => a + r.questions.length, 0);
+  return {
+    id: `e-${Date.now()}`,
+    name: input.name,
+    levelCode: input.level,
+    duration: input.duration,
+    description: input.desc,
+    thumbnail: input.thumbnail,
+    skills,
+    totalQuestions,
+    groups,
+    mode: input.mode,
+    enforceOrder: input.enforceOrder,
+    structure: input.structure,
+    savedAt: new Date().toISOString(),
+  };
+}
 
 const LEVELS: QLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
 const SKILLS: QSkill[] = ["listening", "reading", "writing", "speaking"];
