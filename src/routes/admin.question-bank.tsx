@@ -340,16 +340,16 @@ export function BankPage({ scope = "admin", embedded = false }: { scope?: "admin
 
 
 
-  return (
-    <div className="min-h-screen bg-background">
-      <TopNav />
-      <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
+  const content = (
+    <div className={embedded ? "" : "mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8"}>
+      {!embedded && (
         <Link
           to="/teacher"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
           <ArrowLeft className="h-4 w-4" /> Trở lại
         </Link>
+      )}
 
         <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
           <div>
