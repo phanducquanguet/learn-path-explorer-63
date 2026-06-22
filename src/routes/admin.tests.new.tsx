@@ -101,6 +101,7 @@ function buildExamPayload(input: {
     mode: input.mode,
     enforceOrder: input.enforceOrder,
     structure: input.structure,
+    classIds: input.classIds,
     savedAt: new Date().toISOString(),
   };
 }
