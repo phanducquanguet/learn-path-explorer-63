@@ -700,6 +700,14 @@ export function BankPage({ scope = "admin", embedded = false }: { scope?: "admin
       )}
     </div>
   );
+
+  if (embedded) return content;
+  return (
+    <div className="min-h-screen bg-background">
+      <TopNav />
+      {content}
+    </div>
+  );
 }
 
 function nextId(items: BankQuestion[]) {
