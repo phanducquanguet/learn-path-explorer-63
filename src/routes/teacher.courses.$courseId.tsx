@@ -29,7 +29,9 @@ import {
   UserCheck,
   Users,
   MessageSquare,
+  Star,
 } from "lucide-react";
+import { CourseReviewsView } from "@/components/CourseReviewsView";
 import { TopNav } from "@/components/TopNav";
 import { getCourse, levels, type Course, type Level } from "@/lib/lms-data";
 import { classes, students, type TeacherStudent } from "@/lib/teacher-data";
@@ -145,7 +147,7 @@ function hashSeed(...parts: string[]) {
   return Math.abs(h >>> 0);
 }
 
-type TabKey = "content" | "students" | "scores" | "competence";
+type TabKey = "content" | "students" | "scores" | "competence" | "reviews";
 
 function TeacherCourseDetailPage() {
   const { courseId } = Route.useParams();
@@ -292,6 +294,7 @@ function TeacherCourseDetailPage() {
               { id: "students", label: "Học viên", icon: Users },
               { id: "scores", label: "Điểm số", icon: Trophy },
               { id: "competence", label: "Năng lực", icon: GraduationCap },
+              { id: "reviews", label: "Nhận xét", icon: Star },
             ] as { id: TabKey; label: string; icon: typeof BookOpen }[]
           ).map((t) => {
             const Icon = t.icon;
@@ -350,6 +353,13 @@ function TeacherCourseDetailPage() {
               students={courseStudents}
               classOptions={courseClasses}
               onPick={setPicked}
+            />
+          )}
+          {tab === "reviews" && (
+            <CourseReviewsView
+              courseId={course.id}
+              teacherName="Cô Mai Lan"
+              role="teacher"
             />
           )}
         </div>
