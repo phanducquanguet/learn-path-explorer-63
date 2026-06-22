@@ -24,7 +24,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/exams/")({
-  head: () => ({ meta: [{ title: "Bài luyện thi — UNICOM LMS" }] }),
+  head: () => ({ meta: [{ title: "Đề luyện tập — UNICOM LMS" }] }),
   component: () => <ExamsList scope="admin" />,
 });
 
