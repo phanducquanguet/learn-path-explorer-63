@@ -21,8 +21,12 @@ export const Route = createFileRoute("/admin/exams/$examId")({
   head: ({ params }) => ({
     meta: [{ title: `Bài luyện thi ${params.examId} — UNICOM LMS` }],
   }),
-  component: ExamDetail,
+  component: () => {
+    const { examId } = Route.useParams();
+    return <ExamDetail examId={examId} scope="admin" />;
+  },
 });
+
 
 type QuestionBlock = {
   id: string;
