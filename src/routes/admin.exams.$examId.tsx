@@ -193,9 +193,11 @@ export function ExamDetail({
             [
               { id: "overview", label: "Tổng quan", icon: BarChart3 },
               { id: "questions", label: "Câu hỏi", icon: HelpCircle },
+              { id: "monitor", label: "Giám sát", icon: Activity },
               { id: "results", label: "Kết quả học viên", icon: ClipboardCheck },
             ] as const
           ).map((t) => {
+
             const I = t.icon;
             return (
               <button
