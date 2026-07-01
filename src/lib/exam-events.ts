@@ -2,72 +2,84 @@ export type ExamEventStatus = "upcoming" | "live" | "finished";
 
 export type ExamEvent = {
   id: string;
-  name: string; // Tên kỳ thi (không phải tên đề)
-  classId: string;
-  className: string;
+  /** Tên bộ đề / kỳ (không phải tên đề phụ). Dùng làm phụ đề, không phải header chính. */
+  name: string;
+  /** Mã ca thi ngắn gọn – dùng làm header chính của card monitor. */
+  sessionCode: string;
+  /** Các lớp cùng thi trong ca này (trong cùng một đơn vị). */
+  classes: { id: string; name: string }[];
   orgName: string;
   startAt: string;
   endAt: string;
   durationMinutes: number;
-  paperCount: number; // số đề phụ trong kỳ
+  paperCount: number; // số mã đề trong bộ
   candidateCount: number;
   status: ExamEventStatus;
   proctor?: string;
 };
 
-const iso = (offsetMin: number) => new Date(Date.now() + offsetMin * 60_000).toISOString();
-
+// Dates are fixed (demo) để tránh hydration mismatch giữa SSR và client.
 export const examEvents: ExamEvent[] = [
   {
     id: "evt-b1-midterm",
-    name: "Kỳ thi giữa kỳ B1 — Tháng 6/2026",
-    classId: "cls-b1-fast",
-    className: "B1 — Fastrack",
+    name: "Bộ đề giữa kỳ B1 — Tháng 6/2026",
+    sessionCode: "CA-01/07 · 14:00",
+    classes: [
+      { id: "cls-b1-fast", name: "B1 — Fastrack" },
+      { id: "cls-b1-evening", name: "B1 — Buổi tối" },
+    ],
     orgName: "UNICOM HN",
-    startAt: iso(-45),
-    endAt: iso(45),
+    startAt: "2026-07-01T14:00:00+07:00",
+    endAt: "2026-07-01T15:30:00+07:00",
     durationMinutes: 90,
     paperCount: 4,
-    candidateCount: 24,
+    candidateCount: 42,
     status: "live",
     proctor: "GV. Nguyễn Thu Hà",
   },
   {
     id: "evt-a2-final",
-    name: "Kỳ thi cuối khóa A2 — Đợt 3",
-    classId: "cls-a2-weekend",
-    className: "A2 — Cuối tuần",
+    name: "Bộ đề cuối khóa A2 — Đợt 3",
+    sessionCode: "CA-01/07 · 15:30",
+    classes: [
+      { id: "cls-a2-weekend", name: "A2 — Cuối tuần" },
+      { id: "cls-a2-morning", name: "A2 — Buổi sáng" },
+      { id: "cls-a2-evening", name: "A2 — Buổi tối" },
+    ],
     orgName: "UNICOM HN",
-    startAt: iso(-20),
-    endAt: iso(70),
+    startAt: "2026-07-01T15:30:00+07:00",
+    endAt: "2026-07-01T17:00:00+07:00",
     durationMinutes: 90,
     paperCount: 3,
-    candidateCount: 18,
+    candidateCount: 56,
     status: "live",
     proctor: "GV. Trần Minh Đức",
   },
   {
     id: "evt-b2-placement",
-    name: "Kỳ thi xếp lớp B2 — Khóa hè",
-    classId: "cls-b2-intensive",
-    className: "B2 — Intensive",
+    name: "Bộ đề xếp lớp B2 — Khóa hè",
+    sessionCode: "CA-02/07 · 08:30",
+    classes: [
+      { id: "cls-b2-intensive", name: "B2 — Intensive" },
+      { id: "cls-b2-standard", name: "B2 — Standard" },
+    ],
     orgName: "UNICOM HCM",
-    startAt: iso(90),
-    endAt: iso(180),
+    startAt: "2026-07-02T08:30:00+07:00",
+    endAt: "2026-07-02T10:00:00+07:00",
     durationMinutes: 90,
     paperCount: 2,
-    candidateCount: 30,
+    candidateCount: 60,
     status: "upcoming",
     proctor: "GV. Lê Bảo Trân",
   },
   {
     id: "evt-a1-progress",
-    name: "Kiểm tra tiến độ A1 — Tuần 8",
-    classId: "cls-a1-basic",
-    className: "A1 — Cơ bản",
+    name: "Bộ đề kiểm tra tiến độ A1 — Tuần 8",
+    sessionCode: "CA-30/06 · 09:00",
+    classes: [{ id: "cls-a1-basic", name: "A1 — Cơ bản" }],
     orgName: "UNICOM ĐN",
-    startAt: iso(-240),
-    endAt: iso(-150),
+    startAt: "2026-06-30T09:00:00+07:00",
+    endAt: "2026-06-30T10:30:00+07:00",
     durationMinutes: 90,
     paperCount: 2,
     candidateCount: 22,
