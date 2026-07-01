@@ -275,11 +275,14 @@ export function ExamDetail({
           />
         )}
 
+        {tab === "monitor" && <ExamMonitorView examId={exam.id ?? examId} />}
+
         {tab === "results" && (
           <div className="mt-6">
             <SubmissionsView examId={exam.id ?? examId} />
           </div>
         )}
+
       </div>
     </div>
   );
