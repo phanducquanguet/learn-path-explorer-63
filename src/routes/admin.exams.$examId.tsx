@@ -6,6 +6,7 @@ import type { CustomQuestion } from "@/lib/tests-data";
 import type { QSkill } from "@/lib/question-bank";
 import { SKILL_LABEL } from "@/lib/question-bank";
 import { SubmissionsView } from "@/routes/admin.exams.$examId.submissions";
+import { ExamMonitorView } from "@/components/ExamMonitorView";
 import { getSubmissionsByExam } from "@/lib/exam-submissions";
 import {
   ArrowLeft,
@@ -16,8 +17,10 @@ import {
   FileAudio,
   FileText as FileTextIcon,
   ClipboardCheck,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
 
 export const Route = createFileRoute("/admin/exams/$examId")({
   head: ({ params }) => ({
