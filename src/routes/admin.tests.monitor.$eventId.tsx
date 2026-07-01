@@ -9,7 +9,6 @@ import {
   Clock,
   FileStack,
   GraduationCap,
-  UserCheck,
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -39,6 +38,7 @@ const fmtRange = (a: string, b: string) => {
       month: "2-digit",
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "Asia/Ho_Chi_Minh",
     });
   return `${f(s)} → ${f(e)}`;
 };
@@ -113,11 +113,6 @@ function MonitorDetail() {
                     {c.name}
                   </span>
                 ))}
-                {event.proctor && (
-                  <span className="inline-flex items-center gap-1">
-                    <UserCheck className="h-3 w-3" /> Giám thị: {event.proctor}
-                  </span>
-                )}
               </div>
             </div>
           </div>

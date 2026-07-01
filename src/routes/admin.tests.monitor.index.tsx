@@ -47,6 +47,7 @@ const fmtTime = (iso: string) =>
     month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+    timeZone: "Asia/Ho_Chi_Minh",
   });
 
 function MonitorList() {
