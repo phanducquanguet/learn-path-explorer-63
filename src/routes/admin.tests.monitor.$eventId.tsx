@@ -141,7 +141,7 @@ function MonitorDetail() {
         <div className="mt-6">
           <h2 className="font-display text-lg font-semibold">Thí sinh được giao</h2>
           <p className="text-xs text-muted-foreground">
-            Danh sách theo lớp {event.className}. Theo dõi trạng thái làm bài và reset khi cần.
+            Danh sách các lớp trong ca thi. Theo dõi trạng thái làm bài và reset khi cần.
           </p>
         </div>
 
