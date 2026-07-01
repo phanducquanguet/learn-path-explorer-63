@@ -125,26 +125,40 @@ function MonitorList() {
                 className="group rounded-2xl border border-border bg-surface p-5 shadow-soft transition hover:border-foreground/30 hover:shadow-elevated"
               >
                 <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <span
-                      className={cn(
-                        "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold",
-                        meta.badge,
-                      )}
-                    >
-                      <span className={cn("h-1.5 w-1.5 rounded-full", meta.dot)} />
-                      {meta.label}
-                    </span>
-                    <h3 className="mt-2 truncate font-display text-lg font-semibold text-foreground">
-                      {e.name}
-                    </h3>
-                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                      <span className="inline-flex items-center gap-1">
-                        <GraduationCap className="h-3 w-3" /> {e.className}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                          meta.badge,
+                        )}
+                      >
+                        <span className={cn("h-1.5 w-1.5 rounded-full", meta.dot)} />
+                        {meta.label}
                       </span>
-                      <span className="inline-flex items-center gap-1">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-foreground">
                         <Building2 className="h-3 w-3" /> {e.orgName}
                       </span>
+                    </div>
+                    <h3 className="mt-2 truncate font-display text-lg font-semibold text-foreground">
+                      {e.sessionCode}
+                    </h3>
+                    <div className="mt-1 text-xs text-muted-foreground line-clamp-1">
+                      {e.name}
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-1.5">
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground">
+                        <GraduationCap className="h-3 w-3" />
+                        {e.classes.length} lớp:
+                      </span>
+                      {e.classes.map((c) => (
+                        <span
+                          key={c.id}
+                          className="rounded-md border border-border bg-background px-1.5 py-0.5 text-[11px] font-medium text-foreground"
+                        >
+                          {c.name}
+                        </span>
+                      ))}
                     </div>
                   </div>
                   <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5" />
@@ -153,7 +167,7 @@ function MonitorList() {
                 <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
                   <Metric icon={CalendarClock} label="Bắt đầu" value={fmtTime(e.startAt)} />
                   <Metric icon={Clock} label="Thời lượng" value={`${e.durationMinutes} phút`} />
-                  <Metric icon={FileStack} label="Đề phụ" value={`${e.paperCount} đề`} />
+                  <Metric icon={FileStack} label="Mã đề" value={`${e.paperCount} mã`} />
                   <Metric icon={Users} label="Thí sinh" value={`${e.candidateCount} người`} />
                 </div>
               </Link>
