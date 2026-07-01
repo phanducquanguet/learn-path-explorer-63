@@ -94,15 +94,25 @@ function MonitorDetail() {
                 {statusLabel}
               </span>
               <h1 className="mt-2 font-display text-2xl font-semibold sm:text-3xl">
-                {event.name}
+                {event.sessionCode}
               </h1>
-              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
-                <span className="inline-flex items-center gap-1">
-                  <GraduationCap className="h-3 w-3" /> Lớp {event.className}
-                </span>
+              <div className="mt-1 text-sm text-muted-foreground">{event.name}</div>
+              <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1">
                   <Building2 className="h-3 w-3" /> {event.orgName}
                 </span>
+                <span className="inline-flex items-center gap-1">
+                  <GraduationCap className="h-3 w-3" />
+                  {event.classes.length} lớp:
+                </span>
+                {event.classes.map((c) => (
+                  <span
+                    key={c.id}
+                    className="rounded-md border border-border bg-background px-1.5 py-0.5 text-[11px] font-medium text-foreground"
+                  >
+                    {c.name}
+                  </span>
+                ))}
                 {event.proctor && (
                   <span className="inline-flex items-center gap-1">
                     <UserCheck className="h-3 w-3" /> Giám thị: {event.proctor}
