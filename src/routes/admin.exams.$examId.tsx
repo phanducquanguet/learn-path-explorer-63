@@ -6,7 +6,6 @@ import type { CustomQuestion } from "@/lib/tests-data";
 import type { QSkill } from "@/lib/question-bank";
 import { SKILL_LABEL } from "@/lib/question-bank";
 import { SubmissionsView } from "@/routes/admin.exams.$examId.submissions";
-import { ExamMonitorView } from "@/components/ExamMonitorView";
 import { getSubmissionsByExam } from "@/lib/exam-submissions";
 import {
   ArrowLeft,
@@ -17,9 +16,9 @@ import {
   FileAudio,
   FileText as FileTextIcon,
   ClipboardCheck,
-  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
 
 
 export const Route = createFileRoute("/admin/exams/$examId")({
@@ -65,7 +64,7 @@ export function ExamDetail({
   scope?: "admin" | "teacher";
 }) {
   const [exam, setExam] = useState<SavedExam | null>(null);
-  const [tab, setTab] = useState<"overview" | "questions" | "monitor" | "results">("overview");
+  const [tab, setTab] = useState<"overview" | "questions" | "results">("overview");
   const pendingCount = useMemo(
     () => getSubmissionsByExam(examId).filter((s) => s.status === "pending").length,
     [examId],
