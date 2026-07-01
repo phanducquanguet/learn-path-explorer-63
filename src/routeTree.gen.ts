@@ -45,6 +45,8 @@ import { Route as AdminTestsNewRouteImport } from './routes/admin.tests.new'
 import { Route as AdminExamsNewRouteImport } from './routes/admin.exams.new'
 import { Route as AdminExamsExamIdRouteImport } from './routes/admin.exams.$examId'
 import { Route as AdminCourseApprovalsDraftIdRouteImport } from './routes/admin.course-approvals.$draftId'
+import { Route as AdminTestsMonitorIndexRouteImport } from './routes/admin.tests.monitor.index'
+import { Route as AdminTestsMonitorEventIdRouteImport } from './routes/admin.tests.monitor.$eventId'
 import { Route as AdminExamsExamIdSubmissionsRouteImport } from './routes/admin.exams.$examId.submissions'
 
 const PracticeRoute = PracticeRouteImport.update({
@@ -229,6 +231,17 @@ const AdminCourseApprovalsDraftIdRoute =
     path: '/admin/course-approvals/$draftId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AdminTestsMonitorIndexRoute = AdminTestsMonitorIndexRouteImport.update({
+  id: '/admin/tests/monitor/',
+  path: '/admin/tests/monitor/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminTestsMonitorEventIdRoute =
+  AdminTestsMonitorEventIdRouteImport.update({
+    id: '/admin/tests/monitor/$eventId',
+    path: '/admin/tests/monitor/$eventId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminExamsExamIdSubmissionsRoute =
   AdminExamsExamIdSubmissionsRouteImport.update({
     id: '/submissions',
@@ -274,6 +287,8 @@ export interface FileRoutesByFullPath {
   '/teacher/live/': typeof TeacherLiveIndexRoute
   '/teacher/tests/': typeof TeacherTestsIndexRoute
   '/admin/exams/$examId/submissions': typeof AdminExamsExamIdSubmissionsRoute
+  '/admin/tests/monitor/$eventId': typeof AdminTestsMonitorEventIdRoute
+  '/admin/tests/monitor/': typeof AdminTestsMonitorIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -312,6 +327,8 @@ export interface FileRoutesByTo {
   '/teacher/live': typeof TeacherLiveIndexRoute
   '/teacher/tests': typeof TeacherTestsIndexRoute
   '/admin/exams/$examId/submissions': typeof AdminExamsExamIdSubmissionsRoute
+  '/admin/tests/monitor/$eventId': typeof AdminTestsMonitorEventIdRoute
+  '/admin/tests/monitor': typeof AdminTestsMonitorIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -352,6 +369,8 @@ export interface FileRoutesById {
   '/teacher/live/': typeof TeacherLiveIndexRoute
   '/teacher/tests/': typeof TeacherTestsIndexRoute
   '/admin/exams/$examId/submissions': typeof AdminExamsExamIdSubmissionsRoute
+  '/admin/tests/monitor/$eventId': typeof AdminTestsMonitorEventIdRoute
+  '/admin/tests/monitor/': typeof AdminTestsMonitorIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -393,6 +412,8 @@ export interface FileRouteTypes {
     | '/teacher/live/'
     | '/teacher/tests/'
     | '/admin/exams/$examId/submissions'
+    | '/admin/tests/monitor/$eventId'
+    | '/admin/tests/monitor/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -431,6 +452,8 @@ export interface FileRouteTypes {
     | '/teacher/live'
     | '/teacher/tests'
     | '/admin/exams/$examId/submissions'
+    | '/admin/tests/monitor/$eventId'
+    | '/admin/tests/monitor'
   id:
     | '__root__'
     | '/'
@@ -470,6 +493,8 @@ export interface FileRouteTypes {
     | '/teacher/live/'
     | '/teacher/tests/'
     | '/admin/exams/$examId/submissions'
+    | '/admin/tests/monitor/$eventId'
+    | '/admin/tests/monitor/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -507,6 +532,8 @@ export interface RootRouteChildren {
   TeacherExamsIndexRoute: typeof TeacherExamsIndexRoute
   TeacherLiveIndexRoute: typeof TeacherLiveIndexRoute
   TeacherTestsIndexRoute: typeof TeacherTestsIndexRoute
+  AdminTestsMonitorEventIdRoute: typeof AdminTestsMonitorEventIdRoute
+  AdminTestsMonitorIndexRoute: typeof AdminTestsMonitorIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -763,6 +790,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCourseApprovalsDraftIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/tests/monitor/': {
+      id: '/admin/tests/monitor/'
+      path: '/admin/tests/monitor'
+      fullPath: '/admin/tests/monitor/'
+      preLoaderRoute: typeof AdminTestsMonitorIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/tests/monitor/$eventId': {
+      id: '/admin/tests/monitor/$eventId'
+      path: '/admin/tests/monitor/$eventId'
+      fullPath: '/admin/tests/monitor/$eventId'
+      preLoaderRoute: typeof AdminTestsMonitorEventIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/exams/$examId/submissions': {
       id: '/admin/exams/$examId/submissions'
       path: '/submissions'
@@ -831,6 +872,8 @@ const rootRouteChildren: RootRouteChildren = {
   TeacherExamsIndexRoute: TeacherExamsIndexRoute,
   TeacherLiveIndexRoute: TeacherLiveIndexRoute,
   TeacherTestsIndexRoute: TeacherTestsIndexRoute,
+  AdminTestsMonitorEventIdRoute: AdminTestsMonitorEventIdRoute,
+  AdminTestsMonitorIndexRoute: AdminTestsMonitorIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

@@ -22,7 +22,9 @@ import {
   CheckSquare,
   Square,
   X,
+  Activity,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/tests/")({
@@ -195,15 +197,24 @@ function AdminTestsList() {
               chép đề sang đơn vị khác.
             </p>
           </div>
-          {isAdmin && (
+          <div className="flex flex-wrap items-center gap-2">
             <Link
-              to="/admin/tests/new"
-              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
-              style={{ background: "var(--gradient-brand)" }}
+              to="/admin/tests/monitor"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-foreground shadow-soft hover:bg-muted"
             >
-              <Plus className="h-4 w-4" /> Tạo bài tập mới
+              <Activity className="h-4 w-4 text-emerald-500" /> Giám sát kỳ thi
             </Link>
-          )}
+            {isAdmin && (
+              <Link
+                to="/admin/tests/new"
+                className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
+                style={{ background: "var(--gradient-brand)" }}
+              >
+                <Plus className="h-4 w-4" /> Tạo bài tập mới
+              </Link>
+            )}
+          </div>
+
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-4">
