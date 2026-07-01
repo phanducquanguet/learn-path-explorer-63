@@ -112,11 +112,6 @@ function MonitorDetail() {
                     {c.name}
                   </span>
                 ))}
-                {event.proctor && (
-                  <span className="inline-flex items-center gap-1">
-                    <UserCheck className="h-3 w-3" /> Giám thị: {event.proctor}
-                  </span>
-                )}
               </div>
             </div>
           </div>
