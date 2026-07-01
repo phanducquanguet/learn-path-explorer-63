@@ -193,11 +193,9 @@ export function ExamDetail({
             [
               { id: "overview", label: "Tổng quan", icon: BarChart3 },
               { id: "questions", label: "Câu hỏi", icon: HelpCircle },
-              { id: "monitor", label: "Giám sát", icon: Activity },
               { id: "results", label: "Kết quả học viên", icon: ClipboardCheck },
             ] as const
           ).map((t) => {
-
             const I = t.icon;
             return (
               <button
@@ -220,6 +218,7 @@ export function ExamDetail({
             );
           })}
         </div>
+
 
         {tab === "overview" && (
           <div className="mt-6 grid gap-4 lg:grid-cols-2">
@@ -275,7 +274,7 @@ export function ExamDetail({
           />
         )}
 
-        {tab === "monitor" && <ExamMonitorView examId={exam.id ?? examId} />}
+        
 
         {tab === "results" && (
           <div className="mt-6">
