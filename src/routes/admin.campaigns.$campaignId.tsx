@@ -151,6 +151,15 @@ function CampaignDetail() {
                           >
                             <MailCheck className="h-3 w-3" /> Mail chúc mừng
                           </button>
+                          <button
+                            onClick={() =>
+                              setMailPreview({ type: "result", name: r.fullName, email: r.email, level: r.desiredLevel })
+                            }
+                            className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
+                            title="Xem mẫu mail kết quả thi Linguaskill"
+                          >
+                            <Award className="h-3 w-3" /> Mail kết quả
+                          </button>
                           {!r.assignedClassId && (
                             <button
                               onClick={() => {
