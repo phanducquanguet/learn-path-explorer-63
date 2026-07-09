@@ -143,7 +143,7 @@ export function TopNav() {
 
   const homeFor = (r: Role) => (r === "student" ? "/" : r === "admin" ? "/admin/exams" : "/teacher");
 
-  if (role === "admin") {
+  if (roleStr === "admin") {
     return (
       <>
         <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border/60 bg-background md:flex">
