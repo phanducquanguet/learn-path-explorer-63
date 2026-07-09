@@ -112,8 +112,8 @@ function roleMeta(role: Role) {
 }
 
 export function TopNav() {
-  const { role: roleValue, setRole } = useRole();
-  const role: Role = roleValue;
+  const { role, setRole } = useRole();
+  const roleStr: string = role;
   const tabs = role === "admin" ? adminTabs : role === "teacher" ? teacherTabs : studentTabs;
   const meta = roleMeta(role);
   const [open, setOpen] = useState(false);
