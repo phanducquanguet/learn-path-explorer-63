@@ -25,6 +25,7 @@ import { Route as TeacherQaRouteImport } from './routes/teacher.qa'
 import { Route as LiveSessionIdRouteImport } from './routes/live.$sessionId'
 import { Route as LevelsLevelRouteImport } from './routes/levels.$level'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
+import { Route as CampaignsSlugRouteImport } from './routes/campaigns.$slug'
 import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-bank'
 import { Route as TeacherTestsIndexRouteImport } from './routes/teacher.tests.index'
 import { Route as TeacherLiveIndexRouteImport } from './routes/teacher.live.index'
@@ -129,6 +130,11 @@ const LevelsLevelRoute = LevelsLevelRouteImport.update({
 const CoursesCourseIdRoute = CoursesCourseIdRouteImport.update({
   id: '/courses/$courseId',
   path: '/courses/$courseId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CampaignsSlugRoute = CampaignsSlugRouteImport.update({
+  id: '/campaigns/$slug',
+  path: '/campaigns/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminQuestionBankRoute = AdminQuestionBankRouteImport.update({
@@ -269,6 +275,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
+  '/campaigns/$slug': typeof CampaignsSlugRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
   '/live/$sessionId': typeof LiveSessionIdRoute
@@ -311,6 +318,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
+  '/campaigns/$slug': typeof CampaignsSlugRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
   '/live/$sessionId': typeof LiveSessionIdRoute
@@ -355,6 +363,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
+  '/campaigns/$slug': typeof CampaignsSlugRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
   '/live/$sessionId': typeof LiveSessionIdRoute
@@ -400,6 +409,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/practice'
     | '/admin/question-bank'
+    | '/campaigns/$slug'
     | '/courses/$courseId'
     | '/levels/$level'
     | '/live/$sessionId'
@@ -442,6 +452,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/practice'
     | '/admin/question-bank'
+    | '/campaigns/$slug'
     | '/courses/$courseId'
     | '/levels/$level'
     | '/live/$sessionId'
@@ -485,6 +496,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/practice'
     | '/admin/question-bank'
+    | '/campaigns/$slug'
     | '/courses/$courseId'
     | '/levels/$level'
     | '/live/$sessionId'
@@ -529,6 +541,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PracticeRoute: typeof PracticeRoute
   AdminQuestionBankRoute: typeof AdminQuestionBankRoute
+  CampaignsSlugRoute: typeof CampaignsSlugRoute
   CoursesCourseIdRoute: typeof CoursesCourseIdRoute
   LevelsLevelRoute: typeof LevelsLevelRoute
   LiveSessionIdRoute: typeof LiveSessionIdRoute
@@ -675,6 +688,13 @@ declare module '@tanstack/react-router' {
       path: '/courses/$courseId'
       fullPath: '/courses/$courseId'
       preLoaderRoute: typeof CoursesCourseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/campaigns/$slug': {
+      id: '/campaigns/$slug'
+      path: '/campaigns/$slug'
+      fullPath: '/campaigns/$slug'
+      preLoaderRoute: typeof CampaignsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/question-bank': {
@@ -885,6 +905,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PracticeRoute: PracticeRoute,
   AdminQuestionBankRoute: AdminQuestionBankRoute,
+  CampaignsSlugRoute: CampaignsSlugRoute,
   CoursesCourseIdRoute: CoursesCourseIdRoute,
   LevelsLevelRoute: LevelsLevelRoute,
   LiveSessionIdRoute: LiveSessionIdRoute,
