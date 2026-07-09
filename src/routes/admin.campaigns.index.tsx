@@ -27,8 +27,6 @@ function CampaignsPage() {
   const [showForm, setShowForm] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [slug, setSlug] = useState("");
-  const [trialClassName, setTrialClassName] = useState("");
   const [levels, setLevels] = useState<CampaignLevel[]>(["A1", "A2", "B1", "B2"]);
 
   const refresh = () => setCampaigns(listCampaigns());
@@ -39,26 +37,35 @@ function CampaignsPage() {
     return () => window.removeEventListener("unicom:campaigns-updated", h);
   }, []);
 
+  const slugify = (s: string) =>
+    s
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/[^a-z0-9\s-]/g, "")
+      .trim()
+      .replace(/\s+/g, "-");
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name || !slug || !trialClassName || levels.length === 0) {
-      toast.error("Vui lòng nhập đầy đủ thông tin.");
+    if (!name || levels.length === 0) {
+      toast.error("Vui lòng nhập tên chiến dịch và chọn trình độ.");
       return;
     }
+    const baseSlug = slugify(name) || `chien-dich-${Date.now()}`;
     createCampaign({
-      slug: slug.trim().toLowerCase().replace(/\s+/g, "-"),
+      slug: baseSlug,
       name: name.trim(),
       description: description.trim(),
       levels,
-      trialClassName: trialClassName.trim(),
+      trialClassName: `Trial · ${name.trim()}`,
       status: "active",
     });
     toast.success("Đã tạo chiến dịch mới.");
     setShowForm(false);
     setName("");
     setDescription("");
-    setSlug("");
-    setTrialClassName("");
     setLevels(["A1", "A2", "B1", "B2"]);
   };
 
@@ -101,25 +108,6 @@ function CampaignsPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="VD: Test miễn phí mùa thu 2026"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                  />
-                </Field>
-                <Field label="Slug (đường dẫn landing)">
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-muted-foreground">/campaigns/</span>
-                    <input
-                      value={slug}
-                      onChange={(e) => setSlug(e.target.value)}
-                      placeholder="test-mien-phi-thu-2026"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                    />
-                  </div>
-                </Field>
-                <Field label="Tên lớp trial gốc">
-                  <input
-                    value={trialClassName}
-                    onChange={(e) => setTrialClassName(e.target.value)}
-                    placeholder="VD: Trial Fall 2026"
                     className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                   />
                 </Field>
