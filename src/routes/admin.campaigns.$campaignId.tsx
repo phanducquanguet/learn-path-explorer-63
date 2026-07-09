@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Users, ExternalLink, GraduationCap, Check, Mail, MailCheck, X, Copy } from "lucide-react";
+import { ArrowLeft, Users, ExternalLink, GraduationCap, Check, Mail, MailCheck, X, Copy, Award } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
 import {
   assignAllPending,
