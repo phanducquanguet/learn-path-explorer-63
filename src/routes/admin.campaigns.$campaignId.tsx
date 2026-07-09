@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Users, ExternalLink, GraduationCap, Check, Mail, MailCheck, X, Copy } from "lucide-react";
+import { ArrowLeft, Users, ExternalLink, GraduationCap, Check, Mail, MailCheck, X, Copy, Award } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
 import {
   assignAllPending,
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/admin/campaigns/$campaignId")({
 function CampaignDetail() {
   const { campaignId } = Route.useParams();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
-  const [mailPreview, setMailPreview] = useState<null | { type: "verify" | "welcome"; name: string; email: string }>(null);
+  const [mailPreview, setMailPreview] = useState<null | { type: "verify" | "welcome" | "result"; name: string; email: string; level?: string }>(null);
 
   const refresh = () => {
     const c = getCampaignById(campaignId);
@@ -151,6 +151,15 @@ function CampaignDetail() {
                           >
                             <MailCheck className="h-3 w-3" /> Mail chúc mừng
                           </button>
+                          <button
+                            onClick={() =>
+                              setMailPreview({ type: "result", name: r.fullName, email: r.email, level: r.desiredLevel })
+                            }
+                            className="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100"
+                            title="Xem mẫu mail kết quả thi Linguaskill"
+                          >
+                            <Award className="h-3 w-3" /> Mail kết quả
+                          </button>
                           {!r.assignedClassId && (
                             <button
                               onClick={() => {
@@ -202,18 +211,36 @@ function MailPreviewModal({
   campaignName,
   onClose,
 }: {
-  data: { type: "verify" | "welcome"; name: string; email: string };
+  data: { type: "verify" | "welcome" | "result"; name: string; email: string; level?: string };
   campaignName: string;
   onClose: () => void;
 }) {
-  const isVerify = data.type === "verify";
-  const subject = isVerify
-    ? `[UNICOM] Xác nhận đăng ký thi thử — ${campaignName}`
-    : `[UNICOM] Chúc mừng! Tài khoản thi thử của bạn đã sẵn sàng`;
+  const subject =
+    data.type === "verify"
+      ? `[UNICOM] Xác nhận đăng ký thi thử — ${campaignName}`
+      : data.type === "welcome"
+      ? `[UNICOM] Chúc mừng! Tài khoản thi thử của bạn đã sẵn sàng`
+      : `[Linguaskill] Kết quả bài thi của ${data.name}`;
 
   const copySubject = () => {
     navigator.clipboard.writeText(subject).then(() => toast.success("Đã sao chép tiêu đề."));
   };
+
+  const headerIcon =
+    data.type === "verify" ? (
+      <Mail className="h-4 w-4 text-primary" />
+    ) : data.type === "welcome" ? (
+      <MailCheck className="h-4 w-4 text-emerald-600" />
+    ) : (
+      <Award className="h-4 w-4 text-indigo-600" />
+    );
+
+  const headerLabel =
+    data.type === "verify"
+      ? "Mẫu mail xác nhận đăng ký"
+      : data.type === "welcome"
+      ? "Mẫu mail chúc mừng đăng ký thành công"
+      : "Mẫu mail kết quả thi Linguaskill";
 
   return (
     <div
@@ -226,19 +253,10 @@ function MailPreviewModal({
       >
         <div className="flex items-center justify-between border-b border-border px-5 py-3">
           <div className="flex items-center gap-2">
-            {isVerify ? (
-              <Mail className="h-4 w-4 text-primary" />
-            ) : (
-              <MailCheck className="h-4 w-4 text-emerald-600" />
-            )}
-            <h3 className="font-semibold">
-              {isVerify ? "Mẫu mail xác nhận đăng ký" : "Mẫu mail chúc mừng đăng ký thành công"}
-            </h3>
+            {headerIcon}
+            <h3 className="font-semibold">{headerLabel}</h3>
           </div>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted"
-          >
+          <button onClick={onClose} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted">
             <X className="h-4 w-4" />
           </button>
         </div>
@@ -266,7 +284,7 @@ function MailPreviewModal({
         </div>
 
         <div className="max-h-[60vh] overflow-y-auto px-6 py-5 text-sm leading-relaxed">
-          {isVerify ? (
+          {data.type === "verify" ? (
             <div className="space-y-3">
               <p>Xin chào <strong>{data.name}</strong>,</p>
               <p>
@@ -296,7 +314,7 @@ function MailPreviewModal({
                 <strong>UNICOM Team</strong>
               </p>
             </div>
-          ) : (
+          ) : data.type === "welcome" ? (
             <div className="space-y-3">
               <p>Xin chào <strong>{data.name}</strong>,</p>
               <p>
@@ -337,6 +355,8 @@ function MailPreviewModal({
                 <strong>UNICOM Team</strong>
               </p>
             </div>
+          ) : (
+            <LinguaskillResult name={data.name} level={data.level ?? "B1"} />
           )}
         </div>
 
@@ -352,4 +372,104 @@ function MailPreviewModal({
     </div>
   );
 }
+
+// CEFR mapping loosely aligned with Cambridge Linguaskill score scale (82-180).
+const CEFR_SCALE: { cefr: string; min: number; max: number }[] = [
+  { cefr: "Below A1", min: 82, max: 99 },
+  { cefr: "A1", min: 100, max: 119 },
+  { cefr: "A2", min: 120, max: 139 },
+  { cefr: "B1", min: 140, max: 159 },
+  { cefr: "B2", min: 160, max: 179 },
+  { cefr: "C1/C2", min: 180, max: 210 },
+];
+
+const cefrTargetScore: Record<string, number> = {
+  A1: 110,
+  A2: 130,
+  B1: 150,
+  B2: 170,
+  C1: 185,
+};
+
+function scoreToCefr(score: number) {
+  return CEFR_SCALE.find((b) => score >= b.min && score <= b.max)?.cefr ?? "A1";
+}
+
+function LinguaskillResult({ name, level }: { name: string; level: string }) {
+  const base = cefrTargetScore[level] ?? 150;
+  const offsets = [-4, 3, -2, 5]; // deterministic small variance per skill
+  const skills = [
+    { key: "Listening", score: base + offsets[0] },
+    { key: "Reading", score: base + offsets[1] },
+    { key: "Writing", score: base + offsets[2] },
+    { key: "Speaking", score: base + offsets[3] },
+  ].map((s) => ({ ...s, cefr: scoreToCefr(s.score) }));
+  const overall = Math.round(skills.reduce((a, b) => a + b.score, 0) / skills.length);
+  const overallCefr = scoreToCefr(overall);
+  const today = new Date().toLocaleDateString("vi-VN");
+
+  return (
+    <div className="space-y-4">
+      <p>Xin chào <strong>{name}</strong>,</p>
+      <p>
+        Cảm ơn bạn đã tham gia bài thi đánh giá năng lực tiếng Anh <strong>Linguaskill</strong> do
+        UNICOM tổ chức. Dưới đây là kết quả chính thức của bạn theo khung tham chiếu{" "}
+        <strong>CEFR</strong>:
+      </p>
+
+      <div className="overflow-hidden rounded-xl border border-indigo-200">
+        <div className="flex items-center justify-between bg-indigo-600 px-4 py-3 text-white">
+          <div>
+            <div className="text-[11px] uppercase tracking-widest opacity-80">
+              Linguaskill · Statement of Results
+            </div>
+            <div className="text-base font-semibold">{name}</div>
+            <div className="text-[11px] opacity-80">Ngày thi: {today}</div>
+          </div>
+          <div className="text-right">
+            <div className="text-[11px] uppercase tracking-widest opacity-80">Overall</div>
+            <div className="text-3xl font-bold leading-none">{overall}</div>
+            <div className="mt-1 inline-block rounded-md bg-white/15 px-2 py-0.5 text-xs font-semibold">
+              CEFR {overallCefr}
+            </div>
+          </div>
+        </div>
+
+        <table className="w-full text-sm">
+          <thead className="bg-indigo-50 text-[11px] uppercase tracking-wider text-indigo-700">
+            <tr>
+              <th className="px-4 py-2 text-left">Kỹ năng</th>
+              <th className="px-4 py-2 text-center">Điểm (82–180)</th>
+              <th className="px-4 py-2 text-center">CEFR</th>
+            </tr>
+          </thead>
+          <tbody>
+            {skills.map((s) => (
+              <tr key={s.key} className="border-t border-indigo-100">
+                <td className="px-4 py-2 font-medium">{s.key}</td>
+                <td className="px-4 py-2 text-center font-mono font-semibold">{s.score}</td>
+                <td className="px-4 py-2 text-center">
+                  <span className="rounded-md bg-indigo-100 px-2 py-0.5 text-xs font-semibold text-indigo-700">
+                    {s.cefr}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      <p className="text-xs text-muted-foreground">
+        Thang điểm Linguaskill từ 82 đến 180, tương ứng với các bậc CEFR từ Pre-A1 đến C1/C2. Kết
+        quả này có giá trị tham khảo cho lộ trình học tiếp theo của bạn tại UNICOM.
+      </p>
+
+      <p>
+        Trân trọng,<br />
+        <strong>UNICOM Team</strong>
+      </p>
+    </div>
+  );
+}
+
 
