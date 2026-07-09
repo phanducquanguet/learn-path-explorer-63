@@ -131,18 +131,38 @@ function CampaignDetail() {
                           <span className="text-xs text-muted-foreground">Chưa gán</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        {!r.assignedClassId && (
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap justify-end gap-1.5">
                           <button
-                            onClick={() => {
-                              assignRegistrantToTrial(campaign.id, r.id);
-                              toast.success(`Đã gán ${r.fullName} vào lớp trial.`);
-                            }}
-                            className="rounded-lg bg-foreground px-3 py-1.5 text-xs font-semibold text-background"
+                            onClick={() =>
+                              setMailPreview({ type: "verify", name: r.fullName, email: r.email })
+                            }
+                            className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs font-semibold hover:bg-muted"
+                            title="Xem mẫu mail xác nhận đăng ký"
                           >
-                            Gán vào lớp trial
+                            <Mail className="h-3 w-3" /> Mail xác nhận
                           </button>
-                        )}
+                          <button
+                            onClick={() =>
+                              setMailPreview({ type: "welcome", name: r.fullName, email: r.email })
+                            }
+                            className="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                            title="Xem mẫu mail chúc mừng đăng ký thành công"
+                          >
+                            <MailCheck className="h-3 w-3" /> Mail chúc mừng
+                          </button>
+                          {!r.assignedClassId && (
+                            <button
+                              onClick={() => {
+                                assignRegistrantToTrial(campaign.id, r.id);
+                                toast.success(`Đã gán ${r.fullName} vào lớp trial.`);
+                              }}
+                              className="rounded-lg bg-foreground px-3 py-1.5 text-xs font-semibold text-background"
+                            >
+                              Gán vào lớp trial
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))}
