@@ -25,6 +25,7 @@ import { Route as TeacherQaRouteImport } from './routes/teacher.qa'
 import { Route as LiveSessionIdRouteImport } from './routes/live.$sessionId'
 import { Route as LevelsLevelRouteImport } from './routes/levels.$level'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
+import { Route as CampaignsSlugRouteImport } from './routes/campaigns.$slug'
 import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-bank'
 import { Route as TeacherTestsIndexRouteImport } from './routes/teacher.tests.index'
 import { Route as TeacherLiveIndexRouteImport } from './routes/teacher.live.index'
@@ -34,6 +35,7 @@ import { Route as TeacherClassesIndexRouteImport } from './routes/teacher.classe
 import { Route as AdminTestsIndexRouteImport } from './routes/admin.tests.index'
 import { Route as AdminExamsIndexRouteImport } from './routes/admin.exams.index'
 import { Route as AdminCourseApprovalsIndexRouteImport } from './routes/admin.course-approvals.index'
+import { Route as AdminCampaignsIndexRouteImport } from './routes/admin.campaigns.index'
 import { Route as TeacherTestsTestIdRouteImport } from './routes/teacher.tests.$testId'
 import { Route as TeacherLiveSessionIdRouteImport } from './routes/teacher.live.$sessionId'
 import { Route as TeacherExamsNewRouteImport } from './routes/teacher.exams.new'
@@ -45,6 +47,7 @@ import { Route as AdminTestsNewRouteImport } from './routes/admin.tests.new'
 import { Route as AdminExamsNewRouteImport } from './routes/admin.exams.new'
 import { Route as AdminExamsExamIdRouteImport } from './routes/admin.exams.$examId'
 import { Route as AdminCourseApprovalsDraftIdRouteImport } from './routes/admin.course-approvals.$draftId'
+import { Route as AdminCampaignsCampaignIdRouteImport } from './routes/admin.campaigns.$campaignId'
 import { Route as AdminTestsMonitorIndexRouteImport } from './routes/admin.tests.monitor.index'
 import { Route as AdminTestsMonitorEventIdRouteImport } from './routes/admin.tests.monitor.$eventId'
 import { Route as AdminExamsExamIdSubmissionsRouteImport } from './routes/admin.exams.$examId.submissions'
@@ -129,6 +132,11 @@ const CoursesCourseIdRoute = CoursesCourseIdRouteImport.update({
   path: '/courses/$courseId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CampaignsSlugRoute = CampaignsSlugRouteImport.update({
+  id: '/campaigns/$slug',
+  path: '/campaigns/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminQuestionBankRoute = AdminQuestionBankRouteImport.update({
   id: '/admin/question-bank',
   path: '/admin/question-bank',
@@ -175,6 +183,11 @@ const AdminCourseApprovalsIndexRoute =
     path: '/admin/course-approvals/',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AdminCampaignsIndexRoute = AdminCampaignsIndexRouteImport.update({
+  id: '/admin/campaigns/',
+  path: '/admin/campaigns/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TeacherTestsTestIdRoute = TeacherTestsTestIdRouteImport.update({
   id: '/teacher/tests/$testId',
   path: '/teacher/tests/$testId',
@@ -231,6 +244,12 @@ const AdminCourseApprovalsDraftIdRoute =
     path: '/admin/course-approvals/$draftId',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AdminCampaignsCampaignIdRoute =
+  AdminCampaignsCampaignIdRouteImport.update({
+    id: '/admin/campaigns/$campaignId',
+    path: '/admin/campaigns/$campaignId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminTestsMonitorIndexRoute = AdminTestsMonitorIndexRouteImport.update({
   id: '/admin/tests/monitor/',
   path: '/admin/tests/monitor/',
@@ -256,6 +275,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
+  '/campaigns/$slug': typeof CampaignsSlugRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
   '/live/$sessionId': typeof LiveSessionIdRoute
@@ -267,6 +287,7 @@ export interface FileRoutesByFullPath {
   '/exams/': typeof ExamsIndexRoute
   '/live/': typeof LiveIndexRoute
   '/teacher/': typeof TeacherIndexRoute
+  '/admin/campaigns/$campaignId': typeof AdminCampaignsCampaignIdRoute
   '/admin/course-approvals/$draftId': typeof AdminCourseApprovalsDraftIdRoute
   '/admin/exams/$examId': typeof AdminExamsExamIdRouteWithChildren
   '/admin/exams/new': typeof AdminExamsNewRoute
@@ -278,6 +299,7 @@ export interface FileRoutesByFullPath {
   '/teacher/exams/new': typeof TeacherExamsNewRoute
   '/teacher/live/$sessionId': typeof TeacherLiveSessionIdRoute
   '/teacher/tests/$testId': typeof TeacherTestsTestIdRoute
+  '/admin/campaigns/': typeof AdminCampaignsIndexRoute
   '/admin/course-approvals/': typeof AdminCourseApprovalsIndexRoute
   '/admin/exams/': typeof AdminExamsIndexRoute
   '/admin/tests/': typeof AdminTestsIndexRoute
@@ -296,6 +318,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
+  '/campaigns/$slug': typeof CampaignsSlugRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
   '/live/$sessionId': typeof LiveSessionIdRoute
@@ -307,6 +330,7 @@ export interface FileRoutesByTo {
   '/exams': typeof ExamsIndexRoute
   '/live': typeof LiveIndexRoute
   '/teacher': typeof TeacherIndexRoute
+  '/admin/campaigns/$campaignId': typeof AdminCampaignsCampaignIdRoute
   '/admin/course-approvals/$draftId': typeof AdminCourseApprovalsDraftIdRoute
   '/admin/exams/$examId': typeof AdminExamsExamIdRouteWithChildren
   '/admin/exams/new': typeof AdminExamsNewRoute
@@ -318,6 +342,7 @@ export interface FileRoutesByTo {
   '/teacher/exams/new': typeof TeacherExamsNewRoute
   '/teacher/live/$sessionId': typeof TeacherLiveSessionIdRoute
   '/teacher/tests/$testId': typeof TeacherTestsTestIdRoute
+  '/admin/campaigns': typeof AdminCampaignsIndexRoute
   '/admin/course-approvals': typeof AdminCourseApprovalsIndexRoute
   '/admin/exams': typeof AdminExamsIndexRoute
   '/admin/tests': typeof AdminTestsIndexRoute
@@ -338,6 +363,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
+  '/campaigns/$slug': typeof CampaignsSlugRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
   '/live/$sessionId': typeof LiveSessionIdRoute
@@ -349,6 +375,7 @@ export interface FileRoutesById {
   '/exams/': typeof ExamsIndexRoute
   '/live/': typeof LiveIndexRoute
   '/teacher/': typeof TeacherIndexRoute
+  '/admin/campaigns/$campaignId': typeof AdminCampaignsCampaignIdRoute
   '/admin/course-approvals/$draftId': typeof AdminCourseApprovalsDraftIdRoute
   '/admin/exams/$examId': typeof AdminExamsExamIdRouteWithChildren
   '/admin/exams/new': typeof AdminExamsNewRoute
@@ -360,6 +387,7 @@ export interface FileRoutesById {
   '/teacher/exams/new': typeof TeacherExamsNewRoute
   '/teacher/live/$sessionId': typeof TeacherLiveSessionIdRoute
   '/teacher/tests/$testId': typeof TeacherTestsTestIdRoute
+  '/admin/campaigns/': typeof AdminCampaignsIndexRoute
   '/admin/course-approvals/': typeof AdminCourseApprovalsIndexRoute
   '/admin/exams/': typeof AdminExamsIndexRoute
   '/admin/tests/': typeof AdminTestsIndexRoute
@@ -381,6 +409,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/practice'
     | '/admin/question-bank'
+    | '/campaigns/$slug'
     | '/courses/$courseId'
     | '/levels/$level'
     | '/live/$sessionId'
@@ -392,6 +421,7 @@ export interface FileRouteTypes {
     | '/exams/'
     | '/live/'
     | '/teacher/'
+    | '/admin/campaigns/$campaignId'
     | '/admin/course-approvals/$draftId'
     | '/admin/exams/$examId'
     | '/admin/exams/new'
@@ -403,6 +433,7 @@ export interface FileRouteTypes {
     | '/teacher/exams/new'
     | '/teacher/live/$sessionId'
     | '/teacher/tests/$testId'
+    | '/admin/campaigns/'
     | '/admin/course-approvals/'
     | '/admin/exams/'
     | '/admin/tests/'
@@ -421,6 +452,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/practice'
     | '/admin/question-bank'
+    | '/campaigns/$slug'
     | '/courses/$courseId'
     | '/levels/$level'
     | '/live/$sessionId'
@@ -432,6 +464,7 @@ export interface FileRouteTypes {
     | '/exams'
     | '/live'
     | '/teacher'
+    | '/admin/campaigns/$campaignId'
     | '/admin/course-approvals/$draftId'
     | '/admin/exams/$examId'
     | '/admin/exams/new'
@@ -443,6 +476,7 @@ export interface FileRouteTypes {
     | '/teacher/exams/new'
     | '/teacher/live/$sessionId'
     | '/teacher/tests/$testId'
+    | '/admin/campaigns'
     | '/admin/course-approvals'
     | '/admin/exams'
     | '/admin/tests'
@@ -462,6 +496,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/practice'
     | '/admin/question-bank'
+    | '/campaigns/$slug'
     | '/courses/$courseId'
     | '/levels/$level'
     | '/live/$sessionId'
@@ -473,6 +508,7 @@ export interface FileRouteTypes {
     | '/exams/'
     | '/live/'
     | '/teacher/'
+    | '/admin/campaigns/$campaignId'
     | '/admin/course-approvals/$draftId'
     | '/admin/exams/$examId'
     | '/admin/exams/new'
@@ -484,6 +520,7 @@ export interface FileRouteTypes {
     | '/teacher/exams/new'
     | '/teacher/live/$sessionId'
     | '/teacher/tests/$testId'
+    | '/admin/campaigns/'
     | '/admin/course-approvals/'
     | '/admin/exams/'
     | '/admin/tests/'
@@ -504,6 +541,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PracticeRoute: typeof PracticeRoute
   AdminQuestionBankRoute: typeof AdminQuestionBankRoute
+  CampaignsSlugRoute: typeof CampaignsSlugRoute
   CoursesCourseIdRoute: typeof CoursesCourseIdRoute
   LevelsLevelRoute: typeof LevelsLevelRoute
   LiveSessionIdRoute: typeof LiveSessionIdRoute
@@ -514,6 +552,7 @@ export interface RootRouteChildren {
   CoursesIndexRoute: typeof CoursesIndexRoute
   LiveIndexRoute: typeof LiveIndexRoute
   TeacherIndexRoute: typeof TeacherIndexRoute
+  AdminCampaignsCampaignIdRoute: typeof AdminCampaignsCampaignIdRoute
   AdminCourseApprovalsDraftIdRoute: typeof AdminCourseApprovalsDraftIdRoute
   AdminExamsExamIdRoute: typeof AdminExamsExamIdRouteWithChildren
   AdminExamsNewRoute: typeof AdminExamsNewRoute
@@ -524,6 +563,7 @@ export interface RootRouteChildren {
   TeacherExamsNewRoute: typeof TeacherExamsNewRoute
   TeacherLiveSessionIdRoute: typeof TeacherLiveSessionIdRoute
   TeacherTestsTestIdRoute: typeof TeacherTestsTestIdRoute
+  AdminCampaignsIndexRoute: typeof AdminCampaignsIndexRoute
   AdminCourseApprovalsIndexRoute: typeof AdminCourseApprovalsIndexRoute
   AdminExamsIndexRoute: typeof AdminExamsIndexRoute
   AdminTestsIndexRoute: typeof AdminTestsIndexRoute
@@ -650,6 +690,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoursesCourseIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/campaigns/$slug': {
+      id: '/campaigns/$slug'
+      path: '/campaigns/$slug'
+      fullPath: '/campaigns/$slug'
+      preLoaderRoute: typeof CampaignsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/question-bank': {
       id: '/admin/question-bank'
       path: '/admin/question-bank'
@@ -711,6 +758,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/course-approvals'
       fullPath: '/admin/course-approvals/'
       preLoaderRoute: typeof AdminCourseApprovalsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/campaigns/': {
+      id: '/admin/campaigns/'
+      path: '/admin/campaigns'
+      fullPath: '/admin/campaigns/'
+      preLoaderRoute: typeof AdminCampaignsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teacher/tests/$testId': {
@@ -790,6 +844,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminCourseApprovalsDraftIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/campaigns/$campaignId': {
+      id: '/admin/campaigns/$campaignId'
+      path: '/admin/campaigns/$campaignId'
+      fullPath: '/admin/campaigns/$campaignId'
+      preLoaderRoute: typeof AdminCampaignsCampaignIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/tests/monitor/': {
       id: '/admin/tests/monitor/'
       path: '/admin/tests/monitor'
@@ -844,6 +905,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PracticeRoute: PracticeRoute,
   AdminQuestionBankRoute: AdminQuestionBankRoute,
+  CampaignsSlugRoute: CampaignsSlugRoute,
   CoursesCourseIdRoute: CoursesCourseIdRoute,
   LevelsLevelRoute: LevelsLevelRoute,
   LiveSessionIdRoute: LiveSessionIdRoute,
@@ -854,6 +916,7 @@ const rootRouteChildren: RootRouteChildren = {
   CoursesIndexRoute: CoursesIndexRoute,
   LiveIndexRoute: LiveIndexRoute,
   TeacherIndexRoute: TeacherIndexRoute,
+  AdminCampaignsCampaignIdRoute: AdminCampaignsCampaignIdRoute,
   AdminCourseApprovalsDraftIdRoute: AdminCourseApprovalsDraftIdRoute,
   AdminExamsExamIdRoute: AdminExamsExamIdRouteWithChildren,
   AdminExamsNewRoute: AdminExamsNewRoute,
@@ -864,6 +927,7 @@ const rootRouteChildren: RootRouteChildren = {
   TeacherExamsNewRoute: TeacherExamsNewRoute,
   TeacherLiveSessionIdRoute: TeacherLiveSessionIdRoute,
   TeacherTestsTestIdRoute: TeacherTestsTestIdRoute,
+  AdminCampaignsIndexRoute: AdminCampaignsIndexRoute,
   AdminCourseApprovalsIndexRoute: AdminCourseApprovalsIndexRoute,
   AdminExamsIndexRoute: AdminExamsIndexRoute,
   AdminTestsIndexRoute: AdminTestsIndexRoute,
