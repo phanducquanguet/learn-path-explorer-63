@@ -111,25 +111,6 @@ function CampaignsPage() {
                     className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
                   />
                 </Field>
-                <Field label="Slug (đường dẫn landing)">
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-muted-foreground">/campaigns/</span>
-                    <input
-                      value={slug}
-                      onChange={(e) => setSlug(e.target.value)}
-                      placeholder="test-mien-phi-thu-2026"
-                      className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                    />
-                  </div>
-                </Field>
-                <Field label="Tên lớp trial gốc">
-                  <input
-                    value={trialClassName}
-                    onChange={(e) => setTrialClassName(e.target.value)}
-                    placeholder="VD: Trial Fall 2026"
-                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
-                  />
-                </Field>
                 <Field label="Trình độ mở đăng ký">
                   <div className="flex flex-wrap gap-2">
                     {ALL_LEVELS.map((lv) => {
