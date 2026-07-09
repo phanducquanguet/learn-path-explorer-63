@@ -18,6 +18,7 @@ export const Route = createFileRoute("/admin/campaigns/$campaignId")({
 function CampaignDetail() {
   const { campaignId } = Route.useParams();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
+  const [mailPreview, setMailPreview] = useState<null | { type: "verify" | "welcome"; name: string; email: string }>(null);
 
   const refresh = () => {
     const c = getCampaignById(campaignId);
