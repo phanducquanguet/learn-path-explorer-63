@@ -26,6 +26,7 @@ import { Route as LiveSessionIdRouteImport } from './routes/live.$sessionId'
 import { Route as LevelsLevelRouteImport } from './routes/levels.$level'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
 import { Route as CampaignsSlugRouteImport } from './routes/campaigns.$slug'
+import { Route as AdminStatsRouteImport } from './routes/admin.stats'
 import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-bank'
 import { Route as TeacherTestsIndexRouteImport } from './routes/teacher.tests.index'
 import { Route as TeacherLiveIndexRouteImport } from './routes/teacher.live.index'
@@ -135,6 +136,11 @@ const CoursesCourseIdRoute = CoursesCourseIdRouteImport.update({
 const CampaignsSlugRoute = CampaignsSlugRouteImport.update({
   id: '/campaigns/$slug',
   path: '/campaigns/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminStatsRoute = AdminStatsRouteImport.update({
+  id: '/admin/stats',
+  path: '/admin/stats',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminQuestionBankRoute = AdminQuestionBankRouteImport.update({
@@ -275,6 +281,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
+  '/admin/stats': typeof AdminStatsRoute
   '/campaigns/$slug': typeof CampaignsSlugRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -318,6 +325,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
+  '/admin/stats': typeof AdminStatsRoute
   '/campaigns/$slug': typeof CampaignsSlugRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -363,6 +371,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
+  '/admin/stats': typeof AdminStatsRoute
   '/campaigns/$slug': typeof CampaignsSlugRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -409,6 +418,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/practice'
     | '/admin/question-bank'
+    | '/admin/stats'
     | '/campaigns/$slug'
     | '/courses/$courseId'
     | '/levels/$level'
@@ -452,6 +462,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/practice'
     | '/admin/question-bank'
+    | '/admin/stats'
     | '/campaigns/$slug'
     | '/courses/$courseId'
     | '/levels/$level'
@@ -496,6 +507,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/practice'
     | '/admin/question-bank'
+    | '/admin/stats'
     | '/campaigns/$slug'
     | '/courses/$courseId'
     | '/levels/$level'
@@ -541,6 +553,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PracticeRoute: typeof PracticeRoute
   AdminQuestionBankRoute: typeof AdminQuestionBankRoute
+  AdminStatsRoute: typeof AdminStatsRoute
   CampaignsSlugRoute: typeof CampaignsSlugRoute
   CoursesCourseIdRoute: typeof CoursesCourseIdRoute
   LevelsLevelRoute: typeof LevelsLevelRoute
@@ -695,6 +708,13 @@ declare module '@tanstack/react-router' {
       path: '/campaigns/$slug'
       fullPath: '/campaigns/$slug'
       preLoaderRoute: typeof CampaignsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/stats': {
+      id: '/admin/stats'
+      path: '/admin/stats'
+      fullPath: '/admin/stats'
+      preLoaderRoute: typeof AdminStatsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/question-bank': {
@@ -905,6 +925,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PracticeRoute: PracticeRoute,
   AdminQuestionBankRoute: AdminQuestionBankRoute,
+  AdminStatsRoute: AdminStatsRoute,
   CampaignsSlugRoute: CampaignsSlugRoute,
   CoursesCourseIdRoute: CoursesCourseIdRoute,
   LevelsLevelRoute: LevelsLevelRoute,
