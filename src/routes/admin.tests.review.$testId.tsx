@@ -134,14 +134,24 @@ function ReviewPage() {
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">{test.description}</p>
           </div>
-          <Link
-            to="/teacher/tests/$testId"
-            params={{ testId: test.id }}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-foreground shadow-soft hover:bg-muted"
-          >
-            <Eye className="h-4 w-4" /> Xem trước như thí sinh
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              to="/teacher/tests/$testId"
+              params={{ testId: test.id }}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-foreground shadow-soft hover:bg-muted"
+            >
+              <Eye className="h-4 w-4" /> Xem tĩnh
+            </Link>
+            <button
+              onClick={() => setSimOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft hover:opacity-90"
+              style={{ background: "var(--gradient-brand)" }}
+            >
+              <PlayCircle className="h-4 w-4" /> Mô phỏng làm bài & chấm
+            </button>
+          </div>
         </div>
+
 
         {isSelfCreated && (
           <div className="mt-5 flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
