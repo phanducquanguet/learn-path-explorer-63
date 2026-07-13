@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/admin/tests/$testId/review")({
+export const Route = createFileRoute("/admin/tests/review/$testId")({
   head: ({ params }) => ({
     meta: [{ title: `Duyệt đề ${params.testId} — UNICOM LMS` }],
   }),
