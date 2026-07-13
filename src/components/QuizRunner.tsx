@@ -970,7 +970,7 @@ export function QuizRunner({
               className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white shadow-soft hover:opacity-95"
               style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
             >
-              <Check className="h-4 w-4" /> Nộp bài
+              <Check className="h-4 w-4" /> Nộp và xem kết quả
             </button>
           )}
         </div>
@@ -1026,7 +1026,7 @@ export function QuizRunner({
           className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-semibold text-white shadow-soft hover:opacity-95"
           style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
         >
-          <Check className="h-3.5 w-3.5" /> Nộp bài & xem kết quả
+          <Check className="h-3.5 w-3.5" /> Nộp và xem kết quả
         </button>
         <button
           onClick={onExit}
