@@ -262,14 +262,15 @@ function StatsPage() {
           <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             <Filter className="h-3.5 w-3.5" /> Bộ lọc
           </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             <FilterSelect
               icon={Building2}
               label="Đơn vị"
-              value={orgId}
+              value={draftOrgId}
               onChange={(v) => {
-                setOrgId(v);
-                setClassId("all");
+                setDraftOrgId(v);
+                setDraftClassId("all");
+                setDraftCourseId("");
               }}
               options={[
                 { value: "all", label: `Tất cả (${orgs.length})` },
@@ -279,11 +280,11 @@ function StatsPage() {
             <FilterSelect
               icon={BookOpen}
               label="Level"
-              value={levelCode}
+              value={draftLevelCode}
               onChange={(v) => {
-                setLevelCode(v);
-                setClassId("all");
-                setCourseId("all");
+                setDraftLevelCode(v);
+                setDraftClassId("all");
+                setDraftCourseId("");
               }}
               options={[
                 { value: "all", label: "Tất cả level" },
@@ -296,49 +297,52 @@ function StatsPage() {
             <FilterSelect
               icon={Users}
               label="Lớp"
-              value={classId}
-              onChange={setClassId}
+              value={draftClassId}
+              onChange={(v) => {
+                setDraftClassId(v);
+                setDraftCourseId("");
+              }}
               options={[
-                { value: "all", label: `Tất cả (${scopedClasses.length})` },
-                ...scopedClasses.map((c) => ({ value: c.id, label: c.name })),
+                { value: "all", label: `Tất cả (${draftScopedClasses.length})` },
+                ...draftScopedClasses.map((c) => ({ value: c.id, label: c.name })),
               ]}
             />
             <FilterSelect
               icon={GraduationCap}
-              label="Khóa học"
-              value={courseId}
-              onChange={setCourseId}
+              label="Khóa học *"
+              value={draftCourseId}
+              onChange={setDraftCourseId}
               options={[
-                { value: "all", label: `Tất cả (${scopedCourses.length})` },
-                ...scopedCourses.map((c) => ({ value: c.id, label: `${c.levelCode} · ${c.title}` })),
-              ]}
-            />
-            <FilterSelect
-              icon={TrendingUp}
-              label="Chiều đo"
-              value={skill}
-              onChange={(v) => setSkill(v as typeof skill)}
-              options={[
-                { value: "overall", label: "Điểm tổng" },
-                { value: "listening", label: "Nghe" },
-                { value: "reading", label: "Đọc" },
-                { value: "writing", label: "Viết" },
-                { value: "speaking", label: "Nói" },
+                { value: "", label: draftScopedCourses.length ? "— Chọn khóa học —" : "Không có khóa học" },
+                ...draftScopedCourses.map((c) => ({ value: c.id, label: `${c.levelCode} · ${c.title}` })),
               ]}
             />
           </div>
+          <div className="mt-4 flex items-center justify-end gap-2">
+            <span className="mr-auto text-[11px] text-muted-foreground">
+              * Bắt buộc chọn 1 khóa học để xem điểm số.
+            </span>
+            <button
+              onClick={applyFilters}
+              disabled={!canApply}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-primary-foreground shadow-soft hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <Filter className="h-3.5 w-3.5" /> Lọc
+            </button>
+          </div>
         </div>
-
-        {/* KPIs & Charts ẩn theo yêu cầu — chỉ hiển thị bảng điểm học viên bên dưới */}
-
 
         {/* Student table */}
         <div className="mt-8 overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border p-5">
             <div>
-              <h3 className="text-base font-semibold text-foreground">Chi tiết học viên</h3>
+              <h3 className="text-base font-semibold text-foreground">
+                Chi tiết học viên{activeCourse ? ` · ${activeCourse.levelCode} · ${activeCourse.title}` : ""}
+              </h3>
               <p className="text-xs text-muted-foreground">
-                {rows.length} học viên · nhấn tên để xem chi tiết điểm theo bài · nhấn tiêu đề cột để sắp xếp
+                {applied && activeCourse
+                  ? `${rows.length} học viên · nhấn tên để xem chi tiết · nhấn tiêu đề cột để sắp xếp`
+                  : "Chọn khóa học và bấm Lọc để hiển thị điểm số."}
               </p>
             </div>
             <BarChart3 className="h-5 w-5 text-muted-foreground" />
@@ -358,9 +362,9 @@ function StatsPage() {
                   <th className="cursor-pointer px-3 py-3 text-center" onClick={() => setSortBy("score")}>
                     <span className="inline-flex items-center gap-1">Điểm <ArrowUpDown className="h-3 w-3" /></span>
                   </th>
-                  <th className="px-5 py-3">Điểm theo khóa học</th>
                 </tr>
               </thead>
+
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.student.id} className="border-t border-border/60 hover:bg-muted/30">
