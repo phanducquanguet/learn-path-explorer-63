@@ -73,7 +73,7 @@ const adminTabs = [
   { to: "/admin/question-bank" as const, label: "Ngân hàng câu hỏi", icon: Library },
   { to: "/admin/tests" as const, label: "Thi cử", icon: ScrollText },
   { to: "/admin/campaigns" as const, label: "Chiến dịch", icon: Megaphone },
-  { to: "/teacher/reports" as const, label: "Báo cáo", icon: BarChart3 },
+  { to: "/admin/stats" as const, label: "Thống kê", icon: BarChart3 },
 ];
 
 function roleMeta(role: Role) {
