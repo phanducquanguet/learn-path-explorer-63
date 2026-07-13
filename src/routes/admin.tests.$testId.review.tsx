@@ -193,7 +193,7 @@ function ReviewPage() {
               <Info
                 icon={ShieldCheck}
                 label="Chế độ đề"
-                value={test.mode === "random" ? "Bốc ngẫu nhiên" : "Cố định"}
+                value={test.mode === "random" ? "Bốc ngẫu nhiên" : "Bốc ngẫu nhiên"}
               />
             </div>
 
