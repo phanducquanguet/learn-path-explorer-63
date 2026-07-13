@@ -33,6 +33,7 @@ import {
   ExternalLink,
   Eye,
   MoreHorizontal,
+  PlayCircle,
   Filter,
   ClipboardCheck,
 } from "lucide-react";
@@ -663,6 +664,15 @@ function RowMenu({
             >
               <Sparkles className="h-3.5 w-3.5" /> Tạo đề tương tự
             </button>
+            <Link
+              to="/admin/tests/$testId/review"
+              params={{ testId: t.id }}
+              search={{ sim: 1 }}
+              onClick={() => setOpen(false)}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-muted"
+            >
+              <PlayCircle className="h-3.5 w-3.5" /> Mô phỏng làm bài & chấm
+            </Link>
             {t.approvalStatus === "pending" && (
               <Link
                 to="/admin/tests/$testId/review"
