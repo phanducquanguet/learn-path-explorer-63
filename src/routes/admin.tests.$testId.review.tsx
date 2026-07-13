@@ -40,7 +40,7 @@ const LEVEL_HUE: Record<string, number> = {
   C2: 20,
 };
 
-export const Route = createFileRoute("/admin/tests/review/$testId")({
+export const Route = createFileRoute("/admin/tests/$testId/review")({
   head: ({ params }) => ({
     meta: [{ title: `Duyệt đề ${params.testId} — UNICOM LMS` }],
   }),
