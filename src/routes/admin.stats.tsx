@@ -73,6 +73,25 @@ function studentCourseScore(s: TeacherStudent, courseId: string): number {
   return Math.max(30, Math.min(100, Math.round(base + offset * 0.5 + skillTilt * 0.4)));
 }
 
+// Deterministic per-(student, unit) score around the course base
+function studentUnitScore(s: TeacherStudent, courseId: string, unitId: string): number {
+  const base = studentCourseScore(s, courseId);
+  let h = 0;
+  const key = `${s.id}-${unitId}`;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  const delta = (h % 25) - 12; // -12..+12
+  return Math.max(0, Math.min(100, base + delta));
+}
+
+// Short label for a unit column. Uses "U{index}" when available, else falls back
+// to parsed number from the id/title. Keeps columns compact and predictable
+// regardless of how the course author named its units.
+function unitShortLabel(u: { id: string; index?: number; title?: string }): string {
+  if (typeof u.index === "number") return `U${u.index}`;
+  const m = u.id.match(/(\d+)(?!.*\d)/) || (u.title ?? "").match(/(\d+)/);
+  return m ? `U${m[1]}` : u.id.slice(-3).toUpperCase();
+}
+
 function bucketOf(score: number) {
   if (score >= 85) return "excellent";
   if (score >= 70) return "good";
@@ -102,6 +121,7 @@ function StatsPage() {
 
   const [sortBy, setSortBy] = useState<"name" | "score" | "class">("score");
   const [drilldown, setDrilldown] = useState<TeacherStudent | null>(null);
+  const [viewMode, setViewMode] = useState<"matrix" | "list">("matrix");
   const [unitDetail, setUnitDetail] = useState<{ student: TeacherStudent; course: CourseRef } | null>(null);
 
   // ===== Draft scope (để populate dropdown Lớp / Khóa học phụ thuộc) =====
@@ -143,6 +163,13 @@ function StatsPage() {
       : null),
     [courseId, levelCode],
   );
+
+  // Units of the active course (looked up via level → course → units)
+  const activeCourseUnits = useMemo(() => {
+    if (!activeCourse) return [];
+    const lv = levels.find((l) => l.code === activeCourse.levelCode);
+    return lv?.courses.find((c) => c.id === activeCourse.id)?.units ?? [];
+  }, [activeCourse]);
 
   const scopedStudents = students.filter((s) => {
     if (!scopedClassIds.has(s.classId)) return false;
@@ -342,81 +369,179 @@ function StatsPage() {
               </h3>
               <p className="text-xs text-muted-foreground">
                 {applied && activeCourse
-                  ? `${rows.length} học viên · nhấn tên để xem chi tiết · nhấn tiêu đề cột để sắp xếp`
+                  ? viewMode === "matrix"
+                    ? `${rows.length} học viên · ${activeCourseUnits.length} bài · di chuột lên tiêu đề cột để xem tên bài đầy đủ`
+                    : `${rows.length} học viên · nhấn tên để xem chi tiết · nhấn tiêu đề cột để sắp xếp`
                   : "Chọn khóa học và bấm Lọc để hiển thị điểm số."}
               </p>
             </div>
-            <BarChart3 className="h-5 w-5 text-muted-foreground" />
-          </div>
-          <div className="max-h-[560px] overflow-auto">
-            <table className="w-full text-sm">
-              <thead className="sticky top-0 z-10 bg-surface-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                <tr>
-                  <th className="cursor-pointer px-5 py-3" onClick={() => setSortBy("name")}>
-                    <span className="inline-flex items-center gap-1">Học viên <ArrowUpDown className="h-3 w-3" /></span>
-                  </th>
-                  <th className="px-3 py-3">Đơn vị</th>
-                  <th className="cursor-pointer px-3 py-3" onClick={() => setSortBy("class")}>
-                    <span className="inline-flex items-center gap-1">Lớp <ArrowUpDown className="h-3 w-3" /></span>
-                  </th>
-                  <th className="px-3 py-3 text-center">Level</th>
-                  <th className="cursor-pointer px-3 py-3 text-center" onClick={() => setSortBy("score")}>
-                    <span className="inline-flex items-center gap-1">Điểm <ArrowUpDown className="h-3 w-3" /></span>
-                  </th>
-                  <th className="px-3 py-3 text-center">Chi tiết</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {rows.map((r) => (
-                  <tr key={r.student.id} className="border-t border-border/60 hover:bg-muted/30">
-                    <td className="px-5 py-3">
-                      <button
-                        onClick={() => setDrilldown(r.student)}
-                        className="text-left font-medium text-foreground hover:text-primary"
-                      >
-                        {r.student.name}
-                      </button>
-                      <div className="text-[11px] text-muted-foreground">{r.student.email}</div>
-                    </td>
-                    <td className="px-3 py-3 text-xs text-muted-foreground">{r.orgName}</td>
-                    <td className="px-3 py-3 text-xs text-foreground">{r.className}</td>
-                    <td className="px-3 py-3 text-center">
-                      <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">
-                        {r.levelCode}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3 text-center">
-                      <ScoreBadge score={r.score} />
-                    </td>
-                    <td className="px-3 py-3 text-center">
-                      <button
-                        onClick={() => setUnitDetail({ student: r.student, course: activeCourse! })}
-                        className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-muted"
-                      >
-                        <BookOpen className="h-3 w-3" /> Chi tiết bài
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {applied && activeCourse && rows.length === 0 && (
-                  <tr>
-                    <td colSpan={6} className="px-5 py-10 text-center text-sm text-muted-foreground">
-                      Không có học viên nào khớp bộ lọc.
-                    </td>
-                  </tr>
+            <div className="flex items-center gap-1 rounded-lg border border-border bg-background p-0.5">
+              <button
+                onClick={() => setViewMode("matrix")}
+                className={cn(
+                  "rounded-md px-2.5 py-1 text-[11px] font-semibold",
+                  viewMode === "matrix" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
-                {!applied && (
-                  <tr>
-                    <td colSpan={6} className="px-5 py-10 text-center text-sm text-muted-foreground">
-                      Vui lòng chọn khóa học và bấm <span className="font-semibold text-foreground">Lọc</span> để xem điểm số học viên.
-
-                    </td>
-                  </tr>
+              >
+                Bảng điểm
+              </button>
+              <button
+                onClick={() => setViewMode("list")}
+                className={cn(
+                  "rounded-md px-2.5 py-1 text-[11px] font-semibold",
+                  viewMode === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
                 )}
-              </tbody>
-            </table>
+              >
+                Danh sách
+              </button>
+            </div>
           </div>
+
+          {/* MATRIX VIEW */}
+          {viewMode === "matrix" && (
+            <div className="max-h-[620px] overflow-auto">
+              {!applied || !activeCourse ? (
+                <div className="px-5 py-10 text-center text-sm text-muted-foreground">
+                  Vui lòng chọn khóa học và bấm <span className="font-semibold text-foreground">Lọc</span> để xem bảng điểm.
+                </div>
+              ) : rows.length === 0 ? (
+                <div className="px-5 py-10 text-center text-sm text-muted-foreground">
+                  Không có học viên nào khớp bộ lọc.
+                </div>
+              ) : (
+                <table className="w-full border-separate border-spacing-0 text-sm">
+                  <thead className="sticky top-0 z-10 bg-surface-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    <tr>
+                      <th className="sticky left-0 z-20 bg-surface-2 px-5 py-3 text-left">Học viên</th>
+                      {activeCourseUnits.map((u) => (
+                        <th
+                          key={u.id}
+                          title={u.title}
+                          className="min-w-[64px] px-2 py-3 text-center"
+                        >
+                          {unitShortLabel(u)}
+                        </th>
+                      ))}
+                      <th className="min-w-[64px] px-3 py-3 text-center text-foreground">TB</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((r) => {
+                      const perUnit = activeCourseUnits.map((u) => studentUnitScore(r.student, activeCourse.id, u.id));
+                      const avg = perUnit.length
+                        ? Math.round(perUnit.reduce((a, x) => a + x, 0) / perUnit.length)
+                        : r.score;
+                      return (
+                        <tr key={r.student.id} className="hover:bg-muted/30">
+                          <td className="sticky left-0 z-10 border-t border-border/60 bg-surface px-5 py-3">
+                            <button
+                              onClick={() => setUnitDetail({ student: r.student, course: activeCourse })}
+                              className="text-left font-medium text-foreground hover:text-primary"
+                            >
+                              {r.student.name}
+                            </button>
+                            <div className="text-[11px] text-muted-foreground">{r.className}</div>
+                          </td>
+                          {perUnit.map((score, i) => (
+                            <td
+                              key={activeCourseUnits[i].id}
+                              className="border-t border-border/60 px-2 py-3 text-center"
+                            >
+                              <ScoreCell score={score} />
+                            </td>
+                          ))}
+                          <td className="border-t border-border/60 px-3 py-3 text-center font-semibold">
+                            <ScoreCell score={avg} bold />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              )}
+              {applied && activeCourse && rows.length > 0 && (
+                <div className="flex flex-wrap items-center gap-3 border-t border-border bg-surface-2 px-5 py-2.5 text-[11px] text-muted-foreground">
+                  <span className="font-semibold uppercase tracking-wider">Chú thích:</span>
+                  <LegendDot color="text-emerald-600" label="≥ 85 Xuất sắc" />
+                  <LegendDot color="text-sky-600" label="75–84 Khá" />
+                  <LegendDot color="text-amber-600" label="60–74 TB" />
+                  <LegendDot color="text-rose-600" label="< 60 Yếu" />
+                  <span className="ml-auto">U1, U2… là các bài học theo thứ tự trong khóa. Rê chuột để xem tên đầy đủ.</span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* LIST VIEW */}
+          {viewMode === "list" && (
+            <div className="max-h-[560px] overflow-auto">
+              <table className="w-full text-sm">
+                <thead className="sticky top-0 z-10 bg-surface-2 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  <tr>
+                    <th className="cursor-pointer px-5 py-3" onClick={() => setSortBy("name")}>
+                      <span className="inline-flex items-center gap-1">Học viên <ArrowUpDown className="h-3 w-3" /></span>
+                    </th>
+                    <th className="px-3 py-3">Đơn vị</th>
+                    <th className="cursor-pointer px-3 py-3" onClick={() => setSortBy("class")}>
+                      <span className="inline-flex items-center gap-1">Lớp <ArrowUpDown className="h-3 w-3" /></span>
+                    </th>
+                    <th className="px-3 py-3 text-center">Level</th>
+                    <th className="cursor-pointer px-3 py-3 text-center" onClick={() => setSortBy("score")}>
+                      <span className="inline-flex items-center gap-1">Điểm <ArrowUpDown className="h-3 w-3" /></span>
+                    </th>
+                    <th className="px-3 py-3 text-center">Chi tiết</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((r) => (
+                    <tr key={r.student.id} className="border-t border-border/60 hover:bg-muted/30">
+                      <td className="px-5 py-3">
+                        <button
+                          onClick={() => setDrilldown(r.student)}
+                          className="text-left font-medium text-foreground hover:text-primary"
+                        >
+                          {r.student.name}
+                        </button>
+                        <div className="text-[11px] text-muted-foreground">{r.student.email}</div>
+                      </td>
+                      <td className="px-3 py-3 text-xs text-muted-foreground">{r.orgName}</td>
+                      <td className="px-3 py-3 text-xs text-foreground">{r.className}</td>
+                      <td className="px-3 py-3 text-center">
+                        <span className="rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">
+                          {r.levelCode}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <ScoreBadge score={r.score} />
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        <button
+                          onClick={() => setUnitDetail({ student: r.student, course: activeCourse! })}
+                          className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-muted"
+                        >
+                          <BookOpen className="h-3 w-3" /> Chi tiết bài
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {applied && activeCourse && rows.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                        Không có học viên nào khớp bộ lọc.
+                      </td>
+                    </tr>
+                  )}
+                  {!applied && (
+                    <tr>
+                      <td colSpan={6} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                        Vui lòng chọn khóa học và bấm <span className="font-semibold text-foreground">Lọc</span> để xem điểm số học viên.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
 
@@ -541,6 +666,27 @@ function ScoreBadge({ score }: { score: number }) {
           ? "bg-amber-500/10 text-amber-700"
           : "bg-rose-500/10 text-rose-700";
   return <span className={cn("rounded-full px-2 py-1 text-xs font-bold", cls)}>{score}</span>;
+}
+
+function ScoreCell({ score, bold }: { score: number; bold?: boolean }) {
+  const color =
+    score >= 85
+      ? "text-emerald-600"
+      : score >= 75
+        ? "text-sky-600"
+        : score >= 60
+          ? "text-amber-600"
+          : "text-rose-600";
+  return <span className={cn("tabular-nums", color, bold ? "font-bold" : "font-semibold")}>{score}</span>;
+}
+
+function LegendDot({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      <span className={cn("font-bold", color)}>●</span>
+      <span>{label}</span>
+    </span>
+  );
 }
 
 function DrilldownModal({ student, onClose }: { student: TeacherStudent; onClose: () => void }) {
