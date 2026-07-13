@@ -318,9 +318,12 @@ function ReviewPage() {
               <QuizRunner
                 quizId={test.id}
                 title={test.name}
+                examCode={test.code}
+                durationMinutes={test.durationMinutes}
                 hue={hue}
                 onExit={() => setSimOpen(false)}
               />
+
             </div>
           </div>
         </div>
