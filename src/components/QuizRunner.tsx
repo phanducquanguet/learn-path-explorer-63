@@ -477,9 +477,38 @@ export function QuizRunner({
 
   const q = questions[idx];
   const result = results[q?.id];
+  const q = questions[idx];
+  const result = results[q?.id];
   const totalMax = questions.reduce((s, x) => s + x.maxScore, 0);
   const totalEarned = Object.values(results).reduce((s, r) => s + r.earned, 0);
   const answeredCount = questions.filter((qq) => hasAnswer(qq, answers[qq.id])).length;
+
+  // Countdown timer (client only to avoid SSR mismatch)
+  const totalSeconds = (durationMinutes ?? 60) * 60;
+  const [remaining, setRemaining] = useState<number | null>(null);
+  useEffect(() => {
+    if (phase !== "running") return;
+    setRemaining((r) => (r == null ? totalSeconds : r));
+    const t = window.setInterval(() => {
+      setRemaining((r) => {
+        if (r == null) return totalSeconds;
+        if (r <= 1) {
+          window.clearInterval(t);
+          return 0;
+        }
+        return r - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(t);
+  }, [phase, totalSeconds]);
+  const fmtTime = (s: number) => {
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return h > 0 ? `${pad(h)}:${pad(m)}:${pad(sec)}` : `${pad(m)}:${pad(sec)}`;
+  };
+
 
   const setAnswer = (val: AnswerState) =>
     setAnswers((a) => ({ ...a, [q.id]: val }));
