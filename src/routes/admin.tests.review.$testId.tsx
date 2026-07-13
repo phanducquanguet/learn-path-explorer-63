@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate, notFound } from "@tanstack/react-ro
 import { useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { useRole } from "@/contexts/RoleContext";
+import { QuizRunner } from "@/components/QuizRunner";
 import {
   getTest,
   approveTest,
@@ -25,8 +26,19 @@ import {
   User,
   AlertTriangle,
   ListChecks,
+  X,
+  PlayCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const LEVEL_HUE: Record<string, number> = {
+  A1: 150,
+  A2: 180,
+  B1: 220,
+  B2: 260,
+  C1: 300,
+  C2: 20,
+};
 
 export const Route = createFileRoute("/admin/tests/review/$testId")({
   head: ({ params }) => ({
@@ -47,6 +59,8 @@ function ReviewPage() {
   const isAdmin = role === "admin";
 
   const [note, setNote] = useState("");
+  const [simOpen, setSimOpen] = useState(false);
+  const hue = LEVEL_HUE[test.level] ?? 220;
   const status = testDisplayStatus(test);
   const isPending = test.approvalStatus === "pending";
   const isSelfCreated = test.createdBy === CURRENT_ADMIN;
@@ -120,14 +134,24 @@ function ReviewPage() {
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">{test.description}</p>
           </div>
-          <Link
-            to="/teacher/tests/$testId"
-            params={{ testId: test.id }}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-foreground shadow-soft hover:bg-muted"
-          >
-            <Eye className="h-4 w-4" /> Xem trước như thí sinh
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              to="/teacher/tests/$testId"
+              params={{ testId: test.id }}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-foreground shadow-soft hover:bg-muted"
+            >
+              <Eye className="h-4 w-4" /> Xem tĩnh
+            </Link>
+            <button
+              onClick={() => setSimOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft hover:opacity-90"
+              style={{ background: "var(--gradient-brand)" }}
+            >
+              <PlayCircle className="h-4 w-4" /> Mô phỏng làm bài & chấm
+            </button>
+          </div>
         </div>
+
 
         {isSelfCreated && (
           <div className="mt-5 flex items-start gap-2 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
@@ -260,9 +284,47 @@ function ReviewPage() {
           </div>
         </div>
       </div>
+
+      {simOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-sm">
+          <div className="flex items-center justify-between border-b border-border bg-surface px-6 py-3">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+                <PlayCircle className="h-3.5 w-3.5" /> Mô phỏng làm bài
+              </span>
+              <div className="text-sm font-semibold text-foreground">{test.name}</div>
+              {test.code && (
+                <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-[11px] text-foreground/70">
+                  # {test.code}
+                </span>
+              )}
+              <span className="hidden text-xs text-muted-foreground sm:inline">
+                Trải nghiệm y hệt thí sinh · nộp bài để xem chấm điểm tự động
+              </span>
+            </div>
+            <button
+              onClick={() => setSimOpen(false)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted"
+            >
+              <X className="h-3.5 w-3.5" /> Đóng mô phỏng
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <div className="mx-auto max-w-5xl px-6 py-8">
+              <QuizRunner
+                quizId={test.id}
+                title={test.name}
+                hue={hue}
+                onExit={() => setSimOpen(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
 function Info({
   icon: Icon,
