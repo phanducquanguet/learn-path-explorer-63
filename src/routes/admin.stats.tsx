@@ -454,16 +454,10 @@ function StatsPage() {
                         return (
                           <th
                             key={u.id}
-                            title={`${lbl.index} · ${lbl.topic} · ${u.activities?.length ?? 0} bài tập`}
-                            className="min-w-[120px] max-w-[160px] px-2 py-3 text-center align-bottom"
+                            title={`${lbl.index}${lbl.topic && lbl.topic !== "—" ? " · " + lbl.topic : ""}`}
+                            className="min-w-[76px] px-2 py-3 text-center align-middle"
                           >
-                            <div className="text-[11px] font-bold text-foreground">{lbl.index}</div>
-                            <div className="mt-0.5 truncate text-[10px] font-medium normal-case text-muted-foreground">
-                              {lbl.topic}
-                            </div>
-                            <div className="mt-0.5 text-[9px] font-normal normal-case text-muted-foreground/70">
-                              {u.activities?.length ?? 0} bài tập
-                            </div>
+                            <div className="text-[11px] font-bold normal-case text-foreground">{lbl.index}</div>
                           </th>
                         );
                       })}
