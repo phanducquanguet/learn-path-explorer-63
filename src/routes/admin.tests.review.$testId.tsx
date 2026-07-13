@@ -59,6 +59,8 @@ function ReviewPage() {
   const isAdmin = role === "admin";
 
   const [note, setNote] = useState("");
+  const [simOpen, setSimOpen] = useState(false);
+  const hue = LEVEL_HUE[test.level] ?? 220;
   const status = testDisplayStatus(test);
   const isPending = test.approvalStatus === "pending";
   const isSelfCreated = test.createdBy === CURRENT_ADMIN;
