@@ -401,14 +401,14 @@ function StatsPage() {
                 ))}
                 {applied && activeCourse && rows.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                    <td colSpan={6} className="px-5 py-10 text-center text-sm text-muted-foreground">
                       Không có học viên nào khớp bộ lọc.
                     </td>
                   </tr>
                 )}
                 {!applied && (
                   <tr>
-                    <td colSpan={5} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                    <td colSpan={6} className="px-5 py-10 text-center text-sm text-muted-foreground">
                       Vui lòng chọn khóa học và bấm <span className="font-semibold text-foreground">Lọc</span> để xem điểm số học viên.
 
                     </td>
