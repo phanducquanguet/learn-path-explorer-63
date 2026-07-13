@@ -144,7 +144,7 @@ function ReviewPage() {
               params={{ testId: test.id }}
               className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-foreground shadow-soft hover:bg-muted"
             >
-              <Eye className="h-4 w-4" /> Xem tĩnh
+              <Eye className="h-4 w-4" /> Xem đề
             </Link>
             <button
               onClick={() => setSimOpen(true)}
@@ -193,7 +193,7 @@ function ReviewPage() {
               <Info
                 icon={ShieldCheck}
                 label="Chế độ đề"
-                value={test.mode === "random" ? "Bốc ngẫu nhiên" : "Cố định"}
+                value={test.mode === "random" ? "Bốc ngẫu nhiên" : "Bốc ngẫu nhiên"}
               />
             </div>
 
