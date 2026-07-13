@@ -145,6 +145,11 @@ export const tests: Test[] = [
     graded: 6,
     avgScore: 7.4,
     createdAt: days(-10),
+    code: "B1-MID-05",
+    createdBy: "admin.hoa",
+    approvalStatus: "approved",
+    reviewedBy: "admin.dung",
+    reviewedAt: days(-9),
   },
   {
     id: "test-2",
@@ -165,6 +170,9 @@ export const tests: Test[] = [
     submitted: 0,
     graded: 0,
     createdAt: days(-2),
+    code: "A1-QUIZ-U3",
+    createdBy: "admin.linh",
+    approvalStatus: "pending",
   },
   {
     id: "test-3",
@@ -187,6 +195,11 @@ export const tests: Test[] = [
     submitted: 0,
     graded: 0,
     createdAt: days(-1),
+    code: "A2-FIN-WKB",
+    createdBy: "admin.linh",
+    approvalStatus: "approved",
+    reviewedBy: "admin.dung",
+    reviewedAt: days(-1),
   },
   {
     id: "test-4",
@@ -210,6 +223,9 @@ export const tests: Test[] = [
     graded: 2,
     avgScore: 6.8,
     createdAt: days(-4),
+    code: "B1-MOCK-EVE",
+    createdBy: "admin.hoa",
+    approvalStatus: "draft",
   },
   {
     id: "test-1-sim-1700000001",
