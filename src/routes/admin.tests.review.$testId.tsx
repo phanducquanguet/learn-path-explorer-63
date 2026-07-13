@@ -2,6 +2,7 @@ import { createFileRoute, Link, useNavigate, notFound } from "@tanstack/react-ro
 import { useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { useRole } from "@/contexts/RoleContext";
+import { QuizRunner } from "@/components/QuizRunner";
 import {
   getTest,
   approveTest,
@@ -25,8 +26,19 @@ import {
   User,
   AlertTriangle,
   ListChecks,
+  X,
+  PlayCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+
+const LEVEL_HUE: Record<string, number> = {
+  A1: 150,
+  A2: 180,
+  B1: 220,
+  B2: 260,
+  C1: 300,
+  C2: 20,
+};
 
 export const Route = createFileRoute("/admin/tests/review/$testId")({
   head: ({ params }) => ({
