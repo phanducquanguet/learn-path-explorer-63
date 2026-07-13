@@ -483,3 +483,34 @@ export function testStatus(t: Test): "upcoming" | "open" | "closed" {
   if (n > new Date(t.closeAt).getTime()) return "closed";
   return "open";
 }
+
+export type TestDisplayStatus =
+  | "draft"
+  | "pending"
+  | "approved"
+  | "open"
+  | "closed";
+
+export const TEST_STATUS_LABEL: Record<TestDisplayStatus, string> = {
+  draft: "Bản nháp",
+  pending: "Chờ duyệt",
+  approved: "Đã duyệt",
+  open: "Đang mở",
+  closed: "Đã đóng",
+};
+
+export function testDisplayStatus(t: Test): TestDisplayStatus {
+  const approval = t.approvalStatus ?? "approved";
+  if (approval === "draft") return "draft";
+  if (approval === "pending") return "pending";
+  const s = testStatus(t);
+  if (s === "upcoming") return "approved";
+  if (s === "open") return "open";
+  return "closed";
+}
+
+/** Tổng số lượt hoạt động của một đề (đăng ký / nộp bài). */
+export function testActivityCount(t: Test): number {
+  return t.registered + t.submitted;
+}
+
