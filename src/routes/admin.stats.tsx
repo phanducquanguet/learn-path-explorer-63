@@ -426,6 +426,14 @@ function StatsPage() {
           onClose={() => setDrilldown(null)}
         />
       )}
+
+      {unitDetail && (
+        <UnitDetailModal
+          student={unitDetail.student}
+          course={unitDetail.course}
+          onClose={() => setUnitDetail(null)}
+        />
+      )}
     </div>
   );
 }
