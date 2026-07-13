@@ -828,39 +828,62 @@ function UnitDetailModal({
   const courseFull = lv?.courses.find((c) => c.id === course.id);
   const units = courseFull?.units ?? [];
 
-  const baseScore = studentCourseScore(student, course.id);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const toggleAll = (v: boolean) => {
+    const next: Record<string, boolean> = {};
+    units.forEach((u) => (next[u.id] = v));
+    setExpanded(next);
+  };
 
-  // Deterministic per-unit score around baseScore
+  // Precompute unit + activity scores. Completion is deterministic per unit.
   const unitRows = units.map((u) => {
     let h = 0;
     const key = `${student.id}-${u.id}`;
     for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
-    const delta = (h % 25) - 12; // -12..+12
-    const score = Math.max(0, Math.min(100, baseScore + delta));
     const completed = (h % 10) < 7; // ~70% completed
-    return { unit: u, score: completed ? score : null };
+    const activities = (u.activities ?? []).map((a) => ({
+      id: a.id,
+      title: a.title,
+      type: a.type,
+      score: completed ? studentActivityScore(student, course.id, a.id, a.type) : null,
+    }));
+    const done = activities.filter((a) => a.score !== null);
+    const unitScore =
+      completed && done.length > 0
+        ? Math.round(done.reduce((s, a) => s + (a.score as number), 0) / done.length)
+        : null;
+    return { unit: u, activities, unitScore, completed };
   });
 
-  const completed = unitRows.filter((r) => r.score !== null).length;
+  const completedUnits = unitRows.filter((r) => r.unitScore !== null).length;
   const avg =
-    completed > 0
+    completedUnits > 0
       ? Math.round(
           unitRows
-            .filter((r) => r.score !== null)
-            .reduce((a, r) => a + (r.score as number), 0) / completed,
+            .filter((r) => r.unitScore !== null)
+            .reduce((a, r) => a + (r.unitScore as number), 0) / completedUnits,
         )
       : 0;
+
+  const typeLabel: Record<string, string> = {
+    video: "Video",
+    reading: "Đọc",
+    quiz: "Quiz",
+    speaking: "Nói",
+    writing: "Viết",
+    listening: "Nghe",
+  };
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-2xl bg-background p-6 shadow-elevated"
+        className="max-h-[90vh] w-full max-w-3xl overflow-auto rounded-2xl bg-background p-6 shadow-elevated"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="text-xs font-semibold uppercase tracking-wider text-primary">
-              Chi tiết theo bài học
+              Chi tiết theo bài học & bài tập
             </div>
             <div className="mt-1 text-lg font-semibold text-foreground">{student.name}</div>
             <div className="text-xs text-muted-foreground">
@@ -873,52 +896,112 @@ function UnitDetailModal({
         </div>
 
         <div className="mt-4 grid grid-cols-3 gap-3">
-          <StatBox label="Tổng số bài" value={units.length} />
-          <StatBox label="Đã hoàn thành" value={`${completed}/${units.length}`} />
+          <StatBox label="Tổng số Unit" value={units.length} />
+          <StatBox label="Đã hoàn thành" value={`${completedUnits}/${units.length}`} />
           <StatBox label="Điểm TB" value={avg || "—"} />
         </div>
 
-        <div className="mt-5 overflow-hidden rounded-xl border border-border">
+        <div className="mt-4 flex items-center justify-end gap-2 text-[11px]">
+          <button
+            onClick={() => toggleAll(true)}
+            className="rounded-md border border-border bg-surface px-2.5 py-1 font-semibold text-muted-foreground hover:text-foreground"
+          >
+            Mở rộng tất cả
+          </button>
+          <button
+            onClick={() => toggleAll(false)}
+            className="rounded-md border border-border bg-surface px-2.5 py-1 font-semibold text-muted-foreground hover:text-foreground"
+          >
+            Thu gọn
+          </button>
+        </div>
+
+        <div className="mt-2 overflow-hidden rounded-xl border border-border">
           <table className="w-full text-sm">
             <thead className="bg-surface-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
               <tr>
-                <th className="px-4 py-2.5 w-10">#</th>
-                <th className="px-3 py-2.5">Bài học</th>
+                <th className="w-8 px-2 py-2.5"></th>
+                <th className="px-3 py-2.5">Unit / Bài tập</th>
+                <th className="px-3 py-2.5 text-center">Loại</th>
                 <th className="px-3 py-2.5 text-center">Trạng thái</th>
                 <th className="px-3 py-2.5 text-center">Điểm</th>
               </tr>
             </thead>
             <tbody>
-              {unitRows.map((r) => (
-                <tr key={r.unit.id} className="border-t border-border/60">
-                  <td className="px-4 py-3 text-xs font-semibold text-muted-foreground">
-                    {r.unit.index}
-                  </td>
-                  <td className="px-3 py-3">
-                    <div className="font-medium text-foreground">{r.unit.title}</div>
-                    <div className="text-[11px] text-muted-foreground">
-                      {r.unit.activities.length} hoạt động
-                    </div>
-                  </td>
-                  <td className="px-3 py-3 text-center">
-                    {r.score !== null ? (
-                      <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                        Hoàn thành
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                        Chưa học
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-3 py-3 text-center">
-                    {r.score !== null ? <ScoreBadge score={r.score} /> : <span className="text-xs text-muted-foreground">—</span>}
-                  </td>
-                </tr>
-              ))}
+              {unitRows.map((r) => {
+                const lbl = parseUnitLabel(r.unit);
+                const isOpen = !!expanded[r.unit.id];
+                return (
+                  <>
+                    <tr key={r.unit.id} className="border-t border-border/60 bg-surface/40">
+                      <td className="px-2 py-3 text-center">
+                        <button
+                          onClick={() =>
+                            setExpanded((s) => ({ ...s, [r.unit.id]: !s[r.unit.id] }))
+                          }
+                          className="rounded-md p-1 hover:bg-muted"
+                          aria-label={isOpen ? "Thu gọn" : "Mở rộng"}
+                        >
+                          <span className={cn("inline-block transition", isOpen && "rotate-90")}>▸</span>
+                        </button>
+                      </td>
+                      <td className="px-3 py-3">
+                        <div className="font-semibold text-foreground">
+                          {lbl.index}
+                          <span className="ml-1 font-normal text-muted-foreground">· {lbl.topic}</span>
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {r.activities.length} bài tập
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 text-center text-[11px] text-muted-foreground">—</td>
+                      <td className="px-3 py-3 text-center">
+                        {r.unitScore !== null ? (
+                          <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                            Hoàn thành
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+                            Chưa học
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        {r.unitScore !== null ? (
+                          <ScoreBadge score={r.unitScore} />
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    </tr>
+                    {isOpen &&
+                      r.activities.map((a) => (
+                        <tr key={a.id} className="border-t border-border/40 bg-background">
+                          <td className="px-2 py-2.5"></td>
+                          <td className="px-3 py-2.5 pl-8 text-sm text-foreground">{a.title}</td>
+                          <td className="px-3 py-2.5 text-center">
+                            <span className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">
+                              {typeLabel[a.type ?? ""] ?? a.type ?? "—"}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5 text-center text-[11px] text-muted-foreground">
+                            {a.score !== null ? "Đã nộp" : "Chưa làm"}
+                          </td>
+                          <td className="px-3 py-2.5 text-center">
+                            {a.score !== null ? (
+                              <ScoreCell score={a.score} />
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                  </>
+                );
+              })}
               {unitRows.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                  <td colSpan={5} className="px-4 py-8 text-center text-sm text-muted-foreground">
                     Khóa học chưa có bài học.
                   </td>
                 </tr>
