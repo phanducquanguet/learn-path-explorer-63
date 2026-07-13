@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { classes, students, type TeacherStudent } from "@/lib/teacher-data";
 import { levels } from "@/lib/lms-data";
@@ -73,23 +73,59 @@ function studentCourseScore(s: TeacherStudent, courseId: string): number {
   return Math.max(30, Math.min(100, Math.round(base + offset * 0.5 + skillTilt * 0.4)));
 }
 
-// Deterministic per-(student, unit) score around the course base
-function studentUnitScore(s: TeacherStudent, courseId: string, unitId: string): number {
+// Deterministic per-(student, activity) score around the course base.
+// Different activity types tilt slightly (quiz = harder, video = easier).
+function studentActivityScore(
+  s: TeacherStudent,
+  courseId: string,
+  activityId: string,
+  activityType?: string,
+): number {
   const base = studentCourseScore(s, courseId);
   let h = 0;
-  const key = `${s.id}-${unitId}`;
+  const key = `${s.id}-${activityId}`;
   for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
-  const delta = (h % 25) - 12; // -12..+12
-  return Math.max(0, Math.min(100, base + delta));
+  const delta = (h % 31) - 15; // -15..+15
+  const tilt =
+    activityType === "quiz" ? -3 : activityType === "video" ? 4 : activityType === "speaking" ? -2 : 0;
+  return Math.max(0, Math.min(100, base + delta + tilt));
 }
 
-// Short label for a unit column. Uses "U{index}" when available, else falls back
-// to parsed number from the id/title. Keeps columns compact and predictable
-// regardless of how the course author named its units.
-function unitShortLabel(u: { id: string; index?: number; title?: string }): string {
-  if (typeof u.index === "number") return `U${u.index}`;
-  const m = u.id.match(/(\d+)(?!.*\d)/) || (u.title ?? "").match(/(\d+)/);
-  return m ? `U${m[1]}` : u.id.slice(-3).toUpperCase();
+// Per-unit score = average of activity scores inside the unit.
+function studentUnitScore(
+  s: TeacherStudent,
+  courseId: string,
+  unit: { id: string; activities?: { id: string; type?: string }[] },
+): number {
+  const acts = unit.activities ?? [];
+  if (acts.length === 0) {
+    // Fallback: treat unit id as its own scored item.
+    return studentActivityScore(s, courseId, unit.id);
+  }
+  const sum = acts.reduce(
+    (a, act) => a + studentActivityScore(s, courseId, act.id, act.type),
+    0,
+  );
+  return Math.round(sum / acts.length);
+}
+
+// Parse a unit title like "Unit 3: Travel Stories" into { index, topic }.
+// Falls back gracefully when the author names units without a convention.
+function parseUnitLabel(u: { id: string; index?: number; title?: string }): {
+  index: string;
+  topic: string;
+} {
+  const raw = (u.title ?? "").trim();
+  // Match "Unit N", "Unit N:", "Unit N -", "Unit N."
+  const m = raw.match(/^unit\s*(\d+)\s*[:\-.·]?\s*(.*)$/i);
+  if (m) {
+    return { index: `Unit ${m[1]}`, topic: m[2].trim() || "—" };
+  }
+  if (typeof u.index === "number") {
+    return { index: `Unit ${u.index}`, topic: raw || "—" };
+  }
+  const idNum = u.id.match(/(\d+)(?!.*\d)/);
+  return { index: idNum ? `Unit ${idNum[1]}` : u.id.toUpperCase(), topic: raw || "—" };
 }
 
 function bucketOf(score: number) {
@@ -413,21 +449,30 @@ function StatsPage() {
                   <thead className="sticky top-0 z-10 bg-surface-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     <tr>
                       <th className="sticky left-0 z-20 bg-surface-2 px-5 py-3 text-left">Học viên</th>
-                      {activeCourseUnits.map((u) => (
-                        <th
-                          key={u.id}
-                          title={u.title}
-                          className="min-w-[64px] px-2 py-3 text-center"
-                        >
-                          {unitShortLabel(u)}
-                        </th>
-                      ))}
+                      {activeCourseUnits.map((u) => {
+                        const lbl = parseUnitLabel(u);
+                        return (
+                          <th
+                            key={u.id}
+                            title={`${lbl.index} · ${lbl.topic} · ${u.activities?.length ?? 0} bài tập`}
+                            className="min-w-[120px] max-w-[160px] px-2 py-3 text-center align-bottom"
+                          >
+                            <div className="text-[11px] font-bold text-foreground">{lbl.index}</div>
+                            <div className="mt-0.5 truncate text-[10px] font-medium normal-case text-muted-foreground">
+                              {lbl.topic}
+                            </div>
+                            <div className="mt-0.5 text-[9px] font-normal normal-case text-muted-foreground/70">
+                              {u.activities?.length ?? 0} bài tập
+                            </div>
+                          </th>
+                        );
+                      })}
                       <th className="min-w-[64px] px-3 py-3 text-center text-foreground">TB</th>
                     </tr>
                   </thead>
                   <tbody>
                     {rows.map((r) => {
-                      const perUnit = activeCourseUnits.map((u) => studentUnitScore(r.student, activeCourse.id, u.id));
+                      const perUnit = activeCourseUnits.map((u) => studentUnitScore(r.student, activeCourse.id, u));
                       const avg = perUnit.length
                         ? Math.round(perUnit.reduce((a, x) => a + x, 0) / perUnit.length)
                         : r.score;
@@ -783,39 +828,62 @@ function UnitDetailModal({
   const courseFull = lv?.courses.find((c) => c.id === course.id);
   const units = courseFull?.units ?? [];
 
-  const baseScore = studentCourseScore(student, course.id);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+  const toggleAll = (v: boolean) => {
+    const next: Record<string, boolean> = {};
+    units.forEach((u) => (next[u.id] = v));
+    setExpanded(next);
+  };
 
-  // Deterministic per-unit score around baseScore
+  // Precompute unit + activity scores. Completion is deterministic per unit.
   const unitRows = units.map((u) => {
     let h = 0;
     const key = `${student.id}-${u.id}`;
     for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
-    const delta = (h % 25) - 12; // -12..+12
-    const score = Math.max(0, Math.min(100, baseScore + delta));
     const completed = (h % 10) < 7; // ~70% completed
-    return { unit: u, score: completed ? score : null };
+    const activities = (u.activities ?? []).map((a) => ({
+      id: a.id,
+      title: a.title,
+      type: a.type,
+      score: completed ? studentActivityScore(student, course.id, a.id, a.type) : null,
+    }));
+    const done = activities.filter((a) => a.score !== null);
+    const unitScore =
+      completed && done.length > 0
+        ? Math.round(done.reduce((s, a) => s + (a.score as number), 0) / done.length)
+        : null;
+    return { unit: u, activities, unitScore, completed };
   });
 
-  const completed = unitRows.filter((r) => r.score !== null).length;
+  const completedUnits = unitRows.filter((r) => r.unitScore !== null).length;
   const avg =
-    completed > 0
+    completedUnits > 0
       ? Math.round(
           unitRows
-            .filter((r) => r.score !== null)
-            .reduce((a, r) => a + (r.score as number), 0) / completed,
+            .filter((r) => r.unitScore !== null)
+            .reduce((a, r) => a + (r.unitScore as number), 0) / completedUnits,
         )
       : 0;
+
+  const typeLabel: Record<string, string> = {
+    video: "Video",
+    reading: "Đọc",
+    quiz: "Quiz",
+    speaking: "Nói",
+    writing: "Viết",
+    listening: "Nghe",
+  };
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={onClose}>
       <div
-        className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-2xl bg-background p-6 shadow-elevated"
+        className="max-h-[90vh] w-full max-w-3xl overflow-auto rounded-2xl bg-background p-6 shadow-elevated"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="text-xs font-semibold uppercase tracking-wider text-primary">
-              Chi tiết theo bài học
+              Chi tiết theo bài học & bài tập
             </div>
             <div className="mt-1 text-lg font-semibold text-foreground">{student.name}</div>
             <div className="text-xs text-muted-foreground">
@@ -828,52 +896,112 @@ function UnitDetailModal({
         </div>
 
         <div className="mt-4 grid grid-cols-3 gap-3">
-          <StatBox label="Tổng số bài" value={units.length} />
-          <StatBox label="Đã hoàn thành" value={`${completed}/${units.length}`} />
+          <StatBox label="Tổng số Unit" value={units.length} />
+          <StatBox label="Đã hoàn thành" value={`${completedUnits}/${units.length}`} />
           <StatBox label="Điểm TB" value={avg || "—"} />
         </div>
 
-        <div className="mt-5 overflow-hidden rounded-xl border border-border">
+        <div className="mt-4 flex items-center justify-end gap-2 text-[11px]">
+          <button
+            onClick={() => toggleAll(true)}
+            className="rounded-md border border-border bg-surface px-2.5 py-1 font-semibold text-muted-foreground hover:text-foreground"
+          >
+            Mở rộng tất cả
+          </button>
+          <button
+            onClick={() => toggleAll(false)}
+            className="rounded-md border border-border bg-surface px-2.5 py-1 font-semibold text-muted-foreground hover:text-foreground"
+          >
+            Thu gọn
+          </button>
+        </div>
+
+        <div className="mt-2 overflow-hidden rounded-xl border border-border">
           <table className="w-full text-sm">
             <thead className="bg-surface-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
               <tr>
-                <th className="px-4 py-2.5 w-10">#</th>
-                <th className="px-3 py-2.5">Bài học</th>
+                <th className="w-8 px-2 py-2.5"></th>
+                <th className="px-3 py-2.5">Unit / Bài tập</th>
+                <th className="px-3 py-2.5 text-center">Loại</th>
                 <th className="px-3 py-2.5 text-center">Trạng thái</th>
                 <th className="px-3 py-2.5 text-center">Điểm</th>
               </tr>
             </thead>
             <tbody>
-              {unitRows.map((r) => (
-                <tr key={r.unit.id} className="border-t border-border/60">
-                  <td className="px-4 py-3 text-xs font-semibold text-muted-foreground">
-                    {r.unit.index}
-                  </td>
-                  <td className="px-3 py-3">
-                    <div className="font-medium text-foreground">{r.unit.title}</div>
-                    <div className="text-[11px] text-muted-foreground">
-                      {r.unit.activities.length} hoạt động
-                    </div>
-                  </td>
-                  <td className="px-3 py-3 text-center">
-                    {r.score !== null ? (
-                      <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
-                        Hoàn thành
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
-                        Chưa học
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-3 py-3 text-center">
-                    {r.score !== null ? <ScoreBadge score={r.score} /> : <span className="text-xs text-muted-foreground">—</span>}
-                  </td>
-                </tr>
-              ))}
+              {unitRows.map((r) => {
+                const lbl = parseUnitLabel(r.unit);
+                const isOpen = !!expanded[r.unit.id];
+                return (
+                  <Fragment key={r.unit.id}>
+                    <tr className="border-t border-border/60 bg-surface/40">
+                      <td className="px-2 py-3 text-center">
+                        <button
+                          onClick={() =>
+                            setExpanded((s) => ({ ...s, [r.unit.id]: !s[r.unit.id] }))
+                          }
+                          className="rounded-md p-1 hover:bg-muted"
+                          aria-label={isOpen ? "Thu gọn" : "Mở rộng"}
+                        >
+                          <span className={cn("inline-block transition", isOpen && "rotate-90")}>▸</span>
+                        </button>
+                      </td>
+                      <td className="px-3 py-3">
+                        <div className="font-semibold text-foreground">
+                          {lbl.index}
+                          <span className="ml-1 font-normal text-muted-foreground">· {lbl.topic}</span>
+                        </div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {r.activities.length} bài tập
+                        </div>
+                      </td>
+                      <td className="px-3 py-3 text-center text-[11px] text-muted-foreground">—</td>
+                      <td className="px-3 py-3 text-center">
+                        {r.unitScore !== null ? (
+                          <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                            Hoàn thành
+                          </span>
+                        ) : (
+                          <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+                            Chưa học
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-3 py-3 text-center">
+                        {r.unitScore !== null ? (
+                          <ScoreBadge score={r.unitScore} />
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    </tr>
+                    {isOpen &&
+                      r.activities.map((a) => (
+                        <tr key={a.id} className="border-t border-border/40 bg-background">
+                          <td className="px-2 py-2.5"></td>
+                          <td className="px-3 py-2.5 pl-8 text-sm text-foreground">{a.title}</td>
+                          <td className="px-3 py-2.5 text-center">
+                            <span className="rounded-md bg-muted px-2 py-0.5 text-[10px] font-semibold uppercase text-muted-foreground">
+                              {typeLabel[a.type ?? ""] ?? a.type ?? "—"}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2.5 text-center text-[11px] text-muted-foreground">
+                            {a.score !== null ? "Đã nộp" : "Chưa làm"}
+                          </td>
+                          <td className="px-3 py-2.5 text-center">
+                            {a.score !== null ? (
+                              <ScoreCell score={a.score} />
+                            ) : (
+                              <span className="text-xs text-muted-foreground">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                  </Fragment>
+                );
+              })}
               {unitRows.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                  <td colSpan={5} className="px-4 py-8 text-center text-sm text-muted-foreground">
                     Khóa học chưa có bài học.
                   </td>
                 </tr>
