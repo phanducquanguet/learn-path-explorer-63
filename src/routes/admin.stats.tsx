@@ -449,21 +449,30 @@ function StatsPage() {
                   <thead className="sticky top-0 z-10 bg-surface-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                     <tr>
                       <th className="sticky left-0 z-20 bg-surface-2 px-5 py-3 text-left">Học viên</th>
-                      {activeCourseUnits.map((u) => (
-                        <th
-                          key={u.id}
-                          title={u.title}
-                          className="min-w-[64px] px-2 py-3 text-center"
-                        >
-                          {unitShortLabel(u)}
-                        </th>
-                      ))}
+                      {activeCourseUnits.map((u) => {
+                        const lbl = parseUnitLabel(u);
+                        return (
+                          <th
+                            key={u.id}
+                            title={`${lbl.index} · ${lbl.topic} · ${u.activities?.length ?? 0} bài tập`}
+                            className="min-w-[120px] max-w-[160px] px-2 py-3 text-center align-bottom"
+                          >
+                            <div className="text-[11px] font-bold text-foreground">{lbl.index}</div>
+                            <div className="mt-0.5 truncate text-[10px] font-medium normal-case text-muted-foreground">
+                              {lbl.topic}
+                            </div>
+                            <div className="mt-0.5 text-[9px] font-normal normal-case text-muted-foreground/70">
+                              {u.activities?.length ?? 0} bài tập
+                            </div>
+                          </th>
+                        );
+                      })}
                       <th className="min-w-[64px] px-3 py-3 text-center text-foreground">TB</th>
                     </tr>
                   </thead>
                   <tbody>
                     {rows.map((r) => {
-                      const perUnit = activeCourseUnits.map((u) => studentUnitScore(r.student, activeCourse.id, u.id));
+                      const perUnit = activeCourseUnits.map((u) => studentUnitScore(r.student, activeCourse.id, u));
                       const avg = perUnit.length
                         ? Math.round(perUnit.reduce((a, x) => a + x, 0) / perUnit.length)
                         : r.score;
