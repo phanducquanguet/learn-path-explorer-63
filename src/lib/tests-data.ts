@@ -39,8 +39,12 @@ export type TestStructureItem = {
   customBank?: BankQuestion[];
 };
 
+export type TestApprovalStatus = "draft" | "pending" | "approved";
+
 export type Test = {
   id: string;
+  /** Mã đề hiển thị (VD: FLYER-NB-TEST). */
+  code?: string;
   name: string;
   description: string;
   /** Đơn vị (trường / trung tâm) mà bài thi thuộc về. */
@@ -59,6 +63,13 @@ export type Test = {
   createdAt: string;
   /** Nếu được tạo bằng cách sao chép từ bài khác. */
   copiedFromId?: string;
+  /** Người tạo đề (mã / tên). Dùng để chặn tự duyệt đề của chính mình. */
+  createdBy?: string;
+  /** Trạng thái duyệt (nháp / chờ duyệt / đã duyệt). */
+  approvalStatus?: TestApprovalStatus;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  reviewNote?: string;
 };
 
 export type ProctorEventType =
