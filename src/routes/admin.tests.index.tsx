@@ -331,34 +331,16 @@ function AdminTestsList() {
                 {filtered.map((t, idx) => {
                   const st = testDisplayStatus(t);
                   const org = getOrg(t.orgId);
-                  const isSelected = selected.includes(t.id);
                   const isSim = t.id.includes("-sim-");
                   const activity = t.submitted;
                   const pendingGrade = Math.max(0, t.submitted - t.graded);
                   return (
                     <tr
                       key={t.id}
-                      className={cn(
-                        "transition hover:bg-muted/30",
-                        isSelected && "bg-primary/5",
-                      )}
+                      className="transition hover:bg-muted/30"
                     >
-                      {isAdmin && (
-                        <td className="px-3 py-3">
-                          <button
-                            onClick={() => toggleSelect(t.id)}
-                            className="inline-flex items-center"
-                            aria-label="Chọn"
-                          >
-                            {isSelected ? (
-                              <CheckSquare className="h-4 w-4 text-primary" />
-                            ) : (
-                              <Square className="h-4 w-4 text-muted-foreground" />
-                            )}
-                          </button>
-                        </td>
-                      )}
                       <td className="px-2 py-3 text-xs text-muted-foreground">{idx + 1}</td>
+
                       <td className="px-4 py-3">
                         <Link
                           to="/teacher/tests/$testId"
