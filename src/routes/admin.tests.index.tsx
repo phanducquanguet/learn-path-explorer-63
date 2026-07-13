@@ -310,29 +310,6 @@ function AdminTestsList() {
           </div>
         </div>
 
-        {/* Bulk actions bar */}
-        {isAdmin && selected.length > 0 && (
-          <div className="mt-3 flex items-center gap-2 rounded-xl border border-border bg-primary/5 px-4 py-2">
-            <span className="text-xs text-muted-foreground">
-              Đã chọn <b className="text-foreground">{selected.length}</b> đề
-            </span>
-            <div className="ml-auto flex items-center gap-2">
-              <button
-                onClick={openBulkCopy}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-3 py-1.5 text-xs font-semibold text-background hover:opacity-90"
-              >
-                <Copy className="h-3.5 w-3.5" /> Sao chép sang đơn vị
-              </button>
-              <button
-                onClick={() => setSelected([])}
-                className="rounded-xl border border-border bg-background p-1.5 text-muted-foreground hover:text-foreground"
-                aria-label="Bỏ chọn"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Bảng */}
         <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
@@ -340,21 +317,6 @@ function AdminTestsList() {
             <table className="w-full text-sm">
               <thead className="border-b border-border bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  {isAdmin && (
-                    <th className="w-10 px-3 py-3 text-left font-semibold">
-                      <button
-                        onClick={toggleSelectAll}
-                        className="inline-flex items-center text-foreground"
-                        aria-label="Chọn tất cả"
-                      >
-                        {allSelectedInFilter ? (
-                          <CheckSquare className="h-4 w-4 text-primary" />
-                        ) : (
-                          <Square className="h-4 w-4" />
-                        )}
-                      </button>
-                    </th>
-                  )}
                   <th className="w-10 px-2 py-3 text-left font-semibold">#</th>
                   <th className="px-4 py-3 text-left font-semibold">Đề thi</th>
                   <th className="px-4 py-3 text-left font-semibold">Đơn vị</th>
@@ -364,6 +326,7 @@ function AdminTestsList() {
                   <th className="px-4 py-3 text-right font-semibold">Thao tác</th>
                 </tr>
               </thead>
+
               <tbody className="divide-y divide-border">
                 {filtered.map((t, idx) => {
                   const st = testDisplayStatus(t);
