@@ -39,8 +39,12 @@ export type TestStructureItem = {
   customBank?: BankQuestion[];
 };
 
+export type TestApprovalStatus = "draft" | "pending" | "approved";
+
 export type Test = {
   id: string;
+  /** Mã đề hiển thị (VD: FLYER-NB-TEST). */
+  code?: string;
   name: string;
   description: string;
   /** Đơn vị (trường / trung tâm) mà bài thi thuộc về. */
@@ -59,6 +63,13 @@ export type Test = {
   createdAt: string;
   /** Nếu được tạo bằng cách sao chép từ bài khác. */
   copiedFromId?: string;
+  /** Người tạo đề (mã / tên). Dùng để chặn tự duyệt đề của chính mình. */
+  createdBy?: string;
+  /** Trạng thái duyệt (nháp / chờ duyệt / đã duyệt). */
+  approvalStatus?: TestApprovalStatus;
+  reviewedBy?: string;
+  reviewedAt?: string;
+  reviewNote?: string;
 };
 
 export type ProctorEventType =
@@ -134,6 +145,11 @@ export const tests: Test[] = [
     graded: 6,
     avgScore: 7.4,
     createdAt: days(-10),
+    code: "B1-MID-05",
+    createdBy: "admin.hoa",
+    approvalStatus: "approved",
+    reviewedBy: "admin.dung",
+    reviewedAt: days(-9),
   },
   {
     id: "test-2",
@@ -154,6 +170,9 @@ export const tests: Test[] = [
     submitted: 0,
     graded: 0,
     createdAt: days(-2),
+    code: "A1-QUIZ-U3",
+    createdBy: "admin.linh",
+    approvalStatus: "pending",
   },
   {
     id: "test-3",
@@ -176,6 +195,11 @@ export const tests: Test[] = [
     submitted: 0,
     graded: 0,
     createdAt: days(-1),
+    code: "A2-FIN-WKB",
+    createdBy: "admin.linh",
+    approvalStatus: "approved",
+    reviewedBy: "admin.dung",
+    reviewedAt: days(-1),
   },
   {
     id: "test-4",
@@ -199,6 +223,9 @@ export const tests: Test[] = [
     graded: 2,
     avgScore: 6.8,
     createdAt: days(-4),
+    code: "B1-MOCK-EVE",
+    createdBy: "admin.hoa",
+    approvalStatus: "draft",
   },
   {
     id: "test-1-sim-1700000001",
@@ -471,4 +498,53 @@ export function testStatus(t: Test): "upcoming" | "open" | "closed" {
   if (n < new Date(t.openAt).getTime()) return "upcoming";
   if (n > new Date(t.closeAt).getTime()) return "closed";
   return "open";
+}
+
+export type TestDisplayStatus =
+  | "draft"
+  | "pending"
+  | "approved"
+  | "open"
+  | "closed";
+
+export const TEST_STATUS_LABEL: Record<TestDisplayStatus, string> = {
+  draft: "Bản nháp",
+  pending: "Chờ duyệt",
+  approved: "Đã duyệt",
+  open: "Đang mở",
+  closed: "Đã đóng",
+};
+
+export function testDisplayStatus(t: Test): TestDisplayStatus {
+  const approval = t.approvalStatus ?? "approved";
+  if (approval === "draft") return "draft";
+  if (approval === "pending") return "pending";
+  const s = testStatus(t);
+  if (s === "upcoming") return "approved";
+  if (s === "open") return "open";
+  return "closed";
+}
+
+/** Tổng số lượt hoạt động của một đề (đăng ký / nộp bài). */
+export function testActivityCount(t: Test): number {
+  return t.registered + t.submitted;
+}
+
+
+export function approveTest(id: string, reviewer: string, note?: string) {
+  const t = tests.find((x) => x.id === id);
+  if (!t) return;
+  t.approvalStatus = "approved";
+  t.reviewedBy = reviewer;
+  t.reviewedAt = new Date().toISOString();
+  if (note) t.reviewNote = note;
+}
+
+export function sendBackTest(id: string, reviewer: string, note?: string) {
+  const t = tests.find((x) => x.id === id);
+  if (!t) return;
+  t.approvalStatus = "draft";
+  t.reviewedBy = reviewer;
+  t.reviewedAt = new Date().toISOString();
+  if (note) t.reviewNote = note;
 }
