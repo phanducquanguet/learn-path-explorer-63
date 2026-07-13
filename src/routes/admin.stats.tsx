@@ -629,6 +629,7 @@ function UnitDetailModal({
 }: {
   student: TeacherStudent;
   course: CourseRef;
+  onClose: () => void;
 }) {
   const cls = classes.find((c) => c.id === student.classId);
   const org = cls ? getOrg(classOrgMap[cls.id]) : null;
