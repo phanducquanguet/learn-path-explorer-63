@@ -163,6 +163,13 @@ function StatsPage() {
     [courseId, levelCode],
   );
 
+  // Units of the active course (looked up via level → course → units)
+  const activeCourseUnits = useMemo(() => {
+    if (!activeCourse) return [];
+    const lv = levels.find((l) => l.code === activeCourse.levelCode);
+    return lv?.courses.find((c) => c.id === activeCourse.id)?.units ?? [];
+  }, [activeCourse]);
+
   const scopedStudents = students.filter((s) => {
     if (!scopedClassIds.has(s.classId)) return false;
     if (activeCourse) {
