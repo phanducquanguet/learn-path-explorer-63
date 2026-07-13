@@ -121,6 +121,7 @@ function StatsPage() {
 
   const [sortBy, setSortBy] = useState<"name" | "score" | "class">("score");
   const [drilldown, setDrilldown] = useState<TeacherStudent | null>(null);
+  const [viewMode, setViewMode] = useState<"matrix" | "list">("matrix");
   const [unitDetail, setUnitDetail] = useState<{ student: TeacherStudent; course: CourseRef } | null>(null);
 
   // ===== Draft scope (để populate dropdown Lớp / Khóa học phụ thuộc) =====
