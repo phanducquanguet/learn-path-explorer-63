@@ -477,8 +477,7 @@ export function QuizRunner({
 
   const q = questions[idx];
   const result = results[q?.id];
-  const q = questions[idx];
-  const result = results[q?.id];
+
   const totalMax = questions.reduce((s, x) => s + x.maxScore, 0);
   const totalEarned = Object.values(results).reduce((s, r) => s + r.earned, 0);
   const answeredCount = questions.filter((qq) => hasAnswer(qq, answers[qq.id])).length;
