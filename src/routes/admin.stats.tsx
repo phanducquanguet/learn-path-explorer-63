@@ -102,6 +102,7 @@ function StatsPage() {
 
   const [sortBy, setSortBy] = useState<"name" | "score" | "class">("score");
   const [drilldown, setDrilldown] = useState<TeacherStudent | null>(null);
+  const [unitDetail, setUnitDetail] = useState<{ student: TeacherStudent; course: CourseRef } | null>(null);
 
   // ===== Draft scope (để populate dropdown Lớp / Khóa học phụ thuộc) =====
   const draftScopedClasses = useMemo(() => {
@@ -362,6 +363,7 @@ function StatsPage() {
                   <th className="cursor-pointer px-3 py-3 text-center" onClick={() => setSortBy("score")}>
                     <span className="inline-flex items-center gap-1">Điểm <ArrowUpDown className="h-3 w-3" /></span>
                   </th>
+                  <th className="px-3 py-3 text-center">Chi tiết</th>
                 </tr>
               </thead>
 
@@ -387,18 +389,26 @@ function StatsPage() {
                     <td className="px-3 py-3 text-center">
                       <ScoreBadge score={r.score} />
                     </td>
+                    <td className="px-3 py-3 text-center">
+                      <button
+                        onClick={() => setUnitDetail({ student: r.student, course: activeCourse! })}
+                        className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-muted"
+                      >
+                        <BookOpen className="h-3 w-3" /> Chi tiết bài
+                      </button>
+                    </td>
                   </tr>
                 ))}
                 {applied && activeCourse && rows.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                    <td colSpan={6} className="px-5 py-10 text-center text-sm text-muted-foreground">
                       Không có học viên nào khớp bộ lọc.
                     </td>
                   </tr>
                 )}
                 {!applied && (
                   <tr>
-                    <td colSpan={5} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                    <td colSpan={6} className="px-5 py-10 text-center text-sm text-muted-foreground">
                       Vui lòng chọn khóa học và bấm <span className="font-semibold text-foreground">Lọc</span> để xem điểm số học viên.
 
                     </td>
@@ -414,6 +424,14 @@ function StatsPage() {
         <DrilldownModal
           student={drilldown}
           onClose={() => setDrilldown(null)}
+        />
+      )}
+
+      {unitDetail && (
+        <UnitDetailModal
+          student={unitDetail.student}
+          course={unitDetail.course}
+          onClose={() => setUnitDetail(null)}
         />
       )}
     </div>
@@ -603,3 +621,131 @@ function DrilldownModal({ student, onClose }: { student: TeacherStudent; onClose
     </div>
   );
 }
+
+function UnitDetailModal({
+  student,
+  course,
+  onClose,
+}: {
+  student: TeacherStudent;
+  course: CourseRef;
+  onClose: () => void;
+}) {
+  const cls = classes.find((c) => c.id === student.classId);
+  const org = cls ? getOrg(classOrgMap[cls.id]) : null;
+  const lv = levels.find((l) => l.code === course.levelCode);
+  const courseFull = lv?.courses.find((c) => c.id === course.id);
+  const units = courseFull?.units ?? [];
+
+  const baseScore = studentCourseScore(student, course.id);
+
+  // Deterministic per-unit score around baseScore
+  const unitRows = units.map((u) => {
+    let h = 0;
+    const key = `${student.id}-${u.id}`;
+    for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+    const delta = (h % 25) - 12; // -12..+12
+    const score = Math.max(0, Math.min(100, baseScore + delta));
+    const completed = (h % 10) < 7; // ~70% completed
+    return { unit: u, score: completed ? score : null };
+  });
+
+  const completed = unitRows.filter((r) => r.score !== null).length;
+  const avg =
+    completed > 0
+      ? Math.round(
+          unitRows
+            .filter((r) => r.score !== null)
+            .reduce((a, r) => a + (r.score as number), 0) / completed,
+        )
+      : 0;
+
+  return (
+    <div className="fixed inset-0 z-50 grid place-items-center bg-black/50 p-4" onClick={onClose}>
+      <div
+        className="max-h-[90vh] w-full max-w-2xl overflow-auto rounded-2xl bg-background p-6 shadow-elevated"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="text-xs font-semibold uppercase tracking-wider text-primary">
+              Chi tiết theo bài học
+            </div>
+            <div className="mt-1 text-lg font-semibold text-foreground">{student.name}</div>
+            <div className="text-xs text-muted-foreground">
+              {org?.shortName ?? "—"} · {cls?.name ?? "—"} · {course.levelCode} · {course.title}
+            </div>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1 hover:bg-muted">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-4 grid grid-cols-3 gap-3">
+          <StatBox label="Tổng số bài" value={units.length} />
+          <StatBox label="Đã hoàn thành" value={`${completed}/${units.length}`} />
+          <StatBox label="Điểm TB" value={avg || "—"} />
+        </div>
+
+        <div className="mt-5 overflow-hidden rounded-xl border border-border">
+          <table className="w-full text-sm">
+            <thead className="bg-surface-2 text-left text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+              <tr>
+                <th className="px-4 py-2.5 w-10">#</th>
+                <th className="px-3 py-2.5">Bài học</th>
+                <th className="px-3 py-2.5 text-center">Trạng thái</th>
+                <th className="px-3 py-2.5 text-center">Điểm</th>
+              </tr>
+            </thead>
+            <tbody>
+              {unitRows.map((r) => (
+                <tr key={r.unit.id} className="border-t border-border/60">
+                  <td className="px-4 py-3 text-xs font-semibold text-muted-foreground">
+                    {r.unit.index}
+                  </td>
+                  <td className="px-3 py-3">
+                    <div className="font-medium text-foreground">{r.unit.title}</div>
+                    <div className="text-[11px] text-muted-foreground">
+                      {r.unit.activities.length} hoạt động
+                    </div>
+                  </td>
+                  <td className="px-3 py-3 text-center">
+                    {r.score !== null ? (
+                      <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                        Hoàn thành
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold text-muted-foreground">
+                        Chưa học
+                      </span>
+                    )}
+                  </td>
+                  <td className="px-3 py-3 text-center">
+                    {r.score !== null ? <ScoreBadge score={r.score} /> : <span className="text-xs text-muted-foreground">—</span>}
+                  </td>
+                </tr>
+              ))}
+              {unitRows.length === 0 && (
+                <tr>
+                  <td colSpan={4} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    Khóa học chưa có bài học.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatBox({ label, value }: { label: string; value: string | number }) {
+  return (
+    <div className="rounded-xl border border-border bg-surface p-3">
+      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</div>
+      <div className="mt-1 text-lg font-bold text-foreground">{value}</div>
+    </div>
+  );
+}
+
