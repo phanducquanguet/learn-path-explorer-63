@@ -21,8 +21,6 @@ import {
   Copy,
   Sparkles,
   Building2,
-  CheckSquare,
-  Square,
   X,
   Activity,
   FileText,
@@ -149,7 +147,7 @@ function AdminTestsList() {
   const [tests, setTests] = useState<Test[]>(seedTests);
   const [orgFilter, setOrgFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<TestDisplayStatus | "all">("all");
-  const [selected, setSelected] = useState<string[]>([]);
+  
   const [copyTarget, setCopyTarget] = useState<Test[] | null>(null);
   const [query, setQuery] = useState("");
 
@@ -189,14 +187,6 @@ function AdminTestsList() {
     setTests((arr) => [cloneTestSimilar(t, idx), ...arr]);
   };
 
-  const toggleSelect = (id: string) =>
-    setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
-
-  const openBulkCopy = () => {
-    const list = tests.filter((t) => selected.includes(t.id));
-    if (list.length > 0) setCopyTarget(list);
-  };
-
   const performCopy = (sources: Test[], targetOrgId: string, targetClassIds: string[]) => {
     const stamp = Date.now();
     const clones: Test[] = sources.map((src, i) => ({
@@ -218,18 +208,8 @@ function AdminTestsList() {
     }));
     setTests((arr) => [...clones, ...arr]);
     setCopyTarget(null);
-    setSelected([]);
   };
 
-  const allSelectedInFilter =
-    filtered.length > 0 && filtered.every((t) => selected.includes(t.id));
-  const toggleSelectAll = () => {
-    if (allSelectedInFilter) {
-      setSelected((s) => s.filter((id) => !filtered.some((t) => t.id === id)));
-    } else {
-      setSelected((s) => Array.from(new Set([...s, ...filtered.map((t) => t.id)])));
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -330,51 +310,13 @@ function AdminTestsList() {
           </div>
         </div>
 
-        {/* Bulk actions bar */}
-        {isAdmin && selected.length > 0 && (
-          <div className="mt-3 flex items-center gap-2 rounded-xl border border-border bg-primary/5 px-4 py-2">
-            <span className="text-xs text-muted-foreground">
-              Đã chọn <b className="text-foreground">{selected.length}</b> đề
-            </span>
-            <div className="ml-auto flex items-center gap-2">
-              <button
-                onClick={openBulkCopy}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-3 py-1.5 text-xs font-semibold text-background hover:opacity-90"
-              >
-                <Copy className="h-3.5 w-3.5" /> Sao chép sang đơn vị
-              </button>
-              <button
-                onClick={() => setSelected([])}
-                className="rounded-xl border border-border bg-background p-1.5 text-muted-foreground hover:text-foreground"
-                aria-label="Bỏ chọn"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Bảng */}
+
         <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="border-b border-border bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  {isAdmin && (
-                    <th className="w-10 px-3 py-3 text-left font-semibold">
-                      <button
-                        onClick={toggleSelectAll}
-                        className="inline-flex items-center text-foreground"
-                        aria-label="Chọn tất cả"
-                      >
-                        {allSelectedInFilter ? (
-                          <CheckSquare className="h-4 w-4 text-primary" />
-                        ) : (
-                          <Square className="h-4 w-4" />
-                        )}
-                      </button>
-                    </th>
-                  )}
                   <th className="w-10 px-2 py-3 text-left font-semibold">#</th>
                   <th className="px-4 py-3 text-left font-semibold">Đề thi</th>
                   <th className="px-4 py-3 text-left font-semibold">Đơn vị</th>
@@ -384,38 +326,21 @@ function AdminTestsList() {
                   <th className="px-4 py-3 text-right font-semibold">Thao tác</th>
                 </tr>
               </thead>
+
               <tbody className="divide-y divide-border">
                 {filtered.map((t, idx) => {
                   const st = testDisplayStatus(t);
                   const org = getOrg(t.orgId);
-                  const isSelected = selected.includes(t.id);
                   const isSim = t.id.includes("-sim-");
                   const activity = t.submitted;
                   const pendingGrade = Math.max(0, t.submitted - t.graded);
                   return (
                     <tr
                       key={t.id}
-                      className={cn(
-                        "transition hover:bg-muted/30",
-                        isSelected && "bg-primary/5",
-                      )}
+                      className="transition hover:bg-muted/30"
                     >
-                      {isAdmin && (
-                        <td className="px-3 py-3">
-                          <button
-                            onClick={() => toggleSelect(t.id)}
-                            className="inline-flex items-center"
-                            aria-label="Chọn"
-                          >
-                            {isSelected ? (
-                              <CheckSquare className="h-4 w-4 text-primary" />
-                            ) : (
-                              <Square className="h-4 w-4 text-muted-foreground" />
-                            )}
-                          </button>
-                        </td>
-                      )}
                       <td className="px-2 py-3 text-xs text-muted-foreground">{idx + 1}</td>
+
                       <td className="px-4 py-3">
                         <Link
                           to="/teacher/tests/$testId"
