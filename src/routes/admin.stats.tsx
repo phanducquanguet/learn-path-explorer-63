@@ -544,7 +544,6 @@ function StatsPage() {
           )}
         </div>
       </div>
-      </div>
 
       {drilldown && (
         <DrilldownModal
