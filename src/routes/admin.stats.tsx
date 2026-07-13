@@ -471,14 +471,14 @@ function StatsPage() {
                         ? Math.round(perUnit.reduce((a, x) => a + x, 0) / perUnit.length)
                         : r.score;
                       return (
-                        <tr key={r.student.id} className="hover:bg-muted/30">
-                          <td className="sticky left-0 z-10 border-t border-border/60 bg-surface px-5 py-3">
-                            <button
-                              onClick={() => setUnitDetail({ student: r.student, course: activeCourse })}
-                              className="text-left font-medium text-foreground hover:text-primary"
-                            >
-                              {r.student.name}
-                            </button>
+                        <tr
+                          key={r.student.id}
+                          onClick={() => setUnitDetail({ student: r.student, course: activeCourse })}
+                          className="cursor-pointer hover:bg-muted/40"
+                          title="Nhấn để xem chi tiết điểm từng bài tập trong unit"
+                        >
+                          <td className="sticky left-0 z-10 border-t border-border/60 bg-surface px-5 py-3 group-hover:bg-muted/40">
+                            <div className="font-medium text-foreground">{r.student.name}</div>
                             <div className="text-[11px] text-muted-foreground">{r.className}</div>
                           </td>
                           {perUnit.map((score, i) => (
