@@ -388,6 +388,14 @@ function StatsPage() {
                     <td className="px-3 py-3 text-center">
                       <ScoreBadge score={r.score} />
                     </td>
+                    <td className="px-3 py-3 text-center">
+                      <button
+                        onClick={() => setUnitDetail({ student: r.student, course: activeCourse! })}
+                        className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1 text-[11px] font-semibold text-foreground hover:bg-muted"
+                      >
+                        <BookOpen className="h-3 w-3" /> Chi tiết bài
+                      </button>
+                    </td>
                   </tr>
                 ))}
                 {applied && activeCourse && rows.length === 0 && (
