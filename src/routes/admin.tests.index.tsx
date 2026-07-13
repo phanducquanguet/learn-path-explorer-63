@@ -21,8 +21,6 @@ import {
   Copy,
   Sparkles,
   Building2,
-  CheckSquare,
-  Square,
   X,
   Activity,
   FileText,
@@ -149,7 +147,7 @@ function AdminTestsList() {
   const [tests, setTests] = useState<Test[]>(seedTests);
   const [orgFilter, setOrgFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<TestDisplayStatus | "all">("all");
-  const [selected, setSelected] = useState<string[]>([]);
+  
   const [copyTarget, setCopyTarget] = useState<Test[] | null>(null);
   const [query, setQuery] = useState("");
 
