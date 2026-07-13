@@ -836,23 +836,96 @@ export function QuizRunner({
   return (
     <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
       <div className="space-y-5 min-w-0">
-        {/* Total score bar */}
-        <div className="flex items-center justify-between gap-3 rounded-2xl bg-surface p-3 ring-1 ring-border">
-          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Tiến độ
+        {/* Cambridge-style top header */}
+        <div className="overflow-hidden rounded-2xl bg-surface ring-1 ring-border">
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-5">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="min-w-0">
+                <div className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+                  Cambridge Exam
+                </div>
+                <div className="mt-0.5 flex items-center gap-2">
+                  <div className="truncate font-display text-base font-semibold text-foreground">
+                    {title ?? "Bài thi mô phỏng"}
+                  </div>
+                  <span className="hidden items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 sm:inline-flex">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Trực tuyến
+                  </span>
+                  {examCode && (
+                    <span className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[10px] text-foreground/70">
+                      # {examCode}
+                    </span>
+                  )}
+                </div>
+              </div>
+              <div
+                className="rounded-lg border-2 border-rose-300 bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-700"
+                title="Số câu đã trả lời"
+              >
+                {answeredCount}/{questions.length} Đã trả lời
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-1.5 font-mono text-sm font-bold text-background shadow-soft">
+                <Clock className="h-3.5 w-3.5" />
+                {remaining == null ? fmtTime(totalSeconds) : fmtTime(remaining)}
+              </div>
+              <button
+                onClick={finishQuiz}
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white shadow-soft hover:opacity-95"
+                style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
+              >
+                <Check className="h-3.5 w-3.5" /> Nộp và xem kết quả
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="text-[11px] text-muted-foreground">
-              {answeredCount}/{questions.length} câu đã trả lời
-            </div>
-            <div
-              className="rounded-full px-4 py-1.5 text-sm font-bold text-white shadow-soft"
-              style={{ background: `linear-gradient(135deg, ${accent}, ${accent2})` }}
-            >
-              Câu {idx + 1}/{questions.length}
-            </div>
+
+          {/* Section tabs */}
+          <div className="grid gap-px bg-border sm:grid-cols-4">
+            {grouped.map((g) => {
+              const done = g.items.filter(({ qq }) => hasAnswer(qq, answers[qq.id])).length;
+              const isActive = questionSkill(q.kind) === g.skill;
+              const firstIdx = g.items[0]?.i ?? 0;
+              return (
+                <button
+                  key={g.skill}
+                  onClick={() => setIdx(firstIdx)}
+                  className={cn(
+                    "flex items-center justify-between gap-2 px-4 py-2.5 text-left text-xs transition",
+                    isActive
+                      ? "bg-foreground text-background"
+                      : "bg-surface text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  <span
+                    className={cn(
+                      "font-semibold",
+                      isActive ? "text-background" : "text-foreground",
+                    )}
+                  >
+                    {SKILL_LABEL_VI[g.skill]}
+                  </span>
+                  <span className="flex items-center gap-2 text-[11px]">
+                    <span
+                      className={cn(
+                        "font-mono",
+                        isActive ? "text-background/80" : "text-muted-foreground",
+                      )}
+                    >
+                      {done}/{g.items.length}
+                    </span>
+                    {done === 0 && !isActive && (
+                      <span className="text-[10px] italic text-muted-foreground/80">
+                        Chưa bắt đầu
+                      </span>
+                    )}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
+
 
         {/* question card */}
         <div className="rounded-3xl bg-surface p-5 ring-1 ring-border sm:p-7">
