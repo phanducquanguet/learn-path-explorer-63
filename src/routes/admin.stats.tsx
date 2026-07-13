@@ -362,6 +362,7 @@ function StatsPage() {
                   <th className="cursor-pointer px-3 py-3 text-center" onClick={() => setSortBy("score")}>
                     <span className="inline-flex items-center gap-1">Điểm <ArrowUpDown className="h-3 w-3" /></span>
                   </th>
+                  <th className="px-3 py-3 text-center">Chi tiết</th>
                 </tr>
               </thead>
 
