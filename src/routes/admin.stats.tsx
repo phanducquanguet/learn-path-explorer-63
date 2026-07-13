@@ -73,23 +73,59 @@ function studentCourseScore(s: TeacherStudent, courseId: string): number {
   return Math.max(30, Math.min(100, Math.round(base + offset * 0.5 + skillTilt * 0.4)));
 }
 
-// Deterministic per-(student, unit) score around the course base
-function studentUnitScore(s: TeacherStudent, courseId: string, unitId: string): number {
+// Deterministic per-(student, activity) score around the course base.
+// Different activity types tilt slightly (quiz = harder, video = easier).
+function studentActivityScore(
+  s: TeacherStudent,
+  courseId: string,
+  activityId: string,
+  activityType?: string,
+): number {
   const base = studentCourseScore(s, courseId);
   let h = 0;
-  const key = `${s.id}-${unitId}`;
+  const key = `${s.id}-${activityId}`;
   for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
-  const delta = (h % 25) - 12; // -12..+12
-  return Math.max(0, Math.min(100, base + delta));
+  const delta = (h % 31) - 15; // -15..+15
+  const tilt =
+    activityType === "quiz" ? -3 : activityType === "video" ? 4 : activityType === "speaking" ? -2 : 0;
+  return Math.max(0, Math.min(100, base + delta + tilt));
 }
 
-// Short label for a unit column. Uses "U{index}" when available, else falls back
-// to parsed number from the id/title. Keeps columns compact and predictable
-// regardless of how the course author named its units.
-function unitShortLabel(u: { id: string; index?: number; title?: string }): string {
-  if (typeof u.index === "number") return `U${u.index}`;
-  const m = u.id.match(/(\d+)(?!.*\d)/) || (u.title ?? "").match(/(\d+)/);
-  return m ? `U${m[1]}` : u.id.slice(-3).toUpperCase();
+// Per-unit score = average of activity scores inside the unit.
+function studentUnitScore(
+  s: TeacherStudent,
+  courseId: string,
+  unit: { id: string; activities?: { id: string; type?: string }[] },
+): number {
+  const acts = unit.activities ?? [];
+  if (acts.length === 0) {
+    // Fallback: treat unit id as its own scored item.
+    return studentActivityScore(s, courseId, unit.id);
+  }
+  const sum = acts.reduce(
+    (a, act) => a + studentActivityScore(s, courseId, act.id, act.type),
+    0,
+  );
+  return Math.round(sum / acts.length);
+}
+
+// Parse a unit title like "Unit 3: Travel Stories" into { index, topic }.
+// Falls back gracefully when the author names units without a convention.
+function parseUnitLabel(u: { id: string; index?: number; title?: string }): {
+  index: string;
+  topic: string;
+} {
+  const raw = (u.title ?? "").trim();
+  // Match "Unit N", "Unit N:", "Unit N -", "Unit N."
+  const m = raw.match(/^unit\s*(\d+)\s*[:\-.·]?\s*(.*)$/i);
+  if (m) {
+    return { index: `Unit ${m[1]}`, topic: m[2].trim() || "—" };
+  }
+  if (typeof u.index === "number") {
+    return { index: `Unit ${u.index}`, topic: raw || "—" };
+  }
+  const idNum = u.id.match(/(\d+)(?!.*\d)/);
+  return { index: idNum ? `Unit ${idNum[1]}` : u.id.toUpperCase(), topic: raw || "—" };
 }
 
 function bucketOf(score: number) {
