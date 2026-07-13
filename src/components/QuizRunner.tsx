@@ -452,14 +452,20 @@ type Result = { status: Status; earned: number };
 
 export function QuizRunner({
   quizId,
+  title,
+  examCode,
+  durationMinutes,
   hue,
   onExit,
 }: {
   quizId: string;
   title?: string;
+  examCode?: string;
+  durationMinutes?: number;
   hue: number;
   onExit: () => void;
 }) {
+
   const questions = useMemo(() => buildQuiz(quizId), [quizId]);
   const [idx, setIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerState>>({});
