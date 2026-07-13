@@ -406,7 +406,7 @@ function StatsPage() {
               <p className="text-xs text-muted-foreground">
                 {applied && activeCourse
                   ? viewMode === "matrix"
-                    ? `${rows.length} học viên · ${activeCourseUnits.length} bài · di chuột lên tiêu đề cột để xem tên bài đầy đủ`
+                    ? `${rows.length} học viên · ${activeCourseUnits.length} unit · nhấn vào một dòng để xem điểm chi tiết từng bài tập trong unit`
                     : `${rows.length} học viên · nhấn tên để xem chi tiết · nhấn tiêu đề cột để sắp xếp`
                   : "Chọn khóa học và bấm Lọc để hiển thị điểm số."}
               </p>
