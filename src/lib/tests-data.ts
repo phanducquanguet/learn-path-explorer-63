@@ -530,3 +530,21 @@ export function testActivityCount(t: Test): number {
   return t.registered + t.submitted;
 }
 
+
+export function approveTest(id: string, reviewer: string, note?: string) {
+  const t = tests.find((x) => x.id === id);
+  if (!t) return;
+  t.approvalStatus = "approved";
+  t.reviewedBy = reviewer;
+  t.reviewedAt = new Date().toISOString();
+  if (note) t.reviewNote = note;
+}
+
+export function sendBackTest(id: string, reviewer: string, note?: string) {
+  const t = tests.find((x) => x.id === id);
+  if (!t) return;
+  t.approvalStatus = "draft";
+  t.reviewedBy = reviewer;
+  t.reviewedAt = new Date().toISOString();
+  if (note) t.reviewNote = note;
+}
