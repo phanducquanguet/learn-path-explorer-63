@@ -2,7 +2,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
 import { useRole } from "@/contexts/RoleContext";
-import { tests as seedTests, testStatus, type Test } from "@/lib/tests-data";
+import {
+  tests as seedTests,
+  testDisplayStatus,
+  TEST_STATUS_LABEL,
+  type Test,
+  type TestDisplayStatus,
+} from "@/lib/tests-data";
 import { classes } from "@/lib/teacher-data";
 import { orgs, classOrgMap, getOrg } from "@/lib/orgs";
 import { questionBank } from "@/lib/question-bank";
@@ -10,12 +16,8 @@ import {
   ScrollText,
   Plus,
   Clock,
-  Users,
   Calendar,
   CheckCircle2,
-  Hourglass,
-  Lock,
-  GraduationCap,
   Copy,
   Sparkles,
   Building2,
@@ -23,6 +25,16 @@ import {
   Square,
   X,
   Activity,
+  FileText,
+  FileEdit,
+  Send,
+  ShieldCheck,
+  Lock,
+  ExternalLink,
+  Eye,
+  MoreHorizontal,
+  Filter,
+  ClipboardCheck,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -32,6 +44,7 @@ export const Route = createFileRoute("/admin/tests/")({
   component: AdminTestsList,
 });
 
+/* ------------ helpers copy / sim (giữ nguyên như trước) ------------ */
 function pickSimilar(
   skill: string,
   type: string,
@@ -63,35 +76,12 @@ function cloneTestSimilar(t: Test, index: number): Test {
       ids.forEach((id) => used.add(id));
       next.pickedIds = ids.length ? ids : s.pickedIds;
     }
-    if (s.customQuestions && s.customQuestions.length) {
-      const ids = pickSimilar(
-        s.skill,
-        s.type,
-        s.level,
-        s.difficulty,
-        used,
-        s.customQuestions.length,
-      );
-      ids.forEach((id) => used.add(id));
-      const picks = ids.map((id) => questionBank.find((q) => q.id === id)!).filter(Boolean);
-      next.customQuestions = picks.length
-        ? picks.map((q) => ({
-            id: `BK-${q.id}-${Math.random().toString(36).slice(2, 6)}`,
-            content: q.content,
-            type: q.type,
-            level: q.level,
-            difficulty: q.difficulty,
-            points: q.points,
-            options: q.options,
-            correctAnswer: q.correctAnswer,
-          }))
-        : s.customQuestions;
-    }
     return next;
   });
   return {
     ...t,
     id: `${t.id}-sim-${now}`,
+    code: t.code ? `${t.code}-SIM${index}` : undefined,
     name: `${t.name} — Bản tương tự ${index}`,
     structure,
     openAt: days(7),
@@ -101,26 +91,87 @@ function cloneTestSimilar(t: Test, index: number): Test {
     graded: 0,
     avgScore: undefined,
     createdAt: new Date().toISOString(),
+    approvalStatus: "pending",
+    reviewedBy: undefined,
+    reviewedAt: undefined,
   };
 }
 
 const classNameById = (id: string) => classes.find((c) => c.id === id)?.name ?? id;
 
-function statusMeta(s: ReturnType<typeof testStatus>) {
-  if (s === "upcoming")
-    return { label: "Chưa mở", icon: Hourglass, cls: "bg-amber-100 text-amber-700" };
-  if (s === "open")
-    return { label: "Đang mở", icon: CheckCircle2, cls: "bg-emerald-100 text-emerald-700" };
-  return { label: "Đã đóng", icon: Lock, cls: "bg-muted text-muted-foreground" };
+/* --------------------- status pills ---------------------- */
+const STATUS_STYLE: Record<TestDisplayStatus, { dot: string; badge: string }> = {
+  draft: {
+    dot: "bg-muted-foreground",
+    badge: "bg-muted text-muted-foreground",
+  },
+  pending: {
+    dot: "bg-amber-500",
+    badge: "bg-amber-100 text-amber-700",
+  },
+  approved: {
+    dot: "bg-sky-500",
+    badge: "bg-sky-100 text-sky-700",
+  },
+  open: {
+    dot: "bg-emerald-500",
+    badge: "bg-emerald-100 text-emerald-700",
+  },
+  closed: {
+    dot: "bg-rose-500",
+    badge: "bg-rose-100 text-rose-700",
+  },
+};
+
+const STATUS_ICON: Record<TestDisplayStatus, React.ComponentType<{ className?: string }>> = {
+  draft: FileEdit,
+  pending: ClipboardCheck,
+  approved: ShieldCheck,
+  open: CheckCircle2,
+  closed: Lock,
+};
+
+function StatusPill({ status }: { status: TestDisplayStatus }) {
+  const s = STATUS_STYLE[status];
+  return (
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold", s.badge)}>
+      <span className={cn("h-1.5 w-1.5 rounded-full", s.dot)} />
+      {TEST_STATUS_LABEL[status]}
+    </span>
+  );
 }
 
+/* --------------------- main list ---------------------- */
 function AdminTestsList() {
   const { role } = useRole();
   const isAdmin = role === "admin";
   const [tests, setTests] = useState<Test[]>(seedTests);
   const [orgFilter, setOrgFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<TestDisplayStatus | "all">("all");
   const [selected, setSelected] = useState<string[]>([]);
   const [copyTarget, setCopyTarget] = useState<Test[] | null>(null);
+  const [query, setQuery] = useState("");
+
+  const counts = useMemo(() => {
+    const c: Record<TestDisplayStatus, number> = {
+      draft: 0, pending: 0, approved: 0, open: 0, closed: 0,
+    };
+    for (const t of tests) c[testDisplayStatus(t)]++;
+    return c;
+  }, [tests]);
+
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return tests.filter((t) => {
+      if (orgFilter !== "all" && t.orgId !== orgFilter) return false;
+      if (statusFilter !== "all" && testDisplayStatus(t) !== statusFilter) return false;
+      if (q) {
+        const hay = `${t.name} ${t.code ?? ""}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+  }, [tests, orgFilter, statusFilter, query]);
 
   const simCounts = useMemo(() => {
     const m: Record<string, number> = {};
@@ -130,11 +181,6 @@ function AdminTestsList() {
     }
     return m;
   }, [tests]);
-
-  const filtered = useMemo(
-    () => (orgFilter === "all" ? tests : tests.filter((t) => t.orgId === orgFilter)),
-    [tests, orgFilter],
-  );
 
   const duplicate = (t: Test) => {
     const base = t.id.split("-sim-")[0];
@@ -155,7 +201,8 @@ function AdminTestsList() {
     const clones: Test[] = sources.map((src, i) => ({
       ...src,
       id: `${src.id}-copy-${stamp}-${i}`,
-      name: `${src.name} (Bản sao)`,
+      code: src.code ? `${src.code}-COPY` : undefined,
+      name: `${src.name} (bản sao)`,
       orgId: targetOrgId,
       classIds: targetClassIds,
       copiedFromId: src.id,
@@ -164,6 +211,9 @@ function AdminTestsList() {
       graded: 0,
       avgScore: undefined,
       createdAt: new Date().toISOString(),
+      approvalStatus: "pending",
+      reviewedBy: undefined,
+      reviewedAt: undefined,
     }));
     setTests((arr) => [...clones, ...arr]);
     setCopyTarget(null);
@@ -193,8 +243,8 @@ function AdminTestsList() {
               Thi cử
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Danh sách đề thi đã tạo theo từng đơn vị. Theo dõi lịch mở, số học viên thi và sao
-              chép đề sang đơn vị khác.
+              Danh sách đề thi. Đề mới tạo sẽ chuyển sang trạng thái{" "}
+              <b>Chờ duyệt</b> để admin khác duyệt trước khi mở.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -210,61 +260,82 @@ function AdminTestsList() {
                 className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
                 style={{ background: "var(--gradient-brand)" }}
               >
-                <Plus className="h-4 w-4" /> Tạo bài tập mới
+                <Plus className="h-4 w-4" /> Tạo đề mới
               </Link>
             )}
           </div>
-
         </div>
 
-        <div className="mt-6 grid gap-3 sm:grid-cols-4">
-          <Stat label="Tổng đề thi" value={tests.length} />
-          <Stat label="Đang mở" value={tests.filter((t) => testStatus(t) === "open").length} />
-          <Stat label="Chờ mở" value={tests.filter((t) => testStatus(t) === "upcoming").length} />
-          <Stat
-            label="Cần chấm"
-            value={tests.reduce((s, t) => s + (t.submitted - t.graded), 0)}
-          />
+        {/* 5 thẻ thống kê */}
+        <div className="mt-6 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <StatCard icon={FileText} label="Tổng đề thi" value={tests.length} />
+          <StatCard icon={FileEdit} label="Bản nháp" value={counts.draft} tone="muted" />
+          <StatCard icon={ClipboardCheck} label="Chờ duyệt" value={counts.pending} tone="amber" />
+          <StatCard icon={ShieldCheck} label="Đã duyệt" value={counts.approved} tone="sky" />
+          <StatCard icon={CheckCircle2} label="Đang mở" value={counts.open} tone="emerald" />
         </div>
 
-        {/* Toolbar: org filter + bulk copy */}
-        <div className="mt-6 flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-surface px-4 py-3">
-          <div className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-            <Building2 className="h-3.5 w-3.5" /> Đơn vị:
+        {/* Toolbar: chip trạng thái + search + org */}
+        <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-border bg-surface p-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 pr-1 text-xs font-semibold text-muted-foreground">
+              <Filter className="h-3.5 w-3.5" /> Trạng thái:
+            </span>
+            <FilterChip
+              active={statusFilter === "all"}
+              onClick={() => setStatusFilter("all")}
+              label={`Tất cả (${tests.length})`}
+            />
+            {(Object.keys(counts) as TestDisplayStatus[]).map((s) => (
+              <FilterChip
+                key={s}
+                active={statusFilter === s}
+                onClick={() => setStatusFilter(s)}
+                label={`${TEST_STATUS_LABEL[s]} (${counts[s]})`}
+                tone={s}
+              />
+            ))}
           </div>
-          <button
-            onClick={() => setOrgFilter("all")}
-            className={cn(
-              "rounded-lg px-2.5 py-1 text-xs font-semibold transition",
-              orgFilter === "all"
-                ? "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground",
-            )}
-          >
-            Tất cả ({tests.length})
-          </button>
-          {orgs.map((o) => {
-            const count = tests.filter((t) => t.orgId === o.id).length;
-            return (
-              <button
-                key={o.id}
-                onClick={() => setOrgFilter(o.id)}
-                className={cn(
-                  "rounded-lg px-2.5 py-1 text-xs font-semibold transition",
-                  orgFilter === o.id
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {o.shortName} ({count})
-              </button>
-            );
-          })}
-          {isAdmin && selected.length > 0 && (
+
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Tìm theo tên hoặc mã đề…"
+                className="h-9 w-56 rounded-lg border border-border bg-background pl-3 pr-8 text-xs outline-none focus:border-primary"
+              />
+              {query && (
+                <button
+                  onClick={() => setQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-0.5 text-muted-foreground hover:bg-muted"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              )}
+            </div>
+            <select
+              value={orgFilter}
+              onChange={(e) => setOrgFilter(e.target.value)}
+              className="h-9 rounded-lg border border-border bg-background px-2 text-xs text-foreground outline-none focus:border-primary"
+            >
+              <option value="all">Tất cả đơn vị</option>
+              {orgs.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.shortName}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Bulk actions bar */}
+        {isAdmin && selected.length > 0 && (
+          <div className="mt-3 flex items-center gap-2 rounded-xl border border-border bg-primary/5 px-4 py-2">
+            <span className="text-xs text-muted-foreground">
+              Đã chọn <b className="text-foreground">{selected.length}</b> đề
+            </span>
             <div className="ml-auto flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">
-                Đã chọn <b className="text-foreground">{selected.length}</b> đề
-              </span>
               <button
                 onClick={openBulkCopy}
                 className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-3 py-1.5 text-xs font-semibold text-background hover:opacity-90"
@@ -279,17 +350,17 @@ function AdminTestsList() {
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Table view */}
-        <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
+        {/* Bảng */}
+        <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
+              <thead className="border-b border-border bg-muted/40 text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
                   {isAdmin && (
-                    <th className="px-3 py-3 text-left font-semibold">
+                    <th className="w-10 px-3 py-3 text-left font-semibold">
                       <button
                         onClick={toggleSelectAll}
                         className="inline-flex items-center text-foreground"
@@ -303,26 +374,23 @@ function AdminTestsList() {
                       </button>
                     </th>
                   )}
+                  <th className="w-10 px-2 py-3 text-left font-semibold">#</th>
                   <th className="px-4 py-3 text-left font-semibold">Đề thi</th>
                   <th className="px-4 py-3 text-left font-semibold">Đơn vị</th>
-                  <th className="px-4 py-3 text-left font-semibold">Lớp</th>
-                  <th className="px-4 py-3 text-left font-semibold">Trình độ</th>
+                  <th className="px-4 py-3 text-left font-semibold">Lịch thi</th>
+                  <th className="px-4 py-3 text-left font-semibold">Hoạt động</th>
                   <th className="px-4 py-3 text-left font-semibold">Trạng thái</th>
-                  <th className="px-4 py-3 text-left font-semibold">Lịch mở</th>
-                  <th className="px-4 py-3 text-left font-semibold">Thời lượng</th>
-                  <th className="px-4 py-3 text-left font-semibold">HS</th>
-                  <th className="px-4 py-3 text-right font-semibold">TB</th>
-                  <th className="px-4 py-3 text-right font-semibold">Hành động</th>
+                  <th className="px-4 py-3 text-right font-semibold">Thao tác</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {filtered.map((t) => {
-                  const st = testStatus(t);
-                  const m = statusMeta(st);
-                  const Icon = m.icon;
+                {filtered.map((t, idx) => {
+                  const st = testDisplayStatus(t);
                   const org = getOrg(t.orgId);
                   const isSelected = selected.includes(t.id);
                   const isSim = t.id.includes("-sim-");
+                  const activity = t.submitted;
+                  const pendingGrade = Math.max(0, t.submitted - t.graded);
                   return (
                     <tr
                       key={t.id}
@@ -346,11 +414,12 @@ function AdminTestsList() {
                           </button>
                         </td>
                       )}
+                      <td className="px-2 py-3 text-xs text-muted-foreground">{idx + 1}</td>
                       <td className="px-4 py-3">
                         <Link
                           to="/teacher/tests/$testId"
                           params={{ testId: t.id }}
-                          className="flex flex-col"
+                          className="flex flex-col gap-0.5"
                         >
                           <span className="flex items-center gap-1.5 font-semibold text-foreground line-clamp-1">
                             {t.name}
@@ -360,9 +429,22 @@ function AdminTestsList() {
                               </span>
                             )}
                           </span>
-                          <span className="text-xs text-muted-foreground line-clamp-1">
-                            {t.description}
-                          </span>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] text-muted-foreground">
+                            {t.code && (
+                              <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] text-foreground/70">
+                                # {t.code}
+                              </span>
+                            )}
+                            <span className="truncate">
+                              {t.classIds.map(classNameById).join(", ") || "—"}
+                            </span>
+                            <span>·</span>
+                            <span className="font-semibold text-primary">{t.level}</span>
+                            <span>·</span>
+                            <span className="inline-flex items-center gap-1">
+                              <Clock className="h-3 w-3" /> {t.durationMinutes} phút
+                            </span>
+                          </div>
                         </Link>
                       </td>
                       <td className="px-4 py-3">
@@ -374,75 +456,75 @@ function AdminTestsList() {
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex flex-wrap gap-1">
-                          {t.classIds.map((cid) => (
-                            <span
-                              key={cid}
-                              className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium"
-                            >
-                              <GraduationCap className="h-3 w-3" />
-                              {classNameById(cid)}
-                            </span>
-                          ))}
+                      <td className="px-4 py-3 text-xs" suppressHydrationWarning>
+                        <div className="flex items-center gap-1.5 text-emerald-700">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(t.openAt).toLocaleString("vi-VN", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          })}
+                        </div>
+                        <div className="mt-0.5 flex items-center gap-1.5 text-rose-600">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(t.closeAt).toLocaleString("vi-VN", {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          })}
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="rounded-lg bg-primary/10 px-2 py-1 text-[11px] font-bold uppercase text-primary">
-                          {t.level}
-                        </span>
+                        <div className="flex items-center gap-2 text-xs">
+                          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 font-semibold text-foreground">
+                            <FileText className="h-3 w-3" /> {activity}
+                          </span>
+                          {pendingGrade > 0 && (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-amber-100 px-2 py-0.5 font-semibold text-amber-700">
+                              <ClipboardCheck className="h-3 w-3" /> {pendingGrade}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold",
-                            m.cls,
+                        <StatusPill status={st} />
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-end gap-1">
+                          {st === "pending" && isAdmin && (
+                            <Link
+                              to="/admin/tests/$testId/review"
+                              params={{ testId: t.id }}
+                              className="inline-flex items-center gap-1 rounded-lg bg-amber-500 px-2.5 py-1.5 text-[11px] font-semibold text-white hover:bg-amber-600"
+                              title="Duyệt đề"
+                            >
+                              <ShieldCheck className="h-3 w-3" /> Duyệt
+                            </Link>
                           )}
-                        >
-                          <Icon className="h-3 w-3" /> {m.label}
-                        </span>
-                      </td>
-                      <td
-                        className="px-4 py-3 text-xs text-muted-foreground"
-                        suppressHydrationWarning
-                      >
-                        <span className="inline-flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          {new Date(t.openAt).toLocaleDateString("vi-VN")}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">
-                        <span className="inline-flex items-center gap-1">
-                          <Clock className="h-3 w-3" /> {t.durationMinutes} phút
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">
-                        <span className="inline-flex items-center gap-1">
-                          <Users className="h-3 w-3" /> {t.submitted}/{t.registered}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-right font-semibold text-foreground">
-                        {t.avgScore ? t.avgScore : "—"}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {isAdmin && (
-                          <div className="inline-flex items-center gap-1">
-                            <button
-                              onClick={() => setCopyTarget([t])}
-                              title="Sao chép sang đơn vị khác"
-                              className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2 py-1 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
-                            >
-                              <Copy className="h-3 w-3" /> Sao chép
-                            </button>
-                            <button
-                              onClick={() => duplicate(t)}
-                              title="Tạo đề tương tự"
-                              className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2 py-1 text-[11px] font-semibold text-foreground transition hover:border-primary hover:text-primary"
-                            >
-                              <Sparkles className="h-3 w-3" /> Tương tự
-                            </button>
-                          </div>
-                        )}
+                          <Link
+                            to="/teacher/tests/$testId"
+                            params={{ testId: t.id }}
+                            className="rounded-lg border border-border bg-background p-1.5 text-muted-foreground hover:border-primary hover:text-primary"
+                            title="Mở"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" />
+                          </Link>
+                          <Link
+                            to="/teacher/tests/$testId"
+                            params={{ testId: t.id }}
+                            className="rounded-lg border border-border bg-background p-1.5 text-muted-foreground hover:border-primary hover:text-primary"
+                            title="Xem chi tiết"
+                          >
+                            <Eye className="h-3.5 w-3.5" />
+                          </Link>
+                          {isAdmin && (
+                            <RowMenu t={t} onCopy={() => setCopyTarget([t])} onDuplicate={() => duplicate(t)} />
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -450,10 +532,10 @@ function AdminTestsList() {
                 {filtered.length === 0 && (
                   <tr>
                     <td
-                      colSpan={isAdmin ? 11 : 10}
+                      colSpan={isAdmin ? 8 : 7}
                       className="px-4 py-12 text-center text-sm text-muted-foreground"
                     >
-                      Không có đề thi nào trong đơn vị đã chọn.
+                      Không có đề thi nào khớp bộ lọc.
                     </td>
                   </tr>
                 )}
@@ -474,17 +556,131 @@ function AdminTestsList() {
   );
 }
 
-function Stat({ label, value }: { label: string; value: number | string }) {
+/* --------------------- small pieces ---------------------- */
+
+function FilterChip({
+  active,
+  onClick,
+  label,
+  tone,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  tone?: TestDisplayStatus;
+}) {
+  const dot = tone ? STATUS_STYLE[tone].dot : undefined;
   return (
-    <div className="rounded-2xl border border-border bg-surface p-4 shadow-soft">
-      <div className="text-xs font-medium text-muted-foreground">{label}</div>
-      <div className="mt-1 font-display text-2xl font-semibold tracking-tight text-foreground">
-        {value}
+    <button
+      onClick={onClick}
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition",
+        active
+          ? "bg-foreground text-background"
+          : "text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {dot && <span className={cn("h-1.5 w-1.5 rounded-full", dot)} />}
+      {label}
+    </button>
+  );
+}
+
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: number | string;
+  tone?: "muted" | "amber" | "sky" | "emerald";
+}) {
+  const toneCls =
+    tone === "amber"
+      ? "text-amber-600 bg-amber-50"
+      : tone === "sky"
+        ? "text-sky-600 bg-sky-50"
+        : tone === "emerald"
+          ? "text-emerald-600 bg-emerald-50"
+          : tone === "muted"
+            ? "text-muted-foreground bg-muted"
+            : "text-primary bg-primary/10";
+  return (
+    <div className="flex items-center gap-3 rounded-2xl border border-border bg-surface p-4 shadow-soft">
+      <div className={cn("flex h-10 w-10 items-center justify-center rounded-xl", toneCls)}>
+        <Icon className="h-5 w-5" />
+      </div>
+      <div>
+        <div className="text-xs font-medium text-muted-foreground">{label}</div>
+        <div className="font-display text-2xl font-semibold tracking-tight text-foreground">
+          {value}
+        </div>
       </div>
     </div>
   );
 }
 
+function RowMenu({
+  t,
+  onCopy,
+  onDuplicate,
+}: {
+  t: Test;
+  onCopy: () => void;
+  onDuplicate: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="rounded-lg border border-border bg-background p-1.5 text-muted-foreground hover:border-primary hover:text-primary"
+        title="Thêm hành động"
+      >
+        <MoreHorizontal className="h-3.5 w-3.5" />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full z-20 mt-1 w-52 overflow-hidden rounded-xl border border-border bg-surface text-xs shadow-elevated">
+            <button
+              onClick={() => {
+                setOpen(false);
+                onCopy();
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-muted"
+            >
+              <Copy className="h-3.5 w-3.5" /> Sao chép sang đơn vị khác
+            </button>
+            <button
+              onClick={() => {
+                setOpen(false);
+                onDuplicate();
+              }}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-muted"
+            >
+              <Sparkles className="h-3.5 w-3.5" /> Tạo đề tương tự
+            </button>
+            {t.approvalStatus === "pending" && (
+              <Link
+                to="/admin/tests/$testId/review"
+                params={{ testId: t.id }}
+                onClick={() => setOpen(false)}
+                className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-muted"
+              >
+                <ShieldCheck className="h-3.5 w-3.5" /> Đi tới trang duyệt
+              </Link>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+/* --------------------- CopyDialog (giữ nguyên) ---------------------- */
 function CopyDialog({
   sources,
   onClose,
