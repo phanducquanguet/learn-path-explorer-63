@@ -932,8 +932,8 @@ function UnitDetailModal({
                 const lbl = parseUnitLabel(r.unit);
                 const isOpen = !!expanded[r.unit.id];
                 return (
-                  <>
-                    <tr key={r.unit.id} className="border-t border-border/60 bg-surface/40">
+                  <Fragment key={r.unit.id}>
+                    <tr className="border-t border-border/60 bg-surface/40">
                       <td className="px-2 py-3 text-center">
                         <button
                           onClick={() =>
