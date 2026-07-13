@@ -387,37 +387,20 @@ function StatsPage() {
                     <td className="px-3 py-3 text-center">
                       <ScoreBadge score={r.score} />
                     </td>
-                    <td className="px-5 py-3">
-                      <div className="flex flex-wrap gap-1.5">
-                        {r.perCourse.length === 0 && (
-                          <span className="text-[11px] text-muted-foreground">—</span>
-                        )}
-                        {r.perCourse.map((c) => (
-                          <span
-                            key={c.id}
-                            title={c.title}
-                            className={cn(
-                              "rounded-md px-2 py-0.5 text-[11px] font-semibold",
-                              c.score >= 85
-                                ? "bg-emerald-50 text-emerald-700"
-                                : c.score >= 70
-                                  ? "bg-sky-50 text-sky-700"
-                                  : c.score >= 55
-                                    ? "bg-amber-50 text-amber-700"
-                                    : "bg-rose-50 text-rose-700",
-                            )}
-                          >
-                            {c.title.split(" ").slice(0, 3).join(" ")}: {c.score}
-                          </span>
-                        ))}
-                      </div>
-                    </td>
                   </tr>
                 ))}
-                {rows.length === 0 && (
+                {applied && activeCourse && rows.length === 0 && (
                   <tr>
-                    <td colSpan={6} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                    <td colSpan={5} className="px-5 py-10 text-center text-sm text-muted-foreground">
                       Không có học viên nào khớp bộ lọc.
+                    </td>
+                  </tr>
+                )}
+                {!applied && (
+                  <tr>
+                    <td colSpan={5} className="px-5 py-10 text-center text-sm text-muted-foreground">
+                      Vui lòng chọn khóa học và bấm <span className="font-semibold text-foreground">Lọc</span> để xem điểm số học viên.
+
                     </td>
                   </tr>
                 )}
