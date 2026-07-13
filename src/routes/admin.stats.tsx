@@ -406,7 +406,7 @@ function StatsPage() {
               <p className="text-xs text-muted-foreground">
                 {applied && activeCourse
                   ? viewMode === "matrix"
-                    ? `${rows.length} học viên · ${activeCourseUnits.length} unit · nhấn vào một dòng để xem điểm chi tiết từng bài tập trong unit`
+                    ? `${rows.length} học viên · ${activeCourseUnits.length} unit · điểm hiển thị theo từng bài tập, nhóm theo Unit`
                     : `${rows.length} học viên · nhấn tên để xem chi tiết · nhấn tiêu đề cột để sắp xếp`
                   : "Chọn khóa học và bấm Lọc để hiển thị điểm số."}
               </p>
@@ -445,58 +445,114 @@ function StatsPage() {
                   Không có học viên nào khớp bộ lọc.
                 </div>
               ) : (
-                <table className="w-full border-separate border-spacing-0 text-sm">
-                  <thead className="sticky top-0 z-10 bg-surface-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                    <tr>
-                      <th className="sticky left-0 z-20 bg-surface-2 px-5 py-3 text-left">Học viên</th>
-                      {activeCourseUnits.map((u) => {
-                        const lbl = parseUnitLabel(u);
-                        return (
+                (() => {
+                  // Build a flat activity list with unit grouping for a two-row header
+                  const flat: { unitId: string; unitLabel: string; act: { id: string; title: string; type?: string } }[] = [];
+                  activeCourseUnits.forEach((u) => {
+                    const lbl = parseUnitLabel(u);
+                    (u.activities ?? []).forEach((a) => {
+                      flat.push({ unitId: u.id, unitLabel: lbl.index, act: a });
+                    });
+                  });
+                  const typeShort: Record<string, string> = {
+                    video: "Video",
+                    reading: "Đọc",
+                    quiz: "Quiz",
+                    speaking: "Nói",
+                    writing: "Viết",
+                    listening: "Nghe",
+                  };
+                  return (
+                    <table className="w-full border-separate border-spacing-0 text-sm">
+                      <thead className="sticky top-0 z-10 bg-surface-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        <tr>
                           <th
-                            key={u.id}
-                            title={`${lbl.index}${lbl.topic && lbl.topic !== "—" ? " · " + lbl.topic : ""}`}
-                            className="min-w-[76px] px-2 py-3 text-center align-middle"
+                            rowSpan={2}
+                            className="sticky left-0 z-20 border-b border-border bg-surface-2 px-5 py-3 text-left align-bottom"
                           >
-                            <div className="text-[11px] font-bold normal-case text-foreground">{lbl.index}</div>
+                            Học viên
                           </th>
-                        );
-                      })}
-                      <th className="min-w-[64px] px-3 py-3 text-center text-foreground">TB</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {rows.map((r) => {
-                      const perUnit = activeCourseUnits.map((u) => studentUnitScore(r.student, activeCourse.id, u));
-                      const avg = perUnit.length
-                        ? Math.round(perUnit.reduce((a, x) => a + x, 0) / perUnit.length)
-                        : r.score;
-                      return (
-                        <tr
-                          key={r.student.id}
-                          onClick={() => setUnitDetail({ student: r.student, course: activeCourse })}
-                          className="cursor-pointer hover:bg-muted/40"
-                          title="Nhấn để xem chi tiết điểm từng bài tập trong unit"
-                        >
-                          <td className="sticky left-0 z-10 border-t border-border/60 bg-surface px-5 py-3 group-hover:bg-muted/40">
-                            <div className="font-medium text-foreground">{r.student.name}</div>
-                            <div className="text-[11px] text-muted-foreground">{r.className}</div>
-                          </td>
-                          {perUnit.map((score, i) => (
-                            <td
-                              key={activeCourseUnits[i].id}
-                              className="border-t border-border/60 px-2 py-3 text-center"
-                            >
-                              <ScoreCell score={score} />
-                            </td>
-                          ))}
-                          <td className="border-t border-border/60 px-3 py-3 text-center font-semibold">
-                            <ScoreCell score={avg} bold />
-                          </td>
+                          {activeCourseUnits.map((u) => {
+                            const lbl = parseUnitLabel(u);
+                            const span = Math.max(1, u.activities?.length ?? 0);
+                            return (
+                              <th
+                                key={u.id}
+                                colSpan={span}
+                                className="border-b border-l border-border bg-surface-2 px-2 py-2 text-center align-middle text-[11px] font-bold normal-case text-foreground"
+                                title={`${lbl.index}${lbl.topic && lbl.topic !== "—" ? " · " + lbl.topic : ""}`}
+                              >
+                                {lbl.index}
+                              </th>
+                            );
+                          })}
+                          <th rowSpan={2} className="min-w-[64px] border-b border-l border-border bg-surface-2 px-3 py-3 text-center align-bottom text-foreground">
+                            TB
+                          </th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                        <tr>
+                          {activeCourseUnits.map((u) =>
+                            (u.activities ?? []).map((a, i) => (
+                              <th
+                                key={a.id}
+                                title={a.title}
+                                className={cn(
+                                  "min-w-[92px] max-w-[140px] border-b border-border bg-surface-2 px-2 py-2 text-center align-bottom text-[10px] font-medium normal-case text-muted-foreground",
+                                  i === 0 && "border-l",
+                                )}
+                              >
+                                <div className="truncate">{a.title.replace(/^.*?:\s*/, "")}</div>
+                                <div className="mt-0.5 text-[9px] font-normal uppercase tracking-wider text-muted-foreground/70">
+                                  {typeShort[a.type ?? ""] ?? a.type ?? ""}
+                                </div>
+                              </th>
+                            )),
+                          )}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map((r) => {
+                          const perAct = flat.map((f) =>
+                            studentActivityScore(r.student, activeCourse.id, f.act.id, f.act.type),
+                          );
+                          const avg = perAct.length
+                            ? Math.round(perAct.reduce((a, x) => a + x, 0) / perAct.length)
+                            : r.score;
+                          return (
+                            <tr
+                              key={r.student.id}
+                              onClick={() => setUnitDetail({ student: r.student, course: activeCourse })}
+                              className="cursor-pointer hover:bg-muted/40"
+                              title="Nhấn để xem chi tiết điểm từng bài tập trong unit"
+                            >
+                              <td className="sticky left-0 z-10 border-t border-border/60 bg-surface px-5 py-3">
+                                <div className="font-medium text-foreground">{r.student.name}</div>
+                                <div className="text-[11px] text-muted-foreground">{r.className}</div>
+                              </td>
+                              {flat.map((f, i) => {
+                                const first = i === 0 || flat[i - 1].unitId !== f.unitId;
+                                return (
+                                  <td
+                                    key={f.act.id}
+                                    className={cn(
+                                      "border-t border-border/60 px-2 py-3 text-center",
+                                      first && "border-l",
+                                    )}
+                                  >
+                                    <ScoreCell score={perAct[i]} />
+                                  </td>
+                                );
+                              })}
+                              <td className="border-l border-t border-border/60 px-3 py-3 text-center font-semibold">
+                                <ScoreCell score={avg} bold />
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  );
+                })()
               )}
               {applied && activeCourse && rows.length > 0 && (
                 <div className="flex flex-wrap items-center gap-3 border-t border-border bg-surface-2 px-5 py-2.5 text-[11px] text-muted-foreground">
@@ -505,7 +561,7 @@ function StatsPage() {
                   <LegendDot color="text-sky-600" label="75–84 Khá" />
                   <LegendDot color="text-amber-600" label="60–74 TB" />
                   <LegendDot color="text-rose-600" label="< 60 Yếu" />
-                  <span className="ml-auto">Nhấn vào một dòng để mở chi tiết điểm từng bài tập trong unit.</span>
+                  <span className="ml-auto">Mỗi cột là một bài tập tính điểm; các cột được nhóm theo Unit. Nhấn vào một dòng để xem chi tiết.</span>
                 </div>
               )}
             </div>
