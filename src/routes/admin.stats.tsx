@@ -505,7 +505,7 @@ function StatsPage() {
                   <LegendDot color="text-sky-600" label="75–84 Khá" />
                   <LegendDot color="text-amber-600" label="60–74 TB" />
                   <LegendDot color="text-rose-600" label="< 60 Yếu" />
-                  <span className="ml-auto">U1, U2… là các bài học theo thứ tự trong khóa. Rê chuột để xem tên đầy đủ.</span>
+                  <span className="ml-auto">Nhấn vào một dòng để mở chi tiết điểm từng bài tập trong unit.</span>
                 </div>
               )}
             </div>
