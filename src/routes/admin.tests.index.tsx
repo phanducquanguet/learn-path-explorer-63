@@ -187,14 +187,6 @@ function AdminTestsList() {
     setTests((arr) => [cloneTestSimilar(t, idx), ...arr]);
   };
 
-  const toggleSelect = (id: string) =>
-    setSelected((s) => (s.includes(id) ? s.filter((x) => x !== id) : [...s, id]));
-
-  const openBulkCopy = () => {
-    const list = tests.filter((t) => selected.includes(t.id));
-    if (list.length > 0) setCopyTarget(list);
-  };
-
   const performCopy = (sources: Test[], targetOrgId: string, targetClassIds: string[]) => {
     const stamp = Date.now();
     const clones: Test[] = sources.map((src, i) => ({
@@ -216,18 +208,8 @@ function AdminTestsList() {
     }));
     setTests((arr) => [...clones, ...arr]);
     setCopyTarget(null);
-    setSelected([]);
   };
 
-  const allSelectedInFilter =
-    filtered.length > 0 && filtered.every((t) => selected.includes(t.id));
-  const toggleSelectAll = () => {
-    if (allSelectedInFilter) {
-      setSelected((s) => s.filter((id) => !filtered.some((t) => t.id === id)));
-    } else {
-      setSelected((s) => Array.from(new Set([...s, ...filtered.map((t) => t.id)])));
-    }
-  };
 
   return (
     <div className="min-h-screen bg-background">
