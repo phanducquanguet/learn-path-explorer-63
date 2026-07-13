@@ -406,7 +406,7 @@ function StatsPage() {
               <p className="text-xs text-muted-foreground">
                 {applied && activeCourse
                   ? viewMode === "matrix"
-                    ? `${rows.length} học viên · ${activeCourseUnits.length} bài · di chuột lên tiêu đề cột để xem tên bài đầy đủ`
+                    ? `${rows.length} học viên · ${activeCourseUnits.length} unit · nhấn vào một dòng để xem điểm chi tiết từng bài tập trong unit`
                     : `${rows.length} học viên · nhấn tên để xem chi tiết · nhấn tiêu đề cột để sắp xếp`
                   : "Chọn khóa học và bấm Lọc để hiển thị điểm số."}
               </p>
@@ -454,16 +454,10 @@ function StatsPage() {
                         return (
                           <th
                             key={u.id}
-                            title={`${lbl.index} · ${lbl.topic} · ${u.activities?.length ?? 0} bài tập`}
-                            className="min-w-[120px] max-w-[160px] px-2 py-3 text-center align-bottom"
+                            title={`${lbl.index}${lbl.topic && lbl.topic !== "—" ? " · " + lbl.topic : ""}`}
+                            className="min-w-[76px] px-2 py-3 text-center align-middle"
                           >
-                            <div className="text-[11px] font-bold text-foreground">{lbl.index}</div>
-                            <div className="mt-0.5 truncate text-[10px] font-medium normal-case text-muted-foreground">
-                              {lbl.topic}
-                            </div>
-                            <div className="mt-0.5 text-[9px] font-normal normal-case text-muted-foreground/70">
-                              {u.activities?.length ?? 0} bài tập
-                            </div>
+                            <div className="text-[11px] font-bold normal-case text-foreground">{lbl.index}</div>
                           </th>
                         );
                       })}
@@ -477,14 +471,14 @@ function StatsPage() {
                         ? Math.round(perUnit.reduce((a, x) => a + x, 0) / perUnit.length)
                         : r.score;
                       return (
-                        <tr key={r.student.id} className="hover:bg-muted/30">
-                          <td className="sticky left-0 z-10 border-t border-border/60 bg-surface px-5 py-3">
-                            <button
-                              onClick={() => setUnitDetail({ student: r.student, course: activeCourse })}
-                              className="text-left font-medium text-foreground hover:text-primary"
-                            >
-                              {r.student.name}
-                            </button>
+                        <tr
+                          key={r.student.id}
+                          onClick={() => setUnitDetail({ student: r.student, course: activeCourse })}
+                          className="cursor-pointer hover:bg-muted/40"
+                          title="Nhấn để xem chi tiết điểm từng bài tập trong unit"
+                        >
+                          <td className="sticky left-0 z-10 border-t border-border/60 bg-surface px-5 py-3 group-hover:bg-muted/40">
+                            <div className="font-medium text-foreground">{r.student.name}</div>
                             <div className="text-[11px] text-muted-foreground">{r.className}</div>
                           </td>
                           {perUnit.map((score, i) => (
@@ -511,7 +505,7 @@ function StatsPage() {
                   <LegendDot color="text-sky-600" label="75–84 Khá" />
                   <LegendDot color="text-amber-600" label="60–74 TB" />
                   <LegendDot color="text-rose-600" label="< 60 Yếu" />
-                  <span className="ml-auto">U1, U2… là các bài học theo thứ tự trong khóa. Rê chuột để xem tên đầy đủ.</span>
+                  <span className="ml-auto">Nhấn vào một dòng để mở chi tiết điểm từng bài tập trong unit.</span>
                 </div>
               )}
             </div>
