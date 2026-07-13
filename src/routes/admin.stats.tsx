@@ -996,7 +996,7 @@ function UnitDetailModal({
                           </td>
                         </tr>
                       ))}
-                  </>
+                  </Fragment>
                 );
               })}
               {unitRows.length === 0 && (
