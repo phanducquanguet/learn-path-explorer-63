@@ -73,6 +73,25 @@ function studentCourseScore(s: TeacherStudent, courseId: string): number {
   return Math.max(30, Math.min(100, Math.round(base + offset * 0.5 + skillTilt * 0.4)));
 }
 
+// Deterministic per-(student, unit) score around the course base
+function studentUnitScore(s: TeacherStudent, courseId: string, unitId: string): number {
+  const base = studentCourseScore(s, courseId);
+  let h = 0;
+  const key = `${s.id}-${unitId}`;
+  for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) >>> 0;
+  const delta = (h % 25) - 12; // -12..+12
+  return Math.max(0, Math.min(100, base + delta));
+}
+
+// Short label for a unit column. Uses "U{index}" when available, else falls back
+// to parsed number from the id/title. Keeps columns compact and predictable
+// regardless of how the course author named its units.
+function unitShortLabel(u: { id: string; index?: number; title?: string }): string {
+  if (typeof u.index === "number") return `U${u.index}`;
+  const m = u.id.match(/(\d+)(?!.*\d)/) || (u.title ?? "").match(/(\d+)/);
+  return m ? `U${m[1]}` : u.id.slice(-3).toUpperCase();
+}
+
 function bucketOf(score: number) {
   if (score >= 85) return "excellent";
   if (score >= 70) return "good";
