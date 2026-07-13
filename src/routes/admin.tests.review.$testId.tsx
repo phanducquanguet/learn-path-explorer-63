@@ -44,6 +44,9 @@ export const Route = createFileRoute("/admin/tests/review/$testId")({
   head: ({ params }) => ({
     meta: [{ title: `Duyệt đề ${params.testId} — UNICOM LMS` }],
   }),
+  validateSearch: (s: Record<string, unknown>) => ({
+    sim: s.sim === 1 || s.sim === "1" ? 1 : undefined,
+  }),
   component: ReviewPage,
 });
 
@@ -52,6 +55,7 @@ const CURRENT_ADMIN = "admin.dung";
 
 function ReviewPage() {
   const { testId } = Route.useParams();
+  const { sim } = Route.useSearch();
   const navigate = useNavigate();
   const test = getTest(testId);
   if (!test) throw notFound();
@@ -59,7 +63,7 @@ function ReviewPage() {
   const isAdmin = role === "admin";
 
   const [note, setNote] = useState("");
-  const [simOpen, setSimOpen] = useState(false);
+  const [simOpen, setSimOpen] = useState(sim === 1);
   const hue = LEVEL_HUE[test.level] ?? 220;
   const status = testDisplayStatus(test);
   const isPending = test.approvalStatus === "pending";
