@@ -668,6 +668,27 @@ function ScoreBadge({ score }: { score: number }) {
   return <span className={cn("rounded-full px-2 py-1 text-xs font-bold", cls)}>{score}</span>;
 }
 
+function ScoreCell({ score, bold }: { score: number; bold?: boolean }) {
+  const color =
+    score >= 85
+      ? "text-emerald-600"
+      : score >= 75
+        ? "text-sky-600"
+        : score >= 60
+          ? "text-amber-600"
+          : "text-rose-600";
+  return <span className={cn("tabular-nums", color, bold ? "font-bold" : "font-semibold")}>{score}</span>;
+}
+
+function LegendDot({ color, label }: { color: string; label: string }) {
+  return (
+    <span className="inline-flex items-center gap-1">
+      <span className={cn("font-bold", color)}>●</span>
+      <span>{label}</span>
+    </span>
+  );
+}
+
 function DrilldownModal({ student, onClose }: { student: TeacherStudent; onClose: () => void }) {
   const cls = classes.find((c) => c.id === student.classId)!;
   const org = getOrg(classOrgMap[student.classId]);
