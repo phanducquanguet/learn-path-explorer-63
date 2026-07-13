@@ -284,9 +284,47 @@ function ReviewPage() {
           </div>
         </div>
       </div>
+
+      {simOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-sm">
+          <div className="flex items-center justify-between border-b border-border bg-surface px-6 py-3">
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold text-primary">
+                <PlayCircle className="h-3.5 w-3.5" /> Mô phỏng làm bài
+              </span>
+              <div className="text-sm font-semibold text-foreground">{test.name}</div>
+              {test.code && (
+                <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-[11px] text-foreground/70">
+                  # {test.code}
+                </span>
+              )}
+              <span className="hidden text-xs text-muted-foreground sm:inline">
+                Trải nghiệm y hệt thí sinh · nộp bài để xem chấm điểm tự động
+              </span>
+            </div>
+            <button
+              onClick={() => setSimOpen(false)}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground hover:bg-muted"
+            >
+              <X className="h-3.5 w-3.5" /> Đóng mô phỏng
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <div className="mx-auto max-w-5xl px-6 py-8">
+              <QuizRunner
+                quizId={test.id}
+                title={test.name}
+                hue={hue}
+                onExit={() => setSimOpen(false)}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 
 function Info({
   icon: Icon,
