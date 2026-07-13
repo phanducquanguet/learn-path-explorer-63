@@ -87,17 +87,43 @@ const BUCKETS = [
 ] as const;
 
 function StatsPage() {
+  // Draft filter state (form) — chỉ apply khi bấm "Lọc"
+  const [draftOrgId, setDraftOrgId] = useState<string>("all");
+  const [draftLevelCode, setDraftLevelCode] = useState<string>("all");
+  const [draftClassId, setDraftClassId] = useState<string>("all");
+  const [draftCourseId, setDraftCourseId] = useState<string>("");
+
+  // Applied filter state — dùng để tính toán bảng
   const [orgId, setOrgId] = useState<string>("all");
   const [levelCode, setLevelCode] = useState<string>("all");
   const [classId, setClassId] = useState<string>("all");
-  const [courseId, setCourseId] = useState<string>("all");
-  const [skill, setSkill] = useState<"overall" | "listening" | "reading" | "writing" | "speaking">(
-    "overall",
-  );
+  const [courseId, setCourseId] = useState<string>("");
+  const [applied, setApplied] = useState(false);
+
   const [sortBy, setSortBy] = useState<"name" | "score" | "class">("score");
   const [drilldown, setDrilldown] = useState<TeacherStudent | null>(null);
 
-  // Scoped classes
+  // ===== Draft scope (để populate dropdown Lớp / Khóa học phụ thuộc) =====
+  const draftScopedClasses = useMemo(() => {
+    return classes.filter((c) => {
+      if (draftOrgId !== "all" && classOrgMap[c.id] !== draftOrgId) return false;
+      if (draftLevelCode !== "all" && c.levelCode !== draftLevelCode) return false;
+      return true;
+    });
+  }, [draftOrgId, draftLevelCode]);
+
+  const draftScopedCourses = useMemo(() => {
+    const seen = new Map<string, CourseRef>();
+    const source = draftClassId !== "all"
+      ? draftScopedClasses.filter((c) => c.id === draftClassId)
+      : draftScopedClasses;
+    for (const c of source) {
+      for (const cr of coursesForLevel(c.levelCode)) seen.set(cr.id, cr);
+    }
+    return Array.from(seen.values());
+  }, [draftScopedClasses, draftClassId]);
+
+  // ===== Applied scope =====
   const scopedClasses = useMemo(() => {
     return classes.filter((c) => {
       if (orgId !== "all" && classOrgMap[c.id] !== orgId) return false;
@@ -108,107 +134,31 @@ function StatsPage() {
   }, [orgId, levelCode, classId]);
 
   const scopedClassIds = new Set(scopedClasses.map((c) => c.id));
-  const scopedStudents = students.filter((s) => scopedClassIds.has(s.classId));
+  // Chỉ lấy học viên thuộc lớp có level trùng với khóa học đã chọn
+  const activeCourse = useMemo(
+    () => (courseId ? coursesForLevel(levelCode !== "all" ? levelCode : "").find((c) => c.id === courseId)
+      ?? levels.flatMap((l) => l.courses.map((c) => ({ id: c.id, title: c.title, levelCode: l.code })))
+        .find((c) => c.id === courseId)
+      : null),
+    [courseId, levelCode],
+  );
 
-  // Courses available in scope (union of course lists of the level of each scoped class)
-  const scopedCourses = useMemo(() => {
-    const seen = new Map<string, CourseRef>();
-    for (const c of scopedClasses) {
-      for (const cr of coursesForLevel(c.levelCode)) {
-        seen.set(cr.id, cr);
-      }
+  const scopedStudents = students.filter((s) => {
+    if (!scopedClassIds.has(s.classId)) return false;
+    if (activeCourse) {
+      const cls = classes.find((c) => c.id === s.classId);
+      if (!cls || cls.levelCode !== activeCourse.levelCode) return false;
     }
-    return Array.from(seen.values());
-  }, [scopedClasses]);
+    return true;
+  });
 
-  const activeCourses = courseId === "all" ? scopedCourses : scopedCourses.filter((c) => c.id === courseId);
-
-  // Metric getter
-  const getMetric = (s: TeacherStudent, cId?: string) => {
-    if (skill !== "overall") return s.skills[skill];
-    if (cId) return studentCourseScore(s, cId);
-    // Overall avg across active courses
-    if (activeCourses.length === 0) {
-      return Math.round(
-        s.scoresByUnit.reduce((a, x) => a + x.score, 0) / Math.max(1, s.scoresByUnit.length),
-      );
-    }
-    const vals = activeCourses
-      .filter((c) => {
-        // only count courses that match this student's class level
-        const cls = classes.find((cc) => cc.id === s.classId);
-        return cls && c.levelCode === cls.levelCode;
-      })
-      .map((c) => studentCourseScore(s, c.id));
-    if (!vals.length) return 0;
-    return Math.round(vals.reduce((a, x) => a + x, 0) / vals.length);
+  // Metric: điểm của học viên trên khóa học đã chọn
+  const getMetric = (s: TeacherStudent) => {
+    if (activeCourse) return studentCourseScore(s, activeCourse.id);
+    return Math.round(
+      s.scoresByUnit.reduce((a, x) => a + x.score, 0) / Math.max(1, s.scoresByUnit.length),
+    );
   };
-
-  // ===== KPIs =====
-  const allScores = scopedStudents.map((s) => getMetric(s)).filter((v) => v > 0);
-  const avgScore = allScores.length
-    ? Math.round(allScores.reduce((a, x) => a + x, 0) / allScores.length)
-    : 0;
-  const excellent = allScores.filter((v) => v >= 85).length;
-  const atRisk = allScores.filter((v) => v < 55).length;
-
-  // ===== Chart: score per course (avg across scoped students eligible for that course) =====
-  const courseScoreData = scopedCourses.map((c) => {
-    const eligible = scopedStudents.filter((s) => {
-      const cls = classes.find((cc) => cc.id === s.classId);
-      return cls?.levelCode === c.levelCode;
-    });
-    const scores = eligible.map((s) =>
-      skill === "overall" ? studentCourseScore(s, c.id) : s.skills[skill],
-    );
-    const avg = scores.length ? Math.round(scores.reduce((a, x) => a + x, 0) / scores.length) : 0;
-    const short = c.title.length > 22 ? c.title.slice(0, 20) + "…" : c.title;
-    return {
-      name: `${c.levelCode} · ${short}`,
-      fullName: c.title,
-      score: avg,
-      learners: eligible.length,
-    };
-  });
-
-  // ===== Chart: per-class comparison for currently focused course (or overall) =====
-  const perClassData = scopedClasses.map((c) => {
-    const members = scopedStudents.filter((s) => s.classId === c.id);
-    const scores = members.map((s) => getMetric(s));
-    const avg = scores.length ? Math.round(scores.reduce((a, x) => a + x, 0) / scores.length) : 0;
-    const org = getOrg(classOrgMap[c.id]);
-    return {
-      name: c.name.replace(/^.*— /, ""),
-      full: `${org?.shortName ?? ""} · ${c.name}`,
-      score: avg,
-      size: members.length,
-    };
-  });
-
-  // ===== Bucket distribution across scope =====
-  const bucketData = scopedClasses.map((c) => {
-    const members = scopedStudents.filter((s) => s.classId === c.id);
-    const row: Record<string, number | string> = { name: c.name.replace(/^.*— /, "") };
-    for (const b of BUCKETS) row[b.label] = 0;
-    for (const s of members) {
-      const k = bucketOf(getMetric(s));
-      const b = BUCKETS.find((bb) => bb.key === k)!;
-      row[b.label] = (row[b.label] as number) + 1;
-    }
-    return row;
-  });
-
-  // Radar (skill profile of scope)
-  const avgSkill = (k: "listening" | "reading" | "writing" | "speaking") =>
-    Math.round(
-      scopedStudents.reduce((a, s) => a + s.skills[k], 0) / Math.max(1, scopedStudents.length),
-    );
-  const radarData = [
-    { skill: "Nghe", value: avgSkill("listening") },
-    { skill: "Đọc", value: avgSkill("reading") },
-    { skill: "Viết", value: avgSkill("writing") },
-    { skill: "Nói", value: avgSkill("speaking") },
-  ];
 
   // ===== Student rows =====
   type Row = {
@@ -217,26 +167,20 @@ function StatsPage() {
     orgName: string;
     levelCode: string;
     score: number;
-    perCourse: { id: string; title: string; levelCode: string; score: number }[];
   };
-  const rows: Row[] = scopedStudents.map((s) => {
-    const cls = classes.find((c) => c.id === s.classId)!;
-    const org = getOrg(classOrgMap[s.classId]);
-    const perCourse = coursesForLevel(cls.levelCode).map((c) => ({
-      ...c,
-      score: skill === "overall" ? studentCourseScore(s, c.id) : s.skills[skill],
-    }));
-    const filteredPerCourse =
-      courseId === "all" ? perCourse : perCourse.filter((c) => c.id === courseId);
-    return {
-      student: s,
-      className: cls.name,
-      orgName: org?.shortName ?? "—",
-      levelCode: cls.levelCode,
-      score: getMetric(s),
-      perCourse: filteredPerCourse,
-    };
-  });
+  const rows: Row[] = applied && activeCourse
+    ? scopedStudents.map((s) => {
+        const cls = classes.find((c) => c.id === s.classId)!;
+        const org = getOrg(classOrgMap[s.classId]);
+        return {
+          student: s,
+          className: cls.name,
+          orgName: org?.shortName ?? "—",
+          levelCode: cls.levelCode,
+          score: getMetric(s),
+        };
+      })
+    : [];
   rows.sort((a, b) => {
     if (sortBy === "name") return a.student.name.localeCompare(b.student.name);
     if (sortBy === "class") return a.className.localeCompare(b.className);
@@ -244,19 +188,11 @@ function StatsPage() {
   });
 
   const exportCsv = () => {
-    const header = ["Học viên", "Email", "Đơn vị", "Lớp", "Level", "Điểm TB", ...activeCourses.map((c) => c.title)];
-    const lines = rows.map((r) => {
-      const perCourseMap = new Map(r.perCourse.map((c) => [c.id, c.score]));
-      return [
-        r.student.name,
-        r.student.email,
-        r.orgName,
-        r.className,
-        r.levelCode,
-        r.score,
-        ...activeCourses.map((c) => (perCourseMap.get(c.id) ?? "")),
-      ].join(",");
-    });
+    if (!activeCourse) return;
+    const header = ["Học viên", "Email", "Đơn vị", "Lớp", "Level", "Khóa học", "Điểm"];
+    const lines = rows.map((r) =>
+      [r.student.name, r.student.email, r.orgName, r.className, r.levelCode, activeCourse.title, r.score].join(","),
+    );
     const blob = new Blob([[header.join(","), ...lines].join("\n")], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -266,13 +202,28 @@ function StatsPage() {
     URL.revokeObjectURL(url);
   };
 
+  const applyFilters = () => {
+    setOrgId(draftOrgId);
+    setLevelCode(draftLevelCode);
+    setClassId(draftClassId);
+    setCourseId(draftCourseId);
+    setApplied(true);
+  };
+
   const resetFilters = () => {
+    setDraftOrgId("all");
+    setDraftLevelCode("all");
+    setDraftClassId("all");
+    setDraftCourseId("");
     setOrgId("all");
     setLevelCode("all");
     setClassId("all");
-    setCourseId("all");
-    setSkill("overall");
+    setCourseId("");
+    setApplied(false);
   };
+
+  const canApply = draftCourseId !== "";
+
 
   return (
     <div className="min-h-screen bg-background">
