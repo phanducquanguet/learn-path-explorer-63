@@ -128,13 +128,17 @@ type StructureItem = TestStructureItem;
 
 /* ---------- CEFR grading rules ---------- */
 
-type CefrBand = { level: QLevel; minPercent: number };
+type CefrBand = { id: string; level: QLevel; fromScore: number; toScore: number };
 type CefrRules = {
   perSkill: Partial<Record<QSkill, CefrBand[]>>;
   overall: CefrBand[];
 };
 
 const LEVEL_ORDER: QLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
+
+function newBandId() {
+  return `b_${Math.random().toString(36).slice(2, 9)}`;
+}
 
 /** Trả về dải cấp độ khả dụng cho đề: min(levels)-1 ↔ max(levels)+1 (kẹp trong A1..C2). */
 function allowedBandsFor(levels: QLevel[]): QLevel[] {
@@ -145,25 +149,28 @@ function allowedBandsFor(levels: QLevel[]): QLevel[] {
   return LEVEL_ORDER.slice(lo, hi + 1);
 }
 
-/** Ngưỡng % mặc định cho một dải cấp độ (cao → thấp). */
-function defaultBands(allowed: QLevel[]): CefrBand[] {
+/** Chia ngưỡng điểm mặc định cho dải cấp độ (tổng điểm tuỳ chọn, mặc định 100). */
+function defaultBands(allowed: QLevel[], totalPts = 100): CefrBand[] {
   const n = allowed.length;
   if (n === 0) return [];
-  // Chia đều 40% → 90% từ thấp lên cao.
-  const min = 40;
-  const max = 90;
-  const step = n > 1 ? (max - min) / (n - 1) : 0;
-  return allowed
-    .map((lv, i) => ({ level: lv, minPercent: Math.round(min + step * i) }))
-    .sort((a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level));
+  const total = Math.max(1, totalPts);
+  const step = total / n;
+  const asc = [...allowed].sort(
+    (a, b) => LEVEL_ORDER.indexOf(a) - LEVEL_ORDER.indexOf(b),
+  );
+  const rows: CefrBand[] = asc.map((lv, i) => {
+    const from = Math.round(i * step);
+    const to = i === n - 1 ? total : Math.max(from, Math.round((i + 1) * step) - 1);
+    return { id: newBandId(), level: lv, fromScore: from, toScore: to };
+  });
+  return rows.sort((a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level));
 }
 
 function defaultCefrRules(levels: QLevel[], skills: QSkill[]): CefrRules {
   const allowed = allowedBandsFor(levels);
-  const base = defaultBands(allowed);
   const perSkill: Partial<Record<QSkill, CefrBand[]>> = {};
-  for (const sk of skills) perSkill[sk] = base.map((b) => ({ ...b }));
-  return { perSkill, overall: base };
+  for (const sk of skills) perSkill[sk] = defaultBands(allowed);
+  return { perSkill, overall: defaultBands(allowed) };
 }
 
 function matchBank(s: StructureItem): BankQuestion[] {
@@ -256,31 +263,23 @@ export function TestExamBuilder({
     setCefrRules((prev) => {
       const skills = activeSkillsKey ? (activeSkillsKey.split(",") as QSkill[]) : [];
       const allowed = allowedBandsFor(levels);
-      const base = defaultBands(allowed);
       const perSkill: Partial<Record<QSkill, CefrBand[]>> = {};
       for (const sk of skills) {
         const existing = prev.perSkill[sk];
-        // Lọc bỏ band ngoài dải cho phép, thêm mới nếu thiếu.
-        if (existing) {
-          const filtered = existing.filter((b) => allowed.includes(b.level));
-          const missing = base.filter((b) => !filtered.some((f) => f.level === b.level));
-          perSkill[sk] = [...filtered, ...missing].sort(
-            (a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level),
-          );
+        if (existing && existing.length > 0) {
+          // Chỉ giữ lại các band có level trong dải cho phép; các dòng khác do người dùng tự quản.
+          perSkill[sk] = existing.filter((b) => allowed.includes(b.level));
+          if (perSkill[sk]!.length === 0) perSkill[sk] = defaultBands(allowed);
         } else {
-          perSkill[sk] = base.map((b) => ({ ...b }));
+          perSkill[sk] = defaultBands(allowed);
         }
       }
       const overallFiltered = prev.overall.filter((b) => allowed.includes(b.level));
-      const overallMissing = base.filter((b) => !overallFiltered.some((f) => f.level === b.level));
-      const overall = overallFiltered.length
-        ? [...overallFiltered, ...overallMissing].sort(
-            (a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level),
-          )
-        : base;
+      const overall = overallFiltered.length ? overallFiltered : defaultBands(allowed);
       return { perSkill, overall };
     });
   }, [levels, activeSkillsKey]);
+
 
   const totalQuestions = structure.reduce((s, x) => s + x.count, 0);
 
@@ -1402,20 +1401,51 @@ function CefrRulesEditor({
   }, [resolved]);
   const overallTotal = Object.values(skillTotals).reduce((a: number, b) => a + (b ?? 0), 0);
 
-  const updateBand = (target: "overall" | QSkill, level: QLevel, minPercent: number) => {
-    const v = Math.max(0, Math.min(100, Math.round(minPercent)));
+  const mutate = (
+    target: "overall" | QSkill,
+    fn: (bands: CefrBand[]) => CefrBand[],
+  ) => {
     setRules((prev) => {
-      const patch = (bands: CefrBand[] | undefined): CefrBand[] => {
-        const list = (bands ?? []).map((b) => (b.level === level ? { ...b, minPercent: v } : b));
-        return list.sort((a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level));
+      if (target === "overall") return { ...prev, overall: fn(prev.overall ?? []) };
+      return {
+        ...prev,
+        perSkill: { ...prev.perSkill, [target]: fn(prev.perSkill[target] ?? []) },
       };
-      if (target === "overall") return { ...prev, overall: patch(prev.overall) };
-      return { ...prev, perSkill: { ...prev.perSkill, [target]: patch(prev.perSkill[target]) } };
     });
   };
 
-  const resetTo = (target: "overall" | QSkill) => {
-    const base = defaultBands(allowed);
+  const updateRow = (
+    target: "overall" | QSkill,
+    id: string,
+    patch: Partial<CefrBand>,
+  ) => {
+    mutate(target, (bands) =>
+      bands.map((b) => (b.id === id ? { ...b, ...patch } : b)),
+    );
+  };
+
+  const addRow = (target: "overall" | QSkill, totalPts: number) => {
+    mutate(target, (bands) => {
+      // Chọn level chưa dùng, ưu tiên trong dải cho phép.
+      const used = new Set(bands.map((b) => b.level));
+      const nextLv = (allowed.find((l) => !used.has(l)) ??
+        allowed[0] ?? "B1") as QLevel;
+      const lastTo = bands.length ? Math.max(...bands.map((b) => b.toScore)) : 0;
+      const from = Math.min(totalPts || 100, lastTo + 1);
+      const to = Math.min(totalPts || 100, from + 5);
+      const next: CefrBand = { id: newBandId(), level: nextLv, fromScore: from, toScore: to };
+      return [...bands, next].sort(
+        (a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level),
+      );
+    });
+  };
+
+  const deleteRow = (target: "overall" | QSkill, id: string) => {
+    mutate(target, (bands) => bands.filter((b) => b.id !== id));
+  };
+
+  const resetTo = (target: "overall" | QSkill, totalPts: number) => {
+    const base = defaultBands(allowed, totalPts > 0 ? totalPts : 100);
     setRules((prev) => {
       if (target === "overall") return { ...prev, overall: base };
       return { ...prev, perSkill: { ...prev.perSkill, [target]: base } };
@@ -1427,42 +1457,78 @@ function CefrRulesEditor({
       <table className="w-full text-xs">
         <thead className="bg-muted/40 text-muted-foreground">
           <tr>
-            <th className="px-3 py-2 text-left font-semibold">CEFR</th>
-            <th className="px-3 py-2 text-left font-semibold">Ngưỡng %</th>
-            <th className="px-3 py-2 text-left font-semibold">Điểm tối thiểu</th>
+            <th className="px-3 py-2 text-left font-semibold w-24">CEFR</th>
+            <th className="px-3 py-2 text-left font-semibold w-28">From</th>
+            <th className="px-3 py-2 text-left font-semibold w-28">To</th>
+            <th className="px-3 py-2 text-right font-semibold w-16"></th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
           {bands.map((b) => (
-            <tr key={b.level}>
-              <td className="px-3 py-2 font-bold text-foreground">{b.level}</td>
+            <tr key={b.id}>
               <td className="px-3 py-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={b.minPercent}
-                    onChange={(e) => updateBand(target, b.level, Number(e.target.value))}
-                    className="h-8 w-20 rounded-md border border-border bg-background px-2 text-xs"
-                  />
-                  <span className="text-muted-foreground">%</span>
-                </div>
+                <select
+                  value={b.level}
+                  onChange={(e) => updateRow(target, b.id, { level: e.target.value as QLevel })}
+                  className="h-8 w-full rounded-md border border-border bg-background px-2 text-xs font-bold"
+                >
+                  {allowed.map((lv) => (
+                    <option key={lv} value={lv}>{lv}</option>
+                  ))}
+                </select>
               </td>
-              <td className="px-3 py-2 text-muted-foreground">
-                ≥ {totalPts > 0 ? Math.ceil((b.minPercent / 100) * totalPts) : 0} / {totalPts}
+              <td className="px-3 py-2">
+                <input
+                  type="number"
+                  min={0}
+                  value={b.fromScore}
+                  onChange={(e) =>
+                    updateRow(target, b.id, { fromScore: Math.max(0, Math.round(Number(e.target.value) || 0)) })
+                  }
+                  className="h-8 w-full rounded-md border border-border bg-background px-2 text-xs"
+                />
+              </td>
+              <td className="px-3 py-2">
+                <input
+                  type="number"
+                  min={0}
+                  value={b.toScore}
+                  onChange={(e) =>
+                    updateRow(target, b.id, { toScore: Math.max(0, Math.round(Number(e.target.value) || 0)) })
+                  }
+                  className="h-8 w-full rounded-md border border-border bg-background px-2 text-xs"
+                />
+              </td>
+              <td className="px-3 py-2 text-right">
+                <button
+                  onClick={() => deleteRow(target, b.id)}
+                  className="rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold text-destructive hover:bg-destructive/10"
+                >
+                  Xoá
+                </button>
               </td>
             </tr>
           ))}
           {bands.length === 0 && (
             <tr>
-              <td colSpan={3} className="px-3 py-4 text-center text-muted-foreground">
-                Chưa có band nào cho dải cấp độ này.
+              <td colSpan={4} className="px-3 py-4 text-center text-muted-foreground">
+                Chưa có band nào. Nhấn “+ Thêm dòng”.
               </td>
             </tr>
           )}
         </tbody>
       </table>
+      <div className="flex items-center justify-between border-t border-border bg-muted/20 px-3 py-2">
+        <div className="text-[11px] text-muted-foreground">
+          Tổng điểm: <span className="font-semibold text-foreground">{totalPts}</span>. Admin chỉ nhập số.
+        </div>
+        <button
+          onClick={() => addRow(target, totalPts)}
+          className="rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold hover:bg-muted"
+        >
+          + Thêm dòng
+        </button>
+      </div>
     </div>
   );
 
@@ -1483,7 +1549,7 @@ function CefrRulesEditor({
             </div>
           </div>
           <button
-            onClick={() => resetTo("overall")}
+            onClick={() => resetTo("overall", overallTotal)}
             className="rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold hover:bg-muted"
           >
             Đặt lại mặc định
@@ -1506,7 +1572,7 @@ function CefrRulesEditor({
                     <div className="text-[11px] text-muted-foreground">Tổng {totalPts} điểm</div>
                   </div>
                   <button
-                    onClick={() => resetTo(sk)}
+                    onClick={() => resetTo(sk, totalPts)}
                     className="rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold hover:bg-muted"
                   >
                     Đặt lại
