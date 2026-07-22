@@ -258,7 +258,7 @@ export function TestExamBuilder({
       const allowed = allowedBandsFor(levels);
       const base = defaultBands(allowed);
       const perSkill: Partial<Record<QSkill, CefrBand[]>> = {};
-      for (const sk of activeSkills) {
+      for (const sk of skills) {
         const existing = prev.perSkill[sk];
         // Lọc bỏ band ngoài dải cho phép, thêm mới nếu thiếu.
         if (existing) {
