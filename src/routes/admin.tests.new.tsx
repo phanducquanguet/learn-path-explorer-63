@@ -1368,6 +1368,8 @@ function Step4Build({
           mode={mode}
         />
       )}
+        </div>
+      )}
     </div>
   );
 }
