@@ -1071,6 +1071,11 @@ export function TestExamBuilder({
               structure={structure}
               setStructure={setStructure}
               mode={mode}
+              resolved={resolved}
+              levels={levels}
+              cefrRules={cefrRules}
+              setCefrRules={setCefrRules}
+              activeSkills={activeSkills}
             />
           )}
 
