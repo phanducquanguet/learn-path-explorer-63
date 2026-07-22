@@ -241,6 +241,42 @@ export function TestExamBuilder({
   const [enforceOrder, setEnforceOrder] = useState(false);
   const [previewing, setPreviewing] = useState(false);
 
+  const activeSkills = useMemo(
+    () => Array.from(new Set(structure.filter((s) => s.count > 0).map((s) => s.skill))),
+    [structure],
+  );
+  const [cefrRules, setCefrRules] = useState<CefrRules>(() => defaultCefrRules(levels, activeSkills));
+  // Khi thay đổi cấp độ hoặc danh sách kỹ năng: đồng bộ ngưỡng mặc định cho kỹ năng mới,
+  // vẫn giữ chỉnh tay của người dùng ở các kỹ năng cũ.
+  useEffect(() => {
+    setCefrRules((prev) => {
+      const allowed = allowedBandsFor(levels);
+      const base = defaultBands(allowed);
+      const perSkill: Partial<Record<QSkill, CefrBand[]>> = {};
+      for (const sk of activeSkills) {
+        const existing = prev.perSkill[sk];
+        // Lọc bỏ band ngoài dải cho phép, thêm mới nếu thiếu.
+        if (existing) {
+          const filtered = existing.filter((b) => allowed.includes(b.level));
+          const missing = base.filter((b) => !filtered.some((f) => f.level === b.level));
+          perSkill[sk] = [...filtered, ...missing].sort(
+            (a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level),
+          );
+        } else {
+          perSkill[sk] = base.map((b) => ({ ...b }));
+        }
+      }
+      const overallFiltered = prev.overall.filter((b) => allowed.includes(b.level));
+      const overallMissing = base.filter((b) => !overallFiltered.some((f) => f.level === b.level));
+      const overall = overallFiltered.length
+        ? [...overallFiltered, ...overallMissing].sort(
+            (a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level),
+          )
+        : base;
+      return { perSkill, overall };
+    });
+  }, [levels, activeSkills]);
+
   const totalQuestions = structure.reduce((s, x) => s + x.count, 0);
 
   // Auto-fill random picks when entering step 4 in random mode (only for groups still empty).
