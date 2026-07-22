@@ -1401,20 +1401,51 @@ function CefrRulesEditor({
   }, [resolved]);
   const overallTotal = Object.values(skillTotals).reduce((a: number, b) => a + (b ?? 0), 0);
 
-  const updateBand = (target: "overall" | QSkill, level: QLevel, minPercent: number) => {
-    const v = Math.max(0, Math.min(100, Math.round(minPercent)));
+  const mutate = (
+    target: "overall" | QSkill,
+    fn: (bands: CefrBand[]) => CefrBand[],
+  ) => {
     setRules((prev) => {
-      const patch = (bands: CefrBand[] | undefined): CefrBand[] => {
-        const list = (bands ?? []).map((b) => (b.level === level ? { ...b, minPercent: v } : b));
-        return list.sort((a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level));
+      if (target === "overall") return { ...prev, overall: fn(prev.overall ?? []) };
+      return {
+        ...prev,
+        perSkill: { ...prev.perSkill, [target]: fn(prev.perSkill[target] ?? []) },
       };
-      if (target === "overall") return { ...prev, overall: patch(prev.overall) };
-      return { ...prev, perSkill: { ...prev.perSkill, [target]: patch(prev.perSkill[target]) } };
     });
   };
 
-  const resetTo = (target: "overall" | QSkill) => {
-    const base = defaultBands(allowed);
+  const updateRow = (
+    target: "overall" | QSkill,
+    id: string,
+    patch: Partial<CefrBand>,
+  ) => {
+    mutate(target, (bands) =>
+      bands.map((b) => (b.id === id ? { ...b, ...patch } : b)),
+    );
+  };
+
+  const addRow = (target: "overall" | QSkill, totalPts: number) => {
+    mutate(target, (bands) => {
+      // Chọn level chưa dùng, ưu tiên trong dải cho phép.
+      const used = new Set(bands.map((b) => b.level));
+      const nextLv = (allowed.find((l) => !used.has(l)) ??
+        allowed[0] ?? "B1") as QLevel;
+      const lastTo = bands.length ? Math.max(...bands.map((b) => b.toScore)) : 0;
+      const from = Math.min(totalPts || 100, lastTo + 1);
+      const to = Math.min(totalPts || 100, from + 5);
+      const next: CefrBand = { id: newBandId(), level: nextLv, fromScore: from, toScore: to };
+      return [...bands, next].sort(
+        (a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level),
+      );
+    });
+  };
+
+  const deleteRow = (target: "overall" | QSkill, id: string) => {
+    mutate(target, (bands) => bands.filter((b) => b.id !== id));
+  };
+
+  const resetTo = (target: "overall" | QSkill, totalPts: number) => {
+    const base = defaultBands(allowed, totalPts > 0 ? totalPts : 100);
     setRules((prev) => {
       if (target === "overall") return { ...prev, overall: base };
       return { ...prev, perSkill: { ...prev.perSkill, [target]: base } };
@@ -1426,42 +1457,78 @@ function CefrRulesEditor({
       <table className="w-full text-xs">
         <thead className="bg-muted/40 text-muted-foreground">
           <tr>
-            <th className="px-3 py-2 text-left font-semibold">CEFR</th>
-            <th className="px-3 py-2 text-left font-semibold">Ngưỡng %</th>
-            <th className="px-3 py-2 text-left font-semibold">Điểm tối thiểu</th>
+            <th className="px-3 py-2 text-left font-semibold w-24">CEFR</th>
+            <th className="px-3 py-2 text-left font-semibold w-28">From</th>
+            <th className="px-3 py-2 text-left font-semibold w-28">To</th>
+            <th className="px-3 py-2 text-right font-semibold w-16"></th>
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
           {bands.map((b) => (
-            <tr key={b.level}>
-              <td className="px-3 py-2 font-bold text-foreground">{b.level}</td>
+            <tr key={b.id}>
               <td className="px-3 py-2">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={b.minPercent}
-                    onChange={(e) => updateBand(target, b.level, Number(e.target.value))}
-                    className="h-8 w-20 rounded-md border border-border bg-background px-2 text-xs"
-                  />
-                  <span className="text-muted-foreground">%</span>
-                </div>
+                <select
+                  value={b.level}
+                  onChange={(e) => updateRow(target, b.id, { level: e.target.value as QLevel })}
+                  className="h-8 w-full rounded-md border border-border bg-background px-2 text-xs font-bold"
+                >
+                  {allowed.map((lv) => (
+                    <option key={lv} value={lv}>{lv}</option>
+                  ))}
+                </select>
               </td>
-              <td className="px-3 py-2 text-muted-foreground">
-                ≥ {totalPts > 0 ? Math.ceil((b.minPercent / 100) * totalPts) : 0} / {totalPts}
+              <td className="px-3 py-2">
+                <input
+                  type="number"
+                  min={0}
+                  value={b.fromScore}
+                  onChange={(e) =>
+                    updateRow(target, b.id, { fromScore: Math.max(0, Math.round(Number(e.target.value) || 0)) })
+                  }
+                  className="h-8 w-full rounded-md border border-border bg-background px-2 text-xs"
+                />
+              </td>
+              <td className="px-3 py-2">
+                <input
+                  type="number"
+                  min={0}
+                  value={b.toScore}
+                  onChange={(e) =>
+                    updateRow(target, b.id, { toScore: Math.max(0, Math.round(Number(e.target.value) || 0)) })
+                  }
+                  className="h-8 w-full rounded-md border border-border bg-background px-2 text-xs"
+                />
+              </td>
+              <td className="px-3 py-2 text-right">
+                <button
+                  onClick={() => deleteRow(target, b.id)}
+                  className="rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold text-destructive hover:bg-destructive/10"
+                >
+                  Xoá
+                </button>
               </td>
             </tr>
           ))}
           {bands.length === 0 && (
             <tr>
-              <td colSpan={3} className="px-3 py-4 text-center text-muted-foreground">
-                Chưa có band nào cho dải cấp độ này.
+              <td colSpan={4} className="px-3 py-4 text-center text-muted-foreground">
+                Chưa có band nào. Nhấn “+ Thêm dòng”.
               </td>
             </tr>
           )}
         </tbody>
       </table>
+      <div className="flex items-center justify-between border-t border-border bg-muted/20 px-3 py-2">
+        <div className="text-[11px] text-muted-foreground">
+          Tổng điểm: <span className="font-semibold text-foreground">{totalPts}</span>. Admin chỉ nhập số.
+        </div>
+        <button
+          onClick={() => addRow(target, totalPts)}
+          className="rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold hover:bg-muted"
+        >
+          + Thêm dòng
+        </button>
+      </div>
     </div>
   );
 
