@@ -1549,7 +1549,7 @@ function CefrRulesEditor({
             </div>
           </div>
           <button
-            onClick={() => resetTo("overall")}
+            onClick={() => resetTo("overall", overallTotal)}
             className="rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold hover:bg-muted"
           >
             Đặt lại mặc định
