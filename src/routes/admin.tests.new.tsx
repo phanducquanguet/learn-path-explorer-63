@@ -128,13 +128,17 @@ type StructureItem = TestStructureItem;
 
 /* ---------- CEFR grading rules ---------- */
 
-type CefrBand = { level: QLevel; minPercent: number };
+type CefrBand = { id: string; level: QLevel; fromScore: number; toScore: number };
 type CefrRules = {
   perSkill: Partial<Record<QSkill, CefrBand[]>>;
   overall: CefrBand[];
 };
 
 const LEVEL_ORDER: QLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
+
+function newBandId() {
+  return `b_${Math.random().toString(36).slice(2, 9)}`;
+}
 
 /** Trả về dải cấp độ khả dụng cho đề: min(levels)-1 ↔ max(levels)+1 (kẹp trong A1..C2). */
 function allowedBandsFor(levels: QLevel[]): QLevel[] {
@@ -145,25 +149,28 @@ function allowedBandsFor(levels: QLevel[]): QLevel[] {
   return LEVEL_ORDER.slice(lo, hi + 1);
 }
 
-/** Ngưỡng % mặc định cho một dải cấp độ (cao → thấp). */
-function defaultBands(allowed: QLevel[]): CefrBand[] {
+/** Chia ngưỡng điểm mặc định cho dải cấp độ (tổng điểm tuỳ chọn, mặc định 100). */
+function defaultBands(allowed: QLevel[], totalPts = 100): CefrBand[] {
   const n = allowed.length;
   if (n === 0) return [];
-  // Chia đều 40% → 90% từ thấp lên cao.
-  const min = 40;
-  const max = 90;
-  const step = n > 1 ? (max - min) / (n - 1) : 0;
-  return allowed
-    .map((lv, i) => ({ level: lv, minPercent: Math.round(min + step * i) }))
-    .sort((a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level));
+  const total = Math.max(1, totalPts);
+  const step = total / n;
+  const asc = [...allowed].sort(
+    (a, b) => LEVEL_ORDER.indexOf(a) - LEVEL_ORDER.indexOf(b),
+  );
+  const rows: CefrBand[] = asc.map((lv, i) => {
+    const from = Math.round(i * step);
+    const to = i === n - 1 ? total : Math.max(from, Math.round((i + 1) * step) - 1);
+    return { id: newBandId(), level: lv, fromScore: from, toScore: to };
+  });
+  return rows.sort((a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level));
 }
 
 function defaultCefrRules(levels: QLevel[], skills: QSkill[]): CefrRules {
   const allowed = allowedBandsFor(levels);
-  const base = defaultBands(allowed);
   const perSkill: Partial<Record<QSkill, CefrBand[]>> = {};
-  for (const sk of skills) perSkill[sk] = base.map((b) => ({ ...b }));
-  return { perSkill, overall: base };
+  for (const sk of skills) perSkill[sk] = defaultBands(allowed);
+  return { perSkill, overall: defaultBands(allowed) };
 }
 
 function matchBank(s: StructureItem): BankQuestion[] {
