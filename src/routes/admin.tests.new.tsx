@@ -280,7 +280,7 @@ export function TestExamBuilder({
         : base;
       return { perSkill, overall };
     });
-  }, [levels, activeSkills]);
+  }, [levels, activeSkillsKey]);
 
   const totalQuestions = structure.reduce((s, x) => s + x.count, 0);
 
