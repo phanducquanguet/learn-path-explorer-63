@@ -126,6 +126,46 @@ const STEPS = [
 
 type StructureItem = TestStructureItem;
 
+/* ---------- CEFR grading rules ---------- */
+
+type CefrBand = { level: QLevel; minPercent: number };
+type CefrRules = {
+  perSkill: Partial<Record<QSkill, CefrBand[]>>;
+  overall: CefrBand[];
+};
+
+const LEVEL_ORDER: QLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
+
+/** Trả về dải cấp độ khả dụng cho đề: min(levels)-1 ↔ max(levels)+1 (kẹp trong A1..C2). */
+function allowedBandsFor(levels: QLevel[]): QLevel[] {
+  if (levels.length === 0) return ["B1"];
+  const idxs = levels.map((l) => LEVEL_ORDER.indexOf(l));
+  const lo = Math.max(0, Math.min(...idxs) - 1);
+  const hi = Math.min(LEVEL_ORDER.length - 1, Math.max(...idxs) + 1);
+  return LEVEL_ORDER.slice(lo, hi + 1);
+}
+
+/** Ngưỡng % mặc định cho một dải cấp độ (cao → thấp). */
+function defaultBands(allowed: QLevel[]): CefrBand[] {
+  const n = allowed.length;
+  if (n === 0) return [];
+  // Chia đều 40% → 90% từ thấp lên cao.
+  const min = 40;
+  const max = 90;
+  const step = n > 1 ? (max - min) / (n - 1) : 0;
+  return allowed
+    .map((lv, i) => ({ level: lv, minPercent: Math.round(min + step * i) }))
+    .sort((a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level));
+}
+
+function defaultCefrRules(levels: QLevel[], skills: QSkill[]): CefrRules {
+  const allowed = allowedBandsFor(levels);
+  const base = defaultBands(allowed);
+  const perSkill: Partial<Record<QSkill, CefrBand[]>> = {};
+  for (const sk of skills) perSkill[sk] = base.map((b) => ({ ...b }));
+  return { perSkill, overall: base };
+}
+
 function matchBank(s: StructureItem): BankQuestion[] {
   // Lọc theo Kỹ năng + Cấp độ + Loại + Độ khó + Tags (any-match).
   const wanted = (s.tags ?? []).map((t) => t.trim().toLowerCase()).filter(Boolean);
@@ -200,6 +240,47 @@ export function TestExamBuilder({
   const [mode, setMode] = useState<"fixed" | "random" | "manual">("random");
   const [enforceOrder, setEnforceOrder] = useState(false);
   const [previewing, setPreviewing] = useState(false);
+
+  const activeSkillsKey = useMemo(
+    () => Array.from(new Set(structure.filter((s) => s.count > 0).map((s) => s.skill))).sort().join(","),
+    [structure],
+  );
+  const activeSkills = useMemo(
+    () => (activeSkillsKey ? (activeSkillsKey.split(",") as QSkill[]) : []),
+    [activeSkillsKey],
+  );
+  const [cefrRules, setCefrRules] = useState<CefrRules>(() => defaultCefrRules(levels, activeSkills));
+  // Khi thay đổi cấp độ hoặc danh sách kỹ năng: đồng bộ ngưỡng mặc định cho kỹ năng mới,
+  // vẫn giữ chỉnh tay của người dùng ở các kỹ năng cũ.
+  useEffect(() => {
+    setCefrRules((prev) => {
+      const skills = activeSkillsKey ? (activeSkillsKey.split(",") as QSkill[]) : [];
+      const allowed = allowedBandsFor(levels);
+      const base = defaultBands(allowed);
+      const perSkill: Partial<Record<QSkill, CefrBand[]>> = {};
+      for (const sk of skills) {
+        const existing = prev.perSkill[sk];
+        // Lọc bỏ band ngoài dải cho phép, thêm mới nếu thiếu.
+        if (existing) {
+          const filtered = existing.filter((b) => allowed.includes(b.level));
+          const missing = base.filter((b) => !filtered.some((f) => f.level === b.level));
+          perSkill[sk] = [...filtered, ...missing].sort(
+            (a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level),
+          );
+        } else {
+          perSkill[sk] = base.map((b) => ({ ...b }));
+        }
+      }
+      const overallFiltered = prev.overall.filter((b) => allowed.includes(b.level));
+      const overallMissing = base.filter((b) => !overallFiltered.some((f) => f.level === b.level));
+      const overall = overallFiltered.length
+        ? [...overallFiltered, ...overallMissing].sort(
+            (a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level),
+          )
+        : base;
+      return { perSkill, overall };
+    });
+  }, [levels, activeSkillsKey]);
 
   const totalQuestions = structure.reduce((s, x) => s + x.count, 0);
 
@@ -990,6 +1071,11 @@ export function TestExamBuilder({
               structure={structure}
               setStructure={setStructure}
               mode={mode}
+              resolved={resolved}
+              levels={levels}
+              cefrRules={cefrRules}
+              setCefrRules={setCefrRules}
+              activeSkills={activeSkills}
             />
           )}
 
@@ -1111,11 +1197,22 @@ function Step4Build({
   structure,
   setStructure,
   mode,
+  resolved,
+  levels,
+  cefrRules,
+  setCefrRules,
+  activeSkills,
 }: {
   structure: StructureItem[];
   setStructure: React.Dispatch<React.SetStateAction<StructureItem[]>>;
   mode: "fixed" | "random" | "manual";
+  resolved: { item: StructureItem; questions: BankQuestion[] }[];
+  levels: QLevel[];
+  cefrRules: CefrRules;
+  setCefrRules: React.Dispatch<React.SetStateAction<CefrRules>>;
+  activeSkills: QSkill[];
 }) {
+  const [tab, setTab] = useState<"questions" | "grading">("questions");
   const [openGroup, setOpenGroup] = useState(0);
 
   // Keep openGroup valid if structure shrinks.
@@ -1143,8 +1240,60 @@ function Step4Build({
         : "Chọn từng câu thủ công cho mỗi nhóm. Dùng bộ lọc bên dưới để thu hẹp theo cấp độ và độ khó. Bấm “Tương tự” trên một câu đã chọn để thêm nhanh câu cùng dạng từ ngân hàng.";
 
   return (
-    <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">{intro}</p>
+    <div className="space-y-4">
+      {/* Sub-tabs */}
+      <div className="inline-flex rounded-xl border border-border bg-background p-1 text-xs font-semibold">
+        <button
+          onClick={() => setTab("questions")}
+          className={cn(
+            "rounded-lg px-3 py-1.5 transition",
+            tab === "questions" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          1. Câu hỏi & điểm số
+        </button>
+        <button
+          onClick={() => setTab("grading")}
+          className={cn(
+            "rounded-lg px-3 py-1.5 transition",
+            tab === "grading" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          2. Quy tắc chấm & quy đổi CEFR
+        </button>
+      </div>
+
+      {tab === "grading" ? (
+        <CefrRulesEditor
+          levels={levels}
+          activeSkills={activeSkills}
+          resolved={resolved}
+          rules={cefrRules}
+          setRules={setCefrRules}
+        />
+      ) : (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">{intro}</p>
+
+          {/* Points summary per section */}
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {resolved.filter((r) => r.item.count > 0).map((r, i) => {
+              const total = r.questions.reduce((s, q) => s + (q.points ?? 0), 0);
+              return (
+                <div key={i} className="rounded-xl border border-border bg-background px-3 py-2">
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {SKILL_LABEL[r.item.skill]}
+                  </div>
+                  <div className="mt-0.5 flex items-baseline gap-1.5">
+                    <span className="text-lg font-bold text-foreground">{total}</span>
+                    <span className="text-[11px] text-muted-foreground">
+                      điểm · {r.questions.length} câu
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
 
       {/* Group tabs with reorder controls */}
       <div className="flex flex-wrap gap-2">
@@ -1219,6 +1368,161 @@ function Step4Build({
           mode={mode}
         />
       )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ---------- CEFR Rules Editor ---------- */
+
+function CefrRulesEditor({
+  levels,
+  activeSkills,
+  resolved,
+  rules,
+  setRules,
+}: {
+  levels: QLevel[];
+  activeSkills: QSkill[];
+  resolved: { item: StructureItem; questions: BankQuestion[] }[];
+  rules: CefrRules;
+  setRules: React.Dispatch<React.SetStateAction<CefrRules>>;
+}) {
+  const allowed = useMemo(() => allowedBandsFor(levels), [levels]);
+
+  const skillTotals = useMemo(() => {
+    const map: Partial<Record<QSkill, number>> = {};
+    for (const r of resolved) {
+      if (r.item.count <= 0) continue;
+      const pts = r.questions.reduce((s, q) => s + (q.points ?? 0), 0);
+      map[r.item.skill] = (map[r.item.skill] ?? 0) + pts;
+    }
+    return map;
+  }, [resolved]);
+  const overallTotal = Object.values(skillTotals).reduce((a: number, b) => a + (b ?? 0), 0);
+
+  const updateBand = (target: "overall" | QSkill, level: QLevel, minPercent: number) => {
+    const v = Math.max(0, Math.min(100, Math.round(minPercent)));
+    setRules((prev) => {
+      const patch = (bands: CefrBand[] | undefined): CefrBand[] => {
+        const list = (bands ?? []).map((b) => (b.level === level ? { ...b, minPercent: v } : b));
+        return list.sort((a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level));
+      };
+      if (target === "overall") return { ...prev, overall: patch(prev.overall) };
+      return { ...prev, perSkill: { ...prev.perSkill, [target]: patch(prev.perSkill[target]) } };
+    });
+  };
+
+  const resetTo = (target: "overall" | QSkill) => {
+    const base = defaultBands(allowed);
+    setRules((prev) => {
+      if (target === "overall") return { ...prev, overall: base };
+      return { ...prev, perSkill: { ...prev.perSkill, [target]: base } };
+    });
+  };
+
+  const renderBandTable = (target: "overall" | QSkill, bands: CefrBand[], totalPts: number) => (
+    <div className="overflow-hidden rounded-xl border border-border bg-background">
+      <table className="w-full text-xs">
+        <thead className="bg-muted/40 text-muted-foreground">
+          <tr>
+            <th className="px-3 py-2 text-left font-semibold">CEFR</th>
+            <th className="px-3 py-2 text-left font-semibold">Ngưỡng %</th>
+            <th className="px-3 py-2 text-left font-semibold">Điểm tối thiểu</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {bands.map((b) => (
+            <tr key={b.level}>
+              <td className="px-3 py-2 font-bold text-foreground">{b.level}</td>
+              <td className="px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={b.minPercent}
+                    onChange={(e) => updateBand(target, b.level, Number(e.target.value))}
+                    className="h-8 w-20 rounded-md border border-border bg-background px-2 text-xs"
+                  />
+                  <span className="text-muted-foreground">%</span>
+                </div>
+              </td>
+              <td className="px-3 py-2 text-muted-foreground">
+                ≥ {totalPts > 0 ? Math.ceil((b.minPercent / 100) * totalPts) : 0} / {totalPts}
+              </td>
+            </tr>
+          ))}
+          {bands.length === 0 && (
+            <tr>
+              <td colSpan={3} className="px-3 py-4 text-center text-muted-foreground">
+                Chưa có band nào cho dải cấp độ này.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4 text-sm">
+      <div className="rounded-xl border border-dashed border-border bg-muted/30 px-3 py-2 text-[12px] text-muted-foreground">
+        Dải CEFR khả dụng cho đề này:{" "}
+        <span className="font-semibold text-foreground">{allowed.join(" · ")}</span>. Ngưỡng %
+        được áp cho từng kỹ năng và điểm tổng để quy đổi ra cấp độ CEFR trên phiếu kết quả.
+      </div>
+
+      <section className="rounded-2xl border border-border bg-surface p-4">
+        <div className="mb-2 flex items-center justify-between">
+          <div>
+            <div className="text-sm font-semibold text-foreground">Điểm tổng (Overall)</div>
+            <div className="text-[11px] text-muted-foreground">
+              Tổng {overallTotal} điểm trên toàn đề
+            </div>
+          </div>
+          <button
+            onClick={() => resetTo("overall")}
+            className="rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold hover:bg-muted"
+          >
+            Đặt lại mặc định
+          </button>
+        </div>
+        {renderBandTable("overall", rules.overall, overallTotal)}
+      </section>
+
+      <section className="space-y-3">
+        <div className="text-sm font-semibold text-foreground">Theo từng kỹ năng</div>
+        <div className="grid gap-3 lg:grid-cols-2">
+          {activeSkills.map((sk) => {
+            const bands = rules.perSkill[sk] ?? [];
+            const totalPts = skillTotals[sk] ?? 0;
+            return (
+              <div key={sk} className="rounded-2xl border border-border bg-surface p-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-foreground">{SKILL_LABEL[sk]}</div>
+                    <div className="text-[11px] text-muted-foreground">Tổng {totalPts} điểm</div>
+                  </div>
+                  <button
+                    onClick={() => resetTo(sk)}
+                    className="rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold hover:bg-muted"
+                  >
+                    Đặt lại
+                  </button>
+                </div>
+                {renderBandTable(sk, bands, totalPts)}
+              </div>
+            );
+          })}
+          {activeSkills.length === 0 && (
+            <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+              Chưa có kỹ năng nào trong đề.
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
@@ -1380,6 +1684,9 @@ function GroupEditor({
                     )}
                   >
                     {DIFFICULTY_LABEL[q.difficulty]}
+                  </span>
+                  <span className="rounded-md bg-primary/10 px-1.5 py-0.5 font-semibold text-primary">
+                    {q.points ?? 0} điểm
                   </span>
                 </div>
               </div>
