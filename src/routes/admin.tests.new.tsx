@@ -263,31 +263,23 @@ export function TestExamBuilder({
     setCefrRules((prev) => {
       const skills = activeSkillsKey ? (activeSkillsKey.split(",") as QSkill[]) : [];
       const allowed = allowedBandsFor(levels);
-      const base = defaultBands(allowed);
       const perSkill: Partial<Record<QSkill, CefrBand[]>> = {};
       for (const sk of skills) {
         const existing = prev.perSkill[sk];
-        // Lọc bỏ band ngoài dải cho phép, thêm mới nếu thiếu.
-        if (existing) {
-          const filtered = existing.filter((b) => allowed.includes(b.level));
-          const missing = base.filter((b) => !filtered.some((f) => f.level === b.level));
-          perSkill[sk] = [...filtered, ...missing].sort(
-            (a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level),
-          );
+        if (existing && existing.length > 0) {
+          // Chỉ giữ lại các band có level trong dải cho phép; các dòng khác do người dùng tự quản.
+          perSkill[sk] = existing.filter((b) => allowed.includes(b.level));
+          if (perSkill[sk]!.length === 0) perSkill[sk] = defaultBands(allowed);
         } else {
-          perSkill[sk] = base.map((b) => ({ ...b }));
+          perSkill[sk] = defaultBands(allowed);
         }
       }
       const overallFiltered = prev.overall.filter((b) => allowed.includes(b.level));
-      const overallMissing = base.filter((b) => !overallFiltered.some((f) => f.level === b.level));
-      const overall = overallFiltered.length
-        ? [...overallFiltered, ...overallMissing].sort(
-            (a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level),
-          )
-        : base;
+      const overall = overallFiltered.length ? overallFiltered : defaultBands(allowed);
       return { perSkill, overall };
     });
   }, [levels, activeSkillsKey]);
+
 
   const totalQuestions = structure.reduce((s, x) => s + x.count, 0);
 
