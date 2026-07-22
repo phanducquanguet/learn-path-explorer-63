@@ -1197,11 +1197,22 @@ function Step4Build({
   structure,
   setStructure,
   mode,
+  resolved,
+  levels,
+  cefrRules,
+  setCefrRules,
+  activeSkills,
 }: {
   structure: StructureItem[];
   setStructure: React.Dispatch<React.SetStateAction<StructureItem[]>>;
   mode: "fixed" | "random" | "manual";
+  resolved: { item: StructureItem; questions: BankQuestion[] }[];
+  levels: QLevel[];
+  cefrRules: CefrRules;
+  setCefrRules: React.Dispatch<React.SetStateAction<CefrRules>>;
+  activeSkills: QSkill[];
 }) {
+  const [tab, setTab] = useState<"questions" | "grading">("questions");
   const [openGroup, setOpenGroup] = useState(0);
 
   // Keep openGroup valid if structure shrinks.
