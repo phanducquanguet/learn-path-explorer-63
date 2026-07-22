@@ -254,6 +254,7 @@ export function TestExamBuilder({
   // vẫn giữ chỉnh tay của người dùng ở các kỹ năng cũ.
   useEffect(() => {
     setCefrRules((prev) => {
+      const skills = activeSkillsKey ? (activeSkillsKey.split(",") as QSkill[]) : [];
       const allowed = allowedBandsFor(levels);
       const base = defaultBands(allowed);
       const perSkill: Partial<Record<QSkill, CefrBand[]>> = {};
