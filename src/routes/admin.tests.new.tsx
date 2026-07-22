@@ -1240,8 +1240,60 @@ function Step4Build({
         : "Chọn từng câu thủ công cho mỗi nhóm. Dùng bộ lọc bên dưới để thu hẹp theo cấp độ và độ khó. Bấm “Tương tự” trên một câu đã chọn để thêm nhanh câu cùng dạng từ ngân hàng.";
 
   return (
-    <div className="space-y-3">
-      <p className="text-sm text-muted-foreground">{intro}</p>
+    <div className="space-y-4">
+      {/* Sub-tabs */}
+      <div className="inline-flex rounded-xl border border-border bg-background p-1 text-xs font-semibold">
+        <button
+          onClick={() => setTab("questions")}
+          className={cn(
+            "rounded-lg px-3 py-1.5 transition",
+            tab === "questions" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          1. Câu hỏi & điểm số
+        </button>
+        <button
+          onClick={() => setTab("grading")}
+          className={cn(
+            "rounded-lg px-3 py-1.5 transition",
+            tab === "grading" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          2. Quy tắc chấm & quy đổi CEFR
+        </button>
+      </div>
+
+      {tab === "grading" ? (
+        <CefrRulesEditor
+          levels={levels}
+          activeSkills={activeSkills}
+          resolved={resolved}
+          rules={cefrRules}
+          setRules={setCefrRules}
+        />
+      ) : (
+        <div className="space-y-3">
+          <p className="text-sm text-muted-foreground">{intro}</p>
+
+          {/* Points summary per section */}
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+            {resolved.filter((r) => r.item.count > 0).map((r, i) => {
+              const total = r.questions.reduce((s, q) => s + (q.points ?? 0), 0);
+              return (
+                <div key={i} className="rounded-xl border border-border bg-background px-3 py-2">
+                  <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                    {SKILL_LABEL[r.item.skill]}
+                  </div>
+                  <div className="mt-0.5 flex items-baseline gap-1.5">
+                    <span className="text-lg font-bold text-foreground">{total}</span>
+                    <span className="text-[11px] text-muted-foreground">
+                      điểm · {r.questions.length} câu
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
 
       {/* Group tabs with reorder controls */}
       <div className="flex flex-wrap gap-2">
