@@ -241,9 +241,13 @@ export function TestExamBuilder({
   const [enforceOrder, setEnforceOrder] = useState(false);
   const [previewing, setPreviewing] = useState(false);
 
-  const activeSkills = useMemo(
-    () => Array.from(new Set(structure.filter((s) => s.count > 0).map((s) => s.skill))),
+  const activeSkillsKey = useMemo(
+    () => Array.from(new Set(structure.filter((s) => s.count > 0).map((s) => s.skill))).sort().join(","),
     [structure],
+  );
+  const activeSkills = useMemo(
+    () => (activeSkillsKey ? (activeSkillsKey.split(",") as QSkill[]) : []),
+    [activeSkillsKey],
   );
   const [cefrRules, setCefrRules] = useState<CefrRules>(() => defaultCefrRules(levels, activeSkills));
   // Khi thay đổi cấp độ hoặc danh sách kỹ năng: đồng bộ ngưỡng mặc định cho kỹ năng mới,
