@@ -126,6 +126,46 @@ const STEPS = [
 
 type StructureItem = TestStructureItem;
 
+/* ---------- CEFR grading rules ---------- */
+
+type CefrBand = { level: QLevel; minPercent: number };
+type CefrRules = {
+  perSkill: Partial<Record<QSkill, CefrBand[]>>;
+  overall: CefrBand[];
+};
+
+const LEVEL_ORDER: QLevel[] = ["A1", "A2", "B1", "B2", "C1", "C2"];
+
+/** Trả về dải cấp độ khả dụng cho đề: min(levels)-1 ↔ max(levels)+1 (kẹp trong A1..C2). */
+function allowedBandsFor(levels: QLevel[]): QLevel[] {
+  if (levels.length === 0) return ["B1"];
+  const idxs = levels.map((l) => LEVEL_ORDER.indexOf(l));
+  const lo = Math.max(0, Math.min(...idxs) - 1);
+  const hi = Math.min(LEVEL_ORDER.length - 1, Math.max(...idxs) + 1);
+  return LEVEL_ORDER.slice(lo, hi + 1);
+}
+
+/** Ngưỡng % mặc định cho một dải cấp độ (cao → thấp). */
+function defaultBands(allowed: QLevel[]): CefrBand[] {
+  const n = allowed.length;
+  if (n === 0) return [];
+  // Chia đều 40% → 90% từ thấp lên cao.
+  const min = 40;
+  const max = 90;
+  const step = n > 1 ? (max - min) / (n - 1) : 0;
+  return allowed
+    .map((lv, i) => ({ level: lv, minPercent: Math.round(min + step * i) }))
+    .sort((a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level));
+}
+
+function defaultCefrRules(levels: QLevel[], skills: QSkill[]): CefrRules {
+  const allowed = allowedBandsFor(levels);
+  const base = defaultBands(allowed);
+  const perSkill: Partial<Record<QSkill, CefrBand[]>> = {};
+  for (const sk of skills) perSkill[sk] = base.map((b) => ({ ...b }));
+  return { perSkill, overall: base };
+}
+
 function matchBank(s: StructureItem): BankQuestion[] {
   // Lọc theo Kỹ năng + Cấp độ + Loại + Độ khó + Tags (any-match).
   const wanted = (s.tags ?? []).map((t) => t.trim().toLowerCase()).filter(Boolean);
