@@ -1572,7 +1572,7 @@ function CefrRulesEditor({
                     <div className="text-[11px] text-muted-foreground">Tổng {totalPts} điểm</div>
                   </div>
                   <button
-                    onClick={() => resetTo(sk)}
+                    onClick={() => resetTo(sk, totalPts)}
                     className="rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold hover:bg-muted"
                   >
                     Đặt lại
