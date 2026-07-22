@@ -1374,6 +1374,159 @@ function Step4Build({
   );
 }
 
+/* ---------- CEFR Rules Editor ---------- */
+
+function CefrRulesEditor({
+  levels,
+  activeSkills,
+  resolved,
+  rules,
+  setRules,
+}: {
+  levels: QLevel[];
+  activeSkills: QSkill[];
+  resolved: { item: StructureItem; questions: BankQuestion[] }[];
+  rules: CefrRules;
+  setRules: React.Dispatch<React.SetStateAction<CefrRules>>;
+}) {
+  const allowed = useMemo(() => allowedBandsFor(levels), [levels]);
+
+  const skillTotals = useMemo(() => {
+    const map: Partial<Record<QSkill, number>> = {};
+    for (const r of resolved) {
+      if (r.item.count <= 0) continue;
+      const pts = r.questions.reduce((s, q) => s + (q.points ?? 0), 0);
+      map[r.item.skill] = (map[r.item.skill] ?? 0) + pts;
+    }
+    return map;
+  }, [resolved]);
+  const overallTotal = Object.values(skillTotals).reduce((a: number, b) => a + (b ?? 0), 0);
+
+  const updateBand = (target: "overall" | QSkill, level: QLevel, minPercent: number) => {
+    const v = Math.max(0, Math.min(100, Math.round(minPercent)));
+    setRules((prev) => {
+      const patch = (bands: CefrBand[] | undefined): CefrBand[] => {
+        const list = (bands ?? []).map((b) => (b.level === level ? { ...b, minPercent: v } : b));
+        return list.sort((a, b) => LEVEL_ORDER.indexOf(b.level) - LEVEL_ORDER.indexOf(a.level));
+      };
+      if (target === "overall") return { ...prev, overall: patch(prev.overall) };
+      return { ...prev, perSkill: { ...prev.perSkill, [target]: patch(prev.perSkill[target]) } };
+    });
+  };
+
+  const resetTo = (target: "overall" | QSkill) => {
+    const base = defaultBands(allowed);
+    setRules((prev) => {
+      if (target === "overall") return { ...prev, overall: base };
+      return { ...prev, perSkill: { ...prev.perSkill, [target]: base } };
+    });
+  };
+
+  const renderBandTable = (target: "overall" | QSkill, bands: CefrBand[], totalPts: number) => (
+    <div className="overflow-hidden rounded-xl border border-border bg-background">
+      <table className="w-full text-xs">
+        <thead className="bg-muted/40 text-muted-foreground">
+          <tr>
+            <th className="px-3 py-2 text-left font-semibold">CEFR</th>
+            <th className="px-3 py-2 text-left font-semibold">Ngưỡng %</th>
+            <th className="px-3 py-2 text-left font-semibold">Điểm tối thiểu</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-border">
+          {bands.map((b) => (
+            <tr key={b.level}>
+              <td className="px-3 py-2 font-bold text-foreground">{b.level}</td>
+              <td className="px-3 py-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={b.minPercent}
+                    onChange={(e) => updateBand(target, b.level, Number(e.target.value))}
+                    className="h-8 w-20 rounded-md border border-border bg-background px-2 text-xs"
+                  />
+                  <span className="text-muted-foreground">%</span>
+                </div>
+              </td>
+              <td className="px-3 py-2 text-muted-foreground">
+                ≥ {totalPts > 0 ? Math.ceil((b.minPercent / 100) * totalPts) : 0} / {totalPts}
+              </td>
+            </tr>
+          ))}
+          {bands.length === 0 && (
+            <tr>
+              <td colSpan={3} className="px-3 py-4 text-center text-muted-foreground">
+                Chưa có band nào cho dải cấp độ này.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4 text-sm">
+      <div className="rounded-xl border border-dashed border-border bg-muted/30 px-3 py-2 text-[12px] text-muted-foreground">
+        Dải CEFR khả dụng cho đề này:{" "}
+        <span className="font-semibold text-foreground">{allowed.join(" · ")}</span>. Ngưỡng %
+        được áp cho từng kỹ năng và điểm tổng để quy đổi ra cấp độ CEFR trên phiếu kết quả.
+      </div>
+
+      <section className="rounded-2xl border border-border bg-surface p-4">
+        <div className="mb-2 flex items-center justify-between">
+          <div>
+            <div className="text-sm font-semibold text-foreground">Điểm tổng (Overall)</div>
+            <div className="text-[11px] text-muted-foreground">
+              Tổng {overallTotal} điểm trên toàn đề
+            </div>
+          </div>
+          <button
+            onClick={() => resetTo("overall")}
+            className="rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold hover:bg-muted"
+          >
+            Đặt lại mặc định
+          </button>
+        </div>
+        {renderBandTable("overall", rules.overall, overallTotal)}
+      </section>
+
+      <section className="space-y-3">
+        <div className="text-sm font-semibold text-foreground">Theo từng kỹ năng</div>
+        <div className="grid gap-3 lg:grid-cols-2">
+          {activeSkills.map((sk) => {
+            const bands = rules.perSkill[sk] ?? [];
+            const totalPts = skillTotals[sk] ?? 0;
+            return (
+              <div key={sk} className="rounded-2xl border border-border bg-surface p-4">
+                <div className="mb-2 flex items-center justify-between">
+                  <div>
+                    <div className="text-sm font-semibold text-foreground">{SKILL_LABEL[sk]}</div>
+                    <div className="text-[11px] text-muted-foreground">Tổng {totalPts} điểm</div>
+                  </div>
+                  <button
+                    onClick={() => resetTo(sk)}
+                    className="rounded-md border border-border bg-background px-2 py-1 text-[11px] font-semibold hover:bg-muted"
+                  >
+                    Đặt lại
+                  </button>
+                </div>
+                {renderBandTable(sk, bands, totalPts)}
+              </div>
+            );
+          })}
+          {activeSkills.length === 0 && (
+            <div className="rounded-xl border border-dashed border-border p-4 text-center text-xs text-muted-foreground">
+              Chưa có kỹ năng nào trong đề.
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function GroupEditor({
   structure,
   openGroup,
