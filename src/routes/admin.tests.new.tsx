@@ -1685,6 +1685,9 @@ function GroupEditor({
                   >
                     {DIFFICULTY_LABEL[q.difficulty]}
                   </span>
+                  <span className="rounded-md bg-primary/10 px-1.5 py-0.5 font-semibold text-primary">
+                    {q.points ?? 0} điểm
+                  </span>
                 </div>
               </div>
               <div className="flex shrink-0 flex-col gap-0.5">
