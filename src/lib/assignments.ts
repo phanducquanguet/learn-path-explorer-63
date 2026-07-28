@@ -31,6 +31,8 @@ export type Assignment = {
   allowFile: boolean;
   createdAt: string;
   createdBy: string;
+  /** Per-student deadline extensions when giáo viên mở lại nộp bài. Key = studentId, value = ISO. */
+  extensions?: Record<string, string>;
 };
 
 
