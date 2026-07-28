@@ -228,6 +228,12 @@ export const CURRENT_STUDENT = {
   classId: students[0]?.classId ?? "cls-a1-morning",
 };
 
+let _studentListCache: Assignment[] | null = null;
 export function listAssignmentsForCurrentStudent(): Assignment[] {
-  return listAssignments().filter((a) => a.classId === CURRENT_STUDENT.classId);
+  const all = listAssignments();
+  if (!_studentListCache || _sortedCache !== all) {
+    _studentListCache = all.filter((a) => a.classId === CURRENT_STUDENT.classId);
+  }
+  return _studentListCache;
 }
+
