@@ -65,6 +65,22 @@ function TeacherAssignmentDetail() {
 
   const cls = classes.filter((c) => a.classIds.includes(c.id));
   const clsStudents = students.filter((s) => a.classIds.includes(s.classId));
+
+  const unitIdsForHeader = a.unitIds ?? (a.unitId ? [a.unitId] : []);
+  let courseInfo: { courseTitle: string; units: { id: string; title: string }[]; level: string } | null = null;
+  if (a.courseId) {
+    for (const lv of levels) {
+      const c = lv.courses.find((x) => x.id === a.courseId);
+      if (c) {
+        const us = unitIdsForHeader
+          .map((id) => c.units.find((u) => u.id === id))
+          .filter((u): u is NonNullable<typeof u> => !!u)
+          .map((u) => ({ id: u.id, title: u.title }));
+        courseInfo = { courseTitle: c.title, units: us, level: lv.code };
+        break;
+      }
+    }
+  }
   const now = Date.now();
   const isClosed = new Date(a.dueAt).getTime() < now;
 
