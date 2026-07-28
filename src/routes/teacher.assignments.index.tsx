@@ -307,13 +307,16 @@ function KpiCards({ items }: { items: Assignment[] }) {
   );
 }
 
-function findCourseUnit(courseId?: string, unitId?: string) {
+function findCourseUnits(courseId?: string, unitIds?: string[]) {
   if (!courseId) return null;
   for (const lv of levels) {
     const c = lv.courses.find((x) => x.id === courseId);
     if (c) {
-      const u = unitId ? c.units.find((x) => x.id === unitId) : undefined;
-      return { course: c, unit: u, level: lv.code };
+      const ids = unitIds ?? [];
+      const us = ids
+        .map((id) => c.units.find((x) => x.id === id))
+        .filter((u): u is NonNullable<typeof u> => !!u);
+      return { course: c, units: us, level: lv.code };
     }
   }
   return null;
@@ -325,7 +328,8 @@ function AssignmentRow({ a, onDuplicate }: { a: Assignment; onDuplicate: () => v
   const pending = subs.length - graded;
   const cls = classes.filter((c) => a.classIds.includes(c.id));
   const overdue = new Date(a.dueAt).getTime() < Date.now();
-  const cu = findCourseUnit(a.courseId, a.unitId);
+  const unitIdsForRow = a.unitIds ?? (a.unitId ? [a.unitId] : []);
+  const cu = findCourseUnits(a.courseId, unitIdsForRow);
 
   return (
     <Link
@@ -347,10 +351,14 @@ function AssignmentRow({ a, onDuplicate }: { a: Assignment; onDuplicate: () => v
           {cu && (
             <span
               className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-1.5 py-0.5 text-[10px] font-medium text-primary"
-              title={`${cu.course.title}${cu.unit ? ` · ${cu.unit.title}` : ""}`}
+              title={`${cu.course.title}${cu.units.length ? ` · ${cu.units.map((u) => u.title).join(", ")}` : ""}`}
             >
               <GraduationCap className="h-3 w-3" /> {cu.course.title}
-              {cu.unit && <span className="text-primary/70">· U{cu.unit.index}</span>}
+              {cu.units.length > 0 && (
+                <span className="text-primary/70">
+                  · {cu.units.map((u) => `U${u.index}`).join(", ")}
+                </span>
+              )}
             </span>
           )}
         </div>
@@ -408,7 +416,21 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
   const [classPickerOpen, setClassPickerOpen] = useState(false);
   const classPickerRef = useRef<HTMLDivElement>(null);
   const [courseId, setCourseId] = useState<string>("");
-  const [unitId, setUnitId] = useState<string>("");
+  const [unitIds, setUnitIds] = useState<string[]>([]);
+  const [unitPickerOpen, setUnitPickerOpen] = useState(false);
+  const unitPickerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!unitPickerOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (unitPickerRef.current && !unitPickerRef.current.contains(e.target as Node)) {
+        setUnitPickerOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [unitPickerOpen]);
+  const toggleUnit = (id: string) =>
+    setUnitIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
   useEffect(() => {
     if (!classPickerOpen) return;
@@ -463,12 +485,12 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
     if (!courseId) return;
     if (!availableCourses.some((c) => c.id === courseId)) {
       setCourseId("");
-      setUnitId("");
+      setUnitIds([]);
     }
   }, [availableCourses, courseId]);
   useEffect(() => {
-    if (unitId && !availableUnits.some((u) => u.id === unitId)) setUnitId("");
-  }, [availableUnits, unitId]);
+    setUnitIds((prev) => prev.filter((id) => availableUnits.some((u) => u.id === id)));
+  }, [availableUnits]);
 
   const [dueAt, setDueAt] = useState(() => {
     const d = new Date(Date.now() + 3 * 24 * 3600 * 1000);
@@ -518,7 +540,8 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
         allowAssistantGrading,
         attachments: attachments.length ? attachments : undefined,
         courseId: courseId || undefined,
-        unitId: unitId || undefined,
+        unitIds: unitIds.length ? unitIds : undefined,
+        unitId: unitIds[0],
         createdBy: "Cô Mai Lan",
       });
       if (!first) first = a;
@@ -717,7 +740,7 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
                 value={courseId}
                 onChange={(e) => {
                   setCourseId(e.target.value);
-                  setUnitId("");
+                  setUnitIds([]);
                 }}
                 disabled={availableCourses.length === 0}
                 className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm disabled:opacity-50"
@@ -730,20 +753,81 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
                 ))}
               </select>
             </Field>
-            <Field label={`Unit${!courseId ? " (chọn khóa học trước)" : ""}`}>
-              <select
-                value={unitId}
-                onChange={(e) => setUnitId(e.target.value)}
-                disabled={!courseId}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm disabled:opacity-50"
-              >
-                <option value="">— Không gắn unit —</option>
-                {availableUnits.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    Unit {u.index}: {u.title.replace(/^Unit \d+:\s*/, "")}
-                  </option>
-                ))}
-              </select>
+            <Field label={`Unit${!courseId ? " (chọn khóa học trước)" : ` (${unitIds.length} đã chọn)`}`}>
+              <div ref={unitPickerRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => courseId && setUnitPickerOpen((v) => !v)}
+                  disabled={!courseId}
+                  className="flex w-full items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm hover:border-primary/40 disabled:opacity-50"
+                >
+                  <span className={cn("truncate", unitIds.length === 0 && "text-muted-foreground")}>
+                    {!courseId
+                      ? "Chọn khóa học trước..."
+                      : unitIds.length === 0
+                        ? "— Không gắn unit —"
+                        : `Đã chọn ${unitIds.length} unit`}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+                      unitPickerOpen && "rotate-180",
+                    )}
+                  />
+                </button>
+                {unitPickerOpen && courseId && (
+                  <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-lg border border-border bg-background shadow-lg">
+                    <div className="flex items-center gap-2 border-b border-border px-2 py-1.5 text-[11px]">
+                      <button
+                        type="button"
+                        onClick={() => setUnitIds(availableUnits.map((u) => u.id))}
+                        className="font-medium text-primary hover:underline"
+                      >
+                        Chọn tất cả
+                      </button>
+                      <span className="text-muted-foreground">·</span>
+                      <button
+                        type="button"
+                        onClick={() => setUnitIds([])}
+                        className="font-medium text-muted-foreground hover:underline"
+                      >
+                        Bỏ chọn
+                      </button>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto p-2">
+                      {availableUnits.length === 0 && (
+                        <div className="p-2 text-xs text-muted-foreground">Khóa học chưa có unit.</div>
+                      )}
+                      <div className="grid grid-cols-1 gap-1.5">
+                        {availableUnits.map((u) => {
+                          const checked = unitIds.includes(u.id);
+                          return (
+                            <label
+                              key={u.id}
+                              className={cn(
+                                "flex cursor-pointer items-center gap-2 rounded-md border px-2 py-1.5 text-xs transition",
+                                checked
+                                  ? "border-primary/40 bg-primary/5 text-foreground"
+                                  : "border-border bg-background text-muted-foreground hover:border-primary/30 hover:text-foreground",
+                              )}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => toggleUnit(u.id)}
+                                className="shrink-0"
+                              />
+                              <span className="truncate">
+                                Unit {u.index}: {u.title.replace(/^Unit \d+:\s*/, "")}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </Field>
           </div>
 
@@ -839,6 +923,7 @@ function DuplicateDialog({ a, onClose }: { a: Assignment; onClose: () => void })
         attachments: a.attachments,
         courseId: a.courseId,
         unitId: a.unitId,
+        unitIds: a.unitIds ?? (a.unitId ? [a.unitId] : undefined),
         allowAssistantGrading: a.allowAssistantGrading,
         createdBy: a.createdBy,
       });
