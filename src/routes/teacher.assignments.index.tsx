@@ -923,6 +923,7 @@ function DuplicateDialog({ a, onClose }: { a: Assignment; onClose: () => void })
         attachments: a.attachments,
         courseId: a.courseId,
         unitId: a.unitId,
+        unitIds: a.unitIds ?? (a.unitId ? [a.unitId] : undefined),
         allowAssistantGrading: a.allowAssistantGrading,
         createdBy: a.createdBy,
       });
