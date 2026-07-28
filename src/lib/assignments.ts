@@ -39,8 +39,10 @@ export type Assignment = {
   allowAssistantGrading?: boolean;
   /** Gắn với khóa học (từ lms-data). */
   courseId?: string;
-  /** Gắn với unit trong khóa học đã chọn. */
+  /** Gắn với unit trong khóa học đã chọn (backward compat — unit đầu tiên). */
   unitId?: string;
+  /** Gắn với nhiều unit trong khóa học đã chọn. */
+  unitIds?: string[];
 };
 
 
