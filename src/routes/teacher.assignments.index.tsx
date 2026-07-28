@@ -307,12 +307,25 @@ function KpiCards({ items }: { items: Assignment[] }) {
   );
 }
 
+function findCourseUnit(courseId?: string, unitId?: string) {
+  if (!courseId) return null;
+  for (const lv of levels) {
+    const c = lv.courses.find((x) => x.id === courseId);
+    if (c) {
+      const u = unitId ? c.units.find((x) => x.id === unitId) : undefined;
+      return { course: c, unit: u, level: lv.code };
+    }
+  }
+  return null;
+}
+
 function AssignmentRow({ a, onDuplicate }: { a: Assignment; onDuplicate: () => void }) {
   const subs = listSubmissions(a.id);
   const graded = subs.filter((s) => s.score !== undefined).length;
   const pending = subs.length - graded;
   const cls = classes.filter((c) => a.classIds.includes(c.id));
   const overdue = new Date(a.dueAt).getTime() < Date.now();
+  const cu = findCourseUnit(a.courseId, a.unitId);
 
   return (
     <Link
@@ -331,6 +344,15 @@ function AssignmentRow({ a, onDuplicate }: { a: Assignment; onDuplicate: () => v
               <Paperclip className="h-3 w-3" /> {a.attachments.length}
             </span>
           )}
+          {cu && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-1.5 py-0.5 text-[10px] font-medium text-primary"
+              title={`${cu.course.title}${cu.unit ? ` · ${cu.unit.title}` : ""}`}
+            >
+              <GraduationCap className="h-3 w-3" /> {cu.course.title}
+              {cu.unit && <span className="text-primary/70">· U{cu.unit.index}</span>}
+            </span>
+          )}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
@@ -343,6 +365,7 @@ function AssignmentRow({ a, onDuplicate }: { a: Assignment; onDuplicate: () => v
           <span>Thang điểm: {a.maxScore}</span>
         </div>
       </div>
+
       <div className="hidden text-right text-xs sm:block">
         <div className="font-semibold text-foreground">{subs.length} bài nộp</div>
         <div className="text-muted-foreground">
