@@ -10,7 +10,19 @@ import {
   type Assignment,
 } from "@/lib/assignments";
 import { classes } from "@/lib/teacher-data";
-import { ClipboardList, Plus, Calendar, Users, Trash2, ArrowRight } from "lucide-react";
+import { students } from "@/lib/teacher-data";
+import {
+  ClipboardList,
+  Plus,
+  Calendar,
+  Users,
+  Trash2,
+  ArrowRight,
+  CheckCircle2,
+  Clock,
+  AlertTriangle,
+  FileCheck2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/teacher/assignments/")({
