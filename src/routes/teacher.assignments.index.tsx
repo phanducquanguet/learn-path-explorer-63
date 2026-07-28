@@ -12,6 +12,7 @@ import {
 } from "@/lib/assignments";
 import { classes } from "@/lib/teacher-data";
 import { students } from "@/lib/teacher-data";
+import { levels } from "@/lib/lms-data";
 import {
   ClipboardList,
   Plus,
@@ -306,12 +307,25 @@ function KpiCards({ items }: { items: Assignment[] }) {
   );
 }
 
+function findCourseUnit(courseId?: string, unitId?: string) {
+  if (!courseId) return null;
+  for (const lv of levels) {
+    const c = lv.courses.find((x) => x.id === courseId);
+    if (c) {
+      const u = unitId ? c.units.find((x) => x.id === unitId) : undefined;
+      return { course: c, unit: u, level: lv.code };
+    }
+  }
+  return null;
+}
+
 function AssignmentRow({ a, onDuplicate }: { a: Assignment; onDuplicate: () => void }) {
   const subs = listSubmissions(a.id);
   const graded = subs.filter((s) => s.score !== undefined).length;
   const pending = subs.length - graded;
   const cls = classes.filter((c) => a.classIds.includes(c.id));
   const overdue = new Date(a.dueAt).getTime() < Date.now();
+  const cu = findCourseUnit(a.courseId, a.unitId);
 
   return (
     <Link
@@ -330,6 +344,15 @@ function AssignmentRow({ a, onDuplicate }: { a: Assignment; onDuplicate: () => v
               <Paperclip className="h-3 w-3" /> {a.attachments.length}
             </span>
           )}
+          {cu && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-1.5 py-0.5 text-[10px] font-medium text-primary"
+              title={`${cu.course.title}${cu.unit ? ` · ${cu.unit.title}` : ""}`}
+            >
+              <GraduationCap className="h-3 w-3" /> {cu.course.title}
+              {cu.unit && <span className="text-primary/70">· U{cu.unit.index}</span>}
+            </span>
+          )}
         </div>
         <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
@@ -342,6 +365,7 @@ function AssignmentRow({ a, onDuplicate }: { a: Assignment; onDuplicate: () => v
           <span>Thang điểm: {a.maxScore}</span>
         </div>
       </div>
+
       <div className="hidden text-right text-xs sm:block">
         <div className="font-semibold text-foreground">{subs.length} bài nộp</div>
         <div className="text-muted-foreground">
@@ -380,8 +404,58 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
   const [description, setDescription] = useState("");
   const [attachments, setAttachments] = useState<AssignmentAttachment[]>([]);
   const [classIds, setClassIds] = useState<string[]>(classes[0] ? [classes[0].id] : []);
+  const [classQuery, setClassQuery] = useState("");
+  const [courseId, setCourseId] = useState<string>("");
+  const [unitId, setUnitId] = useState<string>("");
   const toggleClass = (id: string) =>
     setClassIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+  // Nhóm lớp theo level cho picker
+  const classesByLevel = useMemo(() => {
+    const q = classQuery.trim().toLowerCase();
+    const map = new Map<string, typeof classes>();
+    for (const c of classes) {
+      if (q && !c.name.toLowerCase().includes(q) && !c.levelCode.toLowerCase().includes(q)) continue;
+      const arr = map.get(c.levelCode) ?? [];
+      arr.push(c);
+      map.set(c.levelCode, arr);
+    }
+    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [classQuery]);
+
+  // Level của các lớp đang chọn — dùng để lọc course
+  const selectedLevels = useMemo(
+    () => Array.from(new Set(classes.filter((c) => classIds.includes(c.id)).map((c) => c.levelCode))),
+    [classIds],
+  );
+
+  const availableCourses = useMemo(() => {
+    if (selectedLevels.length === 0) return [] as { id: string; title: string; level: string }[];
+    return levels
+      .filter((lv) => selectedLevels.includes(lv.code))
+      .flatMap((lv) => lv.courses.map((c) => ({ id: c.id, title: c.title, level: lv.code })));
+  }, [selectedLevels]);
+
+  const availableUnits = useMemo(() => {
+    if (!courseId) return [] as { id: string; title: string; index: number }[];
+    for (const lv of levels) {
+      const c = lv.courses.find((c) => c.id === courseId);
+      if (c) return c.units.map((u) => ({ id: u.id, title: u.title, index: u.index }));
+    }
+    return [];
+  }, [courseId]);
+
+  // Reset course/unit khi chọn level ko còn khớp
+  useEffect(() => {
+    if (!courseId) return;
+    if (!availableCourses.some((c) => c.id === courseId)) {
+      setCourseId("");
+      setUnitId("");
+    }
+  }, [availableCourses, courseId]);
+  useEffect(() => {
+    if (unitId && !availableUnits.some((u) => u.id === unitId)) setUnitId("");
+  }, [availableUnits, unitId]);
 
   const [dueAt, setDueAt] = useState(() => {
     const d = new Date(Date.now() + 3 * 24 * 3600 * 1000);
@@ -430,6 +504,8 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
         allowFile: allowFile || !allowText,
         allowAssistantGrading,
         attachments: attachments.length ? attachments : undefined,
+        courseId: courseId || undefined,
+        unitId: unitId || undefined,
         createdBy: "Cô Mai Lan",
       });
       if (!first) first = a;
@@ -509,49 +585,134 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
           </Field>
 
           <Field label={`Lớp giao bài (${classIds.length} đã chọn)`}>
-            <div className="max-h-40 overflow-y-auto rounded-lg border border-border bg-background p-2">
-              {classes.map((c) => {
-                const checked = classIds.includes(c.id);
-                return (
-                  <label
-                    key={c.id}
-                    className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleClass(c.id)}
-                    />
-                    <span className="flex-1">{c.name}</span>
-                  </label>
-                );
-              })}
-              {classes.length === 0 && (
-                <div className="p-2 text-xs text-muted-foreground">Chưa có lớp nào.</div>
-              )}
+            <div className="rounded-lg border border-border bg-background">
+              <div className="flex items-center gap-2 border-b border-border px-2 py-1.5">
+                <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                <input
+                  value={classQuery}
+                  onChange={(e) => setClassQuery(e.target.value)}
+                  placeholder="Tìm lớp hoặc level..."
+                  className="h-7 flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
+                />
+                <button
+                  type="button"
+                  onClick={() => setClassIds(classes.map((c) => c.id))}
+                  className="text-[11px] font-medium text-primary hover:underline"
+                >
+                  Chọn tất cả
+                </button>
+                <span className="text-muted-foreground">·</span>
+                <button
+                  type="button"
+                  onClick={() => setClassIds([])}
+                  className="text-[11px] font-medium text-muted-foreground hover:underline"
+                >
+                  Bỏ chọn
+                </button>
+              </div>
+              <div className="max-h-56 space-y-2 overflow-y-auto p-2">
+                {classesByLevel.length === 0 && (
+                  <div className="p-2 text-xs text-muted-foreground">Không tìm thấy lớp.</div>
+                )}
+                {classesByLevel.map(([lvl, arr]) => {
+                  const allIds = arr.map((c) => c.id);
+                  const allSelected = allIds.every((id) => classIds.includes(id));
+                  return (
+                    <div key={lvl}>
+                      <div className="mb-1 flex items-center gap-2 px-1">
+                        <span className="inline-flex h-5 items-center rounded-md bg-primary/10 px-1.5 text-[10px] font-semibold text-primary">
+                          {lvl}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground">{arr.length} lớp</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setClassIds((prev) =>
+                              allSelected
+                                ? prev.filter((id) => !allIds.includes(id))
+                                : Array.from(new Set([...prev, ...allIds])),
+                            )
+                          }
+                          className="ml-auto text-[11px] font-medium text-primary hover:underline"
+                        >
+                          {allSelected ? "Bỏ chọn nhóm" : "Chọn cả nhóm"}
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {arr.map((c) => {
+                          const checked = classIds.includes(c.id);
+                          return (
+                            <label
+                              key={c.id}
+                              className={cn(
+                                "flex cursor-pointer items-center gap-2 rounded-md border px-2 py-1.5 text-xs transition",
+                                checked
+                                  ? "border-primary/40 bg-primary/5 text-foreground"
+                                  : "border-border bg-background text-muted-foreground hover:border-primary/30 hover:text-foreground",
+                              )}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => toggleClass(c.id)}
+                                className="shrink-0"
+                              />
+                              <span className="truncate">{c.name.replace(/^[A-C][12]\s—\s/, "")}</span>
+                              <span className="ml-auto text-[10px] text-muted-foreground">
+                                {c.studentCount} HV
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            <div className="mt-1.5 flex gap-2 text-[11px]">
-              <button
-                type="button"
-                onClick={() => setClassIds(classes.map((c) => c.id))}
-                className="text-primary hover:underline"
-              >
-                Chọn tất cả
-              </button>
-              <button
-                type="button"
-                onClick={() => setClassIds([])}
-                className="text-muted-foreground hover:underline"
-              >
-                Bỏ chọn
-              </button>
-              {classIds.length > 1 && (
-                <span className="ml-auto text-[11px] text-primary">
-                  Sẽ tạo {classIds.length} bản ghi (mỗi lớp một bài).
-                </span>
-              )}
-            </div>
+            {classIds.length > 1 && (
+              <div className="mt-1.5 text-[11px] text-primary">
+                Sẽ tạo {classIds.length} bản ghi (mỗi lớp một bài).
+              </div>
+            )}
           </Field>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label={`Khóa học${availableCourses.length === 0 ? " (chọn lớp trước)" : ""}`}>
+              <select
+                value={courseId}
+                onChange={(e) => {
+                  setCourseId(e.target.value);
+                  setUnitId("");
+                }}
+                disabled={availableCourses.length === 0}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm disabled:opacity-50"
+              >
+                <option value="">— Không gắn khóa học —</option>
+                {availableCourses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    [{c.level}] {c.title}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label={`Unit${!courseId ? " (chọn khóa học trước)" : ""}`}>
+              <select
+                value={unitId}
+                onChange={(e) => setUnitId(e.target.value)}
+                disabled={!courseId}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm disabled:opacity-50"
+              >
+                <option value="">— Không gắn unit —</option>
+                {availableUnits.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    Unit {u.index}: {u.title.replace(/^Unit \d+:\s*/, "")}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Hạn nộp">
               <input
@@ -642,6 +803,9 @@ function DuplicateDialog({ a, onClose }: { a: Assignment; onClose: () => void })
         allowText: a.allowText,
         allowFile: a.allowFile,
         attachments: a.attachments,
+        courseId: a.courseId,
+        unitId: a.unitId,
+        allowAssistantGrading: a.allowAssistantGrading,
         createdBy: a.createdBy,
       });
       if (!first) first = clone;

@@ -13,6 +13,7 @@ import {
   type AssignmentSubmission,
 } from "@/lib/assignments";
 import { classes, students } from "@/lib/teacher-data";
+import { levels } from "@/lib/lms-data";
 import {
   ArrowLeft,
   Calendar,
@@ -644,9 +645,24 @@ function EditAssignmentDialog({
   const [allowAssistantGrading, setAllowAssistantGrading] = useState(
     assignment.allowAssistantGrading ?? false,
   );
+  const [courseId, setCourseId] = useState<string>(assignment.courseId ?? "");
+  const [unitId, setUnitId] = useState<string>(assignment.unitId ?? "");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const cls = classes.find((c) => assignment.classIds.includes(c.id));
+  const availableCourses = cls
+    ? levels
+        .filter((lv) => lv.code === cls.levelCode)
+        .flatMap((lv) => lv.courses.map((c) => ({ id: c.id, title: c.title, level: lv.code })))
+    : [];
+  const availableUnits = (() => {
+    if (!courseId) return [] as { id: string; title: string; index: number }[];
+    for (const lv of levels) {
+      const c = lv.courses.find((c) => c.id === courseId);
+      if (c) return c.units.map((u) => ({ id: u.id, title: u.title, index: u.index }));
+    }
+    return [];
+  })();
 
   const onPick = (files: FileList | null) => {
     if (!files) return;
@@ -680,6 +696,8 @@ function EditAssignmentDialog({
       allowText,
       allowFile: allowFile || !allowText,
       allowAssistantGrading,
+      courseId: courseId || undefined,
+      unitId: unitId || undefined,
     });
     onClose();
   };
@@ -763,6 +781,46 @@ function EditAssignmentDialog({
                   ))}
                 </ul>
               )}
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Khóa học {cls ? `(level ${cls.levelCode})` : ""}
+              </label>
+              <select
+                value={courseId}
+                onChange={(e) => {
+                  setCourseId(e.target.value);
+                  setUnitId("");
+                }}
+                className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              >
+                <option value="">— Không gắn khóa học —</option>
+                {availableCourses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Unit
+              </label>
+              <select
+                value={unitId}
+                onChange={(e) => setUnitId(e.target.value)}
+                disabled={!courseId}
+                className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm disabled:opacity-50"
+              >
+                <option value="">— Không gắn unit —</option>
+                {availableUnits.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    Unit {u.index}: {u.title.replace(/^Unit \d+:\s*/, "")}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
