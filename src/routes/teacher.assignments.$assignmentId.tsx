@@ -65,6 +65,22 @@ function TeacherAssignmentDetail() {
 
   const cls = classes.filter((c) => a.classIds.includes(c.id));
   const clsStudents = students.filter((s) => a.classIds.includes(s.classId));
+
+  const unitIdsForHeader = a.unitIds ?? (a.unitId ? [a.unitId] : []);
+  let courseInfo: { courseTitle: string; units: { id: string; title: string }[]; level: string } | null = null;
+  if (a.courseId) {
+    for (const lv of levels) {
+      const c = lv.courses.find((x) => x.id === a.courseId);
+      if (c) {
+        const us = unitIdsForHeader
+          .map((id) => c.units.find((u) => u.id === id))
+          .filter((u): u is NonNullable<typeof u> => !!u)
+          .map((u) => ({ id: u.id, title: u.title }));
+        courseInfo = { courseTitle: c.title, units: us, level: lv.code };
+        break;
+      }
+    }
+  }
   const now = Date.now();
   const isClosed = new Date(a.dueAt).getTime() < now;
 
@@ -108,6 +124,22 @@ function TeacherAssignmentDetail() {
               </span>
               <span>Thang điểm: {a.maxScore}</span>
             </div>
+            {courseInfo && (
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 font-semibold text-indigo-700">
+                  {courseInfo.level} · {courseInfo.courseTitle}
+                </span>
+                {courseInfo.units.map((u) => (
+                  <span
+                    key={u.id}
+                    className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 font-semibold text-sky-700"
+                    title={u.title}
+                  >
+                    {u.id.toUpperCase()} · {u.title}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex gap-2 text-xs">
             <Stat label="Đã nộp" value={subs.length} tone="default" />
@@ -116,6 +148,7 @@ function TeacherAssignmentDetail() {
             <Stat label="Chưa nộp" value={notSubmitted.length} tone="muted" />
           </div>
         </div>
+
 
         <section className="mt-6 rounded-2xl border border-border bg-surface p-5 shadow-soft">
           <div className="flex items-center justify-between gap-2">
