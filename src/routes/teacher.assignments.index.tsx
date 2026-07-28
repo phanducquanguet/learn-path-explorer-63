@@ -562,49 +562,134 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
           </Field>
 
           <Field label={`Lớp giao bài (${classIds.length} đã chọn)`}>
-            <div className="max-h-40 overflow-y-auto rounded-lg border border-border bg-background p-2">
-              {classes.map((c) => {
-                const checked = classIds.includes(c.id);
-                return (
-                  <label
-                    key={c.id}
-                    className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      onChange={() => toggleClass(c.id)}
-                    />
-                    <span className="flex-1">{c.name}</span>
-                  </label>
-                );
-              })}
-              {classes.length === 0 && (
-                <div className="p-2 text-xs text-muted-foreground">Chưa có lớp nào.</div>
-              )}
+            <div className="rounded-lg border border-border bg-background">
+              <div className="flex items-center gap-2 border-b border-border px-2 py-1.5">
+                <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                <input
+                  value={classQuery}
+                  onChange={(e) => setClassQuery(e.target.value)}
+                  placeholder="Tìm lớp hoặc level..."
+                  className="h-7 flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
+                />
+                <button
+                  type="button"
+                  onClick={() => setClassIds(classes.map((c) => c.id))}
+                  className="text-[11px] font-medium text-primary hover:underline"
+                >
+                  Chọn tất cả
+                </button>
+                <span className="text-muted-foreground">·</span>
+                <button
+                  type="button"
+                  onClick={() => setClassIds([])}
+                  className="text-[11px] font-medium text-muted-foreground hover:underline"
+                >
+                  Bỏ chọn
+                </button>
+              </div>
+              <div className="max-h-56 space-y-2 overflow-y-auto p-2">
+                {classesByLevel.length === 0 && (
+                  <div className="p-2 text-xs text-muted-foreground">Không tìm thấy lớp.</div>
+                )}
+                {classesByLevel.map(([lvl, arr]) => {
+                  const allIds = arr.map((c) => c.id);
+                  const allSelected = allIds.every((id) => classIds.includes(id));
+                  return (
+                    <div key={lvl}>
+                      <div className="mb-1 flex items-center gap-2 px-1">
+                        <span className="inline-flex h-5 items-center rounded-md bg-primary/10 px-1.5 text-[10px] font-semibold text-primary">
+                          {lvl}
+                        </span>
+                        <span className="text-[11px] text-muted-foreground">{arr.length} lớp</span>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setClassIds((prev) =>
+                              allSelected
+                                ? prev.filter((id) => !allIds.includes(id))
+                                : Array.from(new Set([...prev, ...allIds])),
+                            )
+                          }
+                          className="ml-auto text-[11px] font-medium text-primary hover:underline"
+                        >
+                          {allSelected ? "Bỏ chọn nhóm" : "Chọn cả nhóm"}
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {arr.map((c) => {
+                          const checked = classIds.includes(c.id);
+                          return (
+                            <label
+                              key={c.id}
+                              className={cn(
+                                "flex cursor-pointer items-center gap-2 rounded-md border px-2 py-1.5 text-xs transition",
+                                checked
+                                  ? "border-primary/40 bg-primary/5 text-foreground"
+                                  : "border-border bg-background text-muted-foreground hover:border-primary/30 hover:text-foreground",
+                              )}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => toggleClass(c.id)}
+                                className="shrink-0"
+                              />
+                              <span className="truncate">{c.name.replace(/^[A-C][12]\s—\s/, "")}</span>
+                              <span className="ml-auto text-[10px] text-muted-foreground">
+                                {c.studentCount} HV
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
-            <div className="mt-1.5 flex gap-2 text-[11px]">
-              <button
-                type="button"
-                onClick={() => setClassIds(classes.map((c) => c.id))}
-                className="text-primary hover:underline"
-              >
-                Chọn tất cả
-              </button>
-              <button
-                type="button"
-                onClick={() => setClassIds([])}
-                className="text-muted-foreground hover:underline"
-              >
-                Bỏ chọn
-              </button>
-              {classIds.length > 1 && (
-                <span className="ml-auto text-[11px] text-primary">
-                  Sẽ tạo {classIds.length} bản ghi (mỗi lớp một bài).
-                </span>
-              )}
-            </div>
+            {classIds.length > 1 && (
+              <div className="mt-1.5 text-[11px] text-primary">
+                Sẽ tạo {classIds.length} bản ghi (mỗi lớp một bài).
+              </div>
+            )}
           </Field>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label={`Khóa học${availableCourses.length === 0 ? " (chọn lớp trước)" : ""}`}>
+              <select
+                value={courseId}
+                onChange={(e) => {
+                  setCourseId(e.target.value);
+                  setUnitId("");
+                }}
+                disabled={availableCourses.length === 0}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm disabled:opacity-50"
+              >
+                <option value="">— Không gắn khóa học —</option>
+                {availableCourses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    [{c.level}] {c.title}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label={`Unit${!courseId ? " (chọn khóa học trước)" : ""}`}>
+              <select
+                value={unitId}
+                onChange={(e) => setUnitId(e.target.value)}
+                disabled={!courseId}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm disabled:opacity-50"
+              >
+                <option value="">— Không gắn unit —</option>
+                {availableUnits.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    Unit {u.index}: {u.title.replace(/^Unit \d+:\s*/, "")}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Hạn nộp">
               <input
