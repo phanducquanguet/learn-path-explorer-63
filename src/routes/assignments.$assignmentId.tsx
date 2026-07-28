@@ -93,7 +93,7 @@ function StudentAssignmentDetail() {
           to="/assignments"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" /> Quay lại danh sách bài giao
+          <ArrowLeft className="h-4 w-4" /> Quay lại danh sách bài tập
         </Link>
         <div className="mt-4">
           <h1 className="font-display text-2xl font-semibold tracking-tight">{a.title}</h1>
