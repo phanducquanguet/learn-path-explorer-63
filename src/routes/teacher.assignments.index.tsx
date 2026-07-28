@@ -83,6 +83,118 @@ function TeacherAssignmentsPage() {
   );
 }
 
+        <KpiCards items={items} />
+
+        <div className="mt-6 grid gap-3">
+          {items.map((a) => (
+            <AssignmentRow key={a.id} a={a} />
+          ))}
+          {items.length === 0 && (
+            <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center text-sm text-muted-foreground">
+              Chưa có bài giao nào. Bấm "Tạo bài giao" để bắt đầu.
+            </div>
+          )}
+        </div>
+      </div>
+
+      {open && <CreateAssignmentDialog onClose={() => setOpen(false)} />}
+    </div>
+  );
+}
+
+function KpiCards({ items }: { items: Assignment[] }) {
+  const now = Date.now();
+  let openCount = 0;
+  let closedCount = 0;
+  let assigned = 0;
+  let submitted = 0;
+  let graded = 0;
+  let pendingGrade = 0;
+  let overdueMissing = 0;
+
+  for (const a of items) {
+    const isOpen = new Date(a.dueAt).getTime() >= now;
+    if (isOpen) openCount++;
+    else closedCount++;
+
+    const clsStudents = students.filter((s) => (a.classIds ?? []).includes(s.classId));
+    assigned += clsStudents.length;
+
+    const subs = listSubmissions(a.id);
+    submitted += subs.length;
+    const g = subs.filter((s) => s.score !== undefined).length;
+    graded += g;
+    pendingGrade += subs.length - g;
+
+    const submittedIds = new Set(subs.map((s) => s.studentId));
+    for (const st of clsStudents) {
+      if (submittedIds.has(st.id)) continue;
+      const eff = new Date(a.dueAt).getTime(); // base due
+      if (eff < now) overdueMissing++;
+    }
+  }
+
+  const submissionRate = assigned > 0 ? Math.round((submitted / assigned) * 100) : 0;
+
+  const cards = [
+    {
+      label: "Tổng bài giao",
+      value: items.length,
+      sub: `${openCount} đang mở · ${closedCount} đã đóng`,
+      icon: ClipboardList,
+      tone: "text-primary bg-primary/10",
+    },
+    {
+      label: "Tỉ lệ nộp bài",
+      value: `${submissionRate}%`,
+      sub: `${submitted}/${assigned} lượt nộp`,
+      icon: FileCheck2,
+      tone: "text-emerald-600 bg-emerald-500/10",
+    },
+    {
+      label: "Chờ chấm",
+      value: pendingGrade,
+      sub: `${graded} đã chấm`,
+      icon: Clock,
+      tone: "text-amber-600 bg-amber-500/10",
+    },
+    {
+      label: "Quá hạn chưa nộp",
+      value: overdueMissing,
+      sub: "Học viên cần nhắc / gia hạn",
+      icon: AlertTriangle,
+      tone: "text-rose-600 bg-rose-500/10",
+    },
+  ] as const;
+
+  return (
+    <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      {cards.map((c) => {
+        const Icon = c.icon;
+        return (
+          <div
+            key={c.label}
+            className="rounded-2xl border border-border bg-surface p-4 shadow-soft"
+          >
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                {c.label}
+              </div>
+              <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg", c.tone)}>
+                <Icon className="h-4 w-4" />
+              </div>
+            </div>
+            <div className="mt-2 font-display text-2xl font-semibold tracking-tight">
+              {c.value}
+            </div>
+            <div className="mt-0.5 text-xs text-muted-foreground">{c.sub}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function AssignmentRow({ a }: { a: Assignment }) {
   const subs = listSubmissions(a.id);
   const graded = subs.filter((s) => s.score !== undefined).length;
