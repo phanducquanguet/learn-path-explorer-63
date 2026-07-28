@@ -82,24 +82,18 @@ function TeacherAssignmentsPage() {
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="mx-auto max-w-6xl px-6 pb-20 pt-10 sm:px-8">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <h1 className="font-display text-3xl font-semibold tracking-tight">
-              Bài tập
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Ra đề tự luận cho học viên, học viên nộp câu trả lời hoặc file — giáo viên chấm điểm.
-            </p>
-          </div>
-          <button
-            onClick={() => setOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background hover:opacity-90"
-          >
-            <Plus className="h-4 w-4" /> Tạo bài tập
-          </button>
+        <div>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">
+            Bài tập
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Ra đề tự luận cho học viên, học viên nộp câu trả lời hoặc file — giáo viên chấm điểm.
+          </p>
         </div>
 
-        {/* Search + filters */}
+        <KpiCards items={filteredItems} />
+
+        {/* Search + filters + create button */}
         <div className="mt-6 rounded-2xl border border-border bg-surface p-3 shadow-soft">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
             <div className="relative flex-1">
@@ -152,11 +146,16 @@ function TeacherAssignmentsPage() {
                   <X className="h-3.5 w-3.5" /> Xóa lọc
                 </button>
               )}
+              <div className="mx-1 hidden h-5 w-px bg-border lg:block" />
+              <button
+                onClick={() => setOpen(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background hover:opacity-90"
+              >
+                <Plus className="h-4 w-4" /> Tạo bài tập
+              </button>
             </div>
           </div>
         </div>
-
-        <KpiCards items={filteredItems} />
 
         <div className="mt-6 grid gap-3">
           {filteredItems.map((a) => (
