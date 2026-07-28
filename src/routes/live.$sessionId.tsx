@@ -87,28 +87,34 @@ function LiveRoomPage() {
       <div className="mx-auto flex max-w-[1500px] flex-col gap-4 px-4 py-4 lg:flex-row">
         {/* Main stage */}
         <div className="flex-1 space-y-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-              to="/live"
-              className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10"
-            >
-              <ArrowLeft className="h-3.5 w-3.5" /> Danh sách
-            </Link>
-            {isLive && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/90 px-3 py-1 text-xs font-semibold text-white">
-                <CircleDot className="h-3 w-3 animate-pulse" /> LIVE · Đang ghi hình
-              </span>
-            )}
-            {isEnded && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80">
-                Buổi học đã kết thúc · Đang xem bản ghi
-              </span>
-            )}
-            <div className="text-sm text-white/90">
-              <span className="font-semibold">{session.title}</span>
-              <span className="ml-2 text-white/50">· {session.classCode}</span>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Link
+                to="/live"
+                className="inline-flex items-center gap-1.5 rounded-full bg-white/5 px-3 py-1.5 text-xs text-white/80 hover:bg-white/10"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" /> Danh sách
+              </Link>
+              {isLive && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/90 px-3 py-1 text-xs font-semibold text-white">
+                  <CircleDot className="h-3 w-3 animate-pulse" /> LIVE · Đang ghi hình
+                </span>
+              )}
+              {isEnded && (
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white/80">
+                  Buổi học đã kết thúc · Đang xem bản ghi
+                </span>
+              )}
             </div>
-            <LiveCountdown session={session} />
+
+            <div className="flex flex-1 justify-center">
+              <LiveCountdown session={session} size="prominent" />
+            </div>
+
+            <div className="min-w-[200px] text-right text-sm text-white/90">
+              <div className="font-semibold">{session.title}</div>
+              <div className="text-xs text-white/50">{session.classCode} · {session.teacher}</div>
+            </div>
           </div>
 
           {/* Presenter / screen share */}
