@@ -66,22 +66,7 @@ function TeacherAssignmentsPage() {
           </button>
         </div>
 
-        <div className="mt-6 grid gap-3">
-          {items.map((a) => (
-            <AssignmentRow key={a.id} a={a} />
-          ))}
-          {items.length === 0 && (
-            <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center text-sm text-muted-foreground">
-              Chưa có bài giao nào. Bấm "Tạo bài giao" để bắt đầu.
-            </div>
-          )}
-        </div>
-      </div>
 
-      {open && <CreateAssignmentDialog onClose={() => setOpen(false)} />}
-    </div>
-  );
-}
 
         <KpiCards items={items} />
 
