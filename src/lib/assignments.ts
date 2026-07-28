@@ -233,7 +233,7 @@ let _studentListCache: Assignment[] | null = null;
 export function listAssignmentsForCurrentStudent(): Assignment[] {
   const all = listAssignments();
   if (!_studentListCache || _sortedCache !== all) {
-    _studentListCache = all.filter((a) => a.classId === CURRENT_STUDENT.classId);
+    _studentListCache = all.filter((a) => a.classIds.includes(CURRENT_STUDENT.classId));
   }
   return _studentListCache;
 }
