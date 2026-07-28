@@ -308,6 +308,11 @@ function TeacherAssignmentDetail() {
           }}
         />
       )}
+
+      {editing && (
+        <EditAssignmentDialog assignment={a} onClose={() => setEditing(false)} />
+      )}
+
     </div>
   );
 }
