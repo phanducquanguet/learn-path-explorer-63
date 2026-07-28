@@ -100,7 +100,12 @@ function StudentAssignmentDetail() {
           <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
             <span className={cn("inline-flex items-center gap-1", overdue && "text-rose-600")}>
               <Calendar className="h-3 w-3" /> Hạn:{" "}
-              {new Date(a.dueAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}
+              {new Date(effectiveDue).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}
+              {a.extensions?.[CURRENT_STUDENT.id] && (
+                <span className="ml-1 rounded-full bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+                  Đã gia hạn
+                </span>
+              )}
             </span>
             <span>Thang điểm: {a.maxScore}</span>
             <span>Giáo viên: {a.createdBy}</span>
