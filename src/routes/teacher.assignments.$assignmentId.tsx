@@ -85,13 +85,6 @@ function TeacherAssignmentDetail() {
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="font-display text-2xl font-semibold tracking-tight">{a.title}</h1>
-              <button
-                onClick={() => setEditing(true)}
-                className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
-              >
-                <Pencil className="h-3 w-3" /> Sửa đề
-              </button>
-
               {isClosed ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
                   <Lock className="h-3 w-3" /> Đã đóng (hết hạn)
@@ -102,6 +95,7 @@ function TeacherAssignmentDetail() {
                 </span>
               )}
             </div>
+
             <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1">
                 <Users className="h-3 w-3" /> {cls.map((c) => c.name).join(" · ") || "—"}
