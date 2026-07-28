@@ -307,13 +307,16 @@ function KpiCards({ items }: { items: Assignment[] }) {
   );
 }
 
-function findCourseUnit(courseId?: string, unitId?: string) {
+function findCourseUnits(courseId?: string, unitIds?: string[]) {
   if (!courseId) return null;
   for (const lv of levels) {
     const c = lv.courses.find((x) => x.id === courseId);
     if (c) {
-      const u = unitId ? c.units.find((x) => x.id === unitId) : undefined;
-      return { course: c, unit: u, level: lv.code };
+      const ids = unitIds ?? [];
+      const us = ids
+        .map((id) => c.units.find((x) => x.id === id))
+        .filter((u): u is NonNullable<typeof u> => !!u);
+      return { course: c, units: us, level: lv.code };
     }
   }
   return null;
@@ -325,7 +328,8 @@ function AssignmentRow({ a, onDuplicate }: { a: Assignment; onDuplicate: () => v
   const pending = subs.length - graded;
   const cls = classes.filter((c) => a.classIds.includes(c.id));
   const overdue = new Date(a.dueAt).getTime() < Date.now();
-  const cu = findCourseUnit(a.courseId, a.unitId);
+  const unitIdsForRow = a.unitIds ?? (a.unitId ? [a.unitId] : []);
+  const cu = findCourseUnits(a.courseId, unitIdsForRow);
 
   return (
     <Link
