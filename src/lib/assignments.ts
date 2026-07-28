@@ -73,7 +73,7 @@ function seedAssignments(): Assignment[] {
 
 function seedSubs(assignments: Assignment[]): AssignmentSubmission[] {
   const a = assignments[0];
-  const clsStudents = students.filter((s) => a.classIds.includes(s.classId)).slice(0, 2);
+  const clsStudents = students.filter((s) => (a.classIds ?? []).includes(s.classId)).slice(0, 2);
   return clsStudents.map((s, i) => ({
     id: `sub-${a.id}-${s.id}`,
     assignmentId: a.id,
