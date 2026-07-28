@@ -18,6 +18,7 @@ import { Route as TeacherIndexRouteImport } from './routes/teacher.index'
 import { Route as LiveIndexRouteImport } from './routes/live.index'
 import { Route as ExamsIndexRouteImport } from './routes/exams.index'
 import { Route as CoursesIndexRouteImport } from './routes/courses.index'
+import { Route as AssignmentsIndexRouteImport } from './routes/assignments.index'
 import { Route as TeacherUploadRouteImport } from './routes/teacher.upload'
 import { Route as TeacherReportsRouteImport } from './routes/teacher.reports'
 import { Route as TeacherQuestionBankRouteImport } from './routes/teacher.question-bank'
@@ -26,6 +27,7 @@ import { Route as LiveSessionIdRouteImport } from './routes/live.$sessionId'
 import { Route as LevelsLevelRouteImport } from './routes/levels.$level'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
 import { Route as CampaignsSlugRouteImport } from './routes/campaigns.$slug'
+import { Route as AssignmentsAssignmentIdRouteImport } from './routes/assignments.$assignmentId'
 import { Route as AdminStatsRouteImport } from './routes/admin.stats'
 import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-bank'
 import { Route as TeacherTestsIndexRouteImport } from './routes/teacher.tests.index'
@@ -33,6 +35,7 @@ import { Route as TeacherLiveIndexRouteImport } from './routes/teacher.live.inde
 import { Route as TeacherExamsIndexRouteImport } from './routes/teacher.exams.index'
 import { Route as TeacherCoursesIndexRouteImport } from './routes/teacher.courses.index'
 import { Route as TeacherClassesIndexRouteImport } from './routes/teacher.classes.index'
+import { Route as TeacherAssignmentsIndexRouteImport } from './routes/teacher.assignments.index'
 import { Route as AdminTestsIndexRouteImport } from './routes/admin.tests.index'
 import { Route as AdminExamsIndexRouteImport } from './routes/admin.exams.index'
 import { Route as AdminCourseApprovalsIndexRouteImport } from './routes/admin.course-approvals.index'
@@ -43,6 +46,7 @@ import { Route as TeacherExamsNewRouteImport } from './routes/teacher.exams.new'
 import { Route as TeacherExamsExamIdRouteImport } from './routes/teacher.exams.$examId'
 import { Route as TeacherCoursesCourseIdRouteImport } from './routes/teacher.courses.$courseId'
 import { Route as TeacherClassesClassIdRouteImport } from './routes/teacher.classes.$classId'
+import { Route as TeacherAssignmentsAssignmentIdRouteImport } from './routes/teacher.assignments.$assignmentId'
 import { Route as ExamsResultSubmissionIdRouteImport } from './routes/exams.result.$submissionId'
 import { Route as AdminTestsNewRouteImport } from './routes/admin.tests.new'
 import { Route as AdminExamsNewRouteImport } from './routes/admin.exams.new'
@@ -99,6 +103,11 @@ const CoursesIndexRoute = CoursesIndexRouteImport.update({
   path: '/courses/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AssignmentsIndexRoute = AssignmentsIndexRouteImport.update({
+  id: '/assignments/',
+  path: '/assignments/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TeacherUploadRoute = TeacherUploadRouteImport.update({
   id: '/teacher/upload',
   path: '/teacher/upload',
@@ -139,6 +148,11 @@ const CampaignsSlugRoute = CampaignsSlugRouteImport.update({
   path: '/campaigns/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AssignmentsAssignmentIdRoute = AssignmentsAssignmentIdRouteImport.update({
+  id: '/assignments/$assignmentId',
+  path: '/assignments/$assignmentId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminStatsRoute = AdminStatsRouteImport.update({
   id: '/admin/stats',
   path: '/admin/stats',
@@ -172,6 +186,11 @@ const TeacherCoursesIndexRoute = TeacherCoursesIndexRouteImport.update({
 const TeacherClassesIndexRoute = TeacherClassesIndexRouteImport.update({
   id: '/teacher/classes/',
   path: '/teacher/classes/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeacherAssignmentsIndexRoute = TeacherAssignmentsIndexRouteImport.update({
+  id: '/teacher/assignments/',
+  path: '/teacher/assignments/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminTestsIndexRoute = AdminTestsIndexRouteImport.update({
@@ -225,6 +244,12 @@ const TeacherClassesClassIdRoute = TeacherClassesClassIdRouteImport.update({
   path: '/teacher/classes/$classId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const TeacherAssignmentsAssignmentIdRoute =
+  TeacherAssignmentsAssignmentIdRouteImport.update({
+    id: '/teacher/assignments/$assignmentId',
+    path: '/teacher/assignments/$assignmentId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ExamsResultSubmissionIdRoute = ExamsResultSubmissionIdRouteImport.update({
   id: '/result/$submissionId',
   path: '/result/$submissionId',
@@ -288,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/stats': typeof AdminStatsRoute
+  '/assignments/$assignmentId': typeof AssignmentsAssignmentIdRoute
   '/campaigns/$slug': typeof CampaignsSlugRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -296,6 +322,7 @@ export interface FileRoutesByFullPath {
   '/teacher/question-bank': typeof TeacherQuestionBankRoute
   '/teacher/reports': typeof TeacherReportsRoute
   '/teacher/upload': typeof TeacherUploadRoute
+  '/assignments/': typeof AssignmentsIndexRoute
   '/courses/': typeof CoursesIndexRoute
   '/exams/': typeof ExamsIndexRoute
   '/live/': typeof LiveIndexRoute
@@ -306,6 +333,7 @@ export interface FileRoutesByFullPath {
   '/admin/exams/new': typeof AdminExamsNewRoute
   '/admin/tests/new': typeof AdminTestsNewRoute
   '/exams/result/$submissionId': typeof ExamsResultSubmissionIdRoute
+  '/teacher/assignments/$assignmentId': typeof TeacherAssignmentsAssignmentIdRoute
   '/teacher/classes/$classId': typeof TeacherClassesClassIdRoute
   '/teacher/courses/$courseId': typeof TeacherCoursesCourseIdRoute
   '/teacher/exams/$examId': typeof TeacherExamsExamIdRoute
@@ -316,6 +344,7 @@ export interface FileRoutesByFullPath {
   '/admin/course-approvals/': typeof AdminCourseApprovalsIndexRoute
   '/admin/exams/': typeof AdminExamsIndexRoute
   '/admin/tests/': typeof AdminTestsIndexRoute
+  '/teacher/assignments/': typeof TeacherAssignmentsIndexRoute
   '/teacher/classes/': typeof TeacherClassesIndexRoute
   '/teacher/courses/': typeof TeacherCoursesIndexRoute
   '/teacher/exams/': typeof TeacherExamsIndexRoute
@@ -333,6 +362,7 @@ export interface FileRoutesByTo {
   '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/stats': typeof AdminStatsRoute
+  '/assignments/$assignmentId': typeof AssignmentsAssignmentIdRoute
   '/campaigns/$slug': typeof CampaignsSlugRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -341,6 +371,7 @@ export interface FileRoutesByTo {
   '/teacher/question-bank': typeof TeacherQuestionBankRoute
   '/teacher/reports': typeof TeacherReportsRoute
   '/teacher/upload': typeof TeacherUploadRoute
+  '/assignments': typeof AssignmentsIndexRoute
   '/courses': typeof CoursesIndexRoute
   '/exams': typeof ExamsIndexRoute
   '/live': typeof LiveIndexRoute
@@ -351,6 +382,7 @@ export interface FileRoutesByTo {
   '/admin/exams/new': typeof AdminExamsNewRoute
   '/admin/tests/new': typeof AdminTestsNewRoute
   '/exams/result/$submissionId': typeof ExamsResultSubmissionIdRoute
+  '/teacher/assignments/$assignmentId': typeof TeacherAssignmentsAssignmentIdRoute
   '/teacher/classes/$classId': typeof TeacherClassesClassIdRoute
   '/teacher/courses/$courseId': typeof TeacherCoursesCourseIdRoute
   '/teacher/exams/$examId': typeof TeacherExamsExamIdRoute
@@ -361,6 +393,7 @@ export interface FileRoutesByTo {
   '/admin/course-approvals': typeof AdminCourseApprovalsIndexRoute
   '/admin/exams': typeof AdminExamsIndexRoute
   '/admin/tests': typeof AdminTestsIndexRoute
+  '/teacher/assignments': typeof TeacherAssignmentsIndexRoute
   '/teacher/classes': typeof TeacherClassesIndexRoute
   '/teacher/courses': typeof TeacherCoursesIndexRoute
   '/teacher/exams': typeof TeacherExamsIndexRoute
@@ -380,6 +413,7 @@ export interface FileRoutesById {
   '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/stats': typeof AdminStatsRoute
+  '/assignments/$assignmentId': typeof AssignmentsAssignmentIdRoute
   '/campaigns/$slug': typeof CampaignsSlugRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -388,6 +422,7 @@ export interface FileRoutesById {
   '/teacher/question-bank': typeof TeacherQuestionBankRoute
   '/teacher/reports': typeof TeacherReportsRoute
   '/teacher/upload': typeof TeacherUploadRoute
+  '/assignments/': typeof AssignmentsIndexRoute
   '/courses/': typeof CoursesIndexRoute
   '/exams/': typeof ExamsIndexRoute
   '/live/': typeof LiveIndexRoute
@@ -398,6 +433,7 @@ export interface FileRoutesById {
   '/admin/exams/new': typeof AdminExamsNewRoute
   '/admin/tests/new': typeof AdminTestsNewRoute
   '/exams/result/$submissionId': typeof ExamsResultSubmissionIdRoute
+  '/teacher/assignments/$assignmentId': typeof TeacherAssignmentsAssignmentIdRoute
   '/teacher/classes/$classId': typeof TeacherClassesClassIdRoute
   '/teacher/courses/$courseId': typeof TeacherCoursesCourseIdRoute
   '/teacher/exams/$examId': typeof TeacherExamsExamIdRoute
@@ -408,6 +444,7 @@ export interface FileRoutesById {
   '/admin/course-approvals/': typeof AdminCourseApprovalsIndexRoute
   '/admin/exams/': typeof AdminExamsIndexRoute
   '/admin/tests/': typeof AdminTestsIndexRoute
+  '/teacher/assignments/': typeof TeacherAssignmentsIndexRoute
   '/teacher/classes/': typeof TeacherClassesIndexRoute
   '/teacher/courses/': typeof TeacherCoursesIndexRoute
   '/teacher/exams/': typeof TeacherExamsIndexRoute
@@ -428,6 +465,7 @@ export interface FileRouteTypes {
     | '/practice'
     | '/admin/question-bank'
     | '/admin/stats'
+    | '/assignments/$assignmentId'
     | '/campaigns/$slug'
     | '/courses/$courseId'
     | '/levels/$level'
@@ -436,6 +474,7 @@ export interface FileRouteTypes {
     | '/teacher/question-bank'
     | '/teacher/reports'
     | '/teacher/upload'
+    | '/assignments/'
     | '/courses/'
     | '/exams/'
     | '/live/'
@@ -446,6 +485,7 @@ export interface FileRouteTypes {
     | '/admin/exams/new'
     | '/admin/tests/new'
     | '/exams/result/$submissionId'
+    | '/teacher/assignments/$assignmentId'
     | '/teacher/classes/$classId'
     | '/teacher/courses/$courseId'
     | '/teacher/exams/$examId'
@@ -456,6 +496,7 @@ export interface FileRouteTypes {
     | '/admin/course-approvals/'
     | '/admin/exams/'
     | '/admin/tests/'
+    | '/teacher/assignments/'
     | '/teacher/classes/'
     | '/teacher/courses/'
     | '/teacher/exams/'
@@ -473,6 +514,7 @@ export interface FileRouteTypes {
     | '/practice'
     | '/admin/question-bank'
     | '/admin/stats'
+    | '/assignments/$assignmentId'
     | '/campaigns/$slug'
     | '/courses/$courseId'
     | '/levels/$level'
@@ -481,6 +523,7 @@ export interface FileRouteTypes {
     | '/teacher/question-bank'
     | '/teacher/reports'
     | '/teacher/upload'
+    | '/assignments'
     | '/courses'
     | '/exams'
     | '/live'
@@ -491,6 +534,7 @@ export interface FileRouteTypes {
     | '/admin/exams/new'
     | '/admin/tests/new'
     | '/exams/result/$submissionId'
+    | '/teacher/assignments/$assignmentId'
     | '/teacher/classes/$classId'
     | '/teacher/courses/$courseId'
     | '/teacher/exams/$examId'
@@ -501,6 +545,7 @@ export interface FileRouteTypes {
     | '/admin/course-approvals'
     | '/admin/exams'
     | '/admin/tests'
+    | '/teacher/assignments'
     | '/teacher/classes'
     | '/teacher/courses'
     | '/teacher/exams'
@@ -519,6 +564,7 @@ export interface FileRouteTypes {
     | '/practice'
     | '/admin/question-bank'
     | '/admin/stats'
+    | '/assignments/$assignmentId'
     | '/campaigns/$slug'
     | '/courses/$courseId'
     | '/levels/$level'
@@ -527,6 +573,7 @@ export interface FileRouteTypes {
     | '/teacher/question-bank'
     | '/teacher/reports'
     | '/teacher/upload'
+    | '/assignments/'
     | '/courses/'
     | '/exams/'
     | '/live/'
@@ -537,6 +584,7 @@ export interface FileRouteTypes {
     | '/admin/exams/new'
     | '/admin/tests/new'
     | '/exams/result/$submissionId'
+    | '/teacher/assignments/$assignmentId'
     | '/teacher/classes/$classId'
     | '/teacher/courses/$courseId'
     | '/teacher/exams/$examId'
@@ -547,6 +595,7 @@ export interface FileRouteTypes {
     | '/admin/course-approvals/'
     | '/admin/exams/'
     | '/admin/tests/'
+    | '/teacher/assignments/'
     | '/teacher/classes/'
     | '/teacher/courses/'
     | '/teacher/exams/'
@@ -566,6 +615,7 @@ export interface RootRouteChildren {
   PracticeRoute: typeof PracticeRoute
   AdminQuestionBankRoute: typeof AdminQuestionBankRoute
   AdminStatsRoute: typeof AdminStatsRoute
+  AssignmentsAssignmentIdRoute: typeof AssignmentsAssignmentIdRoute
   CampaignsSlugRoute: typeof CampaignsSlugRoute
   CoursesCourseIdRoute: typeof CoursesCourseIdRoute
   LevelsLevelRoute: typeof LevelsLevelRoute
@@ -574,6 +624,7 @@ export interface RootRouteChildren {
   TeacherQuestionBankRoute: typeof TeacherQuestionBankRoute
   TeacherReportsRoute: typeof TeacherReportsRoute
   TeacherUploadRoute: typeof TeacherUploadRoute
+  AssignmentsIndexRoute: typeof AssignmentsIndexRoute
   CoursesIndexRoute: typeof CoursesIndexRoute
   LiveIndexRoute: typeof LiveIndexRoute
   TeacherIndexRoute: typeof TeacherIndexRoute
@@ -582,6 +633,7 @@ export interface RootRouteChildren {
   AdminExamsExamIdRoute: typeof AdminExamsExamIdRouteWithChildren
   AdminExamsNewRoute: typeof AdminExamsNewRoute
   AdminTestsNewRoute: typeof AdminTestsNewRoute
+  TeacherAssignmentsAssignmentIdRoute: typeof TeacherAssignmentsAssignmentIdRoute
   TeacherClassesClassIdRoute: typeof TeacherClassesClassIdRoute
   TeacherCoursesCourseIdRoute: typeof TeacherCoursesCourseIdRoute
   TeacherExamsExamIdRoute: typeof TeacherExamsExamIdRoute
@@ -592,6 +644,7 @@ export interface RootRouteChildren {
   AdminCourseApprovalsIndexRoute: typeof AdminCourseApprovalsIndexRoute
   AdminExamsIndexRoute: typeof AdminExamsIndexRoute
   AdminTestsIndexRoute: typeof AdminTestsIndexRoute
+  TeacherAssignmentsIndexRoute: typeof TeacherAssignmentsIndexRoute
   TeacherClassesIndexRoute: typeof TeacherClassesIndexRoute
   TeacherCoursesIndexRoute: typeof TeacherCoursesIndexRoute
   TeacherExamsIndexRoute: typeof TeacherExamsIndexRoute
@@ -667,6 +720,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoursesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/assignments/': {
+      id: '/assignments/'
+      path: '/assignments'
+      fullPath: '/assignments/'
+      preLoaderRoute: typeof AssignmentsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teacher/upload': {
       id: '/teacher/upload'
       path: '/teacher/upload'
@@ -723,6 +783,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CampaignsSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/assignments/$assignmentId': {
+      id: '/assignments/$assignmentId'
+      path: '/assignments/$assignmentId'
+      fullPath: '/assignments/$assignmentId'
+      preLoaderRoute: typeof AssignmentsAssignmentIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/stats': {
       id: '/admin/stats'
       path: '/admin/stats'
@@ -770,6 +837,13 @@ declare module '@tanstack/react-router' {
       path: '/teacher/classes'
       fullPath: '/teacher/classes/'
       preLoaderRoute: typeof TeacherClassesIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher/assignments/': {
+      id: '/teacher/assignments/'
+      path: '/teacher/assignments'
+      fullPath: '/teacher/assignments/'
+      preLoaderRoute: typeof TeacherAssignmentsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/tests/': {
@@ -840,6 +914,13 @@ declare module '@tanstack/react-router' {
       path: '/teacher/classes/$classId'
       fullPath: '/teacher/classes/$classId'
       preLoaderRoute: typeof TeacherClassesClassIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher/assignments/$assignmentId': {
+      id: '/teacher/assignments/$assignmentId'
+      path: '/teacher/assignments/$assignmentId'
+      fullPath: '/teacher/assignments/$assignmentId'
+      preLoaderRoute: typeof TeacherAssignmentsAssignmentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/exams/result/$submissionId': {
@@ -946,6 +1027,7 @@ const rootRouteChildren: RootRouteChildren = {
   PracticeRoute: PracticeRoute,
   AdminQuestionBankRoute: AdminQuestionBankRoute,
   AdminStatsRoute: AdminStatsRoute,
+  AssignmentsAssignmentIdRoute: AssignmentsAssignmentIdRoute,
   CampaignsSlugRoute: CampaignsSlugRoute,
   CoursesCourseIdRoute: CoursesCourseIdRoute,
   LevelsLevelRoute: LevelsLevelRoute,
@@ -954,6 +1036,7 @@ const rootRouteChildren: RootRouteChildren = {
   TeacherQuestionBankRoute: TeacherQuestionBankRoute,
   TeacherReportsRoute: TeacherReportsRoute,
   TeacherUploadRoute: TeacherUploadRoute,
+  AssignmentsIndexRoute: AssignmentsIndexRoute,
   CoursesIndexRoute: CoursesIndexRoute,
   LiveIndexRoute: LiveIndexRoute,
   TeacherIndexRoute: TeacherIndexRoute,
@@ -962,6 +1045,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminExamsExamIdRoute: AdminExamsExamIdRouteWithChildren,
   AdminExamsNewRoute: AdminExamsNewRoute,
   AdminTestsNewRoute: AdminTestsNewRoute,
+  TeacherAssignmentsAssignmentIdRoute: TeacherAssignmentsAssignmentIdRoute,
   TeacherClassesClassIdRoute: TeacherClassesClassIdRoute,
   TeacherCoursesCourseIdRoute: TeacherCoursesCourseIdRoute,
   TeacherExamsExamIdRoute: TeacherExamsExamIdRoute,
@@ -972,6 +1056,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminCourseApprovalsIndexRoute: AdminCourseApprovalsIndexRoute,
   AdminExamsIndexRoute: AdminExamsIndexRoute,
   AdminTestsIndexRoute: AdminTestsIndexRoute,
+  TeacherAssignmentsIndexRoute: TeacherAssignmentsIndexRoute,
   TeacherClassesIndexRoute: TeacherClassesIndexRoute,
   TeacherCoursesIndexRoute: TeacherCoursesIndexRoute,
   TeacherExamsIndexRoute: TeacherExamsIndexRoute,
