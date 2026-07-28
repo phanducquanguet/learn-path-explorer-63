@@ -44,6 +44,8 @@ function seedAssignments(): Assignment[] {
   const cls = classes[0];
   const cls2 = classes[3] ?? classes[0];
   const cls3 = classes[1] ?? classes[0];
+  const H = 3600 * 1000;
+  const D = 24 * H;
   return [
     {
       id: "asg-1",
@@ -51,11 +53,11 @@ function seedAssignments(): Assignment[] {
       classIds: [cls.id],
       description:
         "Hãy viết một đoạn văn khoảng 100 từ bằng tiếng Anh giới thiệu về sở thích của em.\nYêu cầu:\n- Sử dụng thì hiện tại đơn.\n- Có ít nhất 3 câu ghép.\n- Nộp bằng cách gõ trực tiếp hoặc tải file Word/PDF.",
-      dueAt: new Date(now + 3 * 24 * 3600 * 1000).toISOString(),
+      dueAt: new Date(now + 3 * D).toISOString(),
       maxScore: 10,
       allowText: true,
       allowFile: true,
-      createdAt: new Date(now - 2 * 24 * 3600 * 1000).toISOString(),
+      createdAt: new Date(now - 2 * D).toISOString(),
       createdBy: "Cô Mai Lan",
     },
     {
@@ -64,24 +66,115 @@ function seedAssignments(): Assignment[] {
       classIds: [cls2.id, cls.id],
       description:
         "Ghi âm 1 phút miêu tả quê hương của em bằng tiếng Anh và tải file audio (mp3/m4a) lên hệ thống.",
-      dueAt: new Date(now + 5 * 24 * 3600 * 1000).toISOString(),
+      dueAt: new Date(now + 5 * D).toISOString(),
       maxScore: 10,
       allowText: false,
       allowFile: true,
-      createdAt: new Date(now - 1 * 24 * 3600 * 1000).toISOString(),
+      createdAt: new Date(now - 1 * D).toISOString(),
+      createdBy: "Cô Mai Lan",
+    },
+    {
+      id: "asg-3",
+      title: "Grammar drill: Present Simple vs Present Continuous",
+      classIds: [cls.id],
+      description:
+        "Hoàn thành 20 câu chia động từ giữa thì hiện tại đơn và hiện tại tiếp diễn. Nộp file Word hoặc gõ trực tiếp.",
+      dueAt: new Date(now + 10 * H).toISOString(), // sắp đến hạn hôm nay
+      maxScore: 20,
+      allowText: true,
+      allowFile: true,
+      createdAt: new Date(now - 3 * D).toISOString(),
+      createdBy: "Cô Mai Lan",
+    },
+    {
+      id: "asg-4",
+      title: "Listening log: BBC 6-minute English",
+      classIds: [cls.id],
+      description:
+        "Nghe 1 tập BBC 6-minute English, ghi lại 10 từ mới kèm nghĩa và đặt câu ví dụ với mỗi từ.",
+      dueAt: new Date(now + 2 * D).toISOString(), // sắp đến hạn
+      maxScore: 10,
+      allowText: true,
+      allowFile: false,
+      createdAt: new Date(now - 4 * D).toISOString(),
+      createdBy: "Cô Mai Lan",
+    },
+    {
+      id: "asg-5",
+      title: "Email writing: Reply to a job offer",
+      classIds: [cls.id],
+      description:
+        "Viết email trả lời một lời mời làm việc (accept hoặc politely decline). Độ dài 120-150 từ.",
+      dueAt: new Date(now + 7 * D).toISOString(),
+      maxScore: 10,
+      allowText: true,
+      allowFile: true,
+      createdAt: new Date(now - 1 * D).toISOString(),
+      createdBy: "Cô Mai Lan",
+    },
+    {
+      id: "asg-6",
+      title: "Pronunciation practice: minimal pairs",
+      classIds: [cls.id],
+      description:
+        "Ghi âm đọc 20 cặp từ minimal pairs (ship/sheep, bit/beat...). Nộp file audio.",
+      dueAt: new Date(now + 14 * D).toISOString(),
+      maxScore: 10,
+      allowText: false,
+      allowFile: true,
+      createdAt: new Date(now - 6 * H).toISOString(),
+      createdBy: "Cô Mai Lan",
+    },
+    {
+      id: "asg-7",
+      title: "Vocabulary quiz: Unit 3 — Food & Drink",
+      classIds: [cls.id],
+      description:
+        "Học 30 từ vựng chủ đề Food & Drink, viết định nghĩa và đặt câu với 15 từ tự chọn.",
+      dueAt: new Date(now + 20 * H).toISOString(), // ~ hôm nay/mai
+      maxScore: 15,
+      allowText: true,
+      allowFile: true,
+      createdAt: new Date(now - 2 * D).toISOString(),
+      createdBy: "Cô Mai Lan",
+    },
+    {
+      id: "asg-8",
+      title: "Short essay: My weekend plans",
+      classIds: [cls.id],
+      description:
+        "Viết đoạn văn 80-100 từ miêu tả kế hoạch cuối tuần của em. Sử dụng 'be going to' và 'will'.",
+      dueAt: new Date(now - 1 * D).toISOString(), // quá hạn 1 ngày
+      maxScore: 10,
+      allowText: true,
+      allowFile: true,
+      createdAt: new Date(now - 6 * D).toISOString(),
+      createdBy: "Cô Mai Lan",
+    },
+    {
+      id: "asg-9",
+      title: "Presentation slides: My favorite country",
+      classIds: [cls.id],
+      description:
+        "Tạo 5-7 slide PowerPoint giới thiệu một quốc gia em yêu thích, bao gồm địa lý, ẩm thực và văn hoá.",
+      dueAt: new Date(now + 12 * D).toISOString(),
+      maxScore: 20,
+      allowText: false,
+      allowFile: true,
+      createdAt: new Date(now - 12 * H).toISOString(),
       createdBy: "Cô Mai Lan",
     },
     {
       id: "asg-closed-demo",
       title: "Reading report: A book that changed me",
-      classIds: [cls3.id],
+      classIds: [cls3.id, cls.id],
       description:
         "Chọn 1 cuốn sách em từng đọc và viết bài cảm nhận 150-200 từ (tiếng Anh).\nYêu cầu:\n- Nêu tên sách, tác giả, thể loại.\n- Nội dung chính và bài học rút ra.\n- Nộp bằng text hoặc file PDF/Word.",
-      dueAt: new Date(now - 2 * 24 * 3600 * 1000).toISOString(), // đã hết hạn 2 ngày
+      dueAt: new Date(now - 2 * D).toISOString(),
       maxScore: 10,
       allowText: true,
       allowFile: true,
-      createdAt: new Date(now - 10 * 24 * 3600 * 1000).toISOString(),
+      createdAt: new Date(now - 10 * D).toISOString(),
       createdBy: "Cô Mai Lan",
     },
   ];
