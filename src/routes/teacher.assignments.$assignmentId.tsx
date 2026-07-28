@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState, useSyncExternalStore } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { TopNav } from "@/components/TopNav";
 import {
   getAssignment,
@@ -7,7 +7,9 @@ import {
   subscribeAssignments,
   gradeSubmission,
   extendDeadline,
-  getEffectiveDueAt,
+  updateAssignment,
+  type Assignment,
+  type AssignmentAttachment,
   type AssignmentSubmission,
 } from "@/lib/assignments";
 import { classes, students } from "@/lib/teacher-data";
@@ -25,15 +27,17 @@ import {
   Lock,
   Unlock,
   Clock,
+  Pencil,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/teacher/assignments/$assignmentId")({
   head: ({ params }) => ({
-    meta: [{ title: `Chấm bài giao ${params.assignmentId} — UNICOM LMS` }],
+    meta: [{ title: `Chấm bài tập ${params.assignmentId} — UNICOM LMS` }],
   }),
   component: TeacherAssignmentDetail,
 });
+
 
 function useSubs(id: string) {
   return useSyncExternalStore(
@@ -51,10 +55,12 @@ function TeacherAssignmentDetail() {
   const a = getAssignment(assignmentId);
   const subs = useSubs(assignmentId);
   const [active, setActive] = useState<AssignmentSubmission | null>(null);
+  const [editing, setEditing] = useState(false);
 
   const [extendFor, setExtendFor] = useState<{ id: string; name: string } | null>(null);
 
   if (!a) throw notFound();
+
   const cls = classes.filter((c) => a.classIds.includes(c.id));
   const clsStudents = students.filter((s) => a.classIds.includes(s.classId));
   const now = Date.now();
@@ -73,12 +79,19 @@ function TeacherAssignmentDetail() {
           to="/teacher/assignments"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeft className="h-4 w-4" /> Quay lại danh sách bài giao
+          <ArrowLeft className="h-4 w-4" /> Quay lại danh sách bài tập
         </Link>
         <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <h1 className="font-display text-2xl font-semibold tracking-tight">{a.title}</h1>
+              <button
+                onClick={() => setEditing(true)}
+                className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2 py-1 text-[11px] font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <Pencil className="h-3 w-3" /> Sửa đề
+              </button>
+
               {isClosed ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
                   <Lock className="h-3 w-3" /> Đã đóng (hết hạn)
@@ -115,7 +128,40 @@ function TeacherAssignmentDetail() {
           <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
             {a.description}
           </p>
+          {a.attachments && a.attachments.length > 0 && (
+            <div className="mt-4">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                File đính kèm ({a.attachments.length})
+              </div>
+              <ul className="mt-2 divide-y divide-border rounded-xl border border-border bg-background">
+                {a.attachments.map((f, i) => (
+                  <li
+                    key={i}
+                    className="flex items-center justify-between gap-2 px-3 py-2 text-sm"
+                  >
+                    <div className="min-w-0 flex items-center gap-2">
+                      <Paperclip className="h-3 w-3 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{f.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {(f.size / 1024).toFixed(1)} KB
+                      </span>
+                    </div>
+                    {f.dataUrl && (
+                      <a
+                        href={f.dataUrl}
+                        download={f.name}
+                        className="rounded-md border border-border bg-background px-2 py-1 text-xs font-semibold hover:bg-muted"
+                      >
+                        Tải xuống
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
+
 
         <section className="mt-6">
           <h2 className="mb-3 font-display text-lg font-semibold">Bài nộp của học viên</h2>
@@ -262,6 +308,11 @@ function TeacherAssignmentDetail() {
           }}
         />
       )}
+
+      {editing && (
+        <EditAssignmentDialog assignment={a} onClose={() => setEditing(false)} />
+      )}
+
     </div>
   );
 }
@@ -566,3 +617,214 @@ function ExtendDialog({
     </div>
   );
 }
+
+function EditAssignmentDialog({
+  assignment,
+  onClose,
+}: {
+  assignment: Assignment;
+  onClose: () => void;
+}) {
+  const [title, setTitle] = useState(assignment.title);
+  const [description, setDescription] = useState(assignment.description);
+  const [attachments, setAttachments] = useState<AssignmentAttachment[]>(
+    assignment.attachments ?? [],
+  );
+  const [dueAt, setDueAt] = useState(() => {
+    const d = new Date(assignment.dueAt);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  });
+  const [maxScore, setMaxScore] = useState(assignment.maxScore);
+  const [allowText, setAllowText] = useState(assignment.allowText);
+  const [allowFile, setAllowFile] = useState(assignment.allowFile);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const cls = classes.find((c) => assignment.classIds.includes(c.id));
+
+  const onPick = (files: FileList | null) => {
+    if (!files) return;
+    const arr: AssignmentAttachment[] = [];
+    let pending = 0;
+    Array.from(files).forEach((f) => {
+      if (f.size > 5 * 1024 * 1024) {
+        alert(`"${f.name}" quá 5MB, bỏ qua.`);
+        return;
+      }
+      pending++;
+      const reader = new FileReader();
+      reader.onload = () => {
+        arr.push({ name: f.name, size: f.size, dataUrl: reader.result as string });
+        pending--;
+        if (pending === 0) setAttachments((prev) => [...prev, ...arr]);
+      };
+      reader.readAsDataURL(f);
+    });
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
+  const save = () => {
+    if (!title.trim() || !description.trim()) return;
+    updateAssignment(assignment.id, {
+      title: title.trim(),
+      description: description.trim(),
+      attachments: attachments.length ? attachments : undefined,
+      dueAt: new Date(dueAt).toISOString(),
+      maxScore,
+      allowText,
+      allowFile: allowFile || !allowText,
+    });
+    onClose();
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <button className="absolute inset-0" onClick={onClose} aria-label="Close" />
+      <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-background shadow-elevated">
+        <div className="border-b border-border p-5">
+          <h2 className="font-display text-lg font-semibold">Sửa đề bài</h2>
+          <p className="text-xs text-muted-foreground">
+            Đang sửa cho lớp <b>{cls?.name ?? "—"}</b>. Muốn giao thêm lớp khác, dùng nút{" "}
+            <b>Nhân bản</b> ở danh sách.
+          </p>
+        </div>
+        <div className="max-h-[70vh] space-y-4 overflow-y-auto p-5">
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Tiêu đề
+            </label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Đề bài
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={6}
+              className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+            />
+          </div>
+          <div>
+            <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              File đính kèm ({attachments.length})
+            </label>
+            <div className="mt-1 space-y-2">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground"
+              >
+                <Paperclip className="h-4 w-4" /> Thêm file (tối đa 5MB/file)
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                multiple
+                onChange={(e) => onPick(e.target.files)}
+                className="hidden"
+              />
+              {attachments.length > 0 && (
+                <ul className="divide-y divide-border rounded-lg border border-border bg-background">
+                  {attachments.map((f, i) => (
+                    <li
+                      key={i}
+                      className="flex items-center justify-between gap-2 px-3 py-2 text-sm"
+                    >
+                      <div className="min-w-0 flex items-center gap-2">
+                        <Paperclip className="h-3 w-3 shrink-0 text-muted-foreground" />
+                        <span className="truncate">{f.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {(f.size / 1024).toFixed(1)} KB
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setAttachments((prev) => prev.filter((_, x) => x !== i))
+                        }
+                        className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-rose-600"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Hạn nộp
+              </label>
+              <input
+                type="datetime-local"
+                value={dueAt}
+                onChange={(e) => setDueAt(e.target.value)}
+                className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Thang điểm
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={100}
+                value={maxScore}
+                onChange={(e) => setMaxScore(Number(e.target.value) || 10)}
+                className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Hình thức nộp
+              </label>
+              <div className="mt-1 flex flex-col gap-1.5 text-sm">
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={allowText}
+                    onChange={(e) => setAllowText(e.target.checked)}
+                  />
+                  Nhập câu trả lời (text)
+                </label>
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={allowFile}
+                    onChange={(e) => setAllowFile(e.target.checked)}
+                  />
+                  Tải file đính kèm
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center justify-end gap-2 border-t border-border bg-muted/30 p-4">
+          <button
+            onClick={onClose}
+            className="rounded-lg border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted"
+          >
+            Huỷ
+          </button>
+          <button
+            onClick={save}
+            disabled={!title.trim() || !description.trim()}
+            className="rounded-lg bg-foreground px-4 py-2 text-sm font-semibold text-background hover:opacity-90 disabled:opacity-50"
+          >
+            Lưu thay đổi
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+

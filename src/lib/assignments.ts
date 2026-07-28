@@ -29,6 +29,8 @@ export type Assignment = {
   maxScore: number;
   allowText: boolean;
   allowFile: boolean;
+  /** File giáo viên đính kèm cùng đề bài (tối đa 5MB/file — demo). */
+  attachments?: AssignmentAttachment[];
   createdAt: string;
   createdBy: string;
   /** Per-student deadline extensions when giáo viên mở lại nộp bài. Key = studentId, value = ISO. */
