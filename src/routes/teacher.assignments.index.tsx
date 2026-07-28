@@ -780,6 +780,9 @@ function DuplicateDialog({ a, onClose }: { a: Assignment; onClose: () => void })
         allowText: a.allowText,
         allowFile: a.allowFile,
         attachments: a.attachments,
+        courseId: a.courseId,
+        unitId: a.unitId,
+        allowAssistantGrading: a.allowAssistantGrading,
         createdBy: a.createdBy,
       });
       if (!first) first = clone;
