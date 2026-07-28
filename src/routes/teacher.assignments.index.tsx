@@ -137,6 +137,15 @@ function TeacherAssignmentsPage() {
                 ]}
               />
               <FilterSelect
+                value={courseFilter}
+                onChange={setCourseFilter}
+                icon={<BookOpen className="h-4 w-4" />}
+                options={[
+                  { value: "all", label: "Tất cả khóa học" },
+                  ...courseOptions,
+                ]}
+              />
+              <FilterSelect
                 value={statusFilter}
                 onChange={(v) => setStatusFilter(v as "all" | "open" | "closed")}
                 icon={<Clock className="h-4 w-4" />}
