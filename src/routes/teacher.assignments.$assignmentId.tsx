@@ -713,7 +713,8 @@ function EditAssignmentDialog({
       allowFile: allowFile || !allowText,
       allowAssistantGrading,
       courseId: courseId || undefined,
-      unitId: unitId || undefined,
+      unitIds: unitIds.length ? unitIds : undefined,
+      unitId: unitIds[0],
     });
     onClose();
   };
