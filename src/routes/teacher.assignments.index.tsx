@@ -391,6 +391,7 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
   const [maxScore, setMaxScore] = useState(10);
   const [allowText, setAllowText] = useState(true);
   const [allowFile, setAllowFile] = useState(true);
+  const [allowAssistantGrading, setAllowAssistantGrading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const onPick = (files: FileList | null) => {
@@ -427,6 +428,7 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
         maxScore,
         allowText,
         allowFile: allowFile || !allowText,
+        allowAssistantGrading,
         attachments: attachments.length ? attachments : undefined,
         createdBy: "Cô Mai Lan",
       });
@@ -586,6 +588,14 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
                     onChange={(e) => setAllowFile(e.target.checked)}
                   />
                   Tải file đính kèm
+                </label>
+                <label className="mt-1 inline-flex items-center gap-2 border-t border-border pt-2">
+                  <input
+                    type="checkbox"
+                    checked={allowAssistantGrading}
+                    onChange={(e) => setAllowAssistantGrading(e.target.checked)}
+                  />
+                  Cho phép trợ giảng chấm bài
                 </label>
               </div>
             </Field>

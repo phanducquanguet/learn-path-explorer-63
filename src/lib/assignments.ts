@@ -35,6 +35,8 @@ export type Assignment = {
   createdBy: string;
   /** Per-student deadline extensions when giáo viên mở lại nộp bài. Key = studentId, value = ISO. */
   extensions?: Record<string, string>;
+  /** Cho phép trợ giảng chấm bài. */
+  allowAssistantGrading?: boolean;
 };
 
 
