@@ -428,6 +428,7 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
         maxScore,
         allowText,
         allowFile: allowFile || !allowText,
+        allowAssistantGrading,
         attachments: attachments.length ? attachments : undefined,
         createdBy: "Cô Mai Lan",
       });
