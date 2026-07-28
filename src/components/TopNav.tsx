@@ -308,7 +308,15 @@ export function TopNav() {
                   style: { background: "var(--gradient-brand)" },
                 }}
               >
-                <Icon className="h-4 w-4" />
+                <span className="relative inline-flex">
+                  <Icon className="h-4 w-4" />
+                  {hasLive && (t.to === "/live" || t.to === "/teacher/live") && (
+                    <span className="absolute -right-1 -top-1 flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-500 opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500 ring-2 ring-background" />
+                    </span>
+                  )}
+                </span>
                 <span className="hidden lg:inline">{t.label}</span>
               </Link>
             );
