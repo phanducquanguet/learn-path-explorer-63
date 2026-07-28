@@ -405,8 +405,21 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
   const [attachments, setAttachments] = useState<AssignmentAttachment[]>([]);
   const [classIds, setClassIds] = useState<string[]>(classes[0] ? [classes[0].id] : []);
   const [classQuery, setClassQuery] = useState("");
+  const [classPickerOpen, setClassPickerOpen] = useState(false);
+  const classPickerRef = useRef<HTMLDivElement>(null);
   const [courseId, setCourseId] = useState<string>("");
   const [unitId, setUnitId] = useState<string>("");
+
+  useEffect(() => {
+    if (!classPickerOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (classPickerRef.current && !classPickerRef.current.contains(e.target as Node)) {
+        setClassPickerOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [classPickerOpen]);
   const toggleClass = (id: string) =>
     setClassIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
