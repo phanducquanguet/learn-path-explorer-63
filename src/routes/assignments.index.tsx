@@ -55,7 +55,8 @@ function StudentAssignmentsPage() {
 
 function Row({ a }: { a: Assignment }) {
   const sub = getSubmissionForStudent(a.id, CURRENT_STUDENT.id);
-  const overdue = new Date(a.dueAt).getTime() < Date.now();
+  const effectiveDue = getEffectiveDueAt(a, CURRENT_STUDENT.id);
+  const overdue = new Date(effectiveDue).getTime() < Date.now();
   const status = sub?.score !== undefined ? "graded" : sub ? "submitted" : "todo";
   return (
     <Link
