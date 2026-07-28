@@ -45,7 +45,7 @@ function seedAssignments(): Assignment[] {
     {
       id: "asg-1",
       title: "Viết đoạn văn 100 từ: My favorite hobby",
-      classId: cls.id,
+      classIds: [cls.id],
       description:
         "Hãy viết một đoạn văn khoảng 100 từ bằng tiếng Anh giới thiệu về sở thích của em.\nYêu cầu:\n- Sử dụng thì hiện tại đơn.\n- Có ít nhất 3 câu ghép.\n- Nộp bằng cách gõ trực tiếp hoặc tải file Word/PDF.",
       dueAt: new Date(now + 3 * 24 * 3600 * 1000).toISOString(),
@@ -58,7 +58,7 @@ function seedAssignments(): Assignment[] {
     {
       id: "asg-2",
       title: "Speaking recording: Describe your hometown",
-      classId: cls2.id,
+      classIds: [cls2.id, cls.id],
       description:
         "Ghi âm 1 phút miêu tả quê hương của em bằng tiếng Anh và tải file audio (mp3/m4a) lên hệ thống.",
       dueAt: new Date(now + 5 * 24 * 3600 * 1000).toISOString(),
@@ -73,7 +73,7 @@ function seedAssignments(): Assignment[] {
 
 function seedSubs(assignments: Assignment[]): AssignmentSubmission[] {
   const a = assignments[0];
-  const clsStudents = students.filter((s) => s.classId === a.classId).slice(0, 2);
+  const clsStudents = students.filter((s) => a.classIds.includes(s.classId)).slice(0, 2);
   return clsStudents.map((s, i) => ({
     id: `sub-${a.id}-${s.id}`,
     assignmentId: a.id,
