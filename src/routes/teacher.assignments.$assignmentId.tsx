@@ -641,6 +641,9 @@ function EditAssignmentDialog({
   const [maxScore, setMaxScore] = useState(assignment.maxScore);
   const [allowText, setAllowText] = useState(assignment.allowText);
   const [allowFile, setAllowFile] = useState(assignment.allowFile);
+  const [allowAssistantGrading, setAllowAssistantGrading] = useState(
+    assignment.allowAssistantGrading ?? false,
+  );
   const fileRef = useRef<HTMLInputElement>(null);
 
   const cls = classes.find((c) => assignment.classIds.includes(c.id));
