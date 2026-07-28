@@ -282,6 +282,27 @@ export function gradeSubmission(id: string, score: number, feedback: string) {
   emit();
 }
 
+/** Trả về hạn nộp áp dụng cho 1 học viên (có thể được gia hạn riêng). */
+export function getEffectiveDueAt(a: Assignment, studentId: string): string {
+  return a.extensions?.[studentId] ?? a.dueAt;
+}
+
+export function isClosedForStudent(a: Assignment, studentId: string, now = Date.now()): boolean {
+  return new Date(getEffectiveDueAt(a, studentId)).getTime() < now;
+}
+
+/** Mở lại nộp bài cho 1 học viên (giáo viên đặt hạn mới). */
+export function extendDeadline(assignmentId: string, studentId: string, newDueAt: string) {
+  ensureLoaded();
+  _assignments = _assignments!.map((a) =>
+    a.id === assignmentId
+      ? { ...a, extensions: { ...(a.extensions ?? {}), [studentId]: newDueAt } }
+      : a,
+  );
+  save(A_KEY, _assignments);
+  emit();
+}
+
 /** Current logged-in student (demo). */
 export const CURRENT_STUDENT = {
   id: students[0]?.id ?? "cls-a1-morning-s1",
