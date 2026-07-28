@@ -52,9 +52,13 @@ function TeacherAssignmentDetail() {
   const subs = useSubs(assignmentId);
   const [active, setActive] = useState<AssignmentSubmission | null>(null);
 
+  const [extendFor, setExtendFor] = useState<{ id: string; name: string } | null>(null);
+
   if (!a) throw notFound();
   const cls = classes.filter((c) => a.classIds.includes(c.id));
   const clsStudents = students.filter((s) => a.classIds.includes(s.classId));
+  const now = Date.now();
+  const isClosed = new Date(a.dueAt).getTime() < now;
 
   const submittedIds = new Set(subs.map((s) => s.studentId));
   const notSubmitted = clsStudents.filter((s) => !submittedIds.has(s.id));
