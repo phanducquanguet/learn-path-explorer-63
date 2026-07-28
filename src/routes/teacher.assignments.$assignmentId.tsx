@@ -149,17 +149,6 @@ function TeacherAssignmentDetail() {
           </div>
         </div>
 
-        <section className="mt-6 rounded-2xl border border-border bg-surface p-5 shadow-soft">
-          <div className="flex items-center justify-between gap-2">
-            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Đề bài
-            </div>
-            <button
-              onClick={() => setEditing(true)}
-            <Stat label="Đã chấm" value={graded.length} tone="ok" />
-            <Stat label="Chưa nộp" value={notSubmitted.length} tone="muted" />
-          </div>
-        </div>
 
         <section className="mt-6 rounded-2xl border border-border bg-surface p-5 shadow-soft">
           <div className="flex items-center justify-between gap-2">
