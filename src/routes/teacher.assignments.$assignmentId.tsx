@@ -116,9 +116,18 @@ function TeacherAssignmentDetail() {
         </div>
 
         <section className="mt-6 rounded-2xl border border-border bg-surface p-5 shadow-soft">
-          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Đề bài
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Đề bài
+            </div>
+            <button
+              onClick={() => setEditing(true)}
+              className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+            >
+              <Pencil className="h-3 w-3" /> Sửa đề
+            </button>
           </div>
+
           <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
             {a.description}
           </p>
