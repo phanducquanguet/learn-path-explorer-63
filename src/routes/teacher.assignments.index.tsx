@@ -351,10 +351,14 @@ function AssignmentRow({ a, onDuplicate }: { a: Assignment; onDuplicate: () => v
           {cu && (
             <span
               className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/5 px-1.5 py-0.5 text-[10px] font-medium text-primary"
-              title={`${cu.course.title}${cu.unit ? ` · ${cu.unit.title}` : ""}`}
+              title={`${cu.course.title}${cu.units.length ? ` · ${cu.units.map((u) => u.title).join(", ")}` : ""}`}
             >
               <GraduationCap className="h-3 w-3" /> {cu.course.title}
-              {cu.unit && <span className="text-primary/70">· U{cu.unit.index}</span>}
+              {cu.units.length > 0 && (
+                <span className="text-primary/70">
+                  · {cu.units.map((u) => `U${u.index}`).join(", ")}
+                </span>
+              )}
             </span>
           )}
         </div>
