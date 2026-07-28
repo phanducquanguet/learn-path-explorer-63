@@ -143,6 +143,7 @@ export function TopNav() {
   const roleStr: string = role;
   const tabs = role === "admin" ? adminTabs : role === "teacher" ? teacherTabs : studentTabs;
   const meta = roleMeta(role);
+  const hasLive = useHasLiveNow();
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
