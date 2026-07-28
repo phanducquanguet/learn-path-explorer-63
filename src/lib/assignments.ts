@@ -167,13 +167,21 @@ function ensureLoaded() {
   if (_assignments === null) {
     const seeded = seedAssignments();
     const loaded = load<Assignment[]>(A_KEY, seeded);
-    _assignments = Array.isArray(loaded) ? loaded.map(migrate) : seeded;
+    const arr = Array.isArray(loaded) ? loaded.map(migrate) : seeded;
+    // Merge any missing seed demos (e.g. new closed-demo) into existing storage
+    const ids = new Set(arr.map((a) => a.id));
+    for (const s of seeded) if (!ids.has(s.id)) arr.push(s);
+    _assignments = arr;
     save(A_KEY, _assignments);
   }
   if (_subs === null) {
     const seeded = seedSubs(_assignments!);
-    _subs = load<AssignmentSubmission[]>(S_KEY, seeded);
-    if (_subs === seeded) save(S_KEY, seeded);
+    const loaded = load<AssignmentSubmission[]>(S_KEY, seeded);
+    const arr = Array.isArray(loaded) ? loaded.slice() : seeded;
+    const subIds = new Set(arr.map((s) => s.id));
+    for (const s of seeded) if (!subIds.has(s.id)) arr.push(s);
+    _subs = arr;
+    save(S_KEY, _subs);
   }
 }
 
