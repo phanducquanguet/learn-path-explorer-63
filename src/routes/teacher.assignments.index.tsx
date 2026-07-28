@@ -381,8 +381,58 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
   const [description, setDescription] = useState("");
   const [attachments, setAttachments] = useState<AssignmentAttachment[]>([]);
   const [classIds, setClassIds] = useState<string[]>(classes[0] ? [classes[0].id] : []);
+  const [classQuery, setClassQuery] = useState("");
+  const [courseId, setCourseId] = useState<string>("");
+  const [unitId, setUnitId] = useState<string>("");
   const toggleClass = (id: string) =>
     setClassIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+  // Nhóm lớp theo level cho picker
+  const classesByLevel = useMemo(() => {
+    const q = classQuery.trim().toLowerCase();
+    const map = new Map<string, typeof classes>();
+    for (const c of classes) {
+      if (q && !c.name.toLowerCase().includes(q) && !c.levelCode.toLowerCase().includes(q)) continue;
+      const arr = map.get(c.levelCode) ?? [];
+      arr.push(c);
+      map.set(c.levelCode, arr);
+    }
+    return Array.from(map.entries()).sort(([a], [b]) => a.localeCompare(b));
+  }, [classQuery]);
+
+  // Level của các lớp đang chọn — dùng để lọc course
+  const selectedLevels = useMemo(
+    () => Array.from(new Set(classes.filter((c) => classIds.includes(c.id)).map((c) => c.levelCode))),
+    [classIds],
+  );
+
+  const availableCourses = useMemo(() => {
+    if (selectedLevels.length === 0) return [] as { id: string; title: string; level: string }[];
+    return levels
+      .filter((lv) => selectedLevels.includes(lv.code))
+      .flatMap((lv) => lv.courses.map((c) => ({ id: c.id, title: c.title, level: lv.code })));
+  }, [selectedLevels]);
+
+  const availableUnits = useMemo(() => {
+    if (!courseId) return [] as { id: string; title: string; index: number }[];
+    for (const lv of levels) {
+      const c = lv.courses.find((c) => c.id === courseId);
+      if (c) return c.units.map((u) => ({ id: u.id, title: u.title, index: u.index }));
+    }
+    return [];
+  }, [courseId]);
+
+  // Reset course/unit khi chọn level ko còn khớp
+  useEffect(() => {
+    if (!courseId) return;
+    if (!availableCourses.some((c) => c.id === courseId)) {
+      setCourseId("");
+      setUnitId("");
+    }
+  }, [availableCourses, courseId]);
+  useEffect(() => {
+    if (unitId && !availableUnits.some((u) => u.id === unitId)) setUnitId("");
+  }, [availableUnits, unitId]);
 
   const [dueAt, setDueAt] = useState(() => {
     const d = new Date(Date.now() + 3 * 24 * 3600 * 1000);
@@ -431,6 +481,8 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
         allowFile: allowFile || !allowText,
         allowAssistantGrading,
         attachments: attachments.length ? attachments : undefined,
+        courseId: courseId || undefined,
+        unitId: unitId || undefined,
         createdBy: "Cô Mai Lan",
       });
       if (!first) first = a;
