@@ -37,6 +37,10 @@ export type Assignment = {
   extensions?: Record<string, string>;
   /** Cho phép trợ giảng chấm bài. */
   allowAssistantGrading?: boolean;
+  /** Gắn với khóa học (từ lms-data). */
+  courseId?: string;
+  /** Gắn với unit trong khóa học đã chọn. */
+  unitId?: string;
 };
 
 
