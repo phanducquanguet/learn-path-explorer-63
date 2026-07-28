@@ -405,8 +405,21 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
   const [attachments, setAttachments] = useState<AssignmentAttachment[]>([]);
   const [classIds, setClassIds] = useState<string[]>(classes[0] ? [classes[0].id] : []);
   const [classQuery, setClassQuery] = useState("");
+  const [classPickerOpen, setClassPickerOpen] = useState(false);
+  const classPickerRef = useRef<HTMLDivElement>(null);
   const [courseId, setCourseId] = useState<string>("");
   const [unitId, setUnitId] = useState<string>("");
+
+  useEffect(() => {
+    if (!classPickerOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (classPickerRef.current && !classPickerRef.current.contains(e.target as Node)) {
+        setClassPickerOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [classPickerOpen]);
   const toggleClass = (id: string) =>
     setClassIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
@@ -585,90 +598,111 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
           </Field>
 
           <Field label={`Lớp giao bài (${classIds.length} đã chọn)`}>
-            <div className="rounded-lg border border-border bg-background">
-              <div className="flex items-center gap-2 border-b border-border px-2 py-1.5">
-                <Search className="h-3.5 w-3.5 text-muted-foreground" />
-                <input
-                  value={classQuery}
-                  onChange={(e) => setClassQuery(e.target.value)}
-                  placeholder="Tìm lớp hoặc level..."
-                  className="h-7 flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
+            <div ref={classPickerRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setClassPickerOpen((v) => !v)}
+                className="flex w-full items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm hover:border-primary/40"
+              >
+                <span className={cn("truncate", classIds.length === 0 && "text-muted-foreground")}>
+                  {classIds.length === 0
+                    ? "Chọn lớp giao bài..."
+                    : `Đã chọn ${classIds.length} lớp`}
+                </span>
+                <ChevronDown
+                  className={cn(
+                    "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+                    classPickerOpen && "rotate-180",
+                  )}
                 />
-                <button
-                  type="button"
-                  onClick={() => setClassIds(classes.map((c) => c.id))}
-                  className="text-[11px] font-medium text-primary hover:underline"
-                >
-                  Chọn tất cả
-                </button>
-                <span className="text-muted-foreground">·</span>
-                <button
-                  type="button"
-                  onClick={() => setClassIds([])}
-                  className="text-[11px] font-medium text-muted-foreground hover:underline"
-                >
-                  Bỏ chọn
-                </button>
-              </div>
-              <div className="max-h-56 space-y-2 overflow-y-auto p-2">
-                {classesByLevel.length === 0 && (
-                  <div className="p-2 text-xs text-muted-foreground">Không tìm thấy lớp.</div>
-                )}
-                {classesByLevel.map(([lvl, arr]) => {
-                  const allIds = arr.map((c) => c.id);
-                  const allSelected = allIds.every((id) => classIds.includes(id));
-                  return (
-                    <div key={lvl}>
-                      <div className="mb-1 flex items-center gap-2 px-1">
-                        <span className="inline-flex h-5 items-center rounded-md bg-primary/10 px-1.5 text-[10px] font-semibold text-primary">
-                          {lvl}
-                        </span>
-                        <span className="text-[11px] text-muted-foreground">{arr.length} lớp</span>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setClassIds((prev) =>
-                              allSelected
-                                ? prev.filter((id) => !allIds.includes(id))
-                                : Array.from(new Set([...prev, ...allIds])),
-                            )
-                          }
-                          className="ml-auto text-[11px] font-medium text-primary hover:underline"
-                        >
-                          {allSelected ? "Bỏ chọn nhóm" : "Chọn cả nhóm"}
-                        </button>
-                      </div>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {arr.map((c) => {
-                          const checked = classIds.includes(c.id);
-                          return (
-                            <label
-                              key={c.id}
-                              className={cn(
-                                "flex cursor-pointer items-center gap-2 rounded-md border px-2 py-1.5 text-xs transition",
-                                checked
-                                  ? "border-primary/40 bg-primary/5 text-foreground"
-                                  : "border-border bg-background text-muted-foreground hover:border-primary/30 hover:text-foreground",
-                              )}
+              </button>
+              {classPickerOpen && (
+                <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-lg border border-border bg-background shadow-lg">
+                  <div className="flex items-center gap-2 border-b border-border px-2 py-1.5">
+                    <Search className="h-3.5 w-3.5 text-muted-foreground" />
+                    <input
+                      value={classQuery}
+                      onChange={(e) => setClassQuery(e.target.value)}
+                      placeholder="Tìm lớp hoặc level..."
+                      className="h-7 flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setClassIds(classes.map((c) => c.id))}
+                      className="text-[11px] font-medium text-primary hover:underline"
+                    >
+                      Chọn tất cả
+                    </button>
+                    <span className="text-muted-foreground">·</span>
+                    <button
+                      type="button"
+                      onClick={() => setClassIds([])}
+                      className="text-[11px] font-medium text-muted-foreground hover:underline"
+                    >
+                      Bỏ chọn
+                    </button>
+                  </div>
+                  <div className="max-h-72 space-y-2 overflow-y-auto p-2">
+                    {classesByLevel.length === 0 && (
+                      <div className="p-2 text-xs text-muted-foreground">Không tìm thấy lớp.</div>
+                    )}
+                    {classesByLevel.map(([lvl, arr]) => {
+                      const allIds = arr.map((c) => c.id);
+                      const allSelected = allIds.every((id) => classIds.includes(id));
+                      return (
+                        <div key={lvl}>
+                          <div className="mb-1 flex items-center gap-2 px-1">
+                            <span className="inline-flex h-5 items-center rounded-md bg-primary/10 px-1.5 text-[10px] font-semibold text-primary">
+                              {lvl}
+                            </span>
+                            <span className="text-[11px] text-muted-foreground">{arr.length} lớp</span>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setClassIds((prev) =>
+                                  allSelected
+                                    ? prev.filter((id) => !allIds.includes(id))
+                                    : Array.from(new Set([...prev, ...allIds])),
+                                )
+                              }
+                              className="ml-auto text-[11px] font-medium text-primary hover:underline"
                             >
-                              <input
-                                type="checkbox"
-                                checked={checked}
-                                onChange={() => toggleClass(c.id)}
-                                className="shrink-0"
-                              />
-                              <span className="truncate">{c.name.replace(/^[A-C][12]\s—\s/, "")}</span>
-                              <span className="ml-auto text-[10px] text-muted-foreground">
-                                {c.studentCount} HV
-                              </span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                              {allSelected ? "Bỏ chọn nhóm" : "Chọn cả nhóm"}
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-1.5 md:grid-cols-3">
+                            {arr.map((c) => {
+                              const checked = classIds.includes(c.id);
+                              return (
+                                <label
+                                  key={c.id}
+                                  className={cn(
+                                    "flex cursor-pointer items-center gap-2 rounded-md border px-2 py-1.5 text-xs transition",
+                                    checked
+                                      ? "border-primary/40 bg-primary/5 text-foreground"
+                                      : "border-border bg-background text-muted-foreground hover:border-primary/30 hover:text-foreground",
+                                  )}
+                                >
+                                  <input
+                                    type="checkbox"
+                                    checked={checked}
+                                    onChange={() => toggleClass(c.id)}
+                                    className="shrink-0"
+                                  />
+                                  <span className="truncate">{c.name.replace(/^[A-C][12]\s—\s/, "")}</span>
+                                  <span className="ml-auto text-[10px] text-muted-foreground">
+                                    {c.studentCount} HV
+                                  </span>
+                                </label>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
             {classIds.length > 1 && (
               <div className="mt-1.5 text-[11px] text-primary">
