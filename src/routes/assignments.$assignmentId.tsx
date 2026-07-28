@@ -40,7 +40,8 @@ function StudentAssignmentDetail() {
   const [saved, setSaved] = useState(false);
 
   if (!a) throw notFound();
-  const overdue = new Date(a.dueAt).getTime() < Date.now();
+  const effectiveDue = getEffectiveDueAt(a, CURRENT_STUDENT.id);
+  const overdue = new Date(effectiveDue).getTime() < Date.now();
   const graded = existing?.score !== undefined;
 
   const onFile = (f: File | null) => {
