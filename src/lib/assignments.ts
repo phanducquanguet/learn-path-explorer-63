@@ -112,11 +112,20 @@ let _sortedCache: Assignment[] | null = null;
 const _subsByAssignment = new Map<string, AssignmentSubmission[]>();
 const listeners = new Set<() => void>();
 
+function migrate(a: any): Assignment {
+  if (!a) return a;
+  if (!Array.isArray(a.classIds)) {
+    a.classIds = a.classId ? [a.classId] : [];
+  }
+  return a as Assignment;
+}
+
 function ensureLoaded() {
   if (_assignments === null) {
     const seeded = seedAssignments();
-    _assignments = load<Assignment[]>(A_KEY, seeded);
-    if (_assignments === seeded) save(A_KEY, seeded);
+    const loaded = load<Assignment[]>(A_KEY, seeded);
+    _assignments = Array.isArray(loaded) ? loaded.map(migrate) : seeded;
+    save(A_KEY, _assignments);
   }
   if (_subs === null) {
     const seeded = seedSubs(_assignments!);
