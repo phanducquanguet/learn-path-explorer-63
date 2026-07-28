@@ -6,6 +6,8 @@ import {
   listSubmissions,
   subscribeAssignments,
   gradeSubmission,
+  extendDeadline,
+  getEffectiveDueAt,
   type AssignmentSubmission,
 } from "@/lib/assignments";
 import { classes, students } from "@/lib/teacher-data";
@@ -20,6 +22,9 @@ import {
   X,
   Users,
   Sparkles,
+  Lock,
+  Unlock,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
