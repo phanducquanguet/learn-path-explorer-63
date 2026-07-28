@@ -124,10 +124,38 @@ function TeacherAssignmentDetail() {
               </span>
               <span>Thang điểm: {a.maxScore}</span>
             </div>
+            {courseInfo && (
+              <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                <span className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-0.5 font-semibold text-indigo-700">
+                  {courseInfo.level} · {courseInfo.courseTitle}
+                </span>
+                {courseInfo.units.map((u) => (
+                  <span
+                    key={u.id}
+                    className="inline-flex items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 font-semibold text-sky-700"
+                    title={u.title}
+                  >
+                    {u.id.toUpperCase()} · {u.title}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
           <div className="flex gap-2 text-xs">
             <Stat label="Đã nộp" value={subs.length} tone="default" />
             <Stat label="Chờ chấm" value={pending.length} tone="warn" />
+            <Stat label="Đã chấm" value={graded.length} tone="ok" />
+            <Stat label="Chưa nộp" value={notSubmitted.length} tone="muted" />
+          </div>
+        </div>
+
+        <section className="mt-6 rounded-2xl border border-border bg-surface p-5 shadow-soft">
+          <div className="flex items-center justify-between gap-2">
+            <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Đề bài
+            </div>
+            <button
+              onClick={() => setEditing(true)}
             <Stat label="Đã chấm" value={graded.length} tone="ok" />
             <Stat label="Chưa nộp" value={notSubmitted.length} tone="muted" />
           </div>
