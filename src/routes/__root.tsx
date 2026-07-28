@@ -12,6 +12,7 @@ import appCss from "../styles.css?url";
 import { RoleProvider } from "@/contexts/RoleContext";
 import { Toaster } from "sonner";
 import { ExamCountdownFloater } from "@/components/ExamCountdownFloater";
+import { LiveSessionFloater } from "@/components/LiveSessionFloater";
 
 function NotFoundComponent() {
   return (
