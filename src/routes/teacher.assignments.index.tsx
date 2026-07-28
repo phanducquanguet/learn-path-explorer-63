@@ -29,6 +29,7 @@ import {
   Search,
   ChevronDown,
   GraduationCap,
+  BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -54,7 +55,16 @@ function TeacherAssignmentsPage() {
   const [duplicateOf, setDuplicateOf] = useState<Assignment | null>(null);
   const [query, setQuery] = useState("");
   const [classFilter, setClassFilter] = useState<string>("all");
+  const [courseFilter, setCourseFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
+
+  const courseOptions = useMemo(
+    () =>
+      levels.flatMap((lv) =>
+        lv.courses.map((c) => ({ value: c.id, label: `${c.title} (${lv.code})` })),
+      ),
+    [],
+  );
 
   const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -63,6 +73,7 @@ function TeacherAssignmentsPage() {
       const cls = classes.filter((c) => a.classIds.includes(c.id));
       const clsNames = cls.map((c) => c.name).join(" ");
       if (classFilter !== "all" && !a.classIds.includes(classFilter)) return false;
+      if (courseFilter !== "all" && a.courseId !== courseFilter) return false;
       if (statusFilter !== "all") {
         const isOpen = new Date(a.dueAt).getTime() >= now;
         if (statusFilter === "open" && !isOpen) return false;
@@ -75,9 +86,9 @@ function TeacherAssignmentsPage() {
         return false;
       return true;
     });
-  }, [items, query, classFilter, statusFilter]);
+  }, [items, query, classFilter, courseFilter, statusFilter]);
 
-  const hasFilters = query !== "" || classFilter !== "all" || statusFilter !== "all";
+  const hasFilters = query !== "" || classFilter !== "all" || courseFilter !== "all" || statusFilter !== "all";
 
   return (
     <div className="min-h-screen bg-background">
@@ -126,6 +137,15 @@ function TeacherAssignmentsPage() {
                 ]}
               />
               <FilterSelect
+                value={courseFilter}
+                onChange={setCourseFilter}
+                icon={<BookOpen className="h-4 w-4" />}
+                options={[
+                  { value: "all", label: "Tất cả khóa học" },
+                  ...courseOptions,
+                ]}
+              />
+              <FilterSelect
                 value={statusFilter}
                 onChange={(v) => setStatusFilter(v as "all" | "open" | "closed")}
                 icon={<Clock className="h-4 w-4" />}
@@ -140,6 +160,7 @@ function TeacherAssignmentsPage() {
                   onClick={() => {
                     setQuery("");
                     setClassFilter("all");
+                    setCourseFilter("all");
                     setStatusFilter("all");
                   }}
                   className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
