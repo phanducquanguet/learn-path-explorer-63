@@ -183,7 +183,6 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
             />
           </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
           <Field label={`Lớp giao bài (${classIds.length} đã chọn)`}>
             <div className="max-h-40 overflow-y-auto rounded-lg border border-border bg-background p-2">
               {classes.map((c) => {
@@ -223,6 +222,8 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
               </button>
             </div>
           </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+
 
             <Field label="Hạn nộp">
               <input
