@@ -811,6 +811,14 @@ function EditAssignmentDialog({
                   />
                   Tải file đính kèm
                 </label>
+                <label className="mt-1 inline-flex items-center gap-2 border-t border-border pt-2">
+                  <input
+                    type="checkbox"
+                    checked={allowAssistantGrading}
+                    onChange={(e) => setAllowAssistantGrading(e.target.checked)}
+                  />
+                  Cho phép trợ giảng chấm bài
+                </label>
               </div>
             </div>
           </div>
