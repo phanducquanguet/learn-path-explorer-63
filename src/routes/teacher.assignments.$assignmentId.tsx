@@ -437,3 +437,132 @@ function GradeDrawer({
     </div>
   );
 }
+
+function ExtendDialog({
+  studentName,
+  currentDue,
+  onClose,
+  onSubmit,
+}: {
+  studentName: string;
+  currentDue: string;
+  onClose: () => void;
+  onSubmit: (iso: string) => void;
+}) {
+  const presets = [
+    { label: "+1 ngày", days: 1 },
+    { label: "+3 ngày", days: 3 },
+    { label: "+7 ngày", days: 7 },
+  ];
+  const [choice, setChoice] = useState<"preset" | "custom">("preset");
+  const [days, setDays] = useState(3);
+  const defaultCustom = (() => {
+    const d = new Date(Date.now() + 3 * 24 * 3600 * 1000);
+    // yyyy-MM-ddTHH:mm for datetime-local
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  })();
+  const [customAt, setCustomAt] = useState(defaultCustom);
+
+  const submit = () => {
+    let iso: string;
+    if (choice === "preset") {
+      iso = new Date(Date.now() + days * 24 * 3600 * 1000).toISOString();
+    } else {
+      const t = new Date(customAt);
+      if (Number.isNaN(t.getTime())) return;
+      iso = t.toISOString();
+    }
+    onSubmit(iso);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <button onClick={onClose} className="absolute inset-0" aria-label="Close" />
+      <div className="relative w-full max-w-md rounded-2xl bg-background p-6 shadow-elevated">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-display text-lg font-semibold">Mở lại nộp bài</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Gia hạn riêng cho <b>{studentName}</b>. Hạn hiện tại:{" "}
+              {new Date(currentDue).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}
+            </p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-muted">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-4 space-y-3">
+          <label className="flex items-start gap-2 rounded-xl border border-border p-3 text-sm">
+            <input
+              type="radio"
+              checked={choice === "preset"}
+              onChange={() => setChoice("preset")}
+              className="mt-0.5"
+            />
+            <div className="flex-1">
+              <div className="font-medium">Gia hạn nhanh</div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {presets.map((p) => (
+                  <button
+                    key={p.days}
+                    onClick={() => {
+                      setChoice("preset");
+                      setDays(p.days);
+                    }}
+                    className={cn(
+                      "rounded-lg border px-2.5 py-1 text-xs font-semibold",
+                      choice === "preset" && days === p.days
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-background hover:bg-muted",
+                    )}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </label>
+
+          <label className="flex items-start gap-2 rounded-xl border border-border p-3 text-sm">
+            <input
+              type="radio"
+              checked={choice === "custom"}
+              onChange={() => setChoice("custom")}
+              className="mt-0.5"
+            />
+            <div className="flex-1">
+              <div className="font-medium">Chọn thời điểm cụ thể</div>
+              <input
+                type="datetime-local"
+                value={customAt}
+                onChange={(e) => {
+                  setChoice("custom");
+                  setCustomAt(e.target.value);
+                }}
+                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              />
+            </div>
+          </label>
+        </div>
+
+        <div className="mt-5 flex items-center justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted"
+          >
+            Huỷ
+          </button>
+          <button
+            onClick={submit}
+            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft"
+            style={{ background: "var(--gradient-brand)" }}
+          >
+            <Unlock className="h-4 w-4" /> Mở nộp bài
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
