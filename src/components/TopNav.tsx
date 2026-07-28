@@ -79,7 +79,7 @@ const studentTabs = [
   { to: "/" as const, label: "Trang chủ", icon: Home },
   { to: "/courses" as const, label: "Khóa học", icon: GraduationCap },
   { to: "/live" as const, label: "Lớp trực tuyến", icon: Video },
-  { to: "/assignments" as const, label: "Bài giao", icon: ClipboardList },
+  { to: "/assignments" as const, label: "Bài tập", icon: ClipboardList },
 
   { to: "/exams" as const, label: "Thi cử", icon: ScrollText },
 ];
