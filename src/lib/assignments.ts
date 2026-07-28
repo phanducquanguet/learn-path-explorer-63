@@ -177,6 +177,22 @@ function seedAssignments(): Assignment[] {
       createdAt: new Date(now - 10 * D).toISOString(),
       createdBy: "Cô Mai Lan",
     },
+    {
+      id: "asg-extended-demo",
+      title: "Writing task: Describe a memorable trip",
+      classIds: [cls.id],
+      description:
+        "Viết đoạn văn 120-150 từ miêu tả một chuyến đi đáng nhớ. Bài đã hết hạn nhưng giáo viên gia hạn thêm cho em.",
+      dueAt: new Date(now - 1 * D).toISOString(), // hạn gốc: đã quá hạn 1 ngày
+      maxScore: 10,
+      allowText: true,
+      allowFile: true,
+      createdAt: new Date(now - 5 * D).toISOString(),
+      createdBy: "Cô Mai Lan",
+      extensions: {
+        [students[0]?.id ?? "cls-a1-morning-s1"]: new Date(now + 36 * H).toISOString(),
+      },
+    },
   ];
 }
 
