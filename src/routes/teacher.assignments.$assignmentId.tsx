@@ -191,18 +191,56 @@ function TeacherAssignmentDetail() {
 
           {notSubmitted.length > 0 && (
             <div className="mt-4 rounded-2xl border border-dashed border-border bg-muted/20 p-4">
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Chưa nộp ({notSubmitted.length})
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {notSubmitted.map((s) => (
-                  <span
-                    key={s.id}
-                    className="rounded-full border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground"
-                  >
-                    {s.name}
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Chưa nộp ({notSubmitted.length})
+                </div>
+                {isClosed && (
+                  <span className="text-[11px] text-muted-foreground">
+                    Bài đã đóng — bấm <b>Mở nộp bài</b> để gia hạn riêng cho học viên
                   </span>
-                ))}
+                )}
+              </div>
+              <div className="mt-3 divide-y divide-border/60 rounded-xl border border-border bg-background">
+                {notSubmitted.map((s) => {
+                  const ext = a.extensions?.[s.id];
+                  const stillClosed = isClosed && (!ext || new Date(ext).getTime() < now);
+                  return (
+                    <div
+                      key={s.id}
+                      className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm"
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate font-medium">{s.name}</div>
+                        {ext && (
+                          <div className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-emerald-700">
+                            <Clock className="h-3 w-3" /> Được gia hạn đến{" "}
+                            {new Date(ext).toLocaleString("vi-VN", {
+                              timeZone: "Asia/Ho_Chi_Minh",
+                            })}
+                          </div>
+                        )}
+                      </div>
+                      {stillClosed ? (
+                        <button
+                          onClick={() => setExtendFor({ id: s.id, name: s.name })}
+                          className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1 text-xs font-semibold hover:bg-muted"
+                        >
+                          <Unlock className="h-3 w-3" /> Mở nộp bài
+                        </button>
+                      ) : ext ? (
+                        <button
+                          onClick={() => setExtendFor({ id: s.id, name: s.name })}
+                          className="text-xs font-semibold text-primary hover:underline"
+                        >
+                          Đổi hạn
+                        </button>
+                      ) : (
+                        <span className="text-[11px] text-muted-foreground">Đang mở</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -211,6 +249,18 @@ function TeacherAssignmentDetail() {
 
       {active && (
         <GradeDrawer submission={active} maxScore={a.maxScore} onClose={() => setActive(null)} />
+      )}
+
+      {extendFor && (
+        <ExtendDialog
+          studentName={extendFor.name}
+          currentDue={a.extensions?.[extendFor.id] ?? a.dueAt}
+          onClose={() => setExtendFor(null)}
+          onSubmit={(iso) => {
+            extendDeadline(a.id, extendFor.id, iso);
+            setExtendFor(null);
+          }}
+        />
       )}
     </div>
   );
