@@ -45,6 +45,81 @@ function useAssignments() {
   );
 }
 
+function FilterClassDropdown({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, []);
+
+  const toggle = (id: string) => {
+    onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors",
+          value.length > 0
+            ? "border-primary bg-primary/10 text-primary hover:bg-primary/15"
+            : "border-border bg-surface hover:bg-muted",
+        )}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <Filter className="h-4 w-4" />
+        Lọc theo lớp
+        {value.length > 0 && (
+          <span className="ml-1 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-background">
+            {value.length}
+          </span>
+        )}
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full z-20 mt-2 w-64 rounded-2xl border border-border bg-background p-2 shadow-elevated">
+          <div className="max-h-56 overflow-y-auto space-y-0.5">
+            {classes.map((c) => (
+              <label
+                key={c.id}
+                className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-muted"
+              >
+                <input
+                  type="checkbox"
+                  checked={value.includes(c.id)}
+                  onChange={() => toggle(c.id)}
+                  className="h-4 w-4 accent-primary"
+                />
+                <span className="flex-1 truncate">{c.name}</span>
+              </label>
+            ))}
+          </div>
+          {value.length > 0 && (
+            <button
+              onClick={() => onChange([])}
+              className="mt-2 w-full rounded-lg px-2 py-1.5 text-left text-xs font-medium text-primary hover:bg-primary/10"
+            >
+              Xóa lọc
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TeacherAssignmentsPage() {
   const items = useAssignments();
   const [open, setOpen] = useState(false);
