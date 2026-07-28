@@ -49,6 +49,12 @@ function TeacherAssignmentsPage() {
   const items = useAssignments();
   const [open, setOpen] = useState(false);
   const [duplicateOf, setDuplicateOf] = useState<Assignment | null>(null);
+  const [filterClassIds, setFilterClassIds] = useState<string[]>([]);
+
+  const filteredItems = useMemo(() => {
+    if (filterClassIds.length === 0) return items;
+    return items.filter((a) => a.classIds.some((cid) => filterClassIds.includes(cid)));
+  }, [items, filterClassIds]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -71,15 +77,26 @@ function TeacherAssignmentsPage() {
           </button>
         </div>
 
-        <KpiCards items={items} />
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <FilterClassDropdown value={filterClassIds} onChange={setFilterClassIds} />
+          {filterClassIds.length > 0 && (
+            <span className="text-xs text-muted-foreground">
+              Đang lọc {filteredItems.length} bài tập
+            </span>
+          )}
+        </div>
+
+        <KpiCards items={filteredItems} />
 
         <div className="mt-6 grid gap-3">
-          {items.map((a) => (
+          {filteredItems.map((a) => (
             <AssignmentRow key={a.id} a={a} onDuplicate={() => setDuplicateOf(a)} />
           ))}
-          {items.length === 0 && (
+          {filteredItems.length === 0 && (
             <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center text-sm text-muted-foreground">
-              Chưa có bài tập nào. Bấm "Tạo bài tập" để bắt đầu.
+              {filterClassIds.length > 0
+                ? "Không có bài tập nào cho lớp đã chọn."
+                : "Chưa có bài tập nào. Bấm \"Tạo bài tập\" để bắt đầu."}
             </div>
           )}
         </div>
