@@ -160,6 +160,7 @@ function TeacherAssignmentsPage() {
                   onClick={() => {
                     setQuery("");
                     setClassFilter("all");
+                    setCourseFilter("all");
                     setStatusFilter("all");
                   }}
                   className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
