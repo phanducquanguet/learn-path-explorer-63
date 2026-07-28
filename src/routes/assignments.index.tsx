@@ -5,6 +5,7 @@ import {
   listAssignmentsForCurrentStudent,
   subscribeAssignments,
   getSubmissionForStudent,
+  getEffectiveDueAt,
   CURRENT_STUDENT,
   type Assignment,
 } from "@/lib/assignments";
@@ -54,7 +55,8 @@ function StudentAssignmentsPage() {
 
 function Row({ a }: { a: Assignment }) {
   const sub = getSubmissionForStudent(a.id, CURRENT_STUDENT.id);
-  const overdue = new Date(a.dueAt).getTime() < Date.now();
+  const effectiveDue = getEffectiveDueAt(a, CURRENT_STUDENT.id);
+  const overdue = new Date(effectiveDue).getTime() < Date.now();
   const status = sub?.score !== undefined ? "graded" : sub ? "submitted" : "todo";
   return (
     <Link
@@ -70,7 +72,7 @@ function Row({ a }: { a: Assignment }) {
         <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span className={cn("inline-flex items-center gap-1", overdue && status === "todo" && "text-rose-600")}>
             <Calendar className="h-3 w-3" /> Hạn:{" "}
-            {new Date(a.dueAt).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}
+            {new Date(effectiveDue).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}
           </span>
           <span>Thang điểm: {a.maxScore}</span>
         </div>

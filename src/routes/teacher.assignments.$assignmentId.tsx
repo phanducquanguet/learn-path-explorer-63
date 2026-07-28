@@ -6,6 +6,8 @@ import {
   listSubmissions,
   subscribeAssignments,
   gradeSubmission,
+  extendDeadline,
+  getEffectiveDueAt,
   type AssignmentSubmission,
 } from "@/lib/assignments";
 import { classes, students } from "@/lib/teacher-data";
@@ -20,6 +22,9 @@ import {
   X,
   Users,
   Sparkles,
+  Lock,
+  Unlock,
+  Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -47,9 +52,13 @@ function TeacherAssignmentDetail() {
   const subs = useSubs(assignmentId);
   const [active, setActive] = useState<AssignmentSubmission | null>(null);
 
+  const [extendFor, setExtendFor] = useState<{ id: string; name: string } | null>(null);
+
   if (!a) throw notFound();
   const cls = classes.filter((c) => a.classIds.includes(c.id));
   const clsStudents = students.filter((s) => a.classIds.includes(s.classId));
+  const now = Date.now();
+  const isClosed = new Date(a.dueAt).getTime() < now;
 
   const submittedIds = new Set(subs.map((s) => s.studentId));
   const notSubmitted = clsStudents.filter((s) => !submittedIds.has(s.id));
@@ -68,7 +77,18 @@ function TeacherAssignmentDetail() {
         </Link>
         <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="font-display text-2xl font-semibold tracking-tight">{a.title}</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="font-display text-2xl font-semibold tracking-tight">{a.title}</h1>
+              {isClosed ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
+                  <Lock className="h-3 w-3" /> Đã đóng (hết hạn)
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                  <Unlock className="h-3 w-3" /> Đang mở nộp
+                </span>
+              )}
+            </div>
             <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1">
                 <Users className="h-3 w-3" /> {cls.map((c) => c.name).join(" · ") || "—"}
@@ -171,18 +191,56 @@ function TeacherAssignmentDetail() {
 
           {notSubmitted.length > 0 && (
             <div className="mt-4 rounded-2xl border border-dashed border-border bg-muted/20 p-4">
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                Chưa nộp ({notSubmitted.length})
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {notSubmitted.map((s) => (
-                  <span
-                    key={s.id}
-                    className="rounded-full border border-border bg-background px-2 py-0.5 text-xs text-muted-foreground"
-                  >
-                    {s.name}
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Chưa nộp ({notSubmitted.length})
+                </div>
+                {isClosed && (
+                  <span className="text-[11px] text-muted-foreground">
+                    Bài đã đóng — bấm <b>Mở nộp bài</b> để gia hạn riêng cho học viên
                   </span>
-                ))}
+                )}
+              </div>
+              <div className="mt-3 divide-y divide-border/60 rounded-xl border border-border bg-background">
+                {notSubmitted.map((s) => {
+                  const ext = a.extensions?.[s.id];
+                  const stillClosed = isClosed && (!ext || new Date(ext).getTime() < now);
+                  return (
+                    <div
+                      key={s.id}
+                      className="flex flex-wrap items-center justify-between gap-2 px-3 py-2 text-sm"
+                    >
+                      <div className="min-w-0">
+                        <div className="truncate font-medium">{s.name}</div>
+                        {ext && (
+                          <div className="mt-0.5 inline-flex items-center gap-1 text-[11px] text-emerald-700">
+                            <Clock className="h-3 w-3" /> Được gia hạn đến{" "}
+                            {new Date(ext).toLocaleString("vi-VN", {
+                              timeZone: "Asia/Ho_Chi_Minh",
+                            })}
+                          </div>
+                        )}
+                      </div>
+                      {stillClosed ? (
+                        <button
+                          onClick={() => setExtendFor({ id: s.id, name: s.name })}
+                          className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-3 py-1 text-xs font-semibold hover:bg-muted"
+                        >
+                          <Unlock className="h-3 w-3" /> Mở nộp bài
+                        </button>
+                      ) : ext ? (
+                        <button
+                          onClick={() => setExtendFor({ id: s.id, name: s.name })}
+                          className="text-xs font-semibold text-primary hover:underline"
+                        >
+                          Đổi hạn
+                        </button>
+                      ) : (
+                        <span className="text-[11px] text-muted-foreground">Đang mở</span>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -191,6 +249,18 @@ function TeacherAssignmentDetail() {
 
       {active && (
         <GradeDrawer submission={active} maxScore={a.maxScore} onClose={() => setActive(null)} />
+      )}
+
+      {extendFor && (
+        <ExtendDialog
+          studentName={extendFor.name}
+          currentDue={a.extensions?.[extendFor.id] ?? a.dueAt}
+          onClose={() => setExtendFor(null)}
+          onSubmit={(iso) => {
+            extendDeadline(a.id, extendFor.id, iso);
+            setExtendFor(null);
+          }}
+        />
       )}
     </div>
   );
@@ -361,6 +431,135 @@ function GradeDrawer({
             style={{ background: "var(--gradient-brand)" }}
           >
             <Send className="h-4 w-4" /> Lưu điểm & phản hồi
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ExtendDialog({
+  studentName,
+  currentDue,
+  onClose,
+  onSubmit,
+}: {
+  studentName: string;
+  currentDue: string;
+  onClose: () => void;
+  onSubmit: (iso: string) => void;
+}) {
+  const presets = [
+    { label: "+1 ngày", days: 1 },
+    { label: "+3 ngày", days: 3 },
+    { label: "+7 ngày", days: 7 },
+  ];
+  const [choice, setChoice] = useState<"preset" | "custom">("preset");
+  const [days, setDays] = useState(3);
+  const defaultCustom = (() => {
+    const d = new Date(Date.now() + 3 * 24 * 3600 * 1000);
+    // yyyy-MM-ddTHH:mm for datetime-local
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  })();
+  const [customAt, setCustomAt] = useState(defaultCustom);
+
+  const submit = () => {
+    let iso: string;
+    if (choice === "preset") {
+      iso = new Date(Date.now() + days * 24 * 3600 * 1000).toISOString();
+    } else {
+      const t = new Date(customAt);
+      if (Number.isNaN(t.getTime())) return;
+      iso = t.toISOString();
+    }
+    onSubmit(iso);
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <button onClick={onClose} className="absolute inset-0" aria-label="Close" />
+      <div className="relative w-full max-w-md rounded-2xl bg-background p-6 shadow-elevated">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-display text-lg font-semibold">Mở lại nộp bài</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Gia hạn riêng cho <b>{studentName}</b>. Hạn hiện tại:{" "}
+              {new Date(currentDue).toLocaleString("vi-VN", { timeZone: "Asia/Ho_Chi_Minh" })}
+            </p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-muted">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <div className="mt-4 space-y-3">
+          <label className="flex items-start gap-2 rounded-xl border border-border p-3 text-sm">
+            <input
+              type="radio"
+              checked={choice === "preset"}
+              onChange={() => setChoice("preset")}
+              className="mt-0.5"
+            />
+            <div className="flex-1">
+              <div className="font-medium">Gia hạn nhanh</div>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {presets.map((p) => (
+                  <button
+                    key={p.days}
+                    onClick={() => {
+                      setChoice("preset");
+                      setDays(p.days);
+                    }}
+                    className={cn(
+                      "rounded-lg border px-2.5 py-1 text-xs font-semibold",
+                      choice === "preset" && days === p.days
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border bg-background hover:bg-muted",
+                    )}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </label>
+
+          <label className="flex items-start gap-2 rounded-xl border border-border p-3 text-sm">
+            <input
+              type="radio"
+              checked={choice === "custom"}
+              onChange={() => setChoice("custom")}
+              className="mt-0.5"
+            />
+            <div className="flex-1">
+              <div className="font-medium">Chọn thời điểm cụ thể</div>
+              <input
+                type="datetime-local"
+                value={customAt}
+                onChange={(e) => {
+                  setChoice("custom");
+                  setCustomAt(e.target.value);
+                }}
+                className="mt-2 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              />
+            </div>
+          </label>
+        </div>
+
+        <div className="mt-5 flex items-center justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted"
+          >
+            Huỷ
+          </button>
+          <button
+            onClick={submit}
+            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft"
+            style={{ background: "var(--gradient-brand)" }}
+          >
+            <Unlock className="h-4 w-4" /> Mở nộp bài
           </button>
         </div>
       </div>
