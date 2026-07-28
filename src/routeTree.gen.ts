@@ -18,6 +18,7 @@ import { Route as TeacherIndexRouteImport } from './routes/teacher.index'
 import { Route as LiveIndexRouteImport } from './routes/live.index'
 import { Route as ExamsIndexRouteImport } from './routes/exams.index'
 import { Route as CoursesIndexRouteImport } from './routes/courses.index'
+import { Route as AssignmentsIndexRouteImport } from './routes/assignments.index'
 import { Route as TeacherUploadRouteImport } from './routes/teacher.upload'
 import { Route as TeacherReportsRouteImport } from './routes/teacher.reports'
 import { Route as TeacherQuestionBankRouteImport } from './routes/teacher.question-bank'
@@ -26,6 +27,7 @@ import { Route as LiveSessionIdRouteImport } from './routes/live.$sessionId'
 import { Route as LevelsLevelRouteImport } from './routes/levels.$level'
 import { Route as CoursesCourseIdRouteImport } from './routes/courses.$courseId'
 import { Route as CampaignsSlugRouteImport } from './routes/campaigns.$slug'
+import { Route as AssignmentsAssignmentIdRouteImport } from './routes/assignments.$assignmentId'
 import { Route as AdminStatsRouteImport } from './routes/admin.stats'
 import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-bank'
 import { Route as TeacherTestsIndexRouteImport } from './routes/teacher.tests.index'
@@ -101,6 +103,11 @@ const CoursesIndexRoute = CoursesIndexRouteImport.update({
   path: '/courses/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AssignmentsIndexRoute = AssignmentsIndexRouteImport.update({
+  id: '/assignments/',
+  path: '/assignments/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TeacherUploadRoute = TeacherUploadRouteImport.update({
   id: '/teacher/upload',
   path: '/teacher/upload',
@@ -139,6 +146,11 @@ const CoursesCourseIdRoute = CoursesCourseIdRouteImport.update({
 const CampaignsSlugRoute = CampaignsSlugRouteImport.update({
   id: '/campaigns/$slug',
   path: '/campaigns/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssignmentsAssignmentIdRoute = AssignmentsAssignmentIdRouteImport.update({
+  id: '/assignments/$assignmentId',
+  path: '/assignments/$assignmentId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdminStatsRoute = AdminStatsRouteImport.update({
@@ -301,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/stats': typeof AdminStatsRoute
+  '/assignments/$assignmentId': typeof AssignmentsAssignmentIdRoute
   '/campaigns/$slug': typeof CampaignsSlugRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -309,6 +322,7 @@ export interface FileRoutesByFullPath {
   '/teacher/question-bank': typeof TeacherQuestionBankRoute
   '/teacher/reports': typeof TeacherReportsRoute
   '/teacher/upload': typeof TeacherUploadRoute
+  '/assignments/': typeof AssignmentsIndexRoute
   '/courses/': typeof CoursesIndexRoute
   '/exams/': typeof ExamsIndexRoute
   '/live/': typeof LiveIndexRoute
@@ -348,6 +362,7 @@ export interface FileRoutesByTo {
   '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/stats': typeof AdminStatsRoute
+  '/assignments/$assignmentId': typeof AssignmentsAssignmentIdRoute
   '/campaigns/$slug': typeof CampaignsSlugRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -356,6 +371,7 @@ export interface FileRoutesByTo {
   '/teacher/question-bank': typeof TeacherQuestionBankRoute
   '/teacher/reports': typeof TeacherReportsRoute
   '/teacher/upload': typeof TeacherUploadRoute
+  '/assignments': typeof AssignmentsIndexRoute
   '/courses': typeof CoursesIndexRoute
   '/exams': typeof ExamsIndexRoute
   '/live': typeof LiveIndexRoute
@@ -397,6 +413,7 @@ export interface FileRoutesById {
   '/practice': typeof PracticeRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/stats': typeof AdminStatsRoute
+  '/assignments/$assignmentId': typeof AssignmentsAssignmentIdRoute
   '/campaigns/$slug': typeof CampaignsSlugRoute
   '/courses/$courseId': typeof CoursesCourseIdRoute
   '/levels/$level': typeof LevelsLevelRoute
@@ -405,6 +422,7 @@ export interface FileRoutesById {
   '/teacher/question-bank': typeof TeacherQuestionBankRoute
   '/teacher/reports': typeof TeacherReportsRoute
   '/teacher/upload': typeof TeacherUploadRoute
+  '/assignments/': typeof AssignmentsIndexRoute
   '/courses/': typeof CoursesIndexRoute
   '/exams/': typeof ExamsIndexRoute
   '/live/': typeof LiveIndexRoute
@@ -447,6 +465,7 @@ export interface FileRouteTypes {
     | '/practice'
     | '/admin/question-bank'
     | '/admin/stats'
+    | '/assignments/$assignmentId'
     | '/campaigns/$slug'
     | '/courses/$courseId'
     | '/levels/$level'
@@ -455,6 +474,7 @@ export interface FileRouteTypes {
     | '/teacher/question-bank'
     | '/teacher/reports'
     | '/teacher/upload'
+    | '/assignments/'
     | '/courses/'
     | '/exams/'
     | '/live/'
@@ -494,6 +514,7 @@ export interface FileRouteTypes {
     | '/practice'
     | '/admin/question-bank'
     | '/admin/stats'
+    | '/assignments/$assignmentId'
     | '/campaigns/$slug'
     | '/courses/$courseId'
     | '/levels/$level'
@@ -502,6 +523,7 @@ export interface FileRouteTypes {
     | '/teacher/question-bank'
     | '/teacher/reports'
     | '/teacher/upload'
+    | '/assignments'
     | '/courses'
     | '/exams'
     | '/live'
@@ -542,6 +564,7 @@ export interface FileRouteTypes {
     | '/practice'
     | '/admin/question-bank'
     | '/admin/stats'
+    | '/assignments/$assignmentId'
     | '/campaigns/$slug'
     | '/courses/$courseId'
     | '/levels/$level'
@@ -550,6 +573,7 @@ export interface FileRouteTypes {
     | '/teacher/question-bank'
     | '/teacher/reports'
     | '/teacher/upload'
+    | '/assignments/'
     | '/courses/'
     | '/exams/'
     | '/live/'
@@ -591,6 +615,7 @@ export interface RootRouteChildren {
   PracticeRoute: typeof PracticeRoute
   AdminQuestionBankRoute: typeof AdminQuestionBankRoute
   AdminStatsRoute: typeof AdminStatsRoute
+  AssignmentsAssignmentIdRoute: typeof AssignmentsAssignmentIdRoute
   CampaignsSlugRoute: typeof CampaignsSlugRoute
   CoursesCourseIdRoute: typeof CoursesCourseIdRoute
   LevelsLevelRoute: typeof LevelsLevelRoute
@@ -599,6 +624,7 @@ export interface RootRouteChildren {
   TeacherQuestionBankRoute: typeof TeacherQuestionBankRoute
   TeacherReportsRoute: typeof TeacherReportsRoute
   TeacherUploadRoute: typeof TeacherUploadRoute
+  AssignmentsIndexRoute: typeof AssignmentsIndexRoute
   CoursesIndexRoute: typeof CoursesIndexRoute
   LiveIndexRoute: typeof LiveIndexRoute
   TeacherIndexRoute: typeof TeacherIndexRoute
@@ -694,6 +720,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CoursesIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/assignments/': {
+      id: '/assignments/'
+      path: '/assignments'
+      fullPath: '/assignments/'
+      preLoaderRoute: typeof AssignmentsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/teacher/upload': {
       id: '/teacher/upload'
       path: '/teacher/upload'
@@ -748,6 +781,13 @@ declare module '@tanstack/react-router' {
       path: '/campaigns/$slug'
       fullPath: '/campaigns/$slug'
       preLoaderRoute: typeof CampaignsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assignments/$assignmentId': {
+      id: '/assignments/$assignmentId'
+      path: '/assignments/$assignmentId'
+      fullPath: '/assignments/$assignmentId'
+      preLoaderRoute: typeof AssignmentsAssignmentIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/stats': {
@@ -987,6 +1027,7 @@ const rootRouteChildren: RootRouteChildren = {
   PracticeRoute: PracticeRoute,
   AdminQuestionBankRoute: AdminQuestionBankRoute,
   AdminStatsRoute: AdminStatsRoute,
+  AssignmentsAssignmentIdRoute: AssignmentsAssignmentIdRoute,
   CampaignsSlugRoute: CampaignsSlugRoute,
   CoursesCourseIdRoute: CoursesCourseIdRoute,
   LevelsLevelRoute: LevelsLevelRoute,
@@ -995,6 +1036,7 @@ const rootRouteChildren: RootRouteChildren = {
   TeacherQuestionBankRoute: TeacherQuestionBankRoute,
   TeacherReportsRoute: TeacherReportsRoute,
   TeacherUploadRoute: TeacherUploadRoute,
+  AssignmentsIndexRoute: AssignmentsIndexRoute,
   CoursesIndexRoute: CoursesIndexRoute,
   LiveIndexRoute: LiveIndexRoute,
   TeacherIndexRoute: TeacherIndexRoute,
