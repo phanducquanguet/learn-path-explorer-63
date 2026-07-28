@@ -180,6 +180,40 @@ function TeacherAssignmentsPage() {
   );
 }
 
+function FilterSelect({
+  value,
+  onChange,
+  options,
+  icon,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  icon?: React.ReactNode;
+}) {
+  return (
+    <div className="relative min-w-[10rem]">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-10 w-full appearance-none rounded-xl border border-border bg-background pl-9 pr-8 text-sm font-medium text-foreground outline-none transition hover:border-primary/40 focus:border-primary focus:ring-2 focus:ring-primary/20"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      {icon && (
+        <div className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
+          {icon}
+        </div>
+      )}
+      <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+    </div>
+  );
+}
+
 function KpiCards({ items }: { items: Assignment[] }) {
   const now = Date.now();
   let openCount = 0;
