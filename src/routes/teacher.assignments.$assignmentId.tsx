@@ -77,7 +77,18 @@ function TeacherAssignmentDetail() {
         </Link>
         <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="font-display text-2xl font-semibold tracking-tight">{a.title}</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="font-display text-2xl font-semibold tracking-tight">{a.title}</h1>
+              {isClosed ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
+                  <Lock className="h-3 w-3" /> Đã đóng (hết hạn)
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                  <Unlock className="h-3 w-3" /> Đang mở nộp
+                </span>
+              )}
+            </div>
             <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1">
                 <Users className="h-3 w-3" /> {cls.map((c) => c.name).join(" · ") || "—"}
