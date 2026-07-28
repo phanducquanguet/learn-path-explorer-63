@@ -646,7 +646,23 @@ function EditAssignmentDialog({
     assignment.allowAssistantGrading ?? false,
   );
   const [courseId, setCourseId] = useState<string>(assignment.courseId ?? "");
-  const [unitId, setUnitId] = useState<string>(assignment.unitId ?? "");
+  const [unitIds, setUnitIds] = useState<string[]>(
+    assignment.unitIds ?? (assignment.unitId ? [assignment.unitId] : []),
+  );
+  const [unitPickerOpen, setUnitPickerOpen] = useState(false);
+  const unitPickerRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!unitPickerOpen) return;
+    const onClick = (e: MouseEvent) => {
+      if (unitPickerRef.current && !unitPickerRef.current.contains(e.target as Node)) {
+        setUnitPickerOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [unitPickerOpen]);
+  const toggleUnit = (id: string) =>
+    setUnitIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
   const fileRef = useRef<HTMLInputElement>(null);
 
   const cls = classes.find((c) => assignment.classIds.includes(c.id));
