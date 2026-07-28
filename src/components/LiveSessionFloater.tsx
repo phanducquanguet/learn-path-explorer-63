@@ -79,9 +79,7 @@ export function LiveSessionFloater() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-[320px] animate-in fade-in slide-in-from-bottom-4 duration-300"
-      style={{ marginBottom: "calc(var(--exam-floater-offset, 0px))" }}
-    >
+    <div className="w-[320px] animate-in fade-in slide-in-from-bottom-4 duration-300">
       <div className="overflow-hidden rounded-2xl border border-border bg-surface/95 shadow-elevated backdrop-blur-xl">
         <div
           className={`flex items-center justify-between px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-white ${
