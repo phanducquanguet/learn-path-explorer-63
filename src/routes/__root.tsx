@@ -12,6 +12,7 @@ import appCss from "../styles.css?url";
 import { RoleProvider } from "@/contexts/RoleContext";
 import { Toaster } from "sonner";
 import { ExamCountdownFloater } from "@/components/ExamCountdownFloater";
+import { LiveSessionFloater } from "@/components/LiveSessionFloater";
 
 function NotFoundComponent() {
   return (
@@ -122,7 +123,10 @@ function RootComponent() {
     <QueryClientProvider client={queryClient}>
       <RoleProvider>
         <Outlet />
-        <ExamCountdownFloater />
+        <div className="pointer-events-none fixed bottom-6 right-6 z-50 flex flex-col gap-3 items-end">
+          <div className="pointer-events-auto"><LiveSessionFloater /></div>
+          <div className="pointer-events-auto"><ExamCountdownFloater /></div>
+        </div>
         <Toaster position="top-right" richColors closeButton />
       </RoleProvider>
     </QueryClientProvider>
