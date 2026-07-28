@@ -740,7 +740,7 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
                 value={courseId}
                 onChange={(e) => {
                   setCourseId(e.target.value);
-                  setUnitId("");
+                  setUnitIds([]);
                 }}
                 disabled={availableCourses.length === 0}
                 className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm disabled:opacity-50"
@@ -753,20 +753,81 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
                 ))}
               </select>
             </Field>
-            <Field label={`Unit${!courseId ? " (chọn khóa học trước)" : ""}`}>
-              <select
-                value={unitId}
-                onChange={(e) => setUnitId(e.target.value)}
-                disabled={!courseId}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm disabled:opacity-50"
-              >
-                <option value="">— Không gắn unit —</option>
-                {availableUnits.map((u) => (
-                  <option key={u.id} value={u.id}>
-                    Unit {u.index}: {u.title.replace(/^Unit \d+:\s*/, "")}
-                  </option>
-                ))}
-              </select>
+            <Field label={`Unit${!courseId ? " (chọn khóa học trước)" : ` (${unitIds.length} đã chọn)`}`}>
+              <div ref={unitPickerRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => courseId && setUnitPickerOpen((v) => !v)}
+                  disabled={!courseId}
+                  className="flex w-full items-center justify-between gap-2 rounded-lg border border-border bg-background px-3 py-2 text-sm hover:border-primary/40 disabled:opacity-50"
+                >
+                  <span className={cn("truncate", unitIds.length === 0 && "text-muted-foreground")}>
+                    {!courseId
+                      ? "Chọn khóa học trước..."
+                      : unitIds.length === 0
+                        ? "— Không gắn unit —"
+                        : `Đã chọn ${unitIds.length} unit`}
+                  </span>
+                  <ChevronDown
+                    className={cn(
+                      "h-4 w-4 shrink-0 text-muted-foreground transition-transform",
+                      unitPickerOpen && "rotate-180",
+                    )}
+                  />
+                </button>
+                {unitPickerOpen && courseId && (
+                  <div className="absolute left-0 right-0 top-full z-20 mt-1 rounded-lg border border-border bg-background shadow-lg">
+                    <div className="flex items-center gap-2 border-b border-border px-2 py-1.5 text-[11px]">
+                      <button
+                        type="button"
+                        onClick={() => setUnitIds(availableUnits.map((u) => u.id))}
+                        className="font-medium text-primary hover:underline"
+                      >
+                        Chọn tất cả
+                      </button>
+                      <span className="text-muted-foreground">·</span>
+                      <button
+                        type="button"
+                        onClick={() => setUnitIds([])}
+                        className="font-medium text-muted-foreground hover:underline"
+                      >
+                        Bỏ chọn
+                      </button>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto p-2">
+                      {availableUnits.length === 0 && (
+                        <div className="p-2 text-xs text-muted-foreground">Khóa học chưa có unit.</div>
+                      )}
+                      <div className="grid grid-cols-1 gap-1.5">
+                        {availableUnits.map((u) => {
+                          const checked = unitIds.includes(u.id);
+                          return (
+                            <label
+                              key={u.id}
+                              className={cn(
+                                "flex cursor-pointer items-center gap-2 rounded-md border px-2 py-1.5 text-xs transition",
+                                checked
+                                  ? "border-primary/40 bg-primary/5 text-foreground"
+                                  : "border-border bg-background text-muted-foreground hover:border-primary/30 hover:text-foreground",
+                              )}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={checked}
+                                onChange={() => toggleUnit(u.id)}
+                                className="shrink-0"
+                              />
+                              <span className="truncate">
+                                Unit {u.index}: {u.title.replace(/^Unit \d+:\s*/, "")}
+                              </span>
+                            </label>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </Field>
           </div>
 
