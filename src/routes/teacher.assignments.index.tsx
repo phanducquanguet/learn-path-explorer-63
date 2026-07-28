@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { TopNav } from "@/components/TopNav";
 import {
   listAssignments,
@@ -25,6 +25,7 @@ import {
   Paperclip,
   X,
   Copy,
+  Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -44,10 +45,91 @@ function useAssignments() {
   );
 }
 
+function FilterClassDropdown({
+  value,
+  onChange,
+}: {
+  value: string[];
+  onChange: (v: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handle(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    }
+    document.addEventListener("mousedown", handle);
+    return () => document.removeEventListener("mousedown", handle);
+  }, []);
+
+  const toggle = (id: string) => {
+    onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors",
+          value.length > 0
+            ? "border-primary bg-primary/10 text-primary hover:bg-primary/15"
+            : "border-border bg-surface hover:bg-muted",
+        )}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <Filter className="h-4 w-4" />
+        Lọc theo lớp
+        {value.length > 0 && (
+          <span className="ml-1 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-background">
+            {value.length}
+          </span>
+        )}
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full z-20 mt-2 w-64 rounded-2xl border border-border bg-background p-2 shadow-elevated">
+          <div className="max-h-56 overflow-y-auto space-y-0.5">
+            {classes.map((c) => (
+              <label
+                key={c.id}
+                className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-muted"
+              >
+                <input
+                  type="checkbox"
+                  checked={value.includes(c.id)}
+                  onChange={() => toggle(c.id)}
+                  className="h-4 w-4 accent-primary"
+                />
+                <span className="flex-1 truncate">{c.name}</span>
+              </label>
+            ))}
+          </div>
+          {value.length > 0 && (
+            <button
+              onClick={() => onChange([])}
+              className="mt-2 w-full rounded-lg px-2 py-1.5 text-left text-xs font-medium text-primary hover:bg-primary/10"
+            >
+              Xóa lọc
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function TeacherAssignmentsPage() {
   const items = useAssignments();
   const [open, setOpen] = useState(false);
   const [duplicateOf, setDuplicateOf] = useState<Assignment | null>(null);
+  const [filterClassIds, setFilterClassIds] = useState<string[]>([]);
+
+  const filteredItems = useMemo(() => {
+    if (filterClassIds.length === 0) return items;
+    return items.filter((a) => a.classIds.some((cid) => filterClassIds.includes(cid)));
+  }, [items, filterClassIds]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -70,15 +152,26 @@ function TeacherAssignmentsPage() {
           </button>
         </div>
 
-        <KpiCards items={items} />
+        <div className="mt-4 flex flex-wrap items-center gap-3">
+          <FilterClassDropdown value={filterClassIds} onChange={setFilterClassIds} />
+          {filterClassIds.length > 0 && (
+            <span className="text-xs text-muted-foreground">
+              Đang lọc {filteredItems.length} bài tập
+            </span>
+          )}
+        </div>
+
+        <KpiCards items={filteredItems} />
 
         <div className="mt-6 grid gap-3">
-          {items.map((a) => (
+          {filteredItems.map((a) => (
             <AssignmentRow key={a.id} a={a} onDuplicate={() => setDuplicateOf(a)} />
           ))}
-          {items.length === 0 && (
+          {filteredItems.length === 0 && (
             <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center text-sm text-muted-foreground">
-              Chưa có bài tập nào. Bấm "Tạo bài tập" để bắt đầu.
+              {filterClassIds.length > 0
+                ? "Không có bài tập nào cho lớp đã chọn."
+                : "Chưa có bài tập nào. Bấm \"Tạo bài tập\" để bắt đầu."}
             </div>
           )}
         </div>
