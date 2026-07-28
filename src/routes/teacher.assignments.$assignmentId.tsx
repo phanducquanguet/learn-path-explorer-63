@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { useState, useSyncExternalStore } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { TopNav } from "@/components/TopNav";
 import {
   getAssignment,
@@ -7,7 +7,9 @@ import {
   subscribeAssignments,
   gradeSubmission,
   extendDeadline,
-  getEffectiveDueAt,
+  updateAssignment,
+  type Assignment,
+  type AssignmentAttachment,
   type AssignmentSubmission,
 } from "@/lib/assignments";
 import { classes, students } from "@/lib/teacher-data";
@@ -25,15 +27,17 @@ import {
   Lock,
   Unlock,
   Clock,
+  Pencil,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/teacher/assignments/$assignmentId")({
   head: ({ params }) => ({
-    meta: [{ title: `Chấm bài giao ${params.assignmentId} — UNICOM LMS` }],
+    meta: [{ title: `Chấm bài tập ${params.assignmentId} — UNICOM LMS` }],
   }),
   component: TeacherAssignmentDetail,
 });
+
 
 function useSubs(id: string) {
   return useSyncExternalStore(
