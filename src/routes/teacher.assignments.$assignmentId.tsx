@@ -645,9 +645,24 @@ function EditAssignmentDialog({
   const [allowAssistantGrading, setAllowAssistantGrading] = useState(
     assignment.allowAssistantGrading ?? false,
   );
+  const [courseId, setCourseId] = useState<string>(assignment.courseId ?? "");
+  const [unitId, setUnitId] = useState<string>(assignment.unitId ?? "");
   const fileRef = useRef<HTMLInputElement>(null);
 
   const cls = classes.find((c) => assignment.classIds.includes(c.id));
+  const availableCourses = cls
+    ? levels
+        .filter((lv) => lv.code === cls.levelCode)
+        .flatMap((lv) => lv.courses.map((c) => ({ id: c.id, title: c.title, level: lv.code })))
+    : [];
+  const availableUnits = (() => {
+    if (!courseId) return [] as { id: string; title: string; index: number }[];
+    for (const lv of levels) {
+      const c = lv.courses.find((c) => c.id === courseId);
+      if (c) return c.units.map((u) => ({ id: u.id, title: u.title, index: u.index }));
+    }
+    return [];
+  })();
 
   const onPick = (files: FileList | null) => {
     if (!files) return;
