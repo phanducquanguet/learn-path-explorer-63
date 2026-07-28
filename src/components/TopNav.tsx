@@ -90,7 +90,7 @@ const teacherTabs = [
   { to: "/teacher/live" as const, label: "Lớp trực tuyến", icon: Video },
   { to: "/teacher/courses" as const, label: "Khóa học", icon: GraduationCap },
   
-  { to: "/teacher/assignments" as const, label: "Bài giao", icon: ClipboardList },
+  { to: "/teacher/assignments" as const, label: "Bài tập", icon: ClipboardList },
   { to: "/teacher/tests" as const, label: "Chấm thi", icon: ScrollText },
   { to: "/teacher/reports" as const, label: "Báo cáo", icon: BarChart3 },
 ];
