@@ -75,7 +75,7 @@ function AssignmentRow({ a }: { a: Assignment }) {
   const subs = listSubmissions(a.id);
   const graded = subs.filter((s) => s.score !== undefined).length;
   const pending = subs.length - graded;
-  const cls = classes.find((c) => c.id === a.classId);
+  const cls = classes.filter((c) => a.classIds.includes(c.id));
   const overdue = new Date(a.dueAt).getTime() < Date.now();
 
   return (
@@ -91,7 +91,7 @@ function AssignmentRow({ a }: { a: Assignment }) {
         <div className="truncate font-semibold text-foreground">{a.title}</div>
         <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
-            <Users className="h-3 w-3" /> {cls?.name ?? a.classId}
+            <Users className="h-3 w-3" /> {cls.map((c) => c.name).join(" · ") || "—"}
           </span>
           <span className={cn("inline-flex items-center gap-1", overdue && "text-rose-600")}>
             <Calendar className="h-3 w-3" /> Hạn:{" "}
@@ -125,7 +125,10 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
-  const [classId, setClassId] = useState(classes[0]?.id ?? "");
+  const [classIds, setClassIds] = useState<string[]>(classes[0] ? [classes[0].id] : []);
+  const toggleClass = (id: string) =>
+    setClassIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
   const [dueAt, setDueAt] = useState(() => {
     const d = new Date(Date.now() + 3 * 24 * 3600 * 1000);
     d.setSeconds(0, 0);
@@ -136,11 +139,11 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
   const [allowFile, setAllowFile] = useState(true);
 
   const submit = () => {
-    if (!title.trim() || !description.trim()) return;
+    if (!title.trim() || !description.trim() || classIds.length === 0) return;
     const a = createAssignment({
       title: title.trim(),
       description: description.trim(),
-      classId,
+      classIds,
       dueAt: new Date(dueAt).toISOString(),
       maxScore,
       allowText,
@@ -150,6 +153,7 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
     onClose();
     navigate({ to: "/teacher/assignments/$assignmentId", params: { assignmentId: a.id } });
   };
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
@@ -179,20 +183,48 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
             />
           </Field>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Lớp giao bài">
-              <select
-                value={classId}
-                onChange={(e) => setClassId(e.target.value)}
-                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+          <Field label={`Lớp giao bài (${classIds.length} đã chọn)`}>
+            <div className="max-h-40 overflow-y-auto rounded-lg border border-border bg-background p-2">
+              {classes.map((c) => {
+                const checked = classIds.includes(c.id);
+                return (
+                  <label
+                    key={c.id}
+                    className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => toggleClass(c.id)}
+                    />
+                    <span className="flex-1">{c.name}</span>
+                  </label>
+                );
+              })}
+              {classes.length === 0 && (
+                <div className="p-2 text-xs text-muted-foreground">Chưa có lớp nào.</div>
+              )}
+            </div>
+            <div className="mt-1.5 flex gap-2 text-[11px]">
+              <button
+                type="button"
+                onClick={() => setClassIds(classes.map((c) => c.id))}
+                className="text-primary hover:underline"
               >
-                {classes.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
+                Chọn tất cả
+              </button>
+              <button
+                type="button"
+                onClick={() => setClassIds([])}
+                className="text-muted-foreground hover:underline"
+              >
+                Bỏ chọn
+              </button>
+            </div>
+          </Field>
+          <div className="grid gap-4 sm:grid-cols-2">
+
+
             <Field label="Hạn nộp">
               <input
                 type="datetime-local"

@@ -48,8 +48,9 @@ function TeacherAssignmentDetail() {
   const [active, setActive] = useState<AssignmentSubmission | null>(null);
 
   if (!a) throw notFound();
-  const cls = classes.find((c) => c.id === a.classId);
-  const clsStudents = students.filter((s) => s.classId === a.classId);
+  const cls = classes.filter((c) => a.classIds.includes(c.id));
+  const clsStudents = students.filter((s) => a.classIds.includes(s.classId));
+
   const submittedIds = new Set(subs.map((s) => s.studentId));
   const notSubmitted = clsStudents.filter((s) => !submittedIds.has(s.id));
   const graded = subs.filter((s) => s.score !== undefined);
@@ -70,7 +71,7 @@ function TeacherAssignmentDetail() {
             <h1 className="font-display text-2xl font-semibold tracking-tight">{a.title}</h1>
             <div className="mt-2 flex flex-wrap gap-3 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1">
-                <Users className="h-3 w-3" /> {cls?.name}
+                <Users className="h-3 w-3" /> {cls.map((c) => c.name).join(" · ") || "—"}
               </span>
               <span className="inline-flex items-center gap-1">
                 <Calendar className="h-3 w-3" /> Hạn:{" "}
