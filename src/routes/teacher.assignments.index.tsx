@@ -485,12 +485,12 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
     if (!courseId) return;
     if (!availableCourses.some((c) => c.id === courseId)) {
       setCourseId("");
-      setUnitId("");
+      setUnitIds([]);
     }
   }, [availableCourses, courseId]);
   useEffect(() => {
-    if (unitId && !availableUnits.some((u) => u.id === unitId)) setUnitId("");
-  }, [availableUnits, unitId]);
+    setUnitIds((prev) => prev.filter((id) => availableUnits.some((u) => u.id === id)));
+  }, [availableUnits]);
 
   const [dueAt, setDueAt] = useState(() => {
     const d = new Date(Date.now() + 3 * 24 * 3600 * 1000);
