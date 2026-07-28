@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { TopNav } from "@/components/TopNav";
 import {
   listAssignments,
@@ -25,6 +25,7 @@ import {
   Paperclip,
   X,
   Copy,
+  Filter,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
