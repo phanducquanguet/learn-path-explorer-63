@@ -75,7 +75,7 @@ function AssignmentRow({ a }: { a: Assignment }) {
   const subs = listSubmissions(a.id);
   const graded = subs.filter((s) => s.score !== undefined).length;
   const pending = subs.length - graded;
-  const cls = classes.find((c) => c.id === a.classId);
+  const cls = classes.filter((c) => a.classIds.includes(c.id));
   const overdue = new Date(a.dueAt).getTime() < Date.now();
 
   return (
@@ -91,7 +91,7 @@ function AssignmentRow({ a }: { a: Assignment }) {
         <div className="truncate font-semibold text-foreground">{a.title}</div>
         <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
-            <Users className="h-3 w-3" /> {cls?.name ?? a.classId}
+            <Users className="h-3 w-3" /> {cls.map((c) => c.name).join(" · ") || "—"}
           </span>
           <span className={cn("inline-flex items-center gap-1", overdue && "text-rose-600")}>
             <Calendar className="h-3 w-3" /> Hạn:{" "}
