@@ -119,6 +119,38 @@ function StudentAssignmentDetail() {
           <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-foreground">
             {a.description}
           </p>
+          {a.attachments && a.attachments.length > 0 && (
+            <div className="mt-4">
+              <div className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                File đính kèm của giáo viên ({a.attachments.length})
+              </div>
+              <ul className="mt-2 divide-y divide-border rounded-xl border border-border bg-background">
+                {a.attachments.map((f, i) => (
+                  <li
+                    key={i}
+                    className="flex items-center justify-between gap-2 px-3 py-2 text-sm"
+                  >
+                    <div className="min-w-0 flex items-center gap-2">
+                      <Paperclip className="h-3 w-3 shrink-0 text-muted-foreground" />
+                      <span className="truncate">{f.name}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {(f.size / 1024).toFixed(1)} KB
+                      </span>
+                    </div>
+                    {f.dataUrl && (
+                      <a
+                        href={f.dataUrl}
+                        download={f.name}
+                        className="rounded-md border border-border bg-background px-2 py-1 text-xs font-semibold hover:bg-muted"
+                      >
+                        Tải xuống
+                      </a>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </section>
 
         {graded && (
