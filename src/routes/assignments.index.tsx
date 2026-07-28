@@ -143,6 +143,7 @@ function Row({ a, now }: { a: Assignment; now: number }) {
   const urgency = getUrgency(dueMs, now);
   const overdue = urgency === "overdue";
   const status = sub?.score !== undefined ? "graded" : sub ? "submitted" : "todo";
+  const extended = !!a.extensions?.[CURRENT_STUDENT.id];
   const showWarning = status === "todo" && (urgency === "today" || urgency === "soon");
   return (
     <Link
@@ -156,7 +157,12 @@ function Row({ a, now }: { a: Assignment; now: number }) {
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <div className="truncate font-semibold text-foreground">{a.title}</div>
-          {showWarning && (
+          {extended && status === "todo" && !overdue && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-violet-100 px-2 py-0.5 text-[11px] font-semibold text-violet-700">
+              <AlarmClock className="h-3 w-3" /> Đã gia hạn · còn {formatRemain(dueMs - now)}
+            </span>
+          )}
+          {showWarning && !extended && (
             <span
               className={cn(
                 "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold",
