@@ -679,6 +679,7 @@ function EditAssignmentDialog({
       maxScore,
       allowText,
       allowFile: allowFile || !allowText,
+      allowAssistantGrading,
     });
     onClose();
   };
