@@ -107,6 +107,8 @@ function save<T>(key: string, val: T) {
 
 let _assignments: Assignment[] | null = null;
 let _subs: AssignmentSubmission[] | null = null;
+let _sortedCache: Assignment[] | null = null;
+const _subsByAssignment = new Map<string, AssignmentSubmission[]>();
 const listeners = new Set<() => void>();
 
 function ensureLoaded() {
@@ -122,19 +124,31 @@ function ensureLoaded() {
   }
 }
 
+function invalidateCache() {
+  _sortedCache = null;
+  _subsByAssignment.clear();
+}
+
 function emit() {
+  invalidateCache();
   listeners.forEach((l) => l());
 }
 
 export function subscribeAssignments(fn: () => void) {
   listeners.add(fn);
-  return () => listeners.delete(fn);
+  return () => {
+    listeners.delete(fn);
+  };
 }
 
 export function listAssignments(): Assignment[] {
   ensureLoaded();
-  return _assignments!.slice().sort((a, b) => (a.dueAt < b.dueAt ? 1 : -1));
+  if (!_sortedCache) {
+    _sortedCache = _assignments!.slice().sort((a, b) => (a.dueAt < b.dueAt ? 1 : -1));
+  }
+  return _sortedCache;
 }
+
 
 export function getAssignment(id: string): Assignment | undefined {
   ensureLoaded();
@@ -172,8 +186,14 @@ export function deleteAssignment(id: string) {
 
 export function listSubmissions(assignmentId: string): AssignmentSubmission[] {
   ensureLoaded();
-  return _subs!.filter((s) => s.assignmentId === assignmentId);
+  let cached = _subsByAssignment.get(assignmentId);
+  if (!cached) {
+    cached = _subs!.filter((s) => s.assignmentId === assignmentId);
+    _subsByAssignment.set(assignmentId, cached);
+  }
+  return cached;
 }
+
 
 export function getSubmissionForStudent(
   assignmentId: string,
@@ -208,6 +228,12 @@ export const CURRENT_STUDENT = {
   classId: students[0]?.classId ?? "cls-a1-morning",
 };
 
+let _studentListCache: Assignment[] | null = null;
 export function listAssignmentsForCurrentStudent(): Assignment[] {
-  return listAssignments().filter((a) => a.classId === CURRENT_STUDENT.classId);
+  const all = listAssignments();
+  if (!_studentListCache || _sortedCache !== all) {
+    _studentListCache = all.filter((a) => a.classId === CURRENT_STUDENT.classId);
+  }
+  return _studentListCache;
 }
+
