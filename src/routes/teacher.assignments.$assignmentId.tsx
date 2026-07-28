@@ -696,6 +696,8 @@ function EditAssignmentDialog({
       allowText,
       allowFile: allowFile || !allowText,
       allowAssistantGrading,
+      courseId: courseId || undefined,
+      unitId: unitId || undefined,
     });
     onClose();
   };
