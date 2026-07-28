@@ -540,7 +540,8 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
         allowAssistantGrading,
         attachments: attachments.length ? attachments : undefined,
         courseId: courseId || undefined,
-        unitId: unitId || undefined,
+        unitIds: unitIds.length ? unitIds : undefined,
+        unitId: unitIds[0],
         createdBy: "Cô Mai Lan",
       });
       if (!first) first = a;
