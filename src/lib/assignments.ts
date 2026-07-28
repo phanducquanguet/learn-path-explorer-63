@@ -43,6 +43,7 @@ function seedAssignments(): Assignment[] {
   const now = Date.now();
   const cls = classes[0];
   const cls2 = classes[3] ?? classes[0];
+  const cls3 = classes[1] ?? classes[0];
   return [
     {
       id: "asg-1",
@@ -70,24 +71,64 @@ function seedAssignments(): Assignment[] {
       createdAt: new Date(now - 1 * 24 * 3600 * 1000).toISOString(),
       createdBy: "Cô Mai Lan",
     },
+    {
+      id: "asg-closed-demo",
+      title: "Reading report: A book that changed me",
+      classIds: [cls3.id],
+      description:
+        "Chọn 1 cuốn sách em từng đọc và viết bài cảm nhận 150-200 từ (tiếng Anh).\nYêu cầu:\n- Nêu tên sách, tác giả, thể loại.\n- Nội dung chính và bài học rút ra.\n- Nộp bằng text hoặc file PDF/Word.",
+      dueAt: new Date(now - 2 * 24 * 3600 * 1000).toISOString(), // đã hết hạn 2 ngày
+      maxScore: 10,
+      allowText: true,
+      allowFile: true,
+      createdAt: new Date(now - 10 * 24 * 3600 * 1000).toISOString(),
+      createdBy: "Cô Mai Lan",
+    },
   ];
 }
 
 function seedSubs(assignments: Assignment[]): AssignmentSubmission[] {
+  const out: AssignmentSubmission[] = [];
   const a = assignments[0];
-  const clsStudents = students.filter((s) => (a.classIds ?? []).includes(s.classId)).slice(0, 2);
-  return clsStudents.map((s, i) => ({
-    id: `sub-${a.id}-${s.id}`,
-    assignmentId: a.id,
-    studentId: s.id,
-    studentName: s.name,
-    submittedAt: new Date(Date.now() - (i + 1) * 3600 * 1000).toISOString(),
-    answerText:
-      i === 0
-        ? "My favorite hobby is reading books. Every evening after dinner, I spend about one hour reading novels or short stories. Reading helps me relax and improves my vocabulary. I especially love adventure stories because they bring me to new worlds. Besides reading, I also enjoy writing short diaries about my day."
-        : "I like playing football with my friends on weekends. We often meet at the school yard at 4 pm.",
-    maxScore: a.maxScore,
-  }));
+  if (a) {
+    const clsStudents = students.filter((s) => (a.classIds ?? []).includes(s.classId)).slice(0, 2);
+    clsStudents.forEach((s, i) => {
+      out.push({
+        id: `sub-${a.id}-${s.id}`,
+        assignmentId: a.id,
+        studentId: s.id,
+        studentName: s.name,
+        submittedAt: new Date(Date.now() - (i + 1) * 3600 * 1000).toISOString(),
+        answerText:
+          i === 0
+            ? "My favorite hobby is reading books. Every evening after dinner, I spend about one hour reading novels or short stories. Reading helps me relax and improves my vocabulary. I especially love adventure stories because they bring me to new worlds. Besides reading, I also enjoy writing short diaries about my day."
+            : "I like playing football with my friends on weekends. We often meet at the school yard at 4 pm.",
+        maxScore: a.maxScore,
+      });
+    });
+  }
+  // Closed demo: chỉ ~50% học viên đã nộp, còn lại chưa nộp để demo mở lại
+  const closed = assignments.find((x) => x.id === "asg-closed-demo");
+  if (closed) {
+    const clsStudents = students.filter((s) => (closed.classIds ?? []).includes(s.classId));
+    const submitters = clsStudents.slice(0, Math.max(2, Math.floor(clsStudents.length / 2)));
+    submitters.forEach((s, i) => {
+      out.push({
+        id: `sub-${closed.id}-${s.id}`,
+        assignmentId: closed.id,
+        studentId: s.id,
+        studentName: s.name,
+        submittedAt: new Date(Date.now() - (5 + i) * 24 * 3600 * 1000).toISOString(),
+        answerText:
+          "The book that changed me is 'The Little Prince' by Antoine de Saint-Exupéry. It is a short novella about a young prince who visits various planets. The story teaches me that what is essential is invisible to the eye. After reading it I started paying more attention to the people around me instead of material things.",
+        maxScore: closed.maxScore,
+        score: i === 0 ? 8.5 : undefined,
+        feedback: i === 0 ? "Bài viết rõ ràng, ý tưởng tốt. Cần bổ sung thêm ví dụ cụ thể." : undefined,
+        gradedAt: i === 0 ? new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString() : undefined,
+      });
+    });
+  }
+  return out;
 }
 
 function load<T>(key: string, fallback: T): T {
