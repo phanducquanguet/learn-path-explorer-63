@@ -55,7 +55,16 @@ function TeacherAssignmentsPage() {
   const [duplicateOf, setDuplicateOf] = useState<Assignment | null>(null);
   const [query, setQuery] = useState("");
   const [classFilter, setClassFilter] = useState<string>("all");
+  const [courseFilter, setCourseFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
+
+  const courseOptions = useMemo(
+    () =>
+      levels.flatMap((lv) =>
+        lv.courses.map((c) => ({ value: c.id, label: `${c.title} (${lv.code})` })),
+      ),
+    [],
+  );
 
   const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -64,6 +73,7 @@ function TeacherAssignmentsPage() {
       const cls = classes.filter((c) => a.classIds.includes(c.id));
       const clsNames = cls.map((c) => c.name).join(" ");
       if (classFilter !== "all" && !a.classIds.includes(classFilter)) return false;
+      if (courseFilter !== "all" && a.courseId !== courseFilter) return false;
       if (statusFilter !== "all") {
         const isOpen = new Date(a.dueAt).getTime() >= now;
         if (statusFilter === "open" && !isOpen) return false;
@@ -76,9 +86,9 @@ function TeacherAssignmentsPage() {
         return false;
       return true;
     });
-  }, [items, query, classFilter, statusFilter]);
+  }, [items, query, classFilter, courseFilter, statusFilter]);
 
-  const hasFilters = query !== "" || classFilter !== "all" || statusFilter !== "all";
+  const hasFilters = query !== "" || classFilter !== "all" || courseFilter !== "all" || statusFilter !== "all";
 
   return (
     <div className="min-h-screen bg-background">
