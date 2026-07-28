@@ -786,6 +786,46 @@ function EditAssignmentDialog({
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
               <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Khóa học {cls ? `(level ${cls.levelCode})` : ""}
+              </label>
+              <select
+                value={courseId}
+                onChange={(e) => {
+                  setCourseId(e.target.value);
+                  setUnitId("");
+                }}
+                className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
+              >
+                <option value="">— Không gắn khóa học —</option>
+                {availableCourses.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Unit
+              </label>
+              <select
+                value={unitId}
+                onChange={(e) => setUnitId(e.target.value)}
+                disabled={!courseId}
+                className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm disabled:opacity-50"
+              >
+                <option value="">— Không gắn unit —</option>
+                {availableUnits.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    Unit {u.index}: {u.title.replace(/^Unit \d+:\s*/, "")}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div>
+              <label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Hạn nộp
               </label>
               <input
