@@ -47,91 +47,36 @@ function useAssignments() {
   );
 }
 
-function FilterClassDropdown({
-  value,
-  onChange,
-}: {
-  value: string[];
-  onChange: (v: string[]) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handle(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    }
-    document.addEventListener("mousedown", handle);
-    return () => document.removeEventListener("mousedown", handle);
-  }, []);
-
-  const toggle = (id: string) => {
-    onChange(value.includes(id) ? value.filter((x) => x !== id) : [...value, id]);
-  };
-
-  return (
-    <div className="relative" ref={ref}>
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className={cn(
-          "inline-flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-semibold transition-colors",
-          value.length > 0
-            ? "border-primary bg-primary/10 text-primary hover:bg-primary/15"
-            : "border-border bg-surface hover:bg-muted",
-        )}
-        aria-haspopup="listbox"
-        aria-expanded={open}
-      >
-        <Filter className="h-4 w-4" />
-        Lọc theo lớp
-        {value.length > 0 && (
-          <span className="ml-1 rounded-full bg-primary px-1.5 py-0.5 text-[10px] font-bold text-background">
-            {value.length}
-          </span>
-        )}
-      </button>
-      {open && (
-        <div className="absolute left-0 top-full z-20 mt-2 w-64 rounded-2xl border border-border bg-background p-2 shadow-elevated">
-          <div className="max-h-56 overflow-y-auto space-y-0.5">
-            {classes.map((c) => (
-              <label
-                key={c.id}
-                className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-muted"
-              >
-                <input
-                  type="checkbox"
-                  checked={value.includes(c.id)}
-                  onChange={() => toggle(c.id)}
-                  className="h-4 w-4 accent-primary"
-                />
-                <span className="flex-1 truncate">{c.name}</span>
-              </label>
-            ))}
-          </div>
-          {value.length > 0 && (
-            <button
-              onClick={() => onChange([])}
-              className="mt-2 w-full rounded-lg px-2 py-1.5 text-left text-xs font-medium text-primary hover:bg-primary/10"
-            >
-              Xóa lọc
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
 function TeacherAssignmentsPage() {
   const items = useAssignments();
   const [open, setOpen] = useState(false);
   const [duplicateOf, setDuplicateOf] = useState<Assignment | null>(null);
-  const [filterClassIds, setFilterClassIds] = useState<string[]>([]);
+  const [query, setQuery] = useState("");
+  const [classFilter, setClassFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
 
   const filteredItems = useMemo(() => {
-    if (filterClassIds.length === 0) return items;
-    return items.filter((a) => a.classIds.some((cid) => filterClassIds.includes(cid)));
-  }, [items, filterClassIds]);
+    const q = query.trim().toLowerCase();
+    const now = Date.now();
+    return items.filter((a) => {
+      const cls = classes.filter((c) => a.classIds.includes(c.id));
+      const clsNames = cls.map((c) => c.name).join(" ");
+      if (classFilter !== "all" && !a.classIds.includes(classFilter)) return false;
+      if (statusFilter !== "all") {
+        const isOpen = new Date(a.dueAt).getTime() >= now;
+        if (statusFilter === "open" && !isOpen) return false;
+        if (statusFilter === "closed" && isOpen) return false;
+      }
+      if (
+        q &&
+        !`${a.title} ${a.description} ${a.createdBy ?? ""} ${clsNames}`.toLowerCase().includes(q)
+      )
+        return false;
+      return true;
+    });
+  }, [items, query, classFilter, statusFilter]);
+
+  const hasFilters = query !== "" || classFilter !== "all" || statusFilter !== "all";
 
   return (
     <div className="min-h-screen bg-background">
@@ -154,13 +99,61 @@ function TeacherAssignmentsPage() {
           </button>
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-3">
-          <FilterClassDropdown value={filterClassIds} onChange={setFilterClassIds} />
-          {filterClassIds.length > 0 && (
-            <span className="text-xs text-muted-foreground">
-              Đang lọc {filteredItems.length} bài tập
-            </span>
-          )}
+        {/* Search + filters */}
+        <div className="mt-6 rounded-2xl border border-border bg-surface p-3 shadow-soft">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Tìm bài tập, đề bài hoặc lớp..."
+                className="h-10 w-full rounded-xl border border-border bg-background pl-9 pr-9 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+              {query && (
+                <button
+                  onClick={() => setQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label="Xóa"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <FilterSelect
+                value={classFilter}
+                onChange={setClassFilter}
+                icon={<GraduationCap className="h-4 w-4" />}
+                options={[
+                  { value: "all", label: "Tất cả lớp" },
+                  ...classes.map((c) => ({ value: c.id, label: c.name })),
+                ]}
+              />
+              <FilterSelect
+                value={statusFilter}
+                onChange={(v) => setStatusFilter(v as "all" | "open" | "closed")}
+                icon={<Clock className="h-4 w-4" />}
+                options={[
+                  { value: "all", label: "Tất cả trạng thái" },
+                  { value: "open", label: "Đang mở" },
+                  { value: "closed", label: "Đã đóng" },
+                ]}
+              />
+              {hasFilters && (
+                <button
+                  onClick={() => {
+                    setQuery("");
+                    setClassFilter("all");
+                    setStatusFilter("all");
+                  }}
+                  className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <X className="h-3.5 w-3.5" /> Xóa lọc
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         <KpiCards items={filteredItems} />
@@ -171,8 +164,8 @@ function TeacherAssignmentsPage() {
           ))}
           {filteredItems.length === 0 && (
             <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center text-sm text-muted-foreground">
-              {filterClassIds.length > 0
-                ? "Không có bài tập nào cho lớp đã chọn."
+              {hasFilters
+                ? "Không tìm thấy bài tập phù hợp. Thử bỏ bớt bộ lọc hoặc tìm với từ khóa khác."
                 : "Chưa có bài tập nào. Bấm \"Tạo bài tập\" để bắt đầu."}
             </div>
           )}
