@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, useSyncExternalStore } from "react";
+import { useRef, useState, useSyncExternalStore } from "react";
 import { TopNav } from "@/components/TopNav";
 import {
   listAssignments,
@@ -8,6 +8,7 @@ import {
   listSubmissions,
   deleteAssignment,
   type Assignment,
+  type AssignmentAttachment,
 } from "@/lib/assignments";
 import { classes } from "@/lib/teacher-data";
 import { students } from "@/lib/teacher-data";
@@ -18,15 +19,17 @@ import {
   Users,
   Trash2,
   ArrowRight,
-  CheckCircle2,
   Clock,
   AlertTriangle,
   FileCheck2,
+  Paperclip,
+  X,
+  Copy,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/teacher/assignments/")({
-  head: () => ({ meta: [{ title: "Bài giao (Assignment) — UNICOM LMS" }] }),
+  head: () => ({ meta: [{ title: "Bài tập — UNICOM LMS" }] }),
   component: TeacherAssignmentsPage,
 });
 
@@ -44,6 +47,7 @@ function useAssignments() {
 function TeacherAssignmentsPage() {
   const items = useAssignments();
   const [open, setOpen] = useState(false);
+  const [duplicateOf, setDuplicateOf] = useState<Assignment | null>(null);
 
   return (
     <div className="min-h-screen bg-background">
@@ -52,7 +56,7 @@ function TeacherAssignmentsPage() {
         <div className="flex items-center justify-between gap-4">
           <div>
             <h1 className="font-display text-3xl font-semibold tracking-tight">
-              Bài giao (Assignment)
+              Bài tập
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Ra đề tự luận cho học viên, học viên nộp câu trả lời hoặc file — giáo viên chấm điểm.
@@ -62,27 +66,28 @@ function TeacherAssignmentsPage() {
             onClick={() => setOpen(true)}
             className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background hover:opacity-90"
           >
-            <Plus className="h-4 w-4" /> Tạo bài giao
+            <Plus className="h-4 w-4" /> Tạo bài tập
           </button>
         </div>
-
-
 
         <KpiCards items={items} />
 
         <div className="mt-6 grid gap-3">
           {items.map((a) => (
-            <AssignmentRow key={a.id} a={a} />
+            <AssignmentRow key={a.id} a={a} onDuplicate={() => setDuplicateOf(a)} />
           ))}
           {items.length === 0 && (
             <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center text-sm text-muted-foreground">
-              Chưa có bài giao nào. Bấm "Tạo bài giao" để bắt đầu.
+              Chưa có bài tập nào. Bấm "Tạo bài tập" để bắt đầu.
             </div>
           )}
         </div>
       </div>
 
       {open && <CreateAssignmentDialog onClose={() => setOpen(false)} />}
+      {duplicateOf && (
+        <DuplicateDialog a={duplicateOf} onClose={() => setDuplicateOf(null)} />
+      )}
     </div>
   );
 }
@@ -114,7 +119,7 @@ function KpiCards({ items }: { items: Assignment[] }) {
     const submittedIds = new Set(subs.map((s) => s.studentId));
     for (const st of clsStudents) {
       if (submittedIds.has(st.id)) continue;
-      const eff = new Date(a.dueAt).getTime(); // base due
+      const eff = new Date(a.dueAt).getTime();
       if (eff < now) overdueMissing++;
     }
   }
@@ -123,7 +128,7 @@ function KpiCards({ items }: { items: Assignment[] }) {
 
   const cards = [
     {
-      label: "Tổng bài giao",
+      label: "Tổng bài tập",
       value: items.length,
       sub: `${openCount} đang mở · ${closedCount} đã đóng`,
       icon: ClipboardList,
@@ -180,7 +185,7 @@ function KpiCards({ items }: { items: Assignment[] }) {
   );
 }
 
-function AssignmentRow({ a }: { a: Assignment }) {
+function AssignmentRow({ a, onDuplicate }: { a: Assignment; onDuplicate: () => void }) {
   const subs = listSubmissions(a.id);
   const graded = subs.filter((s) => s.score !== undefined).length;
   const pending = subs.length - graded;
@@ -197,7 +202,14 @@ function AssignmentRow({ a }: { a: Assignment }) {
         <ClipboardList className="h-5 w-5" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="truncate font-semibold text-foreground">{a.title}</div>
+        <div className="flex items-center gap-2">
+          <div className="truncate font-semibold text-foreground">{a.title}</div>
+          {a.attachments && a.attachments.length > 0 && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground">
+              <Paperclip className="h-3 w-3" /> {a.attachments.length}
+            </span>
+          )}
+        </div>
         <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1">
             <Users className="h-3 w-3" /> {cls.map((c) => c.name).join(" · ") || "—"}
@@ -218,7 +230,18 @@ function AssignmentRow({ a }: { a: Assignment }) {
       <button
         onClick={(e) => {
           e.preventDefault();
-          if (confirm(`Xoá bài giao "${a.title}"?`)) deleteAssignment(a.id);
+          onDuplicate();
+        }}
+        className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-primary"
+        aria-label="Nhân bản"
+        title="Nhân bản sang lớp khác"
+      >
+        <Copy className="h-4 w-4" />
+      </button>
+      <button
+        onClick={(e) => {
+          e.preventDefault();
+          if (confirm(`Xoá bài tập "${a.title}"?`)) deleteAssignment(a.id);
         }}
         className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-rose-600"
         aria-label="Xoá"
@@ -234,6 +257,7 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
   const navigate = useNavigate();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [attachments, setAttachments] = useState<AssignmentAttachment[]>([]);
   const [classIds, setClassIds] = useState<string[]>(classes[0] ? [classes[0].id] : []);
   const toggleClass = (id: string) =>
     setClassIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
@@ -246,32 +270,59 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
   const [maxScore, setMaxScore] = useState(10);
   const [allowText, setAllowText] = useState(true);
   const [allowFile, setAllowFile] = useState(true);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const onPick = (files: FileList | null) => {
+    if (!files) return;
+    const arr: AssignmentAttachment[] = [];
+    let pending = 0;
+    Array.from(files).forEach((f) => {
+      if (f.size > 5 * 1024 * 1024) {
+        alert(`"${f.name}" quá 5MB, bỏ qua.`);
+        return;
+      }
+      pending++;
+      const reader = new FileReader();
+      reader.onload = () => {
+        arr.push({ name: f.name, size: f.size, dataUrl: reader.result as string });
+        pending--;
+        if (pending === 0) setAttachments((prev) => [...prev, ...arr]);
+      };
+      reader.readAsDataURL(f);
+    });
+    if (fileRef.current) fileRef.current.value = "";
+  };
 
   const submit = () => {
     if (!title.trim() || !description.trim() || classIds.length === 0) return;
-    const a = createAssignment({
-      title: title.trim(),
-      description: description.trim(),
-      classIds,
-      dueAt: new Date(dueAt).toISOString(),
-      maxScore,
-      allowText,
-      allowFile: allowFile || !allowText,
-      createdBy: "Cô Mai Lan",
-    });
+    // Tạo 1 bản ghi riêng cho mỗi lớp đã chọn
+    let first: { id: string } | null = null;
+    for (const cid of classIds) {
+      const a = createAssignment({
+        title: title.trim(),
+        description: description.trim(),
+        classIds: [cid],
+        dueAt: new Date(dueAt).toISOString(),
+        maxScore,
+        allowText,
+        allowFile: allowFile || !allowText,
+        attachments: attachments.length ? attachments : undefined,
+        createdBy: "Cô Mai Lan",
+      });
+      if (!first) first = a;
+    }
     onClose();
-    navigate({ to: "/teacher/assignments/$assignmentId", params: { assignmentId: a.id } });
+    if (first) navigate({ to: "/teacher/assignments/$assignmentId", params: { assignmentId: first.id } });
   };
-
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
       <button className="absolute inset-0" onClick={onClose} aria-label="Close" />
       <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl bg-background shadow-elevated">
         <div className="border-b border-border p-5">
-          <h2 className="font-display text-lg font-semibold">Tạo bài giao mới</h2>
+          <h2 className="font-display text-lg font-semibold">Tạo bài tập mới</h2>
           <p className="text-xs text-muted-foreground">
-            Nhập đề bài dạng văn bản. Học viên sẽ thấy nội dung này và nộp bài.
+            Nhập đề bài, đính kèm file (nếu cần). Chọn nhiều lớp sẽ tạo thành nhiều bản ghi độc lập, mỗi bản ghi một lớp.
           </p>
         </div>
         <div className="max-h-[70vh] space-y-4 overflow-y-auto p-5">
@@ -292,6 +343,48 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm"
             />
           </Field>
+
+          <Field label={`File đính kèm cùng đề (${attachments.length})`}>
+            <div className="space-y-2">
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border bg-background px-3 py-2 text-sm font-medium text-muted-foreground hover:border-primary/40 hover:text-foreground"
+              >
+                <Paperclip className="h-4 w-4" /> Chọn file đính kèm (tối đa 5MB/file)
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                multiple
+                onChange={(e) => onPick(e.target.files)}
+                className="hidden"
+              />
+              {attachments.length > 0 && (
+                <ul className="divide-y divide-border rounded-lg border border-border bg-background">
+                  {attachments.map((f, i) => (
+                    <li key={i} className="flex items-center justify-between gap-2 px-3 py-2 text-sm">
+                      <div className="min-w-0 flex items-center gap-2">
+                        <Paperclip className="h-3 w-3 shrink-0 text-muted-foreground" />
+                        <span className="truncate">{f.name}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {(f.size / 1024).toFixed(1)} KB
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setAttachments((prev) => prev.filter((_, x) => x !== i))}
+                        className="rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-rose-600"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </Field>
+
           <Field label={`Lớp giao bài (${classIds.length} đã chọn)`}>
             <div className="max-h-40 overflow-y-auto rounded-lg border border-border bg-background p-2">
               {classes.map((c) => {
@@ -329,11 +422,14 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
               >
                 Bỏ chọn
               </button>
+              {classIds.length > 1 && (
+                <span className="ml-auto text-[11px] text-primary">
+                  Sẽ tạo {classIds.length} bản ghi (mỗi lớp một bài).
+                </span>
+              )}
             </div>
           </Field>
           <div className="grid gap-4 sm:grid-cols-2">
-
-
             <Field label="Hạn nộp">
               <input
                 type="datetime-local"
@@ -383,10 +479,94 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
           </button>
           <button
             onClick={submit}
-            disabled={!title.trim() || !description.trim()}
+            disabled={!title.trim() || !description.trim() || classIds.length === 0}
             className="rounded-lg bg-foreground px-4 py-2 text-sm font-semibold text-background hover:opacity-90 disabled:opacity-50"
           >
-            Tạo & giao bài
+            {classIds.length > 1 ? `Tạo ${classIds.length} bài & giao` : "Tạo & giao bài"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DuplicateDialog({ a, onClose }: { a: Assignment; onClose: () => void }) {
+  const navigate = useNavigate();
+  const existing = new Set(a.classIds);
+  const options = classes.filter((c) => !existing.has(c.id));
+  const [selected, setSelected] = useState<string[]>([]);
+  const toggle = (id: string) =>
+    setSelected((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
+
+  const submit = () => {
+    if (selected.length === 0) return;
+    let first: { id: string } | null = null;
+    for (const cid of selected) {
+      const clone = createAssignment({
+        title: a.title,
+        description: a.description,
+        classIds: [cid],
+        dueAt: a.dueAt,
+        maxScore: a.maxScore,
+        allowText: a.allowText,
+        allowFile: a.allowFile,
+        attachments: a.attachments,
+        createdBy: a.createdBy,
+      });
+      if (!first) first = clone;
+    }
+    onClose();
+    if (first) navigate({ to: "/teacher/assignments/$assignmentId", params: { assignmentId: first.id } });
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <button className="absolute inset-0" onClick={onClose} aria-label="Close" />
+      <div className="relative w-full max-w-md rounded-2xl bg-background p-6 shadow-elevated">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="font-display text-lg font-semibold">Nhân bản bài tập</h3>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Chọn (các) lớp muốn nhân bản <b>"{a.title}"</b>. Mỗi lớp sẽ có 1 bản ghi riêng.
+            </p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 hover:bg-muted">
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="mt-4 max-h-64 space-y-1 overflow-y-auto rounded-lg border border-border bg-background p-2">
+          {options.map((c) => (
+            <label
+              key={c.id}
+              className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
+            >
+              <input
+                type="checkbox"
+                checked={selected.includes(c.id)}
+                onChange={() => toggle(c.id)}
+              />
+              <span className="flex-1">{c.name}</span>
+            </label>
+          ))}
+          {options.length === 0 && (
+            <div className="p-3 text-xs text-muted-foreground">
+              Bài này đã có ở tất cả các lớp.
+            </div>
+          )}
+        </div>
+        <div className="mt-5 flex items-center justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted"
+          >
+            Huỷ
+          </button>
+          <button
+            onClick={submit}
+            disabled={selected.length === 0}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background hover:opacity-90 disabled:opacity-50"
+          >
+            <Copy className="h-4 w-4" /> Nhân bản{selected.length > 0 ? ` (${selected.length})` : ""}
           </button>
         </div>
       </div>
