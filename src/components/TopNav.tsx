@@ -46,6 +46,33 @@ import {
   type ConsentLogEntry,
   type PolicyVersion,
 } from "@/lib/policy";
+import { liveSessions } from "@/lib/live-data";
+
+function useHasLiveNow() {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  return liveSessions.some((s) => {
+    const start = new Date(s.startAt).getTime();
+    const end = start + s.durationMin * 60 * 1000;
+    const isLive = now >= start && now <= end;
+    const isSoon = start > now && start - now <= 30 * 60 * 1000;
+    return isLive || isSoon;
+  });
+}
+
+function RedDot({ pulse = false }: { pulse?: boolean }) {
+  return (
+    <span className="relative ml-auto flex h-2 w-2" aria-label="Có lớp trực tuyến">
+      {pulse && (
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-500 opacity-75" />
+      )}
+      <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500 ring-2 ring-background" />
+    </span>
+  );
+}
 
 const studentTabs = [
   { to: "/" as const, label: "Trang chủ", icon: Home },
@@ -116,6 +143,7 @@ export function TopNav() {
   const roleStr: string = role;
   const tabs = role === "admin" ? adminTabs : role === "teacher" ? teacherTabs : studentTabs;
   const meta = roleMeta(role);
+  const hasLive = useHasLiveNow();
   const [open, setOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
   const [privacyOpen, setPrivacyOpen] = useState(false);
@@ -176,6 +204,7 @@ export function TopNav() {
                 >
                   <Icon className="h-4 w-4" />
                   <span>{t.label}</span>
+                  {hasLive && (t.to === "/live" || t.to === "/teacher/live") && <RedDot pulse />}
                 </Link>
               );
             })}
@@ -279,7 +308,15 @@ export function TopNav() {
                   style: { background: "var(--gradient-brand)" },
                 }}
               >
-                <Icon className="h-4 w-4" />
+                <span className="relative inline-flex">
+                  <Icon className="h-4 w-4" />
+                  {hasLive && (t.to === "/live" || t.to === "/teacher/live") && (
+                    <span className="absolute -right-1 -top-1 flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-500 opacity-75" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500 ring-2 ring-background" />
+                    </span>
+                  )}
+                </span>
                 <span className="hidden lg:inline">{t.label}</span>
               </Link>
             );
