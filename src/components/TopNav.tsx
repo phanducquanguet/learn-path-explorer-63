@@ -204,6 +204,7 @@ export function TopNav() {
                 >
                   <Icon className="h-4 w-4" />
                   <span>{t.label}</span>
+                  {hasLive && (t.to === "/live" || t.to === "/teacher/live") && <RedDot pulse />}
                 </Link>
               );
             })}
