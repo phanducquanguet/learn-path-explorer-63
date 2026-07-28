@@ -25,7 +25,9 @@ import {
   Paperclip,
   X,
   Copy,
-  Filter,
+  Search,
+  ChevronDown,
+  GraduationCap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
