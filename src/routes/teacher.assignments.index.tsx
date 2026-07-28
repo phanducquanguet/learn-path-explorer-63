@@ -391,6 +391,7 @@ function CreateAssignmentDialog({ onClose }: { onClose: () => void }) {
   const [maxScore, setMaxScore] = useState(10);
   const [allowText, setAllowText] = useState(true);
   const [allowFile, setAllowFile] = useState(true);
+  const [allowAssistantGrading, setAllowAssistantGrading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   const onPick = (files: FileList | null) => {
