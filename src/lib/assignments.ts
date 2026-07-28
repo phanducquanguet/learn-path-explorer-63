@@ -23,7 +23,7 @@ export type AssignmentSubmission = {
 export type Assignment = {
   id: string;
   title: string;
-  classId: string;
+  classIds: string[];
   description: string; // đề bài (text)
   dueAt: string; // ISO
   maxScore: number;
@@ -32,6 +32,7 @@ export type Assignment = {
   createdAt: string;
   createdBy: string;
 };
+
 
 const A_KEY = "unicom.assignments.v1";
 const S_KEY = "unicom.assignmentSubs.v1";
