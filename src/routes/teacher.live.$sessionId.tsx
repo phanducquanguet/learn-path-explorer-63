@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useParams } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TopNav } from "@/components/TopNav";
+import { LiveCountdown } from "@/components/LiveCountdown";
 import {
   ArrowLeft,
   Hand,
@@ -113,6 +114,7 @@ function TeacherLiveRoomPage() {
               <span className="font-semibold">{session.title}</span>
               <span className="ml-2 text-white/50">· {session.classCode}</span>
             </div>
+            <LiveCountdown session={session} />
           </div>
 
           {/* Stage */}
