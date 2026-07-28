@@ -46,6 +46,33 @@ import {
   type ConsentLogEntry,
   type PolicyVersion,
 } from "@/lib/policy";
+import { liveSessions } from "@/lib/live-data";
+
+function useHasLiveNow() {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 30_000);
+    return () => clearInterval(id);
+  }, []);
+  return liveSessions.some((s) => {
+    const start = new Date(s.startAt).getTime();
+    const end = start + s.durationMin * 60 * 1000;
+    const isLive = now >= start && now <= end;
+    const isSoon = start > now && start - now <= 30 * 60 * 1000;
+    return isLive || isSoon;
+  });
+}
+
+function RedDot({ pulse = false }: { pulse?: boolean }) {
+  return (
+    <span className="relative ml-auto flex h-2 w-2" aria-label="Có lớp trực tuyến">
+      {pulse && (
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-500 opacity-75" />
+      )}
+      <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-500 ring-2 ring-background" />
+    </span>
+  );
+}
 
 const studentTabs = [
   { to: "/" as const, label: "Trang chủ", icon: Home },
