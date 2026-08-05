@@ -67,7 +67,7 @@ export type Assignment = {
 
 
 const A_KEY = "unicom.assignments.v1";
-const S_KEY = "unicom.assignmentSubs.v1";
+const S_KEY = "unicom.assignmentSubs.v2";
 
 function seedAssignments(): Assignment[] {
   // Anchor to the current hour so SSR and client render identical timestamps.
