@@ -70,7 +70,8 @@ const A_KEY = "unicom.assignments.v1";
 const S_KEY = "unicom.assignmentSubs.v1";
 
 function seedAssignments(): Assignment[] {
-  const now = Date.now();
+  // Anchor to the current hour so SSR and client render identical timestamps.
+  const now = Math.floor(Date.now() / (3600 * 1000)) * 3600 * 1000;
   const cls = classes[0];
   const cls2 = classes[3] ?? classes[0];
   const cls3 = classes[1] ?? classes[0];
@@ -242,6 +243,7 @@ function seedAssignments(): Assignment[] {
 
 function seedSubs(assignments: Assignment[]): AssignmentSubmission[] {
   const out: AssignmentSubmission[] = [];
+  const NOW = Math.floor(Date.now() / (3600 * 1000)) * 3600 * 1000;
   const a = assignments[0];
   if (a) {
     const clsStudents = students.filter((s) => (a.classIds ?? []).includes(s.classId)).slice(0, 2);
@@ -251,7 +253,7 @@ function seedSubs(assignments: Assignment[]): AssignmentSubmission[] {
         assignmentId: a.id,
         studentId: s.id,
         studentName: s.name,
-        submittedAt: new Date(Date.now() - (i + 1) * 3600 * 1000).toISOString(),
+        submittedAt: new Date(NOW - (i + 1) * 3600 * 1000).toISOString(),
         answerText:
           i === 0
             ? "My favorite hobby is reading books. Every evening after dinner, I spend about one hour reading novels or short stories. Reading helps me relax and improves my vocabulary. I especially love adventure stories because they bring me to new worlds. Besides reading, I also enjoy writing short diaries about my day."
@@ -271,13 +273,13 @@ function seedSubs(assignments: Assignment[]): AssignmentSubmission[] {
         assignmentId: closed.id,
         studentId: s.id,
         studentName: s.name,
-        submittedAt: new Date(Date.now() - (5 + i) * 24 * 3600 * 1000).toISOString(),
+        submittedAt: new Date(NOW - (5 + i) * 24 * 3600 * 1000).toISOString(),
         answerText:
           "The book that changed me is 'The Little Prince' by Antoine de Saint-Exupéry. It is a short novella about a young prince who visits various planets. The story teaches me that what is essential is invisible to the eye. After reading it I started paying more attention to the people around me instead of material things.",
         maxScore: closed.maxScore,
         score: i === 0 ? 8.5 : undefined,
         feedback: i === 0 ? "Bài viết rõ ràng, ý tưởng tốt. Cần bổ sung thêm ví dụ cụ thể." : undefined,
-        gradedAt: i === 0 ? new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString() : undefined,
+        gradedAt: i === 0 ? new Date(NOW - 1 * 24 * 3600 * 1000).toISOString() : undefined,
       });
     });
   }
@@ -287,7 +289,7 @@ function seedSubs(assignments: Assignment[]): AssignmentSubmission[] {
     const H = 3600 * 1000;
     const clsStudents = students.filter((s) => (returned.classIds ?? []).includes(s.classId)).slice(0, 2);
     clsStudents.forEach((s, i) => {
-      const base = Math.floor(Date.now() / H) * H;
+      const base = NOW;
       // 3 lần nộp trước đều bị gửi trả + lần nộp hiện tại đang chờ chấm
       const rounds = [
         {
