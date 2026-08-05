@@ -518,13 +518,22 @@ function GradeDrawer({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t border-border bg-background p-4">
+        <div className="flex items-center justify-between gap-2 border-t border-border bg-background p-4">
+          <button
+            onClick={doReturn}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-100"
+            title="Gửi trả bài kèm nhận xét để học viên nộp lại"
+          >
+            <RotateCcw className="h-4 w-4" /> Gửi trả để nộp lại
+          </button>
+          <div className="flex items-center gap-2">
           <button
             onClick={onClose}
             className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted"
           >
             Huỷ
           </button>
+
           <button
             onClick={save}
             disabled={score === "" || Number(score) < 0 || Number(score) > maxScore}
