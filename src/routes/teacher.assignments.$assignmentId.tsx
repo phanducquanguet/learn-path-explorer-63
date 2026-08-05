@@ -245,7 +245,11 @@ function TeacherAssignmentDetail() {
                       {s.score !== undefined ? `${s.score}/${s.maxScore}` : "—"}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      {s.score !== undefined ? (
+                      {s.returnedAt ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                          <RotateCcw className="h-3 w-3" /> Đã gửi trả
+                        </span>
+                      ) : s.score !== undefined ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
                           <CheckCircle2 className="h-3 w-3" /> Đã chấm
                         </span>
@@ -254,7 +258,13 @@ function TeacherAssignmentDetail() {
                           <AlertCircle className="h-3 w-3" /> Chờ chấm
                         </span>
                       )}
+                      {(s.revisions?.length ?? 0) > 0 && (
+                        <div className="mt-1 text-[10px] text-muted-foreground">
+                          Lần nộp thứ {(s.revisions?.length ?? 0) + 1}
+                        </div>
+                      )}
                     </td>
+
                     <td className="px-4 py-3 text-right">
                       <button
                         onClick={() => setActive(s)}
