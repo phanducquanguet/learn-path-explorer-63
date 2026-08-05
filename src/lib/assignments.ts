@@ -421,6 +421,39 @@ export function gradeSubmission(id: string, score: number, feedback: string) {
   emit();
 }
 
+/**
+ * Giáo viên gửi trả bài: lần nộp hiện tại được lưu vào lịch sử (vẫn đính kèm),
+ * học viên có thể nộp bài khác kèm nhận xét của giáo viên.
+ */
+export function returnSubmission(id: string, note: string) {
+  ensureLoaded();
+  const returnedAt = new Date().toISOString();
+  _subs = _subs!.map((s) => {
+    if (s.id !== id) return s;
+    const rev: SubmissionRevision = {
+      submittedAt: s.submittedAt,
+      answerText: s.answerText,
+      file: s.file,
+      score: s.score,
+      feedback: s.feedback,
+      returnedAt,
+      returnNote: note || undefined,
+    };
+    return {
+      ...s,
+      revisions: [...(s.revisions ?? []), rev],
+      returnedAt,
+      returnNote: note || undefined,
+      score: undefined,
+      gradedAt: undefined,
+      feedback: undefined,
+    };
+  });
+  save(S_KEY, _subs);
+  emit();
+}
+
+
 /** Trả về hạn nộp áp dụng cho 1 học viên (có thể được gia hạn riêng). */
 export function getEffectiveDueAt(a: Assignment, studentId: string): string {
   return a.extensions?.[studentId] ?? a.dueAt;
