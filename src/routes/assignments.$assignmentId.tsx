@@ -56,6 +56,47 @@ function StudentAssignmentDetail() {
   const graded = existing?.score !== undefined && !returned;
   const revisions = existing?.revisions ?? [];
 
+  type TimelineItem = {
+    round: number;
+    submittedAt: string;
+    answerText?: string;
+    file?: AssignmentSubmission["file"];
+    status: "graded" | "returned" | "pending";
+    score?: number;
+    note?: string;
+    noteAt?: string;
+  };
+  const timeline: TimelineItem[] = [
+    ...revisions.map((r, i) => ({
+      round: i + 1,
+      submittedAt: r.submittedAt,
+      answerText: r.answerText,
+      file: r.file,
+      status: "returned" as const,
+      score: r.score,
+      note: r.returnNote,
+      noteAt: r.returnedAt,
+    })),
+    ...(existing
+      ? [
+          {
+            round: revisions.length + 1,
+            submittedAt: existing.submittedAt,
+            answerText: existing.answerText,
+            file: existing.file,
+            status: (returned ? "returned" : graded ? "graded" : "pending") as
+              | "graded"
+              | "returned"
+              | "pending",
+            score: existing.score,
+            note: returned ? existing.returnNote : existing.feedback,
+            noteAt: returned ? existing.returnedAt : existing.gradedAt,
+          },
+        ]
+      : []),
+  ].reverse();
+
+
 
   const onFile = (f: File | null) => {
     if (!f) return setFile(undefined);
