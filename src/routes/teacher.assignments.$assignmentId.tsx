@@ -434,6 +434,80 @@ function GradeDrawer({
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto p-6">
+          {submission.returnedAt && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              <div className="inline-flex items-center gap-1.5 font-semibold">
+                <RotateCcw className="h-4 w-4" /> Đã gửi trả — chờ học viên nộp lại
+              </div>
+              <div className="mt-1 text-xs">
+                {new Date(submission.returnedAt).toLocaleString("vi-VN", {
+                  timeZone: "Asia/Ho_Chi_Minh",
+                })}
+              </div>
+              {submission.returnNote && (
+                <p className="mt-2 whitespace-pre-wrap text-sm">{submission.returnNote}</p>
+              )}
+            </div>
+          )}
+
+          {revisions.length > 0 && (
+            <div className="rounded-2xl border border-border p-4">
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <History className="h-3 w-3" /> Lịch sử bài nộp trước ({revisions.length})
+              </div>
+              <div className="mt-3 space-y-3">
+                {revisions
+                  .slice()
+                  .reverse()
+                  .map((r, i) => (
+                    <div key={i} className="rounded-xl border border-border bg-muted/30 p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                        <span>
+                          Lần {revisions.length - i} • Nộp{" "}
+                          {new Date(r.submittedAt).toLocaleString("vi-VN", {
+                            timeZone: "Asia/Ho_Chi_Minh",
+                          })}
+                        </span>
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-700">
+                          Đã gửi trả{" "}
+                          {new Date(r.returnedAt).toLocaleString("vi-VN", {
+                            timeZone: "Asia/Ho_Chi_Minh",
+                          })}
+                        </span>
+                      </div>
+                      {r.answerText && (
+                        <p className="mt-2 whitespace-pre-wrap text-sm text-foreground">
+                          {r.answerText}
+                        </p>
+                      )}
+                      {r.file && (
+                        <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-background p-2 text-xs">
+                          <span className="inline-flex min-w-0 items-center gap-1">
+                            <Paperclip className="h-3 w-3 shrink-0" />
+                            <span className="truncate">{r.file.name}</span>
+                          </span>
+                          {r.file.dataUrl && (
+                            <a
+                              href={r.file.dataUrl}
+                              download={r.file.name}
+                              className="rounded-md border border-border px-2 py-1 font-semibold hover:bg-muted"
+                            >
+                              Tải xuống
+                            </a>
+                          )}
+                        </div>
+                      )}
+                      {r.returnNote && (
+                        <p className="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-900">
+                          Nhận xét: {r.returnNote}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
           {submission.answerText && (
             <div className="rounded-2xl border border-border p-4">
               <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
