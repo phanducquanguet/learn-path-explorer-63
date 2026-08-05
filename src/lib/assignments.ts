@@ -223,8 +223,22 @@ function seedAssignments(): Assignment[] {
         [students[0]?.id ?? "cls-a1-morning-s1"]: new Date(now + 36 * H).toISOString(),
       },
     },
+    {
+      id: "asg-returned-demo",
+      title: "Essay: The impact of social media on teenagers",
+      classIds: [cls.id],
+      description:
+        "Viết bài luận 150-200 từ về ảnh hưởng của mạng xã hội tới giới trẻ.\nYêu cầu:\n- Có mở bài, thân bài, kết bài rõ ràng.\n- Nêu ít nhất 2 mặt tích cực và 2 mặt tiêu cực.\n- Nộp bằng text hoặc file Word/PDF.",
+      dueAt: new Date(now + 2 * D).toISOString(),
+      maxScore: 10,
+      allowText: true,
+      allowFile: true,
+      createdAt: new Date(now - 7 * D).toISOString(),
+      createdBy: "Cô Mai Lan",
+    },
   ];
 }
+
 
 function seedSubs(assignments: Assignment[]): AssignmentSubmission[] {
   const out: AssignmentSubmission[] = [];
