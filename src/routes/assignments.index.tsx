@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSyncExternalStore, useMemo } from "react";
+import { useSyncExternalStore, useMemo, useState, useEffect } from "react";
 import { TopNav } from "@/components/TopNav";
 import {
   listAssignmentsForCurrentStudent,
