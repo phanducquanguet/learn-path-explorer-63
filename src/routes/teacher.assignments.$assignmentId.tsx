@@ -396,7 +396,18 @@ function GradeDrawer({
     onClose();
   };
 
+  const doReturn = () => {
+    if (!feedback.trim()) {
+      alert("Hãy nhập nhận xét/lý do gửi trả cho học viên.");
+      return;
+    }
+    returnSubmission(submission.id, feedback.trim());
+    onClose();
+  };
+
+  const revisions = submission.revisions ?? [];
   const wordCount = submission.answerText?.trim().split(/\s+/).filter(Boolean).length ?? 0;
+
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
