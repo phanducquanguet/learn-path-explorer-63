@@ -6,6 +6,7 @@ import {
   listSubmissions,
   subscribeAssignments,
   gradeSubmission,
+  returnSubmission,
   extendDeadline,
   updateAssignment,
   type Assignment,
