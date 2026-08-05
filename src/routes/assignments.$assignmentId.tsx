@@ -56,6 +56,47 @@ function StudentAssignmentDetail() {
   const graded = existing?.score !== undefined && !returned;
   const revisions = existing?.revisions ?? [];
 
+  type TimelineItem = {
+    round: number;
+    submittedAt: string;
+    answerText?: string;
+    file?: AssignmentSubmission["file"];
+    status: "graded" | "returned" | "pending";
+    score?: number;
+    note?: string;
+    noteAt?: string;
+  };
+  const timeline: TimelineItem[] = [
+    ...revisions.map((r, i) => ({
+      round: i + 1,
+      submittedAt: r.submittedAt,
+      answerText: r.answerText,
+      file: r.file,
+      status: "returned" as const,
+      score: r.score,
+      note: r.returnNote,
+      noteAt: r.returnedAt,
+    })),
+    ...(existing
+      ? [
+          {
+            round: revisions.length + 1,
+            submittedAt: existing.submittedAt,
+            answerText: existing.answerText,
+            file: existing.file,
+            status: (returned ? "returned" : graded ? "graded" : "pending") as
+              | "graded"
+              | "returned"
+              | "pending",
+            score: existing.score,
+            note: returned ? existing.returnNote : existing.feedback,
+            noteAt: returned ? existing.returnedAt : existing.gradedAt,
+          },
+        ]
+      : []),
+  ].reverse();
+
+
 
   const onFile = (f: File | null) => {
     if (!f) return setFile(undefined);
@@ -216,61 +257,6 @@ function StudentAssignmentDetail() {
           </section>
         )}
 
-        {revisions.length > 0 && (
-          <section className="mt-6 rounded-2xl border border-border bg-surface p-5 shadow-soft">
-            <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              <History className="h-3 w-3" /> Các lần nộp trước ({revisions.length})
-            </div>
-            <div className="mt-3 space-y-3">
-              {revisions
-                .slice()
-                .reverse()
-                .map((r, i) => (
-                  <div key={i} className="rounded-xl border border-border bg-background p-3">
-                    <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
-                      <span>
-                        Lần {revisions.length - i} •{" "}
-                        {new Date(r.submittedAt).toLocaleString("vi-VN", {
-                          timeZone: "Asia/Ho_Chi_Minh",
-                        })}
-                      </span>
-                      <span className="rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-700">
-                        Đã gửi trả
-                      </span>
-                    </div>
-                    {r.answerText && (
-                      <p className="mt-2 whitespace-pre-wrap text-sm text-foreground">
-                        {r.answerText}
-                      </p>
-                    )}
-                    {r.file && (
-                      <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-muted/40 p-2 text-xs">
-                        <span className="inline-flex min-w-0 items-center gap-1">
-                          <Paperclip className="h-3 w-3 shrink-0" />
-                          <span className="truncate">{r.file.name}</span>
-                        </span>
-                        {r.file.dataUrl && (
-                          <a
-                            href={r.file.dataUrl}
-                            download={r.file.name}
-                            className="rounded-md border border-border bg-background px-2 py-1 font-semibold hover:bg-muted"
-                          >
-                            Tải xuống
-                          </a>
-                        )}
-                      </div>
-                    )}
-                    {r.returnNote && (
-                      <p className="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-900">
-                        Nhận xét: {r.returnNote}
-                      </p>
-                    )}
-                  </div>
-                ))}
-            </div>
-          </section>
-        )}
-
         <section className="mt-6 rounded-2xl border border-border bg-surface p-5 shadow-soft">
           <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
             {graded
@@ -351,6 +337,104 @@ function StudentAssignmentDetail() {
             </div>
           )}
         </section>
+
+        {timeline.length > 0 && (
+          <section className="mt-6 rounded-2xl border border-border bg-surface p-5 shadow-soft">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <History className="h-3 w-3" /> Lịch sử nộp bài &amp; nhận xét ({timeline.length})
+            </div>
+            <ol className="mt-4 space-y-4 border-l border-border pl-5">
+              {timeline.map((t) => (
+                <li key={t.round} className="relative">
+                  <span
+                    className={cn(
+                      "absolute -left-[26px] top-1.5 h-2.5 w-2.5 rounded-full ring-4 ring-surface",
+                      t.status === "graded"
+                        ? "bg-emerald-500"
+                        : t.status === "returned"
+                          ? "bg-amber-500"
+                          : "bg-primary",
+                    )}
+                  />
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="text-sm font-semibold">
+                      Lần {t.round}
+                      <span className="ml-2 text-[11px] font-normal text-muted-foreground">
+                        {new Date(t.submittedAt).toLocaleString("vi-VN", {
+                          timeZone: "Asia/Ho_Chi_Minh",
+                        })}
+                      </span>
+                    </div>
+                    <span
+                      className={cn(
+                        "rounded-full px-2 py-0.5 text-[11px] font-semibold",
+                        t.status === "graded"
+                          ? "bg-emerald-100 text-emerald-700"
+                          : t.status === "returned"
+                            ? "bg-amber-100 text-amber-700"
+                            : "bg-primary/10 text-primary",
+                      )}
+                    >
+                      {t.status === "graded"
+                        ? `Đã chấm ${t.score}/${a.maxScore}`
+                        : t.status === "returned"
+                          ? "Đã gửi trả"
+                          : "Chờ chấm"}
+                    </span>
+                  </div>
+
+                  {t.answerText && (
+                    <p className="mt-2 whitespace-pre-wrap rounded-xl border border-border bg-background p-3 text-sm text-foreground">
+                      {t.answerText}
+                    </p>
+                  )}
+                  {t.file && (
+                    <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-muted/40 p-2 text-xs">
+                      <span className="inline-flex min-w-0 items-center gap-1">
+                        <Paperclip className="h-3 w-3 shrink-0" />
+                        <span className="truncate">{t.file.name}</span>
+                      </span>
+                      {t.file.dataUrl && (
+                        <a
+                          href={t.file.dataUrl}
+                          download={t.file.name}
+                          className="rounded-md border border-border bg-background px-2 py-1 font-semibold hover:bg-muted"
+                        >
+                          Tải xuống
+                        </a>
+                      )}
+                    </div>
+                  )}
+                  {t.note && (
+                    <div
+                      className={cn(
+                        "mt-2 rounded-xl p-3 text-xs",
+                        t.status === "graded"
+                          ? "bg-emerald-50 text-emerald-900"
+                          : "bg-amber-50 text-amber-900",
+                      )}
+                    >
+                      <div className="font-semibold uppercase tracking-wider">
+                        {t.status === "returned"
+                          ? "Nhận xét khi gửi trả"
+                          : "Nhận xét của giáo viên"}
+                        {t.noteAt && (
+                          <span className="ml-2 font-normal normal-case tracking-normal opacity-70">
+                            {new Date(t.noteAt).toLocaleString("vi-VN", {
+                              timeZone: "Asia/Ho_Chi_Minh",
+                            })}
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 whitespace-pre-wrap">{t.note}</p>
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
+
       </div>
     </div>
   );

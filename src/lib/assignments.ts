@@ -67,10 +67,11 @@ export type Assignment = {
 
 
 const A_KEY = "unicom.assignments.v1";
-const S_KEY = "unicom.assignmentSubs.v1";
+const S_KEY = "unicom.assignmentSubs.v2";
 
 function seedAssignments(): Assignment[] {
-  const now = Date.now();
+  // Anchor to the current hour so SSR and client render identical timestamps.
+  const now = Math.floor(Date.now() / (3600 * 1000)) * 3600 * 1000;
   const cls = classes[0];
   const cls2 = classes[3] ?? classes[0];
   const cls3 = classes[1] ?? classes[0];
@@ -242,6 +243,7 @@ function seedAssignments(): Assignment[] {
 
 function seedSubs(assignments: Assignment[]): AssignmentSubmission[] {
   const out: AssignmentSubmission[] = [];
+  const NOW = Math.floor(Date.now() / (3600 * 1000)) * 3600 * 1000;
   const a = assignments[0];
   if (a) {
     const clsStudents = students.filter((s) => (a.classIds ?? []).includes(s.classId)).slice(0, 2);
@@ -251,7 +253,7 @@ function seedSubs(assignments: Assignment[]): AssignmentSubmission[] {
         assignmentId: a.id,
         studentId: s.id,
         studentName: s.name,
-        submittedAt: new Date(Date.now() - (i + 1) * 3600 * 1000).toISOString(),
+        submittedAt: new Date(NOW - (i + 1) * 3600 * 1000).toISOString(),
         answerText:
           i === 0
             ? "My favorite hobby is reading books. Every evening after dinner, I spend about one hour reading novels or short stories. Reading helps me relax and improves my vocabulary. I especially love adventure stories because they bring me to new worlds. Besides reading, I also enjoy writing short diaries about my day."
@@ -271,13 +273,13 @@ function seedSubs(assignments: Assignment[]): AssignmentSubmission[] {
         assignmentId: closed.id,
         studentId: s.id,
         studentName: s.name,
-        submittedAt: new Date(Date.now() - (5 + i) * 24 * 3600 * 1000).toISOString(),
+        submittedAt: new Date(NOW - (5 + i) * 24 * 3600 * 1000).toISOString(),
         answerText:
           "The book that changed me is 'The Little Prince' by Antoine de Saint-Exupéry. It is a short novella about a young prince who visits various planets. The story teaches me that what is essential is invisible to the eye. After reading it I started paying more attention to the people around me instead of material things.",
         maxScore: closed.maxScore,
         score: i === 0 ? 8.5 : undefined,
         feedback: i === 0 ? "Bài viết rõ ràng, ý tưởng tốt. Cần bổ sung thêm ví dụ cụ thể." : undefined,
-        gradedAt: i === 0 ? new Date(Date.now() - 1 * 24 * 3600 * 1000).toISOString() : undefined,
+        gradedAt: i === 0 ? new Date(NOW - 1 * 24 * 3600 * 1000).toISOString() : undefined,
       });
     });
   }
@@ -287,37 +289,54 @@ function seedSubs(assignments: Assignment[]): AssignmentSubmission[] {
     const H = 3600 * 1000;
     const clsStudents = students.filter((s) => (returned.classIds ?? []).includes(s.classId)).slice(0, 2);
     clsStudents.forEach((s, i) => {
-      const submittedAt = new Date(Date.now() - (48 + i * 6) * H).toISOString();
-      const returnedAt = new Date(Date.now() - (12 + i * 3) * H).toISOString();
-      const oldAnswer =
-        i === 0
-          ? "Social media is very popular. Many teenagers use Facebook and TikTok every day. It is good and bad."
-          : "I think social media is bad because students waste time on it.";
+      const base = NOW;
+      // 3 lần nộp trước đều bị gửi trả + lần nộp hiện tại đang chờ chấm
+      const rounds = [
+        {
+          submittedAt: new Date(base - (96 + i * 6) * H).toISOString(),
+          returnedAt: new Date(base - (90 + i * 6) * H).toISOString(),
+          answerText:
+            "Social media is very popular. Many teenagers use Facebook and TikTok every day. It is good and bad.",
+          returnNote:
+            "Bài còn quá ngắn (dưới 60 từ) và chưa đủ 2 mặt tích cực + 2 mặt tiêu cực. Em bổ sung thêm ví dụ cụ thể và viết lại kết bài nhé.",
+        },
+        {
+          submittedAt: new Date(base - (72 + i * 6) * H).toISOString(),
+          returnedAt: new Date(base - (66 + i * 6) * H).toISOString(),
+          answerText:
+            "Nowadays social media is used by most teenagers. On the positive side, it helps them keep in touch with friends and learn new things from videos. On the negative side, they spend too much time on it and sometimes see fake news. In my opinion teenagers should limit their screen time.",
+          returnNote:
+            "Đã dài hơn nhưng phần thân bài chưa tách đoạn, còn thiếu 1 mặt tiêu cực (ảnh hưởng giấc ngủ / so sánh bản thân). Em chỉnh lại bố cục 3 phần rõ ràng.",
+        },
+        {
+          submittedAt: new Date(base - (36 + i * 6) * H).toISOString(),
+          returnedAt: new Date(base - (30 + i * 6) * H).toISOString(),
+          answerText:
+            "Introduction: Social media has become a big part of teenagers' lives.\nBody: First, it helps them connect with friends and family. Second, they can learn English through short videos. However, it also has bad effects: many students lose sleep because they scroll at night, and some of them compare themselves with others and feel unhappy.\nConclusion: Social media is useful but teenagers need to control the time they spend on it.",
+          returnNote:
+            "Bố cục tốt. Tuy nhiên em viết dưới dạng gạch đầu dòng 'Introduction / Body / Conclusion' — bài luận cần viết thành đoạn văn liền mạch. Em sửa lại rồi nộp bản cuối nhé.",
+        },
+      ];
+      const last = rounds[rounds.length - 1]!;
       out.push({
         id: `sub-${returned.id}-${s.id}`,
         assignmentId: returned.id,
         studentId: s.id,
         studentName: s.name,
-        submittedAt,
-        answerText: oldAnswer,
+        submittedAt: last.submittedAt,
+        answerText: last.answerText,
         maxScore: returned.maxScore,
-        returnedAt,
-        returnNote:
-          i === 0
-            ? "Bài còn quá ngắn (dưới 60 từ) và chưa đủ 2 mặt tích cực + 2 mặt tiêu cực. Em bổ sung thêm ví dụ cụ thể và viết lại kết bài nhé."
-            : "Chưa có cấu trúc mở - thân - kết, thiếu dẫn chứng. Em viết lại theo mẫu đã học và nộp lại trước hạn.",
-        revisions: [
-          {
-            submittedAt,
-            answerText: oldAnswer,
-            returnedAt,
-            returnNote:
-              i === 0
-                ? "Bài còn quá ngắn (dưới 60 từ) và chưa đủ 2 mặt tích cực + 2 mặt tiêu cực. Em bổ sung thêm ví dụ cụ thể và viết lại kết bài nhé."
-                : "Chưa có cấu trúc mở - thân - kết, thiếu dẫn chứng. Em viết lại theo mẫu đã học và nộp lại trước hạn.",
-          },
-        ],
+        returnedAt: last.returnedAt,
+        returnNote: last.returnNote,
+        revisions: rounds.slice(0, -1).map((r) => ({
+          submittedAt: r.submittedAt,
+          answerText: r.answerText,
+          returnedAt: r.returnedAt,
+          returnNote: r.returnNote,
+        })),
       });
+
+
     });
   }
   return out;
