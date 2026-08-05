@@ -10,7 +10,17 @@ import {
   CURRENT_STUDENT,
   type AssignmentSubmission,
 } from "@/lib/assignments";
-import { ArrowLeft, Calendar, Send, Paperclip, CheckCircle2, FileText, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  Send,
+  Paperclip,
+  CheckCircle2,
+  FileText,
+  X,
+  RotateCcw,
+  History,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/assignments/$assignmentId")({
@@ -42,7 +52,10 @@ function StudentAssignmentDetail() {
   if (!a) throw notFound();
   const effectiveDue = getEffectiveDueAt(a, CURRENT_STUDENT.id);
   const overdue = new Date(effectiveDue).getTime() < Date.now();
-  const graded = existing?.score !== undefined;
+  const returned = !!existing?.returnedAt;
+  const graded = existing?.score !== undefined && !returned;
+  const revisions = existing?.revisions ?? [];
+
 
   const onFile = (f: File | null) => {
     if (!f) return setFile(undefined);
@@ -76,10 +89,14 @@ function StudentAssignmentDetail() {
       answerText: a.allowText ? answerText.trim() : undefined,
       file,
       maxScore: a.maxScore,
-      score: existing?.score,
-      feedback: existing?.feedback,
-      gradedAt: existing?.gradedAt,
+      score: returned ? undefined : existing?.score,
+      feedback: returned ? undefined : existing?.feedback,
+      gradedAt: returned ? undefined : existing?.gradedAt,
+      revisions,
+      returnedAt: undefined,
+      returnNote: undefined,
     };
+
     upsertSubmission(sub);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
@@ -176,10 +193,95 @@ function StudentAssignmentDetail() {
           </section>
         )}
 
+        {returned && (
+          <section className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-soft">
+            <div className="inline-flex items-center gap-2 text-sm font-semibold text-amber-900">
+              <RotateCcw className="h-4 w-4" /> Giáo viên đã gửi trả bài — hãy nộp lại
+            </div>
+            <div className="mt-1 text-xs text-amber-800">
+              {new Date(existing!.returnedAt!).toLocaleString("vi-VN", {
+                timeZone: "Asia/Ho_Chi_Minh",
+              })}
+            </div>
+            {existing!.returnNote && (
+              <div className="mt-3">
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-amber-900">
+                  Nhận xét của giáo viên
+                </div>
+                <p className="mt-1 whitespace-pre-wrap text-sm text-amber-900">
+                  {existing!.returnNote}
+                </p>
+              </div>
+            )}
+          </section>
+        )}
+
+        {revisions.length > 0 && (
+          <section className="mt-6 rounded-2xl border border-border bg-surface p-5 shadow-soft">
+            <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <History className="h-3 w-3" /> Các lần nộp trước ({revisions.length})
+            </div>
+            <div className="mt-3 space-y-3">
+              {revisions
+                .slice()
+                .reverse()
+                .map((r, i) => (
+                  <div key={i} className="rounded-xl border border-border bg-background p-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                      <span>
+                        Lần {revisions.length - i} •{" "}
+                        {new Date(r.submittedAt).toLocaleString("vi-VN", {
+                          timeZone: "Asia/Ho_Chi_Minh",
+                        })}
+                      </span>
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-700">
+                        Đã gửi trả
+                      </span>
+                    </div>
+                    {r.answerText && (
+                      <p className="mt-2 whitespace-pre-wrap text-sm text-foreground">
+                        {r.answerText}
+                      </p>
+                    )}
+                    {r.file && (
+                      <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-muted/40 p-2 text-xs">
+                        <span className="inline-flex min-w-0 items-center gap-1">
+                          <Paperclip className="h-3 w-3 shrink-0" />
+                          <span className="truncate">{r.file.name}</span>
+                        </span>
+                        {r.file.dataUrl && (
+                          <a
+                            href={r.file.dataUrl}
+                            download={r.file.name}
+                            className="rounded-md border border-border bg-background px-2 py-1 font-semibold hover:bg-muted"
+                          >
+                            Tải xuống
+                          </a>
+                        )}
+                      </div>
+                    )}
+                    {r.returnNote && (
+                      <p className="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-900">
+                        Nhận xét: {r.returnNote}
+                      </p>
+                    )}
+                  </div>
+                ))}
+            </div>
+          </section>
+        )}
+
         <section className="mt-6 rounded-2xl border border-border bg-surface p-5 shadow-soft">
           <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            {graded ? "Bài nộp của bạn" : existing ? "Cập nhật bài nộp" : "Nộp bài"}
+            {graded
+              ? "Bài nộp của bạn"
+              : returned
+                ? "Nộp lại bài"
+                : existing
+                  ? "Cập nhật bài nộp"
+                  : "Nộp bài"}
           </div>
+
 
           {a.allowText && (
             <div className="mt-4">

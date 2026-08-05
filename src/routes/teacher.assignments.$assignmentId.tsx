@@ -6,6 +6,7 @@ import {
   listSubmissions,
   subscribeAssignments,
   gradeSubmission,
+  returnSubmission,
   extendDeadline,
   updateAssignment,
   type Assignment,
@@ -30,6 +31,8 @@ import {
   Clock,
   Pencil,
   ChevronDown,
+  RotateCcw,
+  History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -242,7 +245,11 @@ function TeacherAssignmentDetail() {
                       {s.score !== undefined ? `${s.score}/${s.maxScore}` : "—"}
                     </td>
                     <td className="px-4 py-3 text-center">
-                      {s.score !== undefined ? (
+                      {s.returnedAt ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                          <RotateCcw className="h-3 w-3" /> Đã gửi trả
+                        </span>
+                      ) : s.score !== undefined ? (
                         <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
                           <CheckCircle2 className="h-3 w-3" /> Đã chấm
                         </span>
@@ -251,7 +258,13 @@ function TeacherAssignmentDetail() {
                           <AlertCircle className="h-3 w-3" /> Chờ chấm
                         </span>
                       )}
+                      {(s.revisions?.length ?? 0) > 0 && (
+                        <div className="mt-1 text-[10px] text-muted-foreground">
+                          Lần nộp thứ {(s.revisions?.length ?? 0) + 1}
+                        </div>
+                      )}
                     </td>
+
                     <td className="px-4 py-3 text-right">
                       <button
                         onClick={() => setActive(s)}
@@ -396,7 +409,18 @@ function GradeDrawer({
     onClose();
   };
 
+  const doReturn = () => {
+    if (!feedback.trim()) {
+      alert("Hãy nhập nhận xét/lý do gửi trả cho học viên.");
+      return;
+    }
+    returnSubmission(submission.id, feedback.trim());
+    onClose();
+  };
+
+  const revisions = submission.revisions ?? [];
   const wordCount = submission.answerText?.trim().split(/\s+/).filter(Boolean).length ?? 0;
+
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end bg-black/40">
@@ -420,6 +444,80 @@ function GradeDrawer({
         </div>
 
         <div className="flex-1 space-y-4 overflow-y-auto p-6">
+          {submission.returnedAt && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+              <div className="inline-flex items-center gap-1.5 font-semibold">
+                <RotateCcw className="h-4 w-4" /> Đã gửi trả — chờ học viên nộp lại
+              </div>
+              <div className="mt-1 text-xs">
+                {new Date(submission.returnedAt).toLocaleString("vi-VN", {
+                  timeZone: "Asia/Ho_Chi_Minh",
+                })}
+              </div>
+              {submission.returnNote && (
+                <p className="mt-2 whitespace-pre-wrap text-sm">{submission.returnNote}</p>
+              )}
+            </div>
+          )}
+
+          {revisions.length > 0 && (
+            <div className="rounded-2xl border border-border p-4">
+              <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <History className="h-3 w-3" /> Lịch sử bài nộp trước ({revisions.length})
+              </div>
+              <div className="mt-3 space-y-3">
+                {revisions
+                  .slice()
+                  .reverse()
+                  .map((r, i) => (
+                    <div key={i} className="rounded-xl border border-border bg-muted/30 p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+                        <span>
+                          Lần {revisions.length - i} • Nộp{" "}
+                          {new Date(r.submittedAt).toLocaleString("vi-VN", {
+                            timeZone: "Asia/Ho_Chi_Minh",
+                          })}
+                        </span>
+                        <span className="rounded-full bg-amber-100 px-2 py-0.5 font-semibold text-amber-700">
+                          Đã gửi trả{" "}
+                          {new Date(r.returnedAt).toLocaleString("vi-VN", {
+                            timeZone: "Asia/Ho_Chi_Minh",
+                          })}
+                        </span>
+                      </div>
+                      {r.answerText && (
+                        <p className="mt-2 whitespace-pre-wrap text-sm text-foreground">
+                          {r.answerText}
+                        </p>
+                      )}
+                      {r.file && (
+                        <div className="mt-2 flex items-center justify-between gap-2 rounded-lg bg-background p-2 text-xs">
+                          <span className="inline-flex min-w-0 items-center gap-1">
+                            <Paperclip className="h-3 w-3 shrink-0" />
+                            <span className="truncate">{r.file.name}</span>
+                          </span>
+                          {r.file.dataUrl && (
+                            <a
+                              href={r.file.dataUrl}
+                              download={r.file.name}
+                              className="rounded-md border border-border px-2 py-1 font-semibold hover:bg-muted"
+                            >
+                              Tải xuống
+                            </a>
+                          )}
+                        </div>
+                      )}
+                      {r.returnNote && (
+                        <p className="mt-2 rounded-lg bg-amber-50 p-2 text-xs text-amber-900">
+                          Nhận xét: {r.returnNote}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
           {submission.answerText && (
             <div className="rounded-2xl border border-border p-4">
               <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -506,13 +604,22 @@ function GradeDrawer({
           </div>
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t border-border bg-background p-4">
+        <div className="flex items-center justify-between gap-2 border-t border-border bg-background p-4">
+          <button
+            onClick={doReturn}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-800 hover:bg-amber-100"
+            title="Gửi trả bài kèm nhận xét để học viên nộp lại"
+          >
+            <RotateCcw className="h-4 w-4" /> Gửi trả để nộp lại
+          </button>
+          <div className="flex items-center gap-2">
           <button
             onClick={onClose}
             className="rounded-xl border border-border bg-background px-4 py-2 text-sm font-semibold hover:bg-muted"
           >
             Huỷ
           </button>
+
           <button
             onClick={save}
             disabled={score === "" || Number(score) < 0 || Number(score) > maxScore}
@@ -521,7 +628,9 @@ function GradeDrawer({
           >
             <Send className="h-4 w-4" /> Lưu điểm & phản hồi
           </button>
+          </div>
         </div>
+
       </div>
     </div>
   );
