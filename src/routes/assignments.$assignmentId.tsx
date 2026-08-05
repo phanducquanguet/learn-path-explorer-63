@@ -79,10 +79,14 @@ function StudentAssignmentDetail() {
       answerText: a.allowText ? answerText.trim() : undefined,
       file,
       maxScore: a.maxScore,
-      score: existing?.score,
-      feedback: existing?.feedback,
-      gradedAt: existing?.gradedAt,
+      score: returned ? undefined : existing?.score,
+      feedback: returned ? undefined : existing?.feedback,
+      gradedAt: returned ? undefined : existing?.gradedAt,
+      revisions,
+      returnedAt: undefined,
+      returnNote: undefined,
     };
+
     upsertSubmission(sub);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
