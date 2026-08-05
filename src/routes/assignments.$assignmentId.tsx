@@ -10,7 +10,17 @@ import {
   CURRENT_STUDENT,
   type AssignmentSubmission,
 } from "@/lib/assignments";
-import { ArrowLeft, Calendar, Send, Paperclip, CheckCircle2, FileText, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Calendar,
+  Send,
+  Paperclip,
+  CheckCircle2,
+  FileText,
+  X,
+  RotateCcw,
+  History,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/assignments/$assignmentId")({
