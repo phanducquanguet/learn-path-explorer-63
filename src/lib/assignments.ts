@@ -6,6 +6,19 @@ export type AssignmentAttachment = {
   dataUrl?: string; // for small files (demo)
 };
 
+/** Một lần nộp trước đó đã bị giáo viên gửi trả. */
+export type SubmissionRevision = {
+  submittedAt: string;
+  answerText?: string;
+  file?: AssignmentAttachment;
+  score?: number;
+  feedback?: string;
+  /** Thời điểm giáo viên gửi trả bài này. */
+  returnedAt: string;
+  /** Nhận xét/lý do gửi trả của giáo viên. */
+  returnNote?: string;
+};
+
 export type AssignmentSubmission = {
   id: string;
   assignmentId: string;
@@ -18,7 +31,14 @@ export type AssignmentSubmission = {
   maxScore: number;
   feedback?: string;
   gradedAt?: string;
+  /** Giáo viên đã gửi trả để học viên nộp lại (chưa nộp lại). */
+  returnedAt?: string;
+  /** Nhận xét khi gửi trả. */
+  returnNote?: string;
+  /** Lịch sử các lần nộp trước đã bị gửi trả (mới nhất ở cuối). */
+  revisions?: SubmissionRevision[];
 };
+
 
 export type Assignment = {
   id: string;
