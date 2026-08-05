@@ -18,7 +18,6 @@ import {
   CheckCircle2,
   FileText,
   X,
-  RotateCcw,
   History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
