@@ -31,6 +31,8 @@ import {
   Clock,
   Pencil,
   ChevronDown,
+  RotateCcw,
+  History,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
