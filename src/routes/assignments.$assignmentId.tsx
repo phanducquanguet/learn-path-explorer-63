@@ -50,7 +50,9 @@ function StudentAssignmentDetail() {
 
   if (!a) throw notFound();
   const effectiveDue = getEffectiveDueAt(a, CURRENT_STUDENT.id);
-  const overdue = new Date(effectiveDue).getTime() < Date.now();
+  const [now, setNow] = useState(0);
+  useEffect(() => setNow(Date.now()), []);
+  const overdue = new Date(effectiveDue).getTime() < now;
   const returned = !!existing?.returnedAt;
   const graded = existing?.score !== undefined && !returned;
   const revisions = existing?.revisions ?? [];
