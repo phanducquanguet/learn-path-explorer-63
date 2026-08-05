@@ -315,26 +315,25 @@ function seedSubs(assignments: Assignment[]): AssignmentSubmission[] {
             "Bố cục tốt. Tuy nhiên em viết dưới dạng gạch đầu dòng 'Introduction / Body / Conclusion' — bài luận cần viết thành đoạn văn liền mạch. Em sửa lại rồi nộp bản cuối nhé.",
         },
       ];
-      const current = {
-        submittedAt: new Date(base - (6 + i * 2) * H).toISOString(),
-        answerText:
-          "Social media has become an inseparable part of teenagers' daily lives, and its influence is far from simple. On the one hand, platforms such as Facebook and Instagram allow students to stay connected with friends and family, and short educational videos help them improve their English and discover new interests. On the other hand, excessive use brings clear drawbacks: many teenagers stay up late scrolling and therefore lose sleep, while constantly comparing themselves with the perfect images they see online damages their confidence. In conclusion, social media can be a valuable tool for learning and communication, but teenagers should set clear limits so that it does not harm their health and studies.",
-      };
+      const last = rounds[rounds.length - 1]!;
       out.push({
         id: `sub-${returned.id}-${s.id}`,
         assignmentId: returned.id,
         studentId: s.id,
         studentName: s.name,
-        submittedAt: current.submittedAt,
-        answerText: current.answerText,
+        submittedAt: last.submittedAt,
+        answerText: last.answerText,
         maxScore: returned.maxScore,
-        revisions: rounds.map((r) => ({
+        returnedAt: last.returnedAt,
+        returnNote: last.returnNote,
+        revisions: rounds.slice(0, -1).map((r) => ({
           submittedAt: r.submittedAt,
           answerText: r.answerText,
           returnedAt: r.returnedAt,
           returnNote: r.returnNote,
         })),
       });
+
 
     });
   }
