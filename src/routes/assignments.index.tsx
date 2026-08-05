@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSyncExternalStore, useMemo } from "react";
+import { useSyncExternalStore, useMemo, useState, useEffect } from "react";
 import { TopNav } from "@/components/TopNav";
 import {
   listAssignmentsForCurrentStudent,
@@ -40,7 +40,8 @@ function getUrgency(dueMs: number, now: number): "overdue" | "today" | "soon" | 
 
 function StudentAssignmentsPage() {
   const items = useList();
-  const now = Date.now();
+  const [now, setNow] = useState(0);
+  useEffect(() => setNow(Date.now()), []);
 
   const stats = useMemo(() => {
     let todo = 0, submitted = 0, graded = 0, dueSoon = 0, overdue = 0;
