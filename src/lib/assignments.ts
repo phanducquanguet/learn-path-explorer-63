@@ -281,7 +281,47 @@ function seedSubs(assignments: Assignment[]): AssignmentSubmission[] {
       });
     });
   }
+  // Demo: bài đã bị giáo viên gửi trả để nộp lại
+  const returned = assignments.find((x) => x.id === "asg-returned-demo");
+  if (returned) {
+    const H = 3600 * 1000;
+    const clsStudents = students.filter((s) => (returned.classIds ?? []).includes(s.classId)).slice(0, 2);
+    clsStudents.forEach((s, i) => {
+      const submittedAt = new Date(Date.now() - (48 + i * 6) * H).toISOString();
+      const returnedAt = new Date(Date.now() - (12 + i * 3) * H).toISOString();
+      const oldAnswer =
+        i === 0
+          ? "Social media is very popular. Many teenagers use Facebook and TikTok every day. It is good and bad."
+          : "I think social media is bad because students waste time on it.";
+      out.push({
+        id: `sub-${returned.id}-${s.id}`,
+        assignmentId: returned.id,
+        studentId: s.id,
+        studentName: s.name,
+        submittedAt,
+        answerText: oldAnswer,
+        maxScore: returned.maxScore,
+        returnedAt,
+        returnNote:
+          i === 0
+            ? "Bài còn quá ngắn (dưới 60 từ) và chưa đủ 2 mặt tích cực + 2 mặt tiêu cực. Em bổ sung thêm ví dụ cụ thể và viết lại kết bài nhé."
+            : "Chưa có cấu trúc mở - thân - kết, thiếu dẫn chứng. Em viết lại theo mẫu đã học và nộp lại trước hạn.",
+        revisions: [
+          {
+            submittedAt,
+            answerText: oldAnswer,
+            returnedAt,
+            returnNote:
+              i === 0
+                ? "Bài còn quá ngắn (dưới 60 từ) và chưa đủ 2 mặt tích cực + 2 mặt tiêu cực. Em bổ sung thêm ví dụ cụ thể và viết lại kết bài nhé."
+                : "Chưa có cấu trúc mở - thân - kết, thiếu dẫn chứng. Em viết lại theo mẫu đã học và nộp lại trước hạn.",
+          },
+        ],
+      });
+    });
+  }
   return out;
+
 }
 
 function load<T>(key: string, fallback: T): T {
