@@ -234,28 +234,6 @@ function StudentAssignmentDetail() {
           </section>
         )}
 
-        {returned && (
-          <section className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-soft">
-            <div className="inline-flex items-center gap-2 text-sm font-semibold text-amber-900">
-              <RotateCcw className="h-4 w-4" /> Giáo viên đã gửi trả bài — hãy nộp lại
-            </div>
-            <div className="mt-1 text-xs text-amber-800">
-              {new Date(existing!.returnedAt!).toLocaleString("vi-VN", {
-                timeZone: "Asia/Ho_Chi_Minh",
-              })}
-            </div>
-            {existing!.returnNote && (
-              <div className="mt-3">
-                <div className="text-[11px] font-semibold uppercase tracking-wider text-amber-900">
-                  Nhận xét của giáo viên
-                </div>
-                <p className="mt-1 whitespace-pre-wrap text-sm text-amber-900">
-                  {existing!.returnNote}
-                </p>
-              </div>
-            )}
-          </section>
-        )}
 
         <section className="mt-6 rounded-2xl border border-border bg-surface p-5 shadow-soft">
           <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
