@@ -32,6 +32,7 @@ import { Route as AdminStatsRouteImport } from './routes/admin.stats'
 import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-bank'
 import { Route as TeacherTestsIndexRouteImport } from './routes/teacher.tests.index'
 import { Route as TeacherLiveIndexRouteImport } from './routes/teacher.live.index'
+import { Route as TeacherGuideIndexRouteImport } from './routes/teacher.guide.index'
 import { Route as TeacherExamsIndexRouteImport } from './routes/teacher.exams.index'
 import { Route as TeacherCoursesIndexRouteImport } from './routes/teacher.courses.index'
 import { Route as TeacherClassesIndexRouteImport } from './routes/teacher.classes.index'
@@ -171,6 +172,11 @@ const TeacherTestsIndexRoute = TeacherTestsIndexRouteImport.update({
 const TeacherLiveIndexRoute = TeacherLiveIndexRouteImport.update({
   id: '/teacher/live/',
   path: '/teacher/live/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TeacherGuideIndexRoute = TeacherGuideIndexRouteImport.update({
+  id: '/teacher/guide/',
+  path: '/teacher/guide/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TeacherExamsIndexRoute = TeacherExamsIndexRouteImport.update({
@@ -348,6 +354,7 @@ export interface FileRoutesByFullPath {
   '/teacher/classes/': typeof TeacherClassesIndexRoute
   '/teacher/courses/': typeof TeacherCoursesIndexRoute
   '/teacher/exams/': typeof TeacherExamsIndexRoute
+  '/teacher/guide/': typeof TeacherGuideIndexRoute
   '/teacher/live/': typeof TeacherLiveIndexRoute
   '/teacher/tests/': typeof TeacherTestsIndexRoute
   '/admin/exams/$examId/submissions': typeof AdminExamsExamIdSubmissionsRoute
@@ -397,6 +404,7 @@ export interface FileRoutesByTo {
   '/teacher/classes': typeof TeacherClassesIndexRoute
   '/teacher/courses': typeof TeacherCoursesIndexRoute
   '/teacher/exams': typeof TeacherExamsIndexRoute
+  '/teacher/guide': typeof TeacherGuideIndexRoute
   '/teacher/live': typeof TeacherLiveIndexRoute
   '/teacher/tests': typeof TeacherTestsIndexRoute
   '/admin/exams/$examId/submissions': typeof AdminExamsExamIdSubmissionsRoute
@@ -448,6 +456,7 @@ export interface FileRoutesById {
   '/teacher/classes/': typeof TeacherClassesIndexRoute
   '/teacher/courses/': typeof TeacherCoursesIndexRoute
   '/teacher/exams/': typeof TeacherExamsIndexRoute
+  '/teacher/guide/': typeof TeacherGuideIndexRoute
   '/teacher/live/': typeof TeacherLiveIndexRoute
   '/teacher/tests/': typeof TeacherTestsIndexRoute
   '/admin/exams/$examId/submissions': typeof AdminExamsExamIdSubmissionsRoute
@@ -500,6 +509,7 @@ export interface FileRouteTypes {
     | '/teacher/classes/'
     | '/teacher/courses/'
     | '/teacher/exams/'
+    | '/teacher/guide/'
     | '/teacher/live/'
     | '/teacher/tests/'
     | '/admin/exams/$examId/submissions'
@@ -549,6 +559,7 @@ export interface FileRouteTypes {
     | '/teacher/classes'
     | '/teacher/courses'
     | '/teacher/exams'
+    | '/teacher/guide'
     | '/teacher/live'
     | '/teacher/tests'
     | '/admin/exams/$examId/submissions'
@@ -599,6 +610,7 @@ export interface FileRouteTypes {
     | '/teacher/classes/'
     | '/teacher/courses/'
     | '/teacher/exams/'
+    | '/teacher/guide/'
     | '/teacher/live/'
     | '/teacher/tests/'
     | '/admin/exams/$examId/submissions'
@@ -648,6 +660,7 @@ export interface RootRouteChildren {
   TeacherClassesIndexRoute: typeof TeacherClassesIndexRoute
   TeacherCoursesIndexRoute: typeof TeacherCoursesIndexRoute
   TeacherExamsIndexRoute: typeof TeacherExamsIndexRoute
+  TeacherGuideIndexRoute: typeof TeacherGuideIndexRoute
   TeacherLiveIndexRoute: typeof TeacherLiveIndexRoute
   TeacherTestsIndexRoute: typeof TeacherTestsIndexRoute
   AdminTestsTestIdReviewRoute: typeof AdminTestsTestIdReviewRoute
@@ -816,6 +829,13 @@ declare module '@tanstack/react-router' {
       path: '/teacher/live'
       fullPath: '/teacher/live/'
       preLoaderRoute: typeof TeacherLiveIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/teacher/guide/': {
+      id: '/teacher/guide/'
+      path: '/teacher/guide'
+      fullPath: '/teacher/guide/'
+      preLoaderRoute: typeof TeacherGuideIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teacher/exams/': {
@@ -1060,6 +1080,7 @@ const rootRouteChildren: RootRouteChildren = {
   TeacherClassesIndexRoute: TeacherClassesIndexRoute,
   TeacherCoursesIndexRoute: TeacherCoursesIndexRoute,
   TeacherExamsIndexRoute: TeacherExamsIndexRoute,
+  TeacherGuideIndexRoute: TeacherGuideIndexRoute,
   TeacherLiveIndexRoute: TeacherLiveIndexRoute,
   TeacherTestsIndexRoute: TeacherTestsIndexRoute,
   AdminTestsTestIdReviewRoute: AdminTestsTestIdReviewRoute,
