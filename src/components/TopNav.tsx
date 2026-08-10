@@ -93,7 +93,9 @@ const teacherTabs = [
   { to: "/teacher/assignments" as const, label: "Bài tập", icon: ClipboardList },
   { to: "/teacher/tests" as const, label: "Chấm thi", icon: ScrollText },
   { to: "/teacher/reports" as const, label: "Báo cáo", icon: BarChart3 },
+  { to: "/teacher/guide" as const, label: "Hướng dẫn", icon: BookOpen },
 ];
+
 
 
 const adminTabs = [
