@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { TopNav } from "@/components/TopNav";
-import { findModule, guideModules, rolePermissions, troubleshooting } from "@/lib/guide-data";
+import { findModule, guideModules, rolePermissions, troubleshooting, type GuideModule } from "@/lib/guide-data";
 import { guideIcon } from "@/lib/guide-icons";
 import {
   ChevronDown,
@@ -61,7 +61,7 @@ function GuideNotFound() {
 }
 
 function GuideModulePage() {
-  const { mod } = Route.useLoaderData();
+  const { mod } = Route.useLoaderData() as { mod: GuideModule };
   const Icon = guideIcon(mod.icon);
   const [openId, setOpenId] = useState<string | null>(mod.topics[0]?.id ?? null);
 
