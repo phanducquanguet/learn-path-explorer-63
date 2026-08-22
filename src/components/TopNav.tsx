@@ -104,6 +104,7 @@ const adminTabs = [
   { to: "/admin/exams" as const, label: "Luyện thi", icon: ClipboardCheck },
   { to: "/admin/question-bank" as const, label: "Ngân hàng câu hỏi", icon: Library },
   { to: "/admin/tests" as const, label: "Thi cử", icon: ScrollText },
+  { to: "/admin/test-approvals" as const, label: "Duyệt đề thi", icon: FileCheck2 },
   { to: "/admin/campaigns" as const, label: "Chiến dịch", icon: Megaphone },
   { to: "/admin/stats" as const, label: "Thống kê", icon: BarChart3 },
 ];
