@@ -52,6 +52,7 @@ import { Route as TeacherClassesClassIdRouteImport } from './routes/teacher.clas
 import { Route as TeacherAssignmentsAssignmentIdRouteImport } from './routes/teacher.assignments.$assignmentId'
 import { Route as ExamsResultSubmissionIdRouteImport } from './routes/exams.result.$submissionId'
 import { Route as AdminTestsNewRouteImport } from './routes/admin.tests.new'
+import { Route as AdminTestApprovalsTestIdRouteImport } from './routes/admin.test-approvals.$testId'
 import { Route as AdminExamsNewRouteImport } from './routes/admin.exams.new'
 import { Route as AdminExamsExamIdRouteImport } from './routes/admin.exams.$examId'
 import { Route as AdminCourseApprovalsDraftIdRouteImport } from './routes/admin.course-approvals.$draftId'
@@ -278,6 +279,12 @@ const AdminTestsNewRoute = AdminTestsNewRouteImport.update({
   path: '/admin/tests/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTestApprovalsTestIdRoute =
+  AdminTestApprovalsTestIdRouteImport.update({
+    id: '/admin/test-approvals/$testId',
+    path: '/admin/test-approvals/$testId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminExamsNewRoute = AdminExamsNewRouteImport.update({
   id: '/admin/exams/new',
   path: '/admin/exams/new',
@@ -349,6 +356,7 @@ export interface FileRoutesByFullPath {
   '/admin/course-approvals/$draftId': typeof AdminCourseApprovalsDraftIdRoute
   '/admin/exams/$examId': typeof AdminExamsExamIdRouteWithChildren
   '/admin/exams/new': typeof AdminExamsNewRoute
+  '/admin/test-approvals/$testId': typeof AdminTestApprovalsTestIdRoute
   '/admin/tests/new': typeof AdminTestsNewRoute
   '/exams/result/$submissionId': typeof ExamsResultSubmissionIdRoute
   '/teacher/assignments/$assignmentId': typeof TeacherAssignmentsAssignmentIdRoute
@@ -401,6 +409,7 @@ export interface FileRoutesByTo {
   '/admin/course-approvals/$draftId': typeof AdminCourseApprovalsDraftIdRoute
   '/admin/exams/$examId': typeof AdminExamsExamIdRouteWithChildren
   '/admin/exams/new': typeof AdminExamsNewRoute
+  '/admin/test-approvals/$testId': typeof AdminTestApprovalsTestIdRoute
   '/admin/tests/new': typeof AdminTestsNewRoute
   '/exams/result/$submissionId': typeof ExamsResultSubmissionIdRoute
   '/teacher/assignments/$assignmentId': typeof TeacherAssignmentsAssignmentIdRoute
@@ -455,6 +464,7 @@ export interface FileRoutesById {
   '/admin/course-approvals/$draftId': typeof AdminCourseApprovalsDraftIdRoute
   '/admin/exams/$examId': typeof AdminExamsExamIdRouteWithChildren
   '/admin/exams/new': typeof AdminExamsNewRoute
+  '/admin/test-approvals/$testId': typeof AdminTestApprovalsTestIdRoute
   '/admin/tests/new': typeof AdminTestsNewRoute
   '/exams/result/$submissionId': typeof ExamsResultSubmissionIdRoute
   '/teacher/assignments/$assignmentId': typeof TeacherAssignmentsAssignmentIdRoute
@@ -510,6 +520,7 @@ export interface FileRouteTypes {
     | '/admin/course-approvals/$draftId'
     | '/admin/exams/$examId'
     | '/admin/exams/new'
+    | '/admin/test-approvals/$testId'
     | '/admin/tests/new'
     | '/exams/result/$submissionId'
     | '/teacher/assignments/$assignmentId'
@@ -562,6 +573,7 @@ export interface FileRouteTypes {
     | '/admin/course-approvals/$draftId'
     | '/admin/exams/$examId'
     | '/admin/exams/new'
+    | '/admin/test-approvals/$testId'
     | '/admin/tests/new'
     | '/exams/result/$submissionId'
     | '/teacher/assignments/$assignmentId'
@@ -615,6 +627,7 @@ export interface FileRouteTypes {
     | '/admin/course-approvals/$draftId'
     | '/admin/exams/$examId'
     | '/admin/exams/new'
+    | '/admin/test-approvals/$testId'
     | '/admin/tests/new'
     | '/exams/result/$submissionId'
     | '/teacher/assignments/$assignmentId'
@@ -668,6 +681,7 @@ export interface RootRouteChildren {
   AdminCourseApprovalsDraftIdRoute: typeof AdminCourseApprovalsDraftIdRoute
   AdminExamsExamIdRoute: typeof AdminExamsExamIdRouteWithChildren
   AdminExamsNewRoute: typeof AdminExamsNewRoute
+  AdminTestApprovalsTestIdRoute: typeof AdminTestApprovalsTestIdRoute
   AdminTestsNewRoute: typeof AdminTestsNewRoute
   TeacherAssignmentsAssignmentIdRoute: typeof TeacherAssignmentsAssignmentIdRoute
   TeacherClassesClassIdRoute: typeof TeacherClassesClassIdRoute
@@ -997,6 +1011,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTestsNewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/test-approvals/$testId': {
+      id: '/admin/test-approvals/$testId'
+      path: '/admin/test-approvals/$testId'
+      fullPath: '/admin/test-approvals/$testId'
+      preLoaderRoute: typeof AdminTestApprovalsTestIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/exams/new': {
       id: '/admin/exams/new'
       path: '/admin/exams/new'
@@ -1104,6 +1125,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminCourseApprovalsDraftIdRoute: AdminCourseApprovalsDraftIdRoute,
   AdminExamsExamIdRoute: AdminExamsExamIdRouteWithChildren,
   AdminExamsNewRoute: AdminExamsNewRoute,
+  AdminTestApprovalsTestIdRoute: AdminTestApprovalsTestIdRoute,
   AdminTestsNewRoute: AdminTestsNewRoute,
   TeacherAssignmentsAssignmentIdRoute: TeacherAssignmentsAssignmentIdRoute,
   TeacherClassesClassIdRoute: TeacherClassesClassIdRoute,
