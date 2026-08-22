@@ -65,6 +65,14 @@ export type Test = {
   copiedFromId?: string;
   /** Người tạo đề (mã / tên). Dùng để chặn tự duyệt đề của chính mình. */
   createdBy?: string;
+  /** Tên hiển thị của người đề xuất đề. */
+  createdByName?: string;
+  /** Vai trò người đề xuất: giáo viên hoặc admin. */
+  createdByRole?: "teacher" | "admin";
+  /** Đơn vị của người đề xuất (có thể khác đơn vị của đề). */
+  createdByOrgId?: string;
+  /** Ghi chú của giáo viên khi gửi đề xuất. */
+  proposalNote?: string;
   /** Trạng thái duyệt (nháp / chờ duyệt / đã duyệt). */
   approvalStatus?: TestApprovalStatus;
   reviewedBy?: string;
