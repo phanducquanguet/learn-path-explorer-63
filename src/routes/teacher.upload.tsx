@@ -33,9 +33,9 @@ import {
 
 export const Route = createFileRoute("/teacher/upload")({
   head: () => ({ meta: [{ title: "Quản lý khóa học — UNICOM LMS" }] }),
-  validateSearch: (s: Record<string, unknown>) => ({
-    edit: typeof s.edit === "string" ? s.edit : undefined,
-    mode: s.mode === "admin" ? ("admin" as const) : ("teacher" as const),
+  validateSearch: (s: Record<string, unknown>): { edit?: string; mode?: "admin" | "teacher" } => ({
+    ...(typeof s.edit === "string" ? { edit: s.edit } : {}),
+    mode: s.mode === "admin" ? "admin" : "teacher",
   }),
   component: UploadPage,
 });

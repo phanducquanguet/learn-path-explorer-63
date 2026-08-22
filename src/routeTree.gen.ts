@@ -38,6 +38,7 @@ import { Route as TeacherCoursesIndexRouteImport } from './routes/teacher.course
 import { Route as TeacherClassesIndexRouteImport } from './routes/teacher.classes.index'
 import { Route as TeacherAssignmentsIndexRouteImport } from './routes/teacher.assignments.index'
 import { Route as AdminTestsIndexRouteImport } from './routes/admin.tests.index'
+import { Route as AdminTestApprovalsIndexRouteImport } from './routes/admin.test-approvals.index'
 import { Route as AdminExamsIndexRouteImport } from './routes/admin.exams.index'
 import { Route as AdminCourseApprovalsIndexRouteImport } from './routes/admin.course-approvals.index'
 import { Route as AdminCampaignsIndexRouteImport } from './routes/admin.campaigns.index'
@@ -51,6 +52,7 @@ import { Route as TeacherClassesClassIdRouteImport } from './routes/teacher.clas
 import { Route as TeacherAssignmentsAssignmentIdRouteImport } from './routes/teacher.assignments.$assignmentId'
 import { Route as ExamsResultSubmissionIdRouteImport } from './routes/exams.result.$submissionId'
 import { Route as AdminTestsNewRouteImport } from './routes/admin.tests.new'
+import { Route as AdminTestApprovalsTestIdRouteImport } from './routes/admin.test-approvals.$testId'
 import { Route as AdminExamsNewRouteImport } from './routes/admin.exams.new'
 import { Route as AdminExamsExamIdRouteImport } from './routes/admin.exams.$examId'
 import { Route as AdminCourseApprovalsDraftIdRouteImport } from './routes/admin.course-approvals.$draftId'
@@ -205,6 +207,11 @@ const AdminTestsIndexRoute = AdminTestsIndexRouteImport.update({
   path: '/admin/tests/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTestApprovalsIndexRoute = AdminTestApprovalsIndexRouteImport.update({
+  id: '/admin/test-approvals/',
+  path: '/admin/test-approvals/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminExamsIndexRoute = AdminExamsIndexRouteImport.update({
   id: '/admin/exams/',
   path: '/admin/exams/',
@@ -272,6 +279,12 @@ const AdminTestsNewRoute = AdminTestsNewRouteImport.update({
   path: '/admin/tests/new',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTestApprovalsTestIdRoute =
+  AdminTestApprovalsTestIdRouteImport.update({
+    id: '/admin/test-approvals/$testId',
+    path: '/admin/test-approvals/$testId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminExamsNewRoute = AdminExamsNewRouteImport.update({
   id: '/admin/exams/new',
   path: '/admin/exams/new',
@@ -343,6 +356,7 @@ export interface FileRoutesByFullPath {
   '/admin/course-approvals/$draftId': typeof AdminCourseApprovalsDraftIdRoute
   '/admin/exams/$examId': typeof AdminExamsExamIdRouteWithChildren
   '/admin/exams/new': typeof AdminExamsNewRoute
+  '/admin/test-approvals/$testId': typeof AdminTestApprovalsTestIdRoute
   '/admin/tests/new': typeof AdminTestsNewRoute
   '/exams/result/$submissionId': typeof ExamsResultSubmissionIdRoute
   '/teacher/assignments/$assignmentId': typeof TeacherAssignmentsAssignmentIdRoute
@@ -356,6 +370,7 @@ export interface FileRoutesByFullPath {
   '/admin/campaigns/': typeof AdminCampaignsIndexRoute
   '/admin/course-approvals/': typeof AdminCourseApprovalsIndexRoute
   '/admin/exams/': typeof AdminExamsIndexRoute
+  '/admin/test-approvals/': typeof AdminTestApprovalsIndexRoute
   '/admin/tests/': typeof AdminTestsIndexRoute
   '/teacher/assignments/': typeof TeacherAssignmentsIndexRoute
   '/teacher/classes/': typeof TeacherClassesIndexRoute
@@ -394,6 +409,7 @@ export interface FileRoutesByTo {
   '/admin/course-approvals/$draftId': typeof AdminCourseApprovalsDraftIdRoute
   '/admin/exams/$examId': typeof AdminExamsExamIdRouteWithChildren
   '/admin/exams/new': typeof AdminExamsNewRoute
+  '/admin/test-approvals/$testId': typeof AdminTestApprovalsTestIdRoute
   '/admin/tests/new': typeof AdminTestsNewRoute
   '/exams/result/$submissionId': typeof ExamsResultSubmissionIdRoute
   '/teacher/assignments/$assignmentId': typeof TeacherAssignmentsAssignmentIdRoute
@@ -407,6 +423,7 @@ export interface FileRoutesByTo {
   '/admin/campaigns': typeof AdminCampaignsIndexRoute
   '/admin/course-approvals': typeof AdminCourseApprovalsIndexRoute
   '/admin/exams': typeof AdminExamsIndexRoute
+  '/admin/test-approvals': typeof AdminTestApprovalsIndexRoute
   '/admin/tests': typeof AdminTestsIndexRoute
   '/teacher/assignments': typeof TeacherAssignmentsIndexRoute
   '/teacher/classes': typeof TeacherClassesIndexRoute
@@ -447,6 +464,7 @@ export interface FileRoutesById {
   '/admin/course-approvals/$draftId': typeof AdminCourseApprovalsDraftIdRoute
   '/admin/exams/$examId': typeof AdminExamsExamIdRouteWithChildren
   '/admin/exams/new': typeof AdminExamsNewRoute
+  '/admin/test-approvals/$testId': typeof AdminTestApprovalsTestIdRoute
   '/admin/tests/new': typeof AdminTestsNewRoute
   '/exams/result/$submissionId': typeof ExamsResultSubmissionIdRoute
   '/teacher/assignments/$assignmentId': typeof TeacherAssignmentsAssignmentIdRoute
@@ -460,6 +478,7 @@ export interface FileRoutesById {
   '/admin/campaigns/': typeof AdminCampaignsIndexRoute
   '/admin/course-approvals/': typeof AdminCourseApprovalsIndexRoute
   '/admin/exams/': typeof AdminExamsIndexRoute
+  '/admin/test-approvals/': typeof AdminTestApprovalsIndexRoute
   '/admin/tests/': typeof AdminTestsIndexRoute
   '/teacher/assignments/': typeof TeacherAssignmentsIndexRoute
   '/teacher/classes/': typeof TeacherClassesIndexRoute
@@ -501,6 +520,7 @@ export interface FileRouteTypes {
     | '/admin/course-approvals/$draftId'
     | '/admin/exams/$examId'
     | '/admin/exams/new'
+    | '/admin/test-approvals/$testId'
     | '/admin/tests/new'
     | '/exams/result/$submissionId'
     | '/teacher/assignments/$assignmentId'
@@ -514,6 +534,7 @@ export interface FileRouteTypes {
     | '/admin/campaigns/'
     | '/admin/course-approvals/'
     | '/admin/exams/'
+    | '/admin/test-approvals/'
     | '/admin/tests/'
     | '/teacher/assignments/'
     | '/teacher/classes/'
@@ -552,6 +573,7 @@ export interface FileRouteTypes {
     | '/admin/course-approvals/$draftId'
     | '/admin/exams/$examId'
     | '/admin/exams/new'
+    | '/admin/test-approvals/$testId'
     | '/admin/tests/new'
     | '/exams/result/$submissionId'
     | '/teacher/assignments/$assignmentId'
@@ -565,6 +587,7 @@ export interface FileRouteTypes {
     | '/admin/campaigns'
     | '/admin/course-approvals'
     | '/admin/exams'
+    | '/admin/test-approvals'
     | '/admin/tests'
     | '/teacher/assignments'
     | '/teacher/classes'
@@ -604,6 +627,7 @@ export interface FileRouteTypes {
     | '/admin/course-approvals/$draftId'
     | '/admin/exams/$examId'
     | '/admin/exams/new'
+    | '/admin/test-approvals/$testId'
     | '/admin/tests/new'
     | '/exams/result/$submissionId'
     | '/teacher/assignments/$assignmentId'
@@ -617,6 +641,7 @@ export interface FileRouteTypes {
     | '/admin/campaigns/'
     | '/admin/course-approvals/'
     | '/admin/exams/'
+    | '/admin/test-approvals/'
     | '/admin/tests/'
     | '/teacher/assignments/'
     | '/teacher/classes/'
@@ -656,6 +681,7 @@ export interface RootRouteChildren {
   AdminCourseApprovalsDraftIdRoute: typeof AdminCourseApprovalsDraftIdRoute
   AdminExamsExamIdRoute: typeof AdminExamsExamIdRouteWithChildren
   AdminExamsNewRoute: typeof AdminExamsNewRoute
+  AdminTestApprovalsTestIdRoute: typeof AdminTestApprovalsTestIdRoute
   AdminTestsNewRoute: typeof AdminTestsNewRoute
   TeacherAssignmentsAssignmentIdRoute: typeof TeacherAssignmentsAssignmentIdRoute
   TeacherClassesClassIdRoute: typeof TeacherClassesClassIdRoute
@@ -668,6 +694,7 @@ export interface RootRouteChildren {
   AdminCampaignsIndexRoute: typeof AdminCampaignsIndexRoute
   AdminCourseApprovalsIndexRoute: typeof AdminCourseApprovalsIndexRoute
   AdminExamsIndexRoute: typeof AdminExamsIndexRoute
+  AdminTestApprovalsIndexRoute: typeof AdminTestApprovalsIndexRoute
   AdminTestsIndexRoute: typeof AdminTestsIndexRoute
   TeacherAssignmentsIndexRoute: typeof TeacherAssignmentsIndexRoute
   TeacherClassesIndexRoute: typeof TeacherClassesIndexRoute
@@ -886,6 +913,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminTestsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/test-approvals/': {
+      id: '/admin/test-approvals/'
+      path: '/admin/test-approvals'
+      fullPath: '/admin/test-approvals/'
+      preLoaderRoute: typeof AdminTestApprovalsIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/exams/': {
       id: '/admin/exams/'
       path: '/admin/exams'
@@ -975,6 +1009,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/tests/new'
       fullPath: '/admin/tests/new'
       preLoaderRoute: typeof AdminTestsNewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/test-approvals/$testId': {
+      id: '/admin/test-approvals/$testId'
+      path: '/admin/test-approvals/$testId'
+      fullPath: '/admin/test-approvals/$testId'
+      preLoaderRoute: typeof AdminTestApprovalsTestIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/admin/exams/new': {
@@ -1084,6 +1125,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminCourseApprovalsDraftIdRoute: AdminCourseApprovalsDraftIdRoute,
   AdminExamsExamIdRoute: AdminExamsExamIdRouteWithChildren,
   AdminExamsNewRoute: AdminExamsNewRoute,
+  AdminTestApprovalsTestIdRoute: AdminTestApprovalsTestIdRoute,
   AdminTestsNewRoute: AdminTestsNewRoute,
   TeacherAssignmentsAssignmentIdRoute: TeacherAssignmentsAssignmentIdRoute,
   TeacherClassesClassIdRoute: TeacherClassesClassIdRoute,
@@ -1096,6 +1138,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdminCampaignsIndexRoute: AdminCampaignsIndexRoute,
   AdminCourseApprovalsIndexRoute: AdminCourseApprovalsIndexRoute,
   AdminExamsIndexRoute: AdminExamsIndexRoute,
+  AdminTestApprovalsIndexRoute: AdminTestApprovalsIndexRoute,
   AdminTestsIndexRoute: AdminTestsIndexRoute,
   TeacherAssignmentsIndexRoute: TeacherAssignmentsIndexRoute,
   TeacherClassesIndexRoute: TeacherClassesIndexRoute,
@@ -1111,3 +1154,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}

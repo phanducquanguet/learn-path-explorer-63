@@ -131,7 +131,9 @@ const TABS = [
 type TabId = (typeof TABS)[number]["id"];
 
 function ClassDetailPage() {
-  const { cls } = Route.useLoaderData();
+  const { classId } = Route.useParams();
+  const cls = classes.find((c) => c.id === classId);
+  if (!cls) throw notFound();
   const [tab, setTab] = useState<TabId>("overview");
   const [picked, setPicked] = useState<TeacherStudent | null>(null);
   const [pickedCourse, setPickedCourse] = useState<Course | null>(null);
