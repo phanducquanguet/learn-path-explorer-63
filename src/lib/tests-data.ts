@@ -695,3 +695,18 @@ export function sendBackTest(id: string, reviewer: string, note?: string) {
   t.reviewedAt = new Date().toISOString();
   if (note) t.reviewNote = note;
 }
+
+/** Danh sách đề do giáo viên đề xuất (mọi trạng thái duyệt). */
+export function teacherProposedTests(): Test[] {
+  return tests.filter((t) => t.createdByRole === "teacher");
+}
+
+/** Số đề đang chờ duyệt (dùng cho badge menu). */
+export function pendingApprovalCount(): number {
+  return teacherProposedTests().filter((t) => t.approvalStatus === "pending").length;
+}
+
+/** Tổng số câu hỏi của một đề (theo cấu trúc đã tạo). */
+export function testQuestionCount(t: Test): number {
+  return t.structure.reduce((s, x) => s + x.count, 0);
+}
