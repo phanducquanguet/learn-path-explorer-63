@@ -17,6 +17,7 @@ import {
   Library,
   Shield,
   ShieldCheck,
+  FileCheck2,
   FileText,
   History,
   CheckCircle2,
