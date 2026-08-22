@@ -44,9 +44,8 @@ export const Route = createFileRoute("/admin/tests/$testId/review")({
   head: ({ params }) => ({
     meta: [{ title: `Duyệt đề ${params.testId} — UNICOM LMS` }],
   }),
-  validateSearch: (s: Record<string, unknown>) => ({
-    sim: s.sim === 1 || s.sim === "1" ? 1 : undefined,
-  }),
+  validateSearch: (s: Record<string, unknown>): { sim?: 1 } =>
+    s.sim === 1 || s.sim === "1" ? { sim: 1 } : {},
   component: ReviewPage,
 });
 
