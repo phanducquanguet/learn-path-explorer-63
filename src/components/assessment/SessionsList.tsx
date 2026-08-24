@@ -21,7 +21,7 @@ import {
   ASSESSMENT_TITLE,
   type AssessmentScope,
 } from "@/components/assessment/AssessmentTabs";
-import { CalendarClock, Plus, Copy, XCircle, PencilLine, Users } from "lucide-react";
+import { CalendarClock, Plus, XCircle, CheckCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
@@ -103,25 +103,23 @@ export function SessionsList({
         s.id === id ? { ...s, cancelled: true, cancelReason: "Hủy bởi người tổ chức" } : s,
       ),
     );
-    toast.success("Đã hủy đợt thi — đề thi gốc không bị ảnh hưởng");
+    toast.success("Đã hủy lịch thi — đề thi gốc không bị ảnh hưởng");
   }
 
-  function copySchedule(s: ExamSession) {
-    const copy: ExamSession = {
-      ...s,
-      id: `ses-${Math.random().toString(36).slice(2, 8)}`,
-      name: `${s.name} (bù)`,
-      confirmed: false,
-      cancelled: false,
-      published: false,
-      started: 0,
-      submitted: 0,
-      graded: 0,
-      createdAt: new Date().toISOString(),
-    };
-    persist([copy, ...sessions]);
-    toast.success("Đã sao chép lịch tổ chức — xác nhận lại lớp và thời gian");
+  function publish(id: string) {
+    persist(
+      sessions.map((s) =>
+        s.id === id ? { ...s, published: true } : s,
+      ),
+    );
+    toast.success("Đã công bố kết quả thi");
   }
+
+  function remove(id: string) {
+    persist(sessions.filter((s) => s.id !== id));
+    toast.success("Đã xóa bản nháp");
+  }
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -199,16 +197,14 @@ export function SessionsList({
         </div>
 
         <div className="mt-4 overflow-x-auto rounded-2xl border border-border bg-surface">
-          <table className="w-full min-w-[1100px] text-sm">
+          <table className="w-full min-w-[900px] text-sm">
             <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
               <tr>
-                <th className="px-4 py-3 text-left font-semibold">Tên đợt thi</th>
                 <th className="px-4 py-3 text-left font-semibold">Đề thi</th>
-                <th className="px-4 py-3 text-center font-semibold">Phiên bản</th>
+                <th className="px-4 py-3 text-left font-semibold">Mở</th>
+                <th className="px-4 py-3 text-left font-semibold">Đóng</th>
                 <th className="px-4 py-3 text-left font-semibold">Lớp</th>
-                <th className="px-4 py-3 text-left font-semibold">Mở / Đóng</th>
-                <th className="px-4 py-3 text-center font-semibold">HV / Tham gia / Nộp</th>
-                <th className="px-4 py-3 text-left font-semibold">Người chấm</th>
+                <th className="px-4 py-3 text-center font-semibold">HS đã nộp</th>
                 <th className="px-4 py-3 text-left font-semibold">Trạng thái</th>
                 <th className="px-4 py-3 text-right font-semibold">Thao tác</th>
               </tr>
@@ -219,15 +215,8 @@ export function SessionsList({
                 const test = tests.find((t) => t.id === s.testId);
                 return (
                   <tr key={s.id} className="border-t border-border/60">
-                    <td className="px-4 py-3">
-                      <div className="font-semibold text-foreground">{s.name}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {s.groupCode ? `Nhóm ${s.groupCode} · ` : ""}
-                        {s.durationMinutes}′ · {s.attempts} lần làm
-                      </div>
-                    </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      <span className="inline-flex flex-wrap items-center gap-1.5">
+                      <span className="inline-flex flex-wrap items-center gap-1.5 font-medium text-foreground">
                         <span>{test?.name ?? s.testId}</span>
                         {test && testPaperCount(test) > 1 && (
                           <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
@@ -241,8 +230,16 @@ export function SessionsList({
                         </div>
                       )}
                     </td>
-
-                    <td className="px-4 py-3 text-center tabular-nums">v{s.testVersion}</td>
+                    <td className="px-4 py-3 text-xs">
+                      <div className="text-emerald-600 dark:text-emerald-400">
+                        {now ? fmtDateTime(s.openAt) : "—"}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-xs">
+                      <div className="text-rose-600 dark:text-rose-400">
+                        {now ? fmtDateTime(s.closeAt) : "—"}
+                      </div>
+                    </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
                         {sessionClassNames(s).map((n) => (
@@ -255,21 +252,9 @@ export function SessionsList({
                         ))}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-xs">
-                      <div className="text-emerald-600 dark:text-emerald-400">
-                        {now ? fmtDateTime(s.openAt) : "—"}
-                      </div>
-                      <div className="text-rose-600 dark:text-rose-400">
-                        {now ? fmtDateTime(s.closeAt) : "—"}
-                      </div>
-                    </td>
                     <td className="px-4 py-3 text-center text-xs tabular-nums text-muted-foreground">
-                      <span className="inline-flex items-center gap-1">
-                        <Users className="h-3.5 w-3.5" /> {s.totalStudents} / {s.started} /{" "}
-                        {s.submitted}
-                      </span>
+                      {s.submitted}/{s.totalStudents}
                     </td>
-                    <td className="px-4 py-3 text-muted-foreground">{s.graderName ?? "—"}</td>
                     <td className="px-4 py-3">
                       <span
                         className={cn(
@@ -282,28 +267,28 @@ export function SessionsList({
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1.5">
-                        {!s.confirmed && (
+                        {st === "awaiting-publish" && (
                           <button
-                            onClick={() =>
-                              persist(sessions.map((x) => (x.id === s.id ? { ...x, confirmed: true } : x)))
-                            }
-                            className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2 py-1 text-xs font-semibold text-primary hover:bg-primary/15"
+                            onClick={() => publish(s.id)}
+                            className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-600 hover:bg-emerald-500/15 dark:text-emerald-400"
                           >
-                            <PencilLine className="h-3.5 w-3.5" /> Xác nhận
+                            <CheckCircle className="h-3.5 w-3.5" /> Công bố
                           </button>
                         )}
-                        <button
-                          onClick={() => copySchedule(s)}
-                          className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-                        >
-                          <Copy className="h-3.5 w-3.5" /> Sao chép lịch
-                        </button>
-                        {!s.cancelled && st !== "completed" && (
+                        {!s.cancelled && st !== "completed" && st !== "draft" && (
                           <button
                             onClick={() => cancel(s.id)}
                             className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-medium text-rose-600 hover:bg-rose-500/10"
                           >
-                            <XCircle className="h-3.5 w-3.5" /> Hủy
+                            <XCircle className="h-3.5 w-3.5" /> Hủy lịch
+                          </button>
+                        )}
+                        {st === "draft" && (
+                          <button
+                            onClick={() => remove(s.id)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" /> Xóa
                           </button>
                         )}
                       </div>
@@ -313,7 +298,7 @@ export function SessionsList({
               })}
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                  <td colSpan={7} className="px-4 py-12 text-center text-sm text-muted-foreground">
                     Chưa có đợt thi nào. Chọn <strong>Phân phối đề</strong> để tổ chức thi từ đề đã
                     duyệt.
                   </td>
@@ -322,6 +307,7 @@ export function SessionsList({
             </tbody>
           </table>
         </div>
+
       </div>
 
       <DistributeDialog
