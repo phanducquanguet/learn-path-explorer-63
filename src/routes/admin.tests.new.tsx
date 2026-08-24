@@ -490,8 +490,21 @@ export function TestExamBuilder({
                 />
               </Field>
               {!isExam && (
+                <Field label="Tổng điểm (tự tính từ câu hỏi đã chọn)">
+                  <input
+                    readOnly
+                    value={totalPoints}
+                    className="w-full rounded-xl border border-border bg-muted/40 px-3 py-2 text-sm font-semibold"
+                  />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Điểm được cộng từ điểm của từng câu hỏi trong ngân hàng câu hỏi.
+                  </p>
+                </Field>
+              )}
+              {!isExam && !simpleTestForm && (
                 <>
               <Field label="Đơn vị (trường / trung tâm)">
+
                 <select
                   value={orgId}
                   onChange={(e) => {
