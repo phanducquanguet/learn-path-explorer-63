@@ -17,7 +17,6 @@ import {
   type SessionStatus,
 } from "@/lib/exam-sessions";
 import {
-  AssessmentTabBar,
   ASSESSMENT_DESCRIPTION,
   ASSESSMENT_TITLE,
   type AssessmentScope,
