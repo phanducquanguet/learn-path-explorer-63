@@ -81,10 +81,10 @@ export function SessionsList({
   const counts = useMemo(() => {
     const by = (s: SessionStatus) => sessions.filter((x) => sessionStatus(x, now) === s).length;
     return {
+      draft: by("draft"),
       upcoming: by("upcoming"),
       open: by("open"),
-      grading: by("grading"),
-      completed: by("completed"),
+      closed: by("closed"),
     };
   }, [sessions, now]);
 
