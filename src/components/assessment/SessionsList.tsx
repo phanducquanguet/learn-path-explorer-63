@@ -21,7 +21,7 @@ import {
   ASSESSMENT_TITLE,
   type AssessmentScope,
 } from "@/components/assessment/AssessmentTabs";
-import { CalendarClock, Plus, XCircle, CheckCircle, Trash2 } from "lucide-react";
+import { CalendarClock, Plus, Trash2, Pencil, Send, Undo2, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
