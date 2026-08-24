@@ -342,21 +342,17 @@ function DistributeDialog({
   const tests = useMemo(() => approvedTests(), []);
   const [testId, setTestId] = useState(presetTestId ?? tests[0]?.id ?? "");
   const [classIds, setClassIds] = useState<string[]>([]);
-  const [perClass, setPerClass] = useState(false);
   const [openAt, setOpenAt] = useState(() => toInput(new Date(Date.now() + 86_400_000).toISOString()));
   const [closeAt, setCloseAt] = useState(() =>
     toInput(new Date(Date.now() + 86_400_000 + 7_200_000).toISOString()),
   );
-  const [duration, setDuration] = useState(60);
-  const [attempts, setAttempts] = useState(1);
-  const [grader, setGrader] = useState("Cô Mai Lan");
-  const [publishMode, setPublishMode] = useState<"auto" | "manual">("manual");
 
   useEffect(() => {
     if (presetTestId) setTestId(presetTestId);
   }, [presetTestId]);
 
   const test = tests.find((t) => t.id === testId);
+  const duration = test?.durationMinutes ?? 60;
   const levelWarnings = classIds.filter(
     (id) => test && classes.find((c) => c.id === id)?.levelCode !== test.level,
   );
