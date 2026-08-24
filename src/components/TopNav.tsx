@@ -100,8 +100,8 @@ const teacherTabs: NavItem[] = [
     icon: ScrollText,
     children: [
       { to: "/teacher/question-bank", label: "Ngân hàng câu hỏi", icon: Library },
-      { to: "/teacher/tests/papers", label: "Đề thi", icon: FileText },
-      { to: "/teacher/tests/sessions", label: "Tổ chức thi", icon: ClipboardCheck },
+      { to: "/teacher/tests/papers", label: "Quản lý đề thi", icon: FileText },
+      { to: "/teacher/tests/sessions", label: "Phân phối đề thi", icon: ClipboardCheck },
       { to: "/teacher/tests", label: "Chấm thi", icon: FileCheck2 },
     ],
   },
@@ -119,8 +119,8 @@ const adminTabs: NavItem[] = [
     icon: ScrollText,
     children: [
       { to: "/admin/question-bank", label: "Ngân hàng câu hỏi", icon: Library },
-      { to: "/admin/tests", label: "Đề thi", icon: FileText },
-      { to: "/admin/tests/sessions", label: "Tổ chức thi", icon: ClipboardCheck },
+      { to: "/admin/tests", label: "Quản lý đề thi", icon: FileText },
+      { to: "/admin/tests/sessions", label: "Phân phối đề thi", icon: ClipboardCheck },
       { to: "/admin/test-approvals", label: "Duyệt đề thi", icon: FileCheck2 },
     ],
   },
