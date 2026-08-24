@@ -369,18 +369,21 @@ export function TestExamBuilder({
         prev.push({
           id: `t-${Date.now()}`,
           name,
+          code: code.trim() || `${level}-${Date.now().toString().slice(-4)}`,
           description: desc,
           level,
-          orgId,
-          classIds,
+          totalPoints,
+          orgId: simpleTestForm ? undefined : orgId,
+          classIds: simpleTestForm ? [] : classIds,
           durationMinutes: duration,
-          openAt,
-          closeAt,
+          openAt: simpleTestForm ? "" : openAt,
+          closeAt: simpleTestForm ? "" : closeAt,
           mode,
           enforceOrder,
           structure,
           createdAt: new Date().toISOString(),
         });
+
         window.localStorage.setItem(key, JSON.stringify(prev));
       }
     }
