@@ -40,6 +40,8 @@ export type ExamSession = {
   confirmed: boolean;
   cancelled?: boolean;
   cancelReason?: string;
+  /** Đề bị đóng sớm thủ công. */
+  closedEarly?: boolean;
   totalStudents: number;
   started: number;
   submitted: number;
