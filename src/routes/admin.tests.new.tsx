@@ -220,9 +220,12 @@ export function TestExamBuilder({
   const pageTitle = isExam ? "Tạo bài luyện thi mới" : "Tạo bài tập mới";
   const submitLabel = isExam ? "Tạo bài luyện thi" : "Tạo bài tập";
 
+  const simpleTestForm = !isExam && scope === "teacher";
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
+  const [code, setCode] = useState("");
   const [desc, setDesc] = useState("");
+
   const [levels, setLevels] = useState<QLevel[]>(["B1"]);
   const level: QLevel = levels[0] ?? "B1";
   useEffect(() => {
@@ -314,6 +317,17 @@ export function TestExamBuilder({
     });
   }, [structure, mode]);
 
+  const totalPoints = useMemo(
+    () =>
+      resolved.reduce(
+        (sum, g) => sum + g.questions.reduce((s, q) => s + (Number((q as { points?: number }).points) || 1), 0),
+        0,
+      ),
+    [resolved],
+  );
+
+
+
   if (role !== allowedRole) {
     const who = allowedRole === "admin" ? "Quản trị viên" : "Giáo viên";
     return (
@@ -355,18 +369,21 @@ export function TestExamBuilder({
         prev.push({
           id: `t-${Date.now()}`,
           name,
+          code: code.trim() || `${level}-${Date.now().toString().slice(-4)}`,
           description: desc,
           level,
-          orgId,
-          classIds,
+          totalPoints,
+          orgId: simpleTestForm ? undefined : orgId,
+          classIds: simpleTestForm ? [] : classIds,
           durationMinutes: duration,
-          openAt,
-          closeAt,
+          openAt: simpleTestForm ? "" : openAt,
+          closeAt: simpleTestForm ? "" : closeAt,
           mode,
           enforceOrder,
           structure,
           createdAt: new Date().toISOString(),
         });
+
         window.localStorage.setItem(key, JSON.stringify(prev));
       }
     }
@@ -443,6 +460,17 @@ export function TestExamBuilder({
                   className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
                 />
               </Field>
+              {!isExam && (
+                <Field label="Mã đề">
+                  <input
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.toUpperCase())}
+                    placeholder="VD: B1-MID-06"
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm font-semibold uppercase"
+                  />
+                </Field>
+              )}
+
               <Field label="Mô tả">
                 <textarea
                   value={desc}
@@ -490,8 +518,21 @@ export function TestExamBuilder({
                 />
               </Field>
               {!isExam && (
+                <Field label="Tổng điểm (tự tính từ câu hỏi đã chọn)">
+                  <input
+                    readOnly
+                    value={totalPoints}
+                    className="w-full rounded-xl border border-border bg-muted/40 px-3 py-2 text-sm font-semibold"
+                  />
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    Điểm được cộng từ điểm của từng câu hỏi trong ngân hàng câu hỏi.
+                  </p>
+                </Field>
+              )}
+              {!isExam && !simpleTestForm && (
                 <>
               <Field label="Đơn vị (trường / trung tâm)">
+
                 <select
                   value={orgId}
                   onChange={(e) => {
@@ -1082,9 +1123,11 @@ export function TestExamBuilder({
             <div className="space-y-4 text-sm">
               <div className="grid gap-2 sm:grid-cols-2">
                 <Row label="Tên đề" value={name || "—"} />
+                {!isExam && <Row label="Mã đề" value={code || "—"} />}
                 <Row label="Cấp độ" value={levels.join(", ")} />
                 <Row label="Thời lượng" value={`${duration} phút`} />
-                {!isExam && (
+                {!isExam && <Row label="Tổng điểm" value={String(totalPoints)} />}
+                {!isExam && !simpleTestForm && (
                   <>
                     <Row label="Đơn vị" value={orgs.find((o) => o.id === orgId)?.name ?? "—"} />
                     <Row label="Lớp" value={classIds.length ? classIds.length + " lớp" : "—"} />
@@ -1092,6 +1135,7 @@ export function TestExamBuilder({
                     <Row label="Đóng" value={closeAt || "—"} />
                   </>
                 )}
+
                 <Row label="Tổng câu" value={String(totalQuestions)} />
                 <Row label="Chế độ" value={mode === "random" ? "Bốc ngẫu nhiên" : mode === "manual" ? "Tự soạn" : "Cố định"} />
                 <Row label="Thứ tự làm bài" value={enforceOrder ? "Bắt buộc theo flow" : "Tự do"} />
