@@ -98,27 +98,33 @@ export function SessionsList({
     [sessions, status, classFilter, now],
   );
 
-  function cancel(id: string) {
-    persist(
-      sessions.map((s) =>
-        s.id === id ? { ...s, cancelled: true, cancelReason: "Hủy bởi người tổ chức" } : s,
-      ),
-    );
-    toast.success("Đã hủy lịch thi — đề thi gốc không bị ảnh hưởng");
-  }
-
   function publish(id: string) {
     persist(
       sessions.map((s) =>
-        s.id === id ? { ...s, published: true } : s,
+        s.id === id ? { ...s, confirmed: true, cancelled: false, closedEarly: false } : s,
       ),
     );
-    toast.success("Đã công bố kết quả thi");
+    toast.success("Đã xuất bản đợt thi — học viên sẽ thấy lịch thi này");
+  }
+
+  function unpublish(id: string) {
+    persist(sessions.map((s) => (s.id === id ? { ...s, confirmed: false } : s)));
+    toast.success("Đã hủy xuất bản — đợt thi trở về bản nháp");
+  }
+
+  function closeNow(id: string) {
+    persist(sessions.map((s) => (s.id === id ? { ...s, closedEarly: true } : s)));
+    toast.success("Đã đóng đề — thí sinh không thể vào làm bài");
   }
 
   function remove(id: string) {
     persist(sessions.filter((s) => s.id !== id));
     toast.success("Đã xóa bản nháp");
+  }
+
+  function saveEdit(updated: ExamSession) {
+    persist(sessions.map((s) => (s.id === updated.id ? updated : s)));
+    toast.success("Đã cập nhật bản nháp");
   }
 
 
