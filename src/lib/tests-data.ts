@@ -156,6 +156,7 @@ export const tests: Test[] = [
     avgScore: 7.4,
     createdAt: days(-10),
     code: "B1-MID-05",
+    altCodes: ["B1-MID-05-A", "B1-MID-05-B", "B1-MID-05-C"],
     createdBy: "admin.hoa",
     approvalStatus: "approved",
     reviewedBy: "admin.dung",
