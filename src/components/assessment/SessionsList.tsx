@@ -379,9 +379,8 @@ function DistributeDialog({
       openAt: new Date(openAt).toISOString(),
       closeAt: new Date(closeAt).toISOString(),
       durationMinutes: duration,
-      attempts,
-      graderName: grader,
-      publishMode,
+      attempts: 1,
+      publishMode: "manual",
       confirmed: true,
       totalStudents: ids.reduce(
         (s, id) => s + (classes.find((c) => c.id === id)?.studentCount ?? 0),
