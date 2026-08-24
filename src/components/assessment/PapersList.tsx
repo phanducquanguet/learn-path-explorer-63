@@ -11,6 +11,11 @@ import {
 } from "@/lib/tests-data";
 import { type AssessmentScope } from "@/components/assessment/AssessmentTabs";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -28,6 +33,7 @@ import {
   Trash2,
   Clock,
   MoreHorizontal,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -206,8 +212,40 @@ export function PapersList({ scope = "admin" }: { scope?: AssessmentScope } = {}
                 const st = paperStatus(t);
                 return (
                   <tr key={t.id} className="border-t border-border/60 align-middle">
-                    <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
-                      {t.code ?? "—"}
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="font-mono text-xs text-muted-foreground">
+                          {t.code ?? "—"}
+                        </span>
+                        {t.altCodes && t.altCodes.length > 0 && (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button
+                                type="button"
+                                className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary hover:bg-primary/20"
+                              >
+                                +{t.altCodes.length} mã đề
+                                <ChevronDown className="h-3 w-3" />
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent align="start" className="w-56 p-2">
+                              <p className="mb-1.5 text-xs font-medium text-muted-foreground">
+                                Các mã đề con
+                              </p>
+                              <div className="flex flex-wrap gap-1">
+                                {t.altCodes.map((code) => (
+                                  <span
+                                    key={code}
+                                    className="rounded-md bg-muted px-2 py-1 font-mono text-xs text-foreground"
+                                  >
+                                    {code}
+                                  </span>
+                                ))}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3 font-semibold text-foreground">{t.name}</td>
                     <td className="px-4 py-3 text-right tabular-nums">{testQuestionCount(t)}</td>

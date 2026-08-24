@@ -45,6 +45,8 @@ export type Test = {
   id: string;
   /** Mã đề hiển thị (VD: FLYER-NB-TEST). */
   code?: string;
+  /** Các mã đề con / mã đề thay thế (nếu có nhiều phiên bản). */
+  altCodes?: string[];
   name: string;
   description: string;
   /** Đơn vị (trường / trung tâm) mà bài thi thuộc về. */
@@ -154,6 +156,7 @@ export const tests: Test[] = [
     avgScore: 7.4,
     createdAt: days(-10),
     code: "B1-MID-05",
+    altCodes: ["B1-MID-05-A", "B1-MID-05-B", "B1-MID-05-C"],
     createdBy: "admin.hoa",
     approvalStatus: "approved",
     reviewedBy: "admin.dung",
@@ -232,6 +235,7 @@ export const tests: Test[] = [
     avgScore: 6.8,
     createdAt: days(-4),
     code: "B1-MOCK-EVE",
+    altCodes: ["B1-MOCK-EVE-A", "B1-MOCK-EVE-B"],
     createdBy: "admin.hoa",
     approvalStatus: "draft",
   },
