@@ -11,6 +11,11 @@ import {
 } from "@/lib/tests-data";
 import { type AssessmentScope } from "@/components/assessment/AssessmentTabs";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -28,6 +33,7 @@ import {
   Trash2,
   Clock,
   MoreHorizontal,
+  ChevronDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
