@@ -274,30 +274,45 @@ export function SessionsList({
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1.5">
-                        {st === "awaiting-publish" && (
+                        {st === "draft" && (
+                          <>
+                            <button
+                              onClick={() => setEditing(s)}
+                              className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                            >
+                              <Pencil className="h-3.5 w-3.5" /> Sửa
+                            </button>
+                            <button
+                              onClick={() => publish(s.id)}
+                              className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-600 hover:bg-emerald-500/15 dark:text-emerald-400"
+                            >
+                              <Send className="h-3.5 w-3.5" /> Xuất bản
+                            </button>
+                            <button
+                              onClick={() => remove(s.id)}
+                              className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" /> Xóa
+                            </button>
+                          </>
+                        )}
+                        {st === "upcoming" && (
                           <button
-                            onClick={() => publish(s.id)}
-                            className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-600 hover:bg-emerald-500/15 dark:text-emerald-400"
+                            onClick={() => unpublish(s.id)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-medium text-amber-600 hover:bg-amber-500/10 dark:text-amber-400"
                           >
-                            <CheckCircle className="h-3.5 w-3.5" /> Công bố
+                            <Undo2 className="h-3.5 w-3.5" /> Hủy xuất bản
                           </button>
                         )}
-                        {!s.cancelled && st !== "completed" && st !== "draft" && (
+                        {st === "open" && (
                           <button
-                            onClick={() => cancel(s.id)}
+                            onClick={() => closeNow(s.id)}
                             className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-medium text-rose-600 hover:bg-rose-500/10"
                           >
-                            <XCircle className="h-3.5 w-3.5" /> Hủy lịch
+                            <Lock className="h-3.5 w-3.5" /> Đóng đề
                           </button>
                         )}
-                        {st === "draft" && (
-                          <button
-                            onClick={() => remove(s.id)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" /> Xóa
-                          </button>
-                        )}
+                        {st === "closed" && <span className="text-xs text-muted-foreground">—</span>}
                       </div>
                     </td>
                   </tr>
