@@ -21,7 +21,7 @@ import {
   ASSESSMENT_TITLE,
   type AssessmentScope,
 } from "@/components/assessment/AssessmentTabs";
-import { CalendarClock, Plus, XCircle, CheckCircle, Trash2 } from "lucide-react";
+import { CalendarClock, Plus, Trash2, Pencil, Send, Undo2, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
@@ -61,6 +61,7 @@ export function SessionsList({
   const [status, setStatus] = useState<SessionStatus | "all">("all");
   const [classFilter, setClassFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<ExamSession | null>(null);
 
   useEffect(() => {
     setSessions(loadSessions());
@@ -80,10 +81,10 @@ export function SessionsList({
   const counts = useMemo(() => {
     const by = (s: SessionStatus) => sessions.filter((x) => sessionStatus(x, now) === s).length;
     return {
+      draft: by("draft"),
       upcoming: by("upcoming"),
       open: by("open"),
-      grading: by("grading"),
-      completed: by("completed"),
+      closed: by("closed"),
     };
   }, [sessions, now]);
 
@@ -97,27 +98,33 @@ export function SessionsList({
     [sessions, status, classFilter, now],
   );
 
-  function cancel(id: string) {
-    persist(
-      sessions.map((s) =>
-        s.id === id ? { ...s, cancelled: true, cancelReason: "Hủy bởi người tổ chức" } : s,
-      ),
-    );
-    toast.success("Đã hủy lịch thi — đề thi gốc không bị ảnh hưởng");
-  }
-
   function publish(id: string) {
     persist(
       sessions.map((s) =>
-        s.id === id ? { ...s, published: true } : s,
+        s.id === id ? { ...s, confirmed: true, cancelled: false, closedEarly: false } : s,
       ),
     );
-    toast.success("Đã công bố kết quả thi");
+    toast.success("Đã xuất bản đợt thi — học viên sẽ thấy lịch thi này");
+  }
+
+  function unpublish(id: string) {
+    persist(sessions.map((s) => (s.id === id ? { ...s, confirmed: false } : s)));
+    toast.success("Đã hủy xuất bản — đợt thi trở về bản nháp");
+  }
+
+  function closeNow(id: string) {
+    persist(sessions.map((s) => (s.id === id ? { ...s, closedEarly: true } : s)));
+    toast.success("Đã đóng đề — thí sinh không thể vào làm bài");
   }
 
   function remove(id: string) {
     persist(sessions.filter((s) => s.id !== id));
     toast.success("Đã xóa bản nháp");
+  }
+
+  function saveEdit(updated: ExamSession) {
+    persist(sessions.map((s) => (s.id === updated.id ? updated : s)));
+    toast.success("Đã cập nhật bản nháp");
   }
 
 
@@ -149,10 +156,10 @@ export function SessionsList({
         <div className="mt-6 grid gap-3 sm:grid-cols-4">
           {(
             [
+              ["draft", "Bản nháp", counts.draft],
               ["upcoming", "Sắp diễn ra", counts.upcoming],
               ["open", "Đang mở", counts.open],
-              ["grading", "Chờ chấm", counts.grading],
-              ["completed", "Hoàn tất", counts.completed],
+              ["closed", "Đã đóng", counts.closed],
             ] as [SessionStatus, string, number][]
           ).map(([key, label, value]) => (
             <button
@@ -267,30 +274,45 @@ export function SessionsList({
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center justify-end gap-1.5">
-                        {st === "awaiting-publish" && (
+                        {st === "draft" && (
+                          <>
+                            <button
+                              onClick={() => setEditing(s)}
+                              className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                            >
+                              <Pencil className="h-3.5 w-3.5" /> Sửa
+                            </button>
+                            <button
+                              onClick={() => publish(s.id)}
+                              className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-600 hover:bg-emerald-500/15 dark:text-emerald-400"
+                            >
+                              <Send className="h-3.5 w-3.5" /> Xuất bản
+                            </button>
+                            <button
+                              onClick={() => remove(s.id)}
+                              className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" /> Xóa
+                            </button>
+                          </>
+                        )}
+                        {st === "upcoming" && (
                           <button
-                            onClick={() => publish(s.id)}
-                            className="inline-flex items-center gap-1 rounded-lg bg-emerald-500/10 px-2 py-1 text-xs font-semibold text-emerald-600 hover:bg-emerald-500/15 dark:text-emerald-400"
+                            onClick={() => unpublish(s.id)}
+                            className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-medium text-amber-600 hover:bg-amber-500/10 dark:text-amber-400"
                           >
-                            <CheckCircle className="h-3.5 w-3.5" /> Công bố
+                            <Undo2 className="h-3.5 w-3.5" /> Hủy xuất bản
                           </button>
                         )}
-                        {!s.cancelled && st !== "completed" && st !== "draft" && (
+                        {st === "open" && (
                           <button
-                            onClick={() => cancel(s.id)}
+                            onClick={() => closeNow(s.id)}
                             className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-medium text-rose-600 hover:bg-rose-500/10"
                           >
-                            <XCircle className="h-3.5 w-3.5" /> Hủy lịch
+                            <Lock className="h-3.5 w-3.5" /> Đóng đề
                           </button>
                         )}
-                        {st === "draft" && (
-                          <button
-                            onClick={() => remove(s.id)}
-                            className="inline-flex items-center gap-1 rounded-lg border border-border px-2 py-1 text-xs font-medium text-muted-foreground hover:bg-rose-500/10 hover:text-rose-600"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" /> Xóa
-                          </button>
-                        )}
+                        {st === "closed" && <span className="text-xs text-muted-foreground">—</span>}
                       </div>
                     </td>
                   </tr>
@@ -319,6 +341,20 @@ export function SessionsList({
           toast.success(`Đã tạo ${list.length} đợt thi từ đề đã duyệt`);
         }}
       />
+
+      {editing && (
+        <DistributeDialog
+          key={editing.id}
+          open
+          onOpenChange={(v) => !v && setEditing(null)}
+          editing={editing}
+          onCreate={(list) => {
+            const first = list[0];
+            if (first) saveEdit({ ...editing, ...first, id: editing.id });
+            setEditing(null);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -327,24 +363,28 @@ function DistributeDialog({
   open,
   onOpenChange,
   presetTestId,
+  editing,
   onCreate,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   presetTestId?: string;
+  editing?: ExamSession;
   onCreate: (sessions: ExamSession[]) => void;
 }) {
   const tests = useMemo(() => approvedTests(), []);
-  const [testId, setTestId] = useState(presetTestId ?? tests[0]?.id ?? "");
-  const [classIds, setClassIds] = useState<string[]>([]);
-  const [openAt, setOpenAt] = useState(() => toInput(new Date(Date.now() + 86_400_000).toISOString()));
+  const [testId, setTestId] = useState(editing?.testId ?? presetTestId ?? tests[0]?.id ?? "");
+  const [classIds, setClassIds] = useState<string[]>(editing?.classIds ?? []);
+  const [openAt, setOpenAt] = useState(() =>
+    toInput(editing?.openAt ?? new Date(Date.now() + 86_400_000).toISOString()),
+  );
   const [closeAt, setCloseAt] = useState(() =>
-    toInput(new Date(Date.now() + 86_400_000 + 7_200_000).toISOString()),
+    toInput(editing?.closeAt ?? new Date(Date.now() + 86_400_000 + 7_200_000).toISOString()),
   );
 
   useEffect(() => {
-    if (presetTestId) setTestId(presetTestId);
-  }, [presetTestId]);
+    if (!editing && presetTestId) setTestId(presetTestId);
+  }, [presetTestId, editing]);
 
   const test = tests.find((t) => t.id === testId);
   const duration = test?.durationMinutes ?? 60;
@@ -383,8 +423,8 @@ function DistributeDialog({
       durationMinutes: duration,
       attempts: 1,
       publishMode: "manual",
-      createdBy: "Hệ thống",
-      confirmed: true,
+      createdBy: editing?.createdBy ?? "Hệ thống",
+      confirmed: editing ? editing.confirmed : true,
       totalStudents: ids.reduce(
         (s, id) => s + (classes.find((c) => c.id === id)?.studentCount ?? 0),
         0,
@@ -404,7 +444,7 @@ function DistributeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Phân phối đề</DialogTitle>
+          <DialogTitle>{editing ? "Sửa bản nháp đợt thi" : "Phân phối đề"}</DialogTitle>
           <DialogDescription>
             Chọn một đề đã duyệt, giao cho lớp và thiết lập lịch thi. Không thay đổi nội dung đề.
           </DialogDescription>
@@ -516,7 +556,7 @@ function DistributeDialog({
             className="rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft disabled:opacity-50"
             style={{ background: "var(--gradient-brand)" }}
           >
-            Xác nhận tổ chức
+            {editing ? "Lưu bản nháp" : "Xác nhận tổ chức"}
           </button>
         </DialogFooter>
       </DialogContent>
