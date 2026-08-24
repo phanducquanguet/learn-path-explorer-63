@@ -45,6 +45,8 @@ export type Test = {
   id: string;
   /** Mã đề hiển thị (VD: FLYER-NB-TEST). */
   code?: string;
+  /** Các mã đề con / mã đề thay thế (nếu có nhiều phiên bản). */
+  altCodes?: string[];
   name: string;
   description: string;
   /** Đơn vị (trường / trung tâm) mà bài thi thuộc về. */
