@@ -13,6 +13,7 @@ import { orgs } from "@/lib/orgs";
 import {
   ASSESSMENT_DESCRIPTION,
   ASSESSMENT_TITLE,
+  type AssessmentScope,
 } from "@/components/assessment/AssessmentTabs";
 import {
   FileText,
