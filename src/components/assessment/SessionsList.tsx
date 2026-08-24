@@ -21,7 +21,7 @@ import {
   ASSESSMENT_TITLE,
   type AssessmentScope,
 } from "@/components/assessment/AssessmentTabs";
-import { CalendarClock, Plus, Copy, XCircle, PencilLine, Users } from "lucide-react";
+import { CalendarClock, Plus, XCircle, CheckCircle, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import {
@@ -103,25 +103,23 @@ export function SessionsList({
         s.id === id ? { ...s, cancelled: true, cancelReason: "Hủy bởi người tổ chức" } : s,
       ),
     );
-    toast.success("Đã hủy đợt thi — đề thi gốc không bị ảnh hưởng");
+    toast.success("Đã hủy lịch thi — đề thi gốc không bị ảnh hưởng");
   }
 
-  function copySchedule(s: ExamSession) {
-    const copy: ExamSession = {
-      ...s,
-      id: `ses-${Math.random().toString(36).slice(2, 8)}`,
-      name: `${s.name} (bù)`,
-      confirmed: false,
-      cancelled: false,
-      published: false,
-      started: 0,
-      submitted: 0,
-      graded: 0,
-      createdAt: new Date().toISOString(),
-    };
-    persist([copy, ...sessions]);
-    toast.success("Đã sao chép lịch tổ chức — xác nhận lại lớp và thời gian");
+  function publish(id: string) {
+    persist(
+      sessions.map((s) =>
+        s.id === id ? { ...s, published: true } : s,
+      ),
+    );
+    toast.success("Đã công bố kết quả thi");
   }
+
+  function remove(id: string) {
+    persist(sessions.filter((s) => s.id !== id));
+    toast.success("Đã xóa bản nháp");
+  }
+
 
   return (
     <div className="min-h-screen bg-background">
