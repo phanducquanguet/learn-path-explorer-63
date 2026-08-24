@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import { classes, students } from "@/lib/teacher-data";
 import { levels } from "@/lib/lms-data";
 import {
@@ -177,34 +178,31 @@ function ReportsPage() {
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-          <div>
-            <span className="inline-flex w-fit items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <Sparkles className="h-3.5 w-3.5" /> Phân tích dữ liệu
-            </span>
-            <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Báo cáo & Phân tích
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Theo dõi tiến độ học tập, mức độ thành thạo và học viên cần quan tâm trong các lớp đang quản lý.
-            </p>
-          </div>
-          <div className="flex items-center gap-2 rounded-xl border border-border bg-surface p-2 shadow-soft">
-            <span className="text-xs font-medium text-muted-foreground">Phạm vi:</span>
-            <select
-              value={classId}
-              onChange={(e) => setClassId(e.target.value)}
-              className="h-8 rounded-lg border border-border bg-background px-2 text-xs font-semibold text-foreground outline-none focus:border-primary"
-            >
-              <option value="all">Tất cả lớp ({classes.length})</option>
-              {classes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} ({c.role === "primary" ? "GV chính" : "Trợ giảng"})
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <PageHeader
+          eyebrow="Phân tích dữ liệu"
+          eyebrowIcon={Sparkles}
+          title="Báo cáo & Phân tích"
+          description={<>Theo dõi tiến độ học tập, mức độ thành thạo và học viên cần quan tâm trong các lớp đang quản lý.</>}
+          actions={
+            <>
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-surface p-2 shadow-soft">
+              <span className="text-xs font-medium text-muted-foreground">Phạm vi:</span>
+              <select
+                value={classId}
+                onChange={(e) => setClassId(e.target.value)}
+                className="h-8 rounded-lg border border-border bg-background px-2 text-xs font-semibold text-foreground outline-none focus:border-primary"
+              >
+                <option value="all">Tất cả lớp ({classes.length})</option>
+                {classes.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.role === "primary" ? "GV chính" : "Trợ giảng"})
+                  </option>
+                ))}
+              </select>
+            </div>
+            </>
+          }
+        />
 
         {/* KPI */}
         <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

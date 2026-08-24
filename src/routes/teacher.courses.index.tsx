@@ -20,6 +20,7 @@ import {
   Check,
 } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import { levels, type Course, type Level } from "@/lib/lms-data";
 import { classes, students } from "@/lib/teacher-data";
 import { cn } from "@/lib/utils";
@@ -252,35 +253,32 @@ function TeacherCoursesPage() {
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
         {/* Header */}
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-          <div className="flex flex-col gap-2">
-            <span className="inline-flex w-fit items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <Sparkles className="h-3.5 w-3.5" /> Khóa học của tôi
-            </span>
-            <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Quản trị khóa học
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {rows.length} khóa học ({teacherRows.length} tự tạo) • {totalClasses} lớp đang dạy •{" "}
-              {totalStudents} lượt học viên
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2 sm:self-end">
-            <Link
-              to="/teacher/qa"
-              className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-soft transition hover:bg-muted"
-            >
-              <MessageSquare className="h-4 w-4" /> Hỏi đáp học viên
-            </Link>
-            <Link
-              to="/teacher/upload"
-              className="inline-flex h-10 items-center gap-1.5 rounded-xl px-4 text-sm font-semibold text-primary-foreground shadow-soft transition hover:opacity-90"
-              style={{ background: "var(--gradient-brand)" }}
-            >
-              <Plus className="h-4 w-4" /> Tạo khóa học mới
-            </Link>
-          </div>
-        </div>
+        <PageHeader
+          eyebrow="Khóa học của tôi"
+          eyebrowIcon={Sparkles}
+          title="Quản trị khóa học"
+          description={<>{rows.length} khóa học ({teacherRows.length} tự tạo) • {totalClasses} lớp đang dạy •{" "}
+              {totalStudents} lượt học viên</>}
+          actions={
+            <>
+            <div className="flex flex-wrap gap-2 sm:self-end">
+              <Link
+                to="/teacher/qa"
+                className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-border bg-surface px-4 text-sm font-semibold text-foreground shadow-soft transition hover:bg-muted"
+              >
+                <MessageSquare className="h-4 w-4" /> Hỏi đáp học viên
+              </Link>
+              <Link
+                to="/teacher/upload"
+                className="inline-flex h-10 items-center gap-1.5 rounded-xl px-4 text-sm font-semibold text-primary-foreground shadow-soft transition hover:opacity-90"
+                style={{ background: "var(--gradient-brand)" }}
+              >
+                <Plus className="h-4 w-4" /> Tạo khóa học mới
+              </Link>
+            </div>
+            </>
+          }
+        />
 
         {/* KPI strip */}
         <div className="mt-6 grid gap-3 sm:grid-cols-4">

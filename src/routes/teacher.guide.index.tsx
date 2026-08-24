@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import { guideModules, searchGuide } from "@/lib/guide-data";
 import { guideIcon } from "@/lib/guide-icons";
 import { BookOpen, Search, ArrowRight, ListChecks } from "lucide-react";
@@ -35,16 +36,13 @@ function GuideIndex() {
     <div className="min-h-screen bg-background">
       <TopNav />
       <main className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
-        <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-          <BookOpen className="h-3.5 w-3.5" /> Cẩm nang giáo viên
-        </span>
-        <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-          Hướng dẫn sử dụng
-        </h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          {guideModules.length} module · {totalTopics} hướng dẫn. Mỗi hướng dẫn trình bày theo cùng
-          cấu trúc: Mục đích · Điều kiện · Các bước · Kết quả · Nếu không thành công.
-        </p>
+        <PageHeader
+          eyebrow="Cẩm nang giáo viên"
+          eyebrowIcon={BookOpen}
+          title="Hướng dẫn sử dụng"
+          description={<>{guideModules.length} module · {totalTopics} hướng dẫn. Mỗi hướng dẫn trình bày theo cùng
+          cấu trúc: Mục đích · Điều kiện · Các bước · Kết quả · Nếu không thành công.</>}
+        />
 
         <div className="mt-6 max-w-xl">
           <div className="relative">

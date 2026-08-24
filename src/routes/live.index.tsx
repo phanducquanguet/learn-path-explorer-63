@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import {
   Video,
   Calendar,
@@ -50,17 +51,12 @@ function LiveIndexPage() {
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
-        <div className="flex flex-col gap-2">
-          <span className="inline-flex w-fit items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-            <Sparkles className="h-3.5 w-3.5" /> Học cùng giáo viên
-          </span>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            Lớp học trực tuyến
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Tham gia buổi học trực tiếp, đặt câu hỏi, raise hand và xem lại bản ghi bất cứ lúc nào.
-          </p>
-        </div>
+        <PageHeader
+          eyebrow="Học cùng giáo viên"
+          eyebrowIcon={Sparkles}
+          title="Lớp học trực tuyến"
+          description={<>Tham gia buổi học trực tiếp, đặt câu hỏi, raise hand và xem lại bản ghi bất cứ lúc nào.</>}
+        />
 
         {liveNow.length > 0 && (
           <div className="mt-8 space-y-3">

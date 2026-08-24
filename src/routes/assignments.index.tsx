@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useSyncExternalStore, useMemo, useState, useEffect } from "react";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import {
   listAssignmentsForCurrentStudent,
   subscribeAssignments,
@@ -64,17 +65,19 @@ function StudentAssignmentsPage() {
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="mx-auto max-w-4xl px-6 pb-20 pt-10 sm:px-8">
-        <h1 className="font-display text-3xl font-semibold tracking-tight">Bài tập</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Bài tập tự luận do giáo viên giao. Nộp bằng câu trả lời hoặc file đính kèm.
-        </p>
+        <PageHeader
+          eyebrow="Bài tập của tôi"
+          eyebrowIcon={ListTodo}
+          title="Bài tập"
+          description="Bài tập tự luận do giáo viên giao. Nộp bằng câu trả lời hoặc file đính kèm."
+          stats={[
+            { icon: ListTodo, label: "Cần làm", value: stats.todo, tone: "primary" },
+            { icon: AlarmClock, label: "Sắp đến hạn", value: stats.dueSoon, tone: "warning" },
+            { icon: Clock, label: "Chờ chấm", value: stats.submitted, tone: "muted" },
+            { icon: CheckCircle2, label: "Đã chấm", value: stats.graded, tone: "success" },
+          ]}
+        />
 
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <KpiCard icon={<ListTodo className="h-4 w-4" />} label="Cần làm" value={stats.todo} tone="primary" />
-          <KpiCard icon={<AlarmClock className="h-4 w-4" />} label="Sắp đến hạn" value={stats.dueSoon} tone="amber" />
-          <KpiCard icon={<Clock className="h-4 w-4" />} label="Chờ chấm" value={stats.submitted} tone="sky" />
-          <KpiCard icon={<CheckCircle2 className="h-4 w-4" />} label="Đã chấm" value={stats.graded} tone="emerald" />
-        </div>
         {stats.overdue > 0 && (
           <div className="mt-3 flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700">
             <AlertCircle className="h-4 w-4" /> Bạn đang có {stats.overdue} bài quá hạn chưa nộp.

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import { examEvents, type ExamEventStatus } from "@/lib/exam-events";
 import {
   Activity,
@@ -76,20 +77,13 @@ function MonitorList() {
           <ArrowLeft className="h-3.5 w-3.5" /> Quay lại Thi cử
         </Link>
 
-        <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <Activity className="h-3.5 w-3.5" /> Giám sát trực tiếp
-            </span>
-            <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-              Các kỳ thi
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Kỳ thi được thiết lập theo lớp. Mỗi kỳ có thể gồm nhiều đề phụ được phân ngẫu nhiên
-              cho thí sinh.
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          eyebrow="Giám sát trực tiếp"
+          eyebrowIcon={Activity}
+          title="Các kỳ thi"
+          description={<>Kỳ thi được thiết lập theo lớp. Mỗi kỳ có thể gồm nhiều đề phụ được phân ngẫu nhiên
+              cho thí sinh.</>}
+        />
 
         <div className="mt-6 flex flex-wrap gap-1">
           {(

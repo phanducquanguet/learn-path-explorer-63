@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import {
   Video,
   Calendar,
@@ -40,25 +41,22 @@ function TeacherLivePage() {
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div className="flex flex-col gap-2">
-            <span className="inline-flex w-fit items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <Sparkles className="h-3.5 w-3.5" /> Giảng dạy trực tiếp
-            </span>
-            <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Lớp trực tuyến của tôi
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Đặt lịch buổi học, vào lớp giảng dạy, chia sẻ màn hình và quản lý bản ghi.
-            </p>
-          </div>
-          <button
-            onClick={() => setShowCreate(true)}
-            className="inline-flex items-center gap-2 self-start rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft hover:opacity-90"
-          >
-            <Plus className="h-4 w-4" /> Đặt lịch buổi học mới
-          </button>
-        </div>
+        <PageHeader
+          eyebrow="Giảng dạy trực tiếp"
+          eyebrowIcon={Sparkles}
+          title="Lớp trực tuyến của tôi"
+          description={<>Đặt lịch buổi học, vào lớp giảng dạy, chia sẻ màn hình và quản lý bản ghi.</>}
+          actions={
+            <>
+            <button
+              onClick={() => setShowCreate(true)}
+              className="inline-flex items-center gap-2 self-start rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft hover:opacity-90"
+            >
+              <Plus className="h-4 w-4" /> Đặt lịch buổi học mới
+            </button>
+            </>
+          }
+        />
 
         {/* Stats */}
         <div className="mt-8 grid gap-4 sm:grid-cols-3">

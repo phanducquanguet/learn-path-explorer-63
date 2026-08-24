@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import { classes, students, type ClassRoom } from "@/lib/teacher-data";
 import {
   Users,
@@ -40,17 +41,12 @@ function TeacherClassesPage() {
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
-        <div className="flex flex-col gap-2">
-          <span className="inline-flex w-fit items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-            <Sparkles className="h-3.5 w-3.5" /> Quản lý lớp
-          </span>
-          <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            Lớp học của tôi
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Bạn đang phụ trách <b>{primaryCount}</b> lớp chính và hỗ trợ <b>{assistantCount}</b> lớp khác với vai trò trợ giảng.
-          </p>
-        </div>
+        <PageHeader
+          eyebrow="Quản lý lớp"
+          eyebrowIcon={Sparkles}
+          title="Lớp học của tôi"
+          description={<>Bạn đang phụ trách <b>{primaryCount}</b> lớp chính và hỗ trợ <b>{assistantCount}</b> lớp khác với vai trò trợ giảng.</>}
+        />
 
         {/* Toolbar */}
         <div className="mt-8 flex flex-col items-center gap-3 rounded-2xl border border-border bg-surface p-3 shadow-soft sm:flex-row">

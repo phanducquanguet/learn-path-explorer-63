@@ -15,6 +15,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import { classes as allClasses } from "@/lib/teacher-data";
 import { orgs, classOrgMap, getOrg } from "@/lib/orgs";
 import { levels } from "@/lib/lms-data";
@@ -211,26 +212,23 @@ function ApprovalsPage() {
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-          <div className="flex flex-col gap-2">
-            <span className="inline-flex w-fit items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <Sparkles className="h-3.5 w-3.5" /> Phê duyệt
-            </span>
-            <h1 className="font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Duyệt khóa học của giáo viên
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              {counts.pending} chờ duyệt • {counts.approved} đã duyệt • {counts.rejected} bị từ
-              chối
-            </p>
-          </div>
-          <Link
-            to="/courses"
-            className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-surface px-3 text-sm font-medium text-foreground hover:bg-muted"
-          >
-            <ArrowLeft className="h-4 w-4" /> Về danh sách khóa học
-          </Link>
-        </div>
+        <PageHeader
+          eyebrow="Phê duyệt"
+          eyebrowIcon={Sparkles}
+          title="Duyệt khóa học của giáo viên"
+          description={<>{counts.pending} chờ duyệt • {counts.approved} đã duyệt • {counts.rejected} bị từ
+              chối</>}
+          actions={
+            <>
+            <Link
+              to="/courses"
+              className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-border bg-surface px-3 text-sm font-medium text-foreground hover:bg-muted"
+            >
+              <ArrowLeft className="h-4 w-4" /> Về danh sách khóa học
+            </Link>
+            </>
+          }
+        />
 
         <div className="mt-6 grid gap-3 sm:grid-cols-4">
           <Kpi label="Chờ duyệt" value={counts.pending} icon={Clock} tone="amber" />

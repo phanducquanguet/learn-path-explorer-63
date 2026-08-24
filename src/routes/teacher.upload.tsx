@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import { levels, getCourse } from "@/lib/lms-data";
 import { classes as teacherClasses } from "@/lib/teacher-data";
 import { useCategories, categoryOf, type Category } from "@/lib/course-categories";
@@ -187,15 +188,12 @@ function UploadPage() {
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="mx-auto max-w-5xl px-6 pb-20 pt-10 sm:px-8">
-        <span className="inline-flex w-fit items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-          <Sparkles className="h-3.5 w-3.5" /> {isEdit ? "Chỉnh sửa nội dung" : "Tạo nội dung mới"}
-        </span>
-        <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-          {isEdit ? "Chỉnh sửa khóa học" : "Tải lên khóa học"}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Cấu trúc: Khóa học → Units → Activities (video, PDF, hoặc 11 dạng bài tập).
-        </p>
+        <PageHeader
+          eyebrow={isEdit ? "Chỉnh sửa nội dung" : "Tạo nội dung mới"}
+          eyebrowIcon={Sparkles}
+          title={<>{isEdit ? "Chỉnh sửa khóa học" : "Tải lên khóa học"}</>}
+          description={<>Cấu trúc: Khóa học → Units → Activities (video, PDF, hoặc 11 dạng bài tập).</>}
+        />
 
 
         {/* Stepper */}
