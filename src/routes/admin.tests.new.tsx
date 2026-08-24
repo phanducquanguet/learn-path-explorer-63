@@ -1082,9 +1082,11 @@ export function TestExamBuilder({
             <div className="space-y-4 text-sm">
               <div className="grid gap-2 sm:grid-cols-2">
                 <Row label="Tên đề" value={name || "—"} />
+                {!isExam && <Row label="Mã đề" value={code || "—"} />}
                 <Row label="Cấp độ" value={levels.join(", ")} />
                 <Row label="Thời lượng" value={`${duration} phút`} />
-                {!isExam && (
+                {!isExam && <Row label="Tổng điểm" value={String(totalPoints)} />}
+                {!isExam && !simpleTestForm && (
                   <>
                     <Row label="Đơn vị" value={orgs.find((o) => o.id === orgId)?.name ?? "—"} />
                     <Row label="Lớp" value={classIds.length ? classIds.length + " lớp" : "—"} />
@@ -1092,6 +1094,7 @@ export function TestExamBuilder({
                     <Row label="Đóng" value={closeAt || "—"} />
                   </>
                 )}
+
                 <Row label="Tổng câu" value={String(totalQuestions)} />
                 <Row label="Chế độ" value={mode === "random" ? "Bốc ngẫu nhiên" : mode === "manual" ? "Tự soạn" : "Cố định"} />
                 <Row label="Thứ tự làm bài" value={enforceOrder ? "Bắt buộc theo flow" : "Tự do"} />
