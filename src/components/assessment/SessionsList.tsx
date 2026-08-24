@@ -10,6 +10,7 @@ import {
   sessionStatus,
   SESSION_STATUS_COLOR,
   SESSION_STATUS_LABEL,
+  testPaperCount,
   testVersion,
   type ExamSession,
   type SessionStatus,
@@ -226,13 +227,21 @@ export function SessionsList({
                       </div>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {test?.name ?? s.testId}
+                      <span className="inline-flex flex-wrap items-center gap-1.5">
+                        <span>{test?.name ?? s.testId}</span>
+                        {test && testPaperCount(test) > 1 && (
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                            + {testPaperCount(test)} mã đề
+                          </span>
+                        )}
+                      </span>
                       {test && (
                         <div className="text-xs">
                           {test.level} · {testQuestionCount(test)} câu
                         </div>
                       )}
                     </td>
+
                     <td className="px-4 py-3 text-center tabular-nums">v{s.testVersion}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
@@ -353,9 +362,16 @@ function DistributeDialog({
 
   const test = tests.find((t) => t.id === testId);
   const duration = test?.durationMinutes ?? 60;
-  const levelWarnings = classIds.filter(
-    (id) => test && classes.find((c) => c.id === id)?.levelCode !== test.level,
+  const eligibleClasses = useMemo(
+    () => (test ? classes.filter((c) => c.levelCode === test.level) : []),
+    [test],
   );
+
+  // Bỏ chọn các lớp không còn thuộc level của đề khi đổi đề
+  useEffect(() => {
+    setClassIds((prev) => prev.filter((id) => eligibleClasses.some((c) => c.id === id)));
+  }, [eligibleClasses]);
+
 
   const timeError =
     new Date(closeAt).getTime() <= new Date(openAt).getTime()
@@ -419,15 +435,23 @@ function DistributeDialog({
               {tests.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name} · {t.level} · v{testVersion(t)}
+                  {testPaperCount(t) > 1 ? ` · ${testPaperCount(t)} mã đề` : ""}
                 </option>
               ))}
             </select>
+            {test && testPaperCount(test) > 1 && (
+              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                + {testPaperCount(test)} mã đề — hệ thống phát ngẫu nhiên cho thí sinh
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-muted-foreground">Lớp được giao</label>
+            <label className="text-xs font-semibold text-muted-foreground">
+              Lớp được giao {test ? `(level ${test.level})` : ""}
+            </label>
             <div className="mt-1 grid gap-1.5 sm:grid-cols-3">
-              {classes.map((c) => {
+              {eligibleClasses.map((c) => {
                 const checked = classIds.includes(c.id);
                 return (
                   <label
@@ -451,12 +475,13 @@ function DistributeDialog({
                 );
               })}
             </div>
-            {levelWarnings.length > 0 && (
+            {eligibleClasses.length === 0 && (
               <p className="mt-2 rounded-xl bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
-                Cảnh báo: {levelWarnings.length} lớp có level khác level áp dụng của đề ({test?.level}).
+                Không có lớp nào thuộc level {test?.level} của đề này.
               </p>
             )}
           </div>
+
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
