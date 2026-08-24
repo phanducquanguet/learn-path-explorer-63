@@ -362,9 +362,16 @@ function DistributeDialog({
 
   const test = tests.find((t) => t.id === testId);
   const duration = test?.durationMinutes ?? 60;
-  const levelWarnings = classIds.filter(
-    (id) => test && classes.find((c) => c.id === id)?.levelCode !== test.level,
+  const eligibleClasses = useMemo(
+    () => (test ? classes.filter((c) => c.levelCode === test.level) : []),
+    [test],
   );
+
+  // Bỏ chọn các lớp không còn thuộc level của đề khi đổi đề
+  useEffect(() => {
+    setClassIds((prev) => prev.filter((id) => eligibleClasses.some((c) => c.id === id)));
+  }, [eligibleClasses]);
+
 
   const timeError =
     new Date(closeAt).getTime() <= new Date(openAt).getTime()
