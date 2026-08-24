@@ -11,7 +11,6 @@ import {
 import { testVersion } from "@/lib/exam-sessions";
 import { orgs } from "@/lib/orgs";
 import {
-  AssessmentTabBar,
   ASSESSMENT_DESCRIPTION,
   ASSESSMENT_TITLE,
   type AssessmentScope,
@@ -172,9 +171,7 @@ export function PapersList({ scope = "admin" }: { scope?: AssessmentScope } = {}
             onClick: () => setStatus(c.key),
             active: status === c.key,
           }))}
-        >
-          <AssessmentTabBar scope={scope} active="papers" />
-        </PageHeader>
+        />
 
         <div className="mt-6 flex flex-wrap items-center gap-2">
           <input

@@ -17,7 +17,6 @@ import {
   type SessionStatus,
 } from "@/lib/exam-sessions";
 import {
-  AssessmentTabBar,
   ASSESSMENT_DESCRIPTION,
   ASSESSMENT_TITLE,
   type AssessmentScope,
@@ -160,9 +159,7 @@ export function SessionsList({
             onClick: () => setStatus(status === key ? "all" : key),
             active: status === key,
           }))}
-        >
-          <AssessmentTabBar scope={scope} active="sessions" />
-        </PageHeader>
+        />
 
         <div className="mt-6 flex flex-wrap items-center gap-2">
           <select
