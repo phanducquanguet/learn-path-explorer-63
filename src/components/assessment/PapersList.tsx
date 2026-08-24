@@ -11,10 +11,8 @@ import {
 import { testVersion } from "@/lib/exam-sessions";
 import { orgs } from "@/lib/orgs";
 import {
-  AssessmentTabBar,
   ASSESSMENT_DESCRIPTION,
   ASSESSMENT_TITLE,
-  type AssessmentScope,
 } from "@/components/assessment/AssessmentTabs";
 import {
   FileText,
