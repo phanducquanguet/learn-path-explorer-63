@@ -342,21 +342,17 @@ function DistributeDialog({
   const tests = useMemo(() => approvedTests(), []);
   const [testId, setTestId] = useState(presetTestId ?? tests[0]?.id ?? "");
   const [classIds, setClassIds] = useState<string[]>([]);
-  const [perClass, setPerClass] = useState(false);
   const [openAt, setOpenAt] = useState(() => toInput(new Date(Date.now() + 86_400_000).toISOString()));
   const [closeAt, setCloseAt] = useState(() =>
     toInput(new Date(Date.now() + 86_400_000 + 7_200_000).toISOString()),
   );
-  const [duration, setDuration] = useState(60);
-  const [attempts, setAttempts] = useState(1);
-  const [grader, setGrader] = useState("Cô Mai Lan");
-  const [publishMode, setPublishMode] = useState<"auto" | "manual">("manual");
 
   useEffect(() => {
     if (presetTestId) setTestId(presetTestId);
   }, [presetTestId]);
 
   const test = tests.find((t) => t.id === testId);
+  const duration = test?.durationMinutes ?? 60;
   const levelWarnings = classIds.filter(
     (id) => test && classes.find((c) => c.id === id)?.levelCode !== test.level,
   );
@@ -383,9 +379,9 @@ function DistributeDialog({
       openAt: new Date(openAt).toISOString(),
       closeAt: new Date(closeAt).toISOString(),
       durationMinutes: duration,
-      attempts,
-      graderName: grader,
-      publishMode,
+      attempts: 1,
+      publishMode: "manual",
+      createdBy: "Hệ thống",
       confirmed: true,
       totalStudents: ids.reduce(
         (s, id) => s + (classes.find((c) => c.id === id)?.studentCount ?? 0),
@@ -394,10 +390,9 @@ function DistributeDialog({
       started: 0,
       submitted: 0,
       graded: 0,
-      createdBy: grader,
       createdAt: new Date().toISOString(),
     });
-    const list = perClass ? classIds.map((id, i) => mk([id], i)) : [mk(classIds, 0)];
+    const list = [mk(classIds, 0)];
     onCreate(list);
     onOpenChange(false);
     setClassIds([]);
@@ -463,11 +458,6 @@ function DistributeDialog({
             )}
           </div>
 
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={perClass} onChange={(e) => setPerClass(e.target.checked)} />
-            Thiết lập lịch riêng cho từng lớp (tạo bản ghi độc lập theo lớp)
-          </label>
-
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="text-xs font-semibold text-muted-foreground">Mở lúc</label>
@@ -487,45 +477,13 @@ function DistributeDialog({
                 className="mt-1 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm"
               />
             </div>
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground">Thời lượng (phút)</label>
-              <input
-                type="number"
-                value={duration}
-                onChange={(e) => setDuration(Number(e.target.value))}
-                className="mt-1 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground">Số lần được làm</label>
-              <input
-                type="number"
-                min={1}
-                value={attempts}
-                onChange={(e) => setAttempts(Number(e.target.value))}
-                className="mt-1 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground">Người phụ trách chấm</label>
-              <input
-                value={grader}
-                onChange={(e) => setGrader(e.target.value)}
-                className="mt-1 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-semibold text-muted-foreground">Công bố kết quả</label>
-              <select
-                value={publishMode}
-                onChange={(e) => setPublishMode(e.target.value as "auto" | "manual")}
-                className="mt-1 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm"
-              >
-                <option value="manual">Công bố thủ công sau khi chấm</option>
-                <option value="auto">Tự động công bố khi chấm xong</option>
-              </select>
-            </div>
           </div>
+
+          <p className="rounded-xl bg-muted px-3 py-2 text-xs text-muted-foreground">
+            Thời lượng làm bài lấy theo đề: <strong>{duration}′</strong> · 1 lần làm bài · kết quả công
+            bố thủ công sau khi chấm.
+          </p>
+
 
           {timeError && (
             <p className="rounded-xl bg-rose-500/10 px-3 py-2 text-xs font-medium text-rose-600 dark:text-rose-400">
