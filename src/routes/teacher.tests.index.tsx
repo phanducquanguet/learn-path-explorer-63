@@ -187,16 +187,15 @@ function TestsList() {
               chấm điểm tự luận hoặc rà soát kết quả.
             </p>
           </div>
-          {isAdmin && (
-            <Link
-              to="/admin/tests/new"
-              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
-              style={{ background: "var(--gradient-brand)" }}
-            >
-              <Plus className="h-4 w-4" /> Tạo bài tập mới
-            </Link>
-          )}
+          <Link
+            to={isAdmin ? "/admin/tests/new" : "/teacher/tests/new"}
+            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
+            style={{ background: "var(--gradient-brand)" }}
+          >
+            <Plus className="h-4 w-4" /> Tạo đề thi mới
+          </Link>
         </div>
+
 
         <div className="mt-6 grid gap-3 sm:grid-cols-4">
           <Stat label="Tổng bài làm" value={counts.total} />
