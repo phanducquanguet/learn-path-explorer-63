@@ -156,10 +156,10 @@ export function SessionsList({
         <div className="mt-6 grid gap-3 sm:grid-cols-4">
           {(
             [
+              ["draft", "Bản nháp", counts.draft],
               ["upcoming", "Sắp diễn ra", counts.upcoming],
               ["open", "Đang mở", counts.open],
-              ["grading", "Chờ chấm", counts.grading],
-              ["completed", "Hoàn tất", counts.completed],
+              ["closed", "Đã đóng", counts.closed],
             ] as [SessionStatus, string, number][]
           ).map(([key, label, value]) => (
             <button
