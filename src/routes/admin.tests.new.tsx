@@ -317,6 +317,17 @@ export function TestExamBuilder({
     });
   }, [structure, mode]);
 
+  const totalPoints = useMemo(
+    () =>
+      resolved.reduce(
+        (sum, g) => sum + g.questions.reduce((s, q) => s + (Number((q as { points?: number }).points) || 1), 0),
+        0,
+      ),
+    [resolved],
+  );
+
+
+
   if (role !== allowedRole) {
     const who = allowedRole === "admin" ? "Quản trị viên" : "Giáo viên";
     return (
