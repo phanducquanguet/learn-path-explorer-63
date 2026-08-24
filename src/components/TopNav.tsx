@@ -92,8 +92,11 @@ const teacherTabs = [
   { to: "/teacher/courses" as const, label: "Khóa học", icon: GraduationCap },
   
   { to: "/teacher/assignments" as const, label: "Bài tập", icon: ClipboardList },
+  { to: "/teacher/question-bank" as const, label: "Ngân hàng câu hỏi", icon: Library },
+  { to: "/teacher/tests/new" as const, label: "Tạo đề thi", icon: FileCheck2 },
   { to: "/teacher/tests" as const, label: "Chấm thi", icon: ScrollText },
   { to: "/teacher/reports" as const, label: "Báo cáo", icon: BarChart3 },
+
   { to: "/teacher/guide" as const, label: "Hướng dẫn", icon: BookOpen },
 ];
 
