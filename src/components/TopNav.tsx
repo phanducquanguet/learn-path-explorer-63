@@ -76,7 +76,10 @@ function RedDot({ pulse = false }: { pulse?: boolean }) {
   );
 }
 
-const studentTabs = [
+type NavChild = { to: string; label: string; icon: typeof Home };
+type NavItem = { to: string; label: string; icon: typeof Home; children?: NavChild[] };
+
+const studentTabs: NavItem[] = [
   { to: "/" as const, label: "Trang chủ", icon: Home },
   { to: "/courses" as const, label: "Khóa học", icon: GraduationCap },
   { to: "/live" as const, label: "Lớp trực tuyến", icon: Video },
@@ -85,33 +88,144 @@ const studentTabs = [
   { to: "/exams" as const, label: "Thi cử", icon: ScrollText },
 ];
 
-const teacherTabs = [
-  { to: "/teacher" as const, label: "Tổng quan", icon: LayoutDashboard },
-  { to: "/teacher/classes" as const, label: "Lớp học", icon: Users },
-  { to: "/teacher/live" as const, label: "Lớp trực tuyến", icon: Video },
-  { to: "/teacher/courses" as const, label: "Khóa học", icon: GraduationCap },
-  
-  { to: "/teacher/assignments" as const, label: "Bài tập", icon: ClipboardList },
-  { to: "/teacher/question-bank" as const, label: "Ngân hàng câu hỏi", icon: Library },
-  { to: "/teacher/tests/new" as const, label: "Tạo đề thi", icon: FileCheck2 },
-  { to: "/teacher/tests" as const, label: "Chấm thi", icon: ScrollText },
-  { to: "/teacher/reports" as const, label: "Báo cáo", icon: BarChart3 },
-
-  { to: "/teacher/guide" as const, label: "Hướng dẫn", icon: BookOpen },
+const teacherTabs: NavItem[] = [
+  { to: "/teacher", label: "Tổng quan", icon: LayoutDashboard },
+  { to: "/teacher/classes", label: "Lớp học", icon: Users },
+  { to: "/teacher/live", label: "Lớp trực tuyến", icon: Video },
+  { to: "/teacher/courses", label: "Khóa học", icon: GraduationCap },
+  { to: "/teacher/assignments", label: "Bài tập", icon: ClipboardList },
+  {
+    to: "/teacher/tests",
+    label: "Thi cử",
+    icon: ScrollText,
+    children: [
+      { to: "/teacher/question-bank", label: "Ngân hàng câu hỏi", icon: Library },
+      { to: "/teacher/tests/papers", label: "Đề thi", icon: FileText },
+      { to: "/teacher/tests/sessions", label: "Tổ chức thi", icon: ClipboardCheck },
+      { to: "/teacher/tests", label: "Chấm thi", icon: FileCheck2 },
+    ],
+  },
+  { to: "/teacher/reports", label: "Báo cáo", icon: BarChart3 },
+  { to: "/teacher/guide", label: "Hướng dẫn", icon: BookOpen },
 ];
 
-
-
-const adminTabs = [
-  { to: "/courses" as const, label: "Khóa học", icon: GraduationCap },
-  { to: "/admin/course-approvals" as const, label: "Duyệt khóa học", icon: ShieldCheck },
-  { to: "/admin/exams" as const, label: "Luyện thi", icon: ClipboardCheck },
-  { to: "/admin/question-bank" as const, label: "Ngân hàng câu hỏi", icon: Library },
-  { to: "/admin/tests" as const, label: "Thi cử", icon: ScrollText },
-  { to: "/admin/test-approvals" as const, label: "Duyệt đề thi", icon: FileCheck2 },
-  { to: "/admin/campaigns" as const, label: "Chiến dịch", icon: Megaphone },
-  { to: "/admin/stats" as const, label: "Thống kê", icon: BarChart3 },
+const adminTabs: NavItem[] = [
+  { to: "/courses", label: "Khóa học", icon: GraduationCap },
+  { to: "/admin/course-approvals", label: "Duyệt khóa học", icon: ShieldCheck },
+  { to: "/admin/exams", label: "Luyện thi", icon: ClipboardCheck },
+  {
+    to: "/admin/tests",
+    label: "Thi cử",
+    icon: ScrollText,
+    children: [
+      { to: "/admin/question-bank", label: "Ngân hàng câu hỏi", icon: Library },
+      { to: "/admin/tests", label: "Đề thi", icon: FileText },
+      { to: "/admin/tests/sessions", label: "Tổ chức thi", icon: ClipboardCheck },
+      { to: "/admin/test-approvals", label: "Duyệt đề thi", icon: FileCheck2 },
+    ],
+  },
+  { to: "/admin/campaigns", label: "Chiến dịch", icon: Megaphone },
+  { to: "/admin/stats", label: "Thống kê", icon: BarChart3 },
 ];
+
+function useOutsideClose(onClose: () => void) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) onClose();
+    };
+    window.addEventListener("mousedown", onDown);
+    return () => window.removeEventListener("mousedown", onDown);
+  }, [onClose]);
+  return ref;
+}
+
+/** Nhóm menu dạng dropdown trong sidebar (admin). */
+function SidebarGroup({ item }: { item: NavItem }) {
+  const [expanded, setExpanded] = useState(true);
+  const Icon = item.icon;
+  return (
+    <div>
+      <button
+        onClick={() => setExpanded((v) => !v)}
+        className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+      >
+        <Icon className="h-4 w-4" />
+        <span>{item.label}</span>
+        <ChevronDown
+          className={cn("ml-auto h-3.5 w-3.5 transition-transform", expanded && "rotate-180")}
+        />
+      </button>
+      {expanded && (
+        <div className="mt-1 space-y-0.5 border-l border-border/60 pl-3">
+          {item.children?.map((c) => {
+            const CIcon = c.icon;
+            return (
+              <Link
+                key={c.to}
+                to={c.to as never}
+                activeOptions={{ exact: true }}
+                className="flex items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                activeProps={{
+                  className:
+                    "flex items-center gap-2 rounded-lg px-3 py-1.5 text-[13px] font-semibold text-primary bg-primary/10",
+                }}
+              >
+                <CIcon className="h-3.5 w-3.5" />
+                {c.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Nhóm menu dạng dropdown trên thanh ngang (giáo viên / học viên). */
+function HeaderGroup({ item }: { item: NavItem }) {
+  const [open, setOpen] = useState(false);
+  const ref = useOutsideClose(() => setOpen(false));
+  const Icon = item.icon;
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className={cn(
+          "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap",
+          open ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground",
+        )}
+      >
+        <Icon className="h-4 w-4" />
+        <span className="hidden lg:inline">{item.label}</span>
+        <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", open && "rotate-180")} />
+      </button>
+      {open && (
+        <div className="absolute left-0 top-[calc(100%+8px)] z-50 w-60 rounded-2xl border border-border bg-background p-2 shadow-elevated">
+          {item.children?.map((c) => {
+            const CIcon = c.icon;
+            return (
+              <Link
+                key={c.to}
+                to={c.to as never}
+                activeOptions={{ exact: true }}
+                onClick={() => setOpen(false)}
+                className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
+                activeProps={{
+                  className:
+                    "flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-semibold text-primary bg-primary/10",
+                }}
+              >
+                <CIcon className="h-4 w-4" /> {c.label}
+              </Link>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 
 function roleMeta(role: Role) {
   if (role === "admin")
@@ -200,10 +314,13 @@ export function TopNav() {
           <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
             {tabs.map((t) => {
               const Icon = t.icon;
+              if (t.children) {
+                return <SidebarGroup key={t.to} item={t} />;
+              }
               return (
                 <Link
                   key={t.to}
-                  to={t.to}
+                  to={t.to as never}
                   activeOptions={{ exact: t.to === "/" || t.to === "/teacher" }}
                   className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
                   activeProps={{
@@ -219,6 +336,7 @@ export function TopNav() {
               );
             })}
           </nav>
+
           <div className="relative border-t border-border/60 p-3" ref={ref}>
             <button
               onClick={() => setOpen((v) => !v)}
@@ -300,13 +418,16 @@ export function TopNav() {
           </div>
         </Link>
 
-        <nav className="flex items-center gap-1 rounded-full bg-surface p-1 ring-1 ring-border shadow-soft overflow-x-auto max-w-[60vw]">
+        <nav className="flex items-center gap-1 rounded-full bg-surface p-1 ring-1 ring-border shadow-soft max-w-[60vw]">
           {tabs.map((t) => {
             const Icon = t.icon;
+            if (t.children) {
+              return <HeaderGroup key={t.to} item={t} />;
+            }
             return (
               <Link
                 key={t.to}
-                to={t.to}
+                to={t.to as never}
                 activeOptions={{ exact: t.to === "/" || t.to === "/teacher" }}
                 className={cn(
                   "inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-colors whitespace-nowrap",
@@ -332,6 +453,7 @@ export function TopNav() {
             );
           })}
         </nav>
+
 
         <div className="relative flex items-center gap-2" ref={ref}>
           <span className="hidden rounded-full bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground ring-1 ring-border md:inline-flex">
