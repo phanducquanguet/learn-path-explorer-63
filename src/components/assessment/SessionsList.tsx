@@ -61,6 +61,7 @@ export function SessionsList({
   const [status, setStatus] = useState<SessionStatus | "all">("all");
   const [classFilter, setClassFilter] = useState("all");
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [editing, setEditing] = useState<ExamSession | null>(null);
 
   useEffect(() => {
     setSessions(loadSessions());
