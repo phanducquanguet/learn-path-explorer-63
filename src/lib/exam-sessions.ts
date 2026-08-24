@@ -155,17 +155,15 @@ export function saveSessions(list: ExamSession[]) {
   }
 }
 
-/** Trạng thái suy ra theo thời gian + tiến độ chấm/công bố. */
+/** Trạng thái suy ra theo trạng thái xuất bản + thời gian. */
 export function sessionStatus(s: ExamSession, now = Date.now()): SessionStatus {
-  if (s.cancelled) return "cancelled";
   if (!s.confirmed) return "draft";
+  if (s.cancelled || s.closedEarly) return "closed";
   const open = new Date(s.openAt).getTime();
   const close = new Date(s.closeAt).getTime();
   if (now < open) return "upcoming";
   if (now <= close) return "open";
-  if (s.submitted > s.graded) return "grading";
-  if (!s.published) return "awaiting-publish";
-  return "completed";
+  return "closed";
 }
 
 export function sessionClassNames(s: ExamSession): string[] {
