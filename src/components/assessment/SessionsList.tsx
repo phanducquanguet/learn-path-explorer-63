@@ -16,11 +16,7 @@ import {
   type ExamSession,
   type SessionStatus,
 } from "@/lib/exam-sessions";
-import {
-  ASSESSMENT_DESCRIPTION,
-  ASSESSMENT_TITLE,
-  type AssessmentScope,
-} from "@/components/assessment/AssessmentTabs";
+import { type AssessmentScope } from "@/components/assessment/AssessmentTabs";
 import { CalendarClock, Plus, Trash2, Pencil, Send, Undo2, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -133,10 +129,11 @@ export function SessionsList({
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
         <PageHeader
-          eyebrow="Phân phối đề & lịch thi"
+          eyebrow="Phân phối đề thi"
           eyebrowIcon={CalendarClock}
-          title={ASSESSMENT_TITLE}
-          description={ASSESSMENT_DESCRIPTION}
+          title="Phân phối đề thi"
+          description="Phân phối đề đã duyệt cho lớp và thiết lập lịch thi."
+
           actions={
             <button
               onClick={() => setDialogOpen(true)}

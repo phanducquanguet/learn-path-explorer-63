@@ -40,7 +40,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/tests/")({
-  head: () => ({ meta: [{ title: "Thi cử — UNICOM LMS" }] }),
+  head: () => ({ meta: [{ title: "Quản lý đề thi — Kiểm tra & Đánh giá — UNICOM LMS" }] }),
   component: AdminTestsList,
 });
 
@@ -217,9 +217,9 @@ function AdminTestsList() {
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
         <PageHeader
-          eyebrow="Quản lý kỳ thi"
+          eyebrow="Quản lý đề thi"
           eyebrowIcon={ScrollText}
-          title="Thi cử"
+          title="Quản lý đề thi"
           description={<>Danh sách đề thi. Đề mới tạo sẽ chuyển sang trạng thái{" "}
               <b>Chờ duyệt</b> để admin khác duyệt trước khi mở.</>}
           actions={
