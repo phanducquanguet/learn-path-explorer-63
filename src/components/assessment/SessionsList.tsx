@@ -389,10 +389,9 @@ function DistributeDialog({
       started: 0,
       submitted: 0,
       graded: 0,
-      createdBy: grader,
       createdAt: new Date().toISOString(),
     });
-    const list = perClass ? classIds.map((id, i) => mk([id], i)) : [mk(classIds, 0)];
+    const list = [mk(classIds, 0)];
     onCreate(list);
     onOpenChange(false);
     setClassIds([]);
