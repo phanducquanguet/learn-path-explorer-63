@@ -428,15 +428,23 @@ function DistributeDialog({
               {tests.map((t) => (
                 <option key={t.id} value={t.id}>
                   {t.name} · {t.level} · v{testVersion(t)}
+                  {testPaperCount(t) > 1 ? ` · ${testPaperCount(t)} mã đề` : ""}
                 </option>
               ))}
             </select>
+            {test && testPaperCount(test) > 1 && (
+              <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary">
+                + {testPaperCount(test)} mã đề — hệ thống phát ngẫu nhiên cho thí sinh
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-muted-foreground">Lớp được giao</label>
+            <label className="text-xs font-semibold text-muted-foreground">
+              Lớp được giao {test ? `(level ${test.level})` : ""}
+            </label>
             <div className="mt-1 grid gap-1.5 sm:grid-cols-3">
-              {classes.map((c) => {
+              {eligibleClasses.map((c) => {
                 const checked = classIds.includes(c.id);
                 return (
                   <label
@@ -460,12 +468,13 @@ function DistributeDialog({
                 );
               })}
             </div>
-            {levelWarnings.length > 0 && (
+            {eligibleClasses.length === 0 && (
               <p className="mt-2 rounded-xl bg-amber-500/10 px-3 py-2 text-xs text-amber-600 dark:text-amber-400">
-                Cảnh báo: {levelWarnings.length} lớp có level khác level áp dụng của đề ({test?.level}).
+                Không có lớp nào thuộc level {test?.level} của đề này.
               </p>
             )}
           </div>
+
 
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
