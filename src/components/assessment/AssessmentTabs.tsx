@@ -15,15 +15,15 @@ export function assessmentTabs(scope: AssessmentScope): TabDef[] {
   if (scope === "admin") {
     return [
       { key: "bank", label: "Ngân hàng câu hỏi", icon: Library, to: "/admin/question-bank" },
-      { key: "papers", label: "Đề thi", icon: FileText, to: "/admin/tests" },
-      { key: "sessions", label: "Tổ chức thi", icon: CalendarClock, to: "/admin/tests/sessions" },
+      { key: "papers", label: "Quản lý đề thi", icon: FileText, to: "/admin/tests" },
+      { key: "sessions", label: "Phân phối đề thi", icon: CalendarClock, to: "/admin/tests/sessions" },
       { key: "grading", label: "Chấm thi", icon: ClipboardCheck, to: "/admin/test-approvals" },
     ];
   }
   return [
     { key: "bank", label: "Ngân hàng câu hỏi", icon: Library, to: "/teacher/question-bank" },
-    { key: "papers", label: "Đề thi", icon: FileText, to: "/teacher/tests/papers" },
-    { key: "sessions", label: "Tổ chức thi", icon: CalendarClock, to: "/teacher/tests/sessions" },
+    { key: "papers", label: "Quản lý đề thi", icon: FileText, to: "/teacher/tests/papers" },
+    { key: "sessions", label: "Phân phối đề thi", icon: CalendarClock, to: "/teacher/tests/sessions" },
     { key: "grading", label: "Chấm thi", icon: ClipboardCheck, to: "/teacher/tests" },
   ];
 }

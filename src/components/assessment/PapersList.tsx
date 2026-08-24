@@ -10,11 +10,7 @@ import {
 } from "@/lib/tests-data";
 import { testVersion } from "@/lib/exam-sessions";
 import { orgs } from "@/lib/orgs";
-import {
-  ASSESSMENT_DESCRIPTION,
-  ASSESSMENT_TITLE,
-  type AssessmentScope,
-} from "@/components/assessment/AssessmentTabs";
+import { type AssessmentScope } from "@/components/assessment/AssessmentTabs";
 import {
   FileText,
   Plus,
@@ -152,10 +148,11 @@ export function PapersList({ scope = "admin" }: { scope?: AssessmentScope } = {}
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
         <PageHeader
-          eyebrow="Nội dung đề dùng chung"
+          eyebrow="Quản lý đề thi"
           eyebrowIcon={FileText}
-          title={ASSESSMENT_TITLE}
-          description={ASSESSMENT_DESCRIPTION}
+          title="Quản lý đề thi"
+          description="Quản lý nội dung đề thi, trạng thái duyệt và phiên bản đề."
+
           actions={
             <Link
               to={scope === "admin" ? "/admin/tests/new" : "/teacher/tests/new"}
@@ -327,7 +324,7 @@ export function PapersList({ scope = "admin" }: { scope?: AssessmentScope } = {}
         </div>
         <p className="mt-3 text-xs text-muted-foreground">
           Màn hình đề thi chỉ quản lý nội dung đề. Lớp áp dụng, giờ mở và giờ đóng được thiết lập tại
-          tab <strong>Tổ chức thi</strong>.
+          tab <strong>Phân phối đề thi</strong>.
         </p>
       </div>
     </div>

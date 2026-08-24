@@ -7,9 +7,9 @@ export const Route = createFileRoute("/teacher/tests/sessions")({
   }),
   head: () => ({
     meta: [
-      { title: "Tổ chức thi — Kiểm tra & Đánh giá — UNICOM LMS" },
+      { title: "Phân phối đề thi — Kiểm tra & Đánh giá — UNICOM LMS" },
       { name: "description", content: "Phân phối đề đã duyệt cho lớp và thiết lập lịch thi." },
-      { property: "og:title", content: "Tổ chức thi — Kiểm tra & Đánh giá" },
+      { property: "og:title", content: "Phân phối đề thi — Kiểm tra & Đánh giá" },
       { property: "og:description", content: "Phân phối đề đã duyệt cho lớp và thiết lập lịch thi." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
