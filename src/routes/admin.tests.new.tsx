@@ -443,6 +443,17 @@ export function TestExamBuilder({
                   className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm"
                 />
               </Field>
+              {!isExam && (
+                <Field label="Mã đề">
+                  <input
+                    value={code}
+                    onChange={(e) => setCode(e.target.value.toUpperCase())}
+                    placeholder="VD: B1-MID-06"
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm font-semibold uppercase"
+                  />
+                </Field>
+              )}
+
               <Field label="Mô tả">
                 <textarea
                   value={desc}
