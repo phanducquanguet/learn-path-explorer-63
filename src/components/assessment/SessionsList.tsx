@@ -381,6 +381,7 @@ function DistributeDialog({
       durationMinutes: duration,
       attempts: 1,
       publishMode: "manual",
+      createdBy: "Hệ thống",
       confirmed: true,
       totalStudents: ids.reduce(
         (s, id) => s + (classes.find((c) => c.id === id)?.studentCount ?? 0),
