@@ -341,6 +341,20 @@ export function SessionsList({
           toast.success(`Đã tạo ${list.length} đợt thi từ đề đã duyệt`);
         }}
       />
+
+      {editing && (
+        <DistributeDialog
+          key={editing.id}
+          open
+          onOpenChange={(v) => !v && setEditing(null)}
+          editing={editing}
+          onCreate={(list) => {
+            const first = list[0];
+            if (first) saveEdit({ ...editing, ...first, id: editing.id });
+            setEditing(null);
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -349,24 +363,28 @@ function DistributeDialog({
   open,
   onOpenChange,
   presetTestId,
+  editing,
   onCreate,
 }: {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   presetTestId?: string;
+  editing?: ExamSession;
   onCreate: (sessions: ExamSession[]) => void;
 }) {
   const tests = useMemo(() => approvedTests(), []);
-  const [testId, setTestId] = useState(presetTestId ?? tests[0]?.id ?? "");
-  const [classIds, setClassIds] = useState<string[]>([]);
-  const [openAt, setOpenAt] = useState(() => toInput(new Date(Date.now() + 86_400_000).toISOString()));
+  const [testId, setTestId] = useState(editing?.testId ?? presetTestId ?? tests[0]?.id ?? "");
+  const [classIds, setClassIds] = useState<string[]>(editing?.classIds ?? []);
+  const [openAt, setOpenAt] = useState(() =>
+    toInput(editing?.openAt ?? new Date(Date.now() + 86_400_000).toISOString()),
+  );
   const [closeAt, setCloseAt] = useState(() =>
-    toInput(new Date(Date.now() + 86_400_000 + 7_200_000).toISOString()),
+    toInput(editing?.closeAt ?? new Date(Date.now() + 86_400_000 + 7_200_000).toISOString()),
   );
 
   useEffect(() => {
-    if (presetTestId) setTestId(presetTestId);
-  }, [presetTestId]);
+    if (!editing && presetTestId) setTestId(presetTestId);
+  }, [presetTestId, editing]);
 
   const test = tests.find((t) => t.id === testId);
   const duration = test?.durationMinutes ?? 60;
