@@ -171,9 +171,7 @@ export function PapersList({ scope = "admin" }: { scope?: AssessmentScope } = {}
             onClick: () => setStatus(c.key),
             active: status === c.key,
           }))}
-        >
-          <AssessmentTabBar scope={scope} active="papers" />
-        </PageHeader>
+        />
 
         <div className="mt-6 flex flex-wrap items-center gap-2">
           <input
