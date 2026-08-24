@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import {
   teacherProposedTests,
   testDisplayStatus,
@@ -96,16 +97,13 @@ function TestApprovalsList() {
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
-        <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-          <ShieldCheck className="h-3.5 w-3.5" /> Kiểm duyệt nội dung
-        </span>
-        <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-          Duyệt đề thi
-        </h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Các đề thi do giáo viên đề xuất. Xem chi tiết đề theo đúng format đã tạo trước khi duyệt
-          hoặc trả lại để chỉnh sửa.
-        </p>
+        <PageHeader
+          eyebrow="Kiểm duyệt nội dung"
+          eyebrowIcon={ShieldCheck}
+          title="Duyệt đề thi"
+          description={<>Các đề thi do giáo viên đề xuất. Xem chi tiết đề theo đúng format đã tạo trước khi duyệt
+          hoặc trả lại để chỉnh sửa.</>}
+        />
 
         <div className="mt-6 grid gap-3 sm:grid-cols-4">
           <Stat label="Tổng đề đề xuất" value={counts.all ?? 0} />

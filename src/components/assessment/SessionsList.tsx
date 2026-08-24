@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import { classes } from "@/lib/teacher-data";
 import { testQuestionCount } from "@/lib/tests-data";
 import {
@@ -132,49 +133,36 @@ export function SessionsList({
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <CalendarClock className="h-3.5 w-3.5" /> Phân phối đề & lịch thi
-            </span>
-            <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-              {ASSESSMENT_TITLE}
-            </h1>
-            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{ASSESSMENT_DESCRIPTION}</p>
-          </div>
-          <button
-            onClick={() => setDialogOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
-            style={{ background: "var(--gradient-brand)" }}
-          >
-            <Plus className="h-4 w-4" /> Phân phối đề
-          </button>
-        </div>
-
-        <AssessmentTabBar scope={scope} active="sessions" />
-
-        <div className="mt-6 grid gap-3 sm:grid-cols-4">
-          {(
+        <PageHeader
+          eyebrow="Phân phối đề & lịch thi"
+          eyebrowIcon={CalendarClock}
+          title={ASSESSMENT_TITLE}
+          description={ASSESSMENT_DESCRIPTION}
+          actions={
+            <button
+              onClick={() => setDialogOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
+              style={{ background: "var(--gradient-brand)" }}
+            >
+              <Plus className="h-4 w-4" /> Phân phối đề
+            </button>
+          }
+          stats={(
             [
               ["draft", "Bản nháp", counts.draft],
               ["upcoming", "Sắp diễn ra", counts.upcoming],
               ["open", "Đang mở", counts.open],
               ["closed", "Đã đóng", counts.closed],
             ] as [SessionStatus, string, number][]
-          ).map(([key, label, value]) => (
-            <button
-              key={key}
-              onClick={() => setStatus(status === key ? "all" : key)}
-              className={cn(
-                "rounded-2xl border p-4 text-left transition-colors",
-                status === key ? "border-primary bg-primary/5" : "border-border bg-surface hover:bg-muted",
-              )}
-            >
-              <div className="text-xs font-medium text-muted-foreground">{label}</div>
-              <div className="mt-1 text-2xl font-semibold text-foreground">{value}</div>
-            </button>
-          ))}
-        </div>
+          ).map(([key, label, value]) => ({
+            label,
+            value,
+            onClick: () => setStatus(status === key ? "all" : key),
+            active: status === key,
+          }))}
+        >
+          <AssessmentTabBar scope={scope} active="sessions" />
+        </PageHeader>
 
         <div className="mt-6 flex flex-wrap items-center gap-2">
           <select

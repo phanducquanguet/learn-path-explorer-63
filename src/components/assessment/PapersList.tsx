@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import {
   tests as seedTests,
   testQuestionCount,
@@ -151,42 +152,29 @@ export function PapersList({ scope = "admin" }: { scope?: AssessmentScope } = {}
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <FileText className="h-3.5 w-3.5" /> Nội dung đề dùng chung
-            </span>
-            <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-              {ASSESSMENT_TITLE}
-            </h1>
-            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{ASSESSMENT_DESCRIPTION}</p>
-          </div>
-          <Link
-            to={scope === "admin" ? "/admin/tests/new" : "/teacher/tests/new"}
-            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
-            style={{ background: "var(--gradient-brand)" }}
-          >
-            <Plus className="h-4 w-4" /> Tạo đề thi
-          </Link>
-        </div>
-
-        <AssessmentTabBar scope={scope} active="papers" />
-
-        <div className="mt-6 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {statCards.map((c) => (
-            <button
-              key={c.key}
-              onClick={() => setStatus(c.key)}
-              className={cn(
-                "rounded-2xl border p-4 text-left transition-colors",
-                status === c.key ? "border-primary bg-primary/5" : "border-border bg-surface hover:bg-muted",
-              )}
+        <PageHeader
+          eyebrow="Nội dung đề dùng chung"
+          eyebrowIcon={FileText}
+          title={ASSESSMENT_TITLE}
+          description={ASSESSMENT_DESCRIPTION}
+          actions={
+            <Link
+              to={scope === "admin" ? "/admin/tests/new" : "/teacher/tests/new"}
+              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
+              style={{ background: "var(--gradient-brand)" }}
             >
-              <div className="text-xs font-medium text-muted-foreground">{c.label}</div>
-              <div className="mt-1 text-2xl font-semibold text-foreground">{c.value}</div>
-            </button>
-          ))}
-        </div>
+              <Plus className="h-4 w-4" /> Tạo đề thi
+            </Link>
+          }
+          stats={statCards.map((c) => ({
+            label: c.label,
+            value: c.value,
+            onClick: () => setStatus(c.key),
+            active: status === c.key,
+          }))}
+        >
+          <AssessmentTabBar scope={scope} active="papers" />
+        </PageHeader>
 
         <div className="mt-6 flex flex-wrap items-center gap-2">
           <input

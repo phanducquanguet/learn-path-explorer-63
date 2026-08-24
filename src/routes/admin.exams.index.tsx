@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import { EXAM_SKILLS, classes as teacherClasses } from "@/lib/teacher-data";
 import { useRole } from "@/contexts/RoleContext";
 import { usePublishStatus, STATUS_LABEL, type PublishStatus, type PublishEvent } from "@/lib/publish-status";
@@ -159,41 +160,38 @@ export function ExamsList({ scope = "admin" }: { scope?: "admin" | "teacher" } =
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <Sparkles className="h-3.5 w-3.5" /> Quản lý đề thi
-            </span>
-            <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              {scope === "teacher" ? "Bài tập & Kiểm tra" : "Đề luyện tập"}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {scope === "teacher"
+        <PageHeader
+          eyebrow="Quản lý đề thi"
+          eyebrowIcon={Sparkles}
+          title={<>{scope === "teacher" ? "Bài tập & Kiểm tra" : "Đề luyện tập"}</>}
+          description={<>{scope === "teacher"
                 ? "Tạo bài kiểm tra và luyện tập cho học viên trong các lớp bạn được phân công."
-                : "Đề thi được phân loại theo cấp độ (A1–C2) và dùng chung cho mọi học viên cùng cấp."}
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            {scope === "teacher" && (
-              <Link
-                to="/teacher/qa"
-                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-sm font-semibold text-foreground hover:bg-muted"
-              >
-                <MessageSquare className="h-4 w-4" /> Hỏi đáp học viên
-              </Link>
-            )}
-            {canManage && tab === "exams" && (
-              <Link
-                to={scope === "teacher" ? "/teacher/exams/new" : "/admin/exams/new"}
-                className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
-                style={{ background: "var(--gradient-brand)" }}
-              >
-                <Plus className="h-4 w-4" /> Tạo bài tập mới
-              </Link>
-            )}
+                : "Đề thi được phân loại theo cấp độ (A1–C2) và dùng chung cho mọi học viên cùng cấp."}</>}
+          actions={
+            <>
+            <div className="flex flex-wrap items-center gap-2">
+              {scope === "teacher" && (
+                <Link
+                  to="/teacher/qa"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-sm font-semibold text-foreground hover:bg-muted"
+                >
+                  <MessageSquare className="h-4 w-4" /> Hỏi đáp học viên
+                </Link>
+              )}
+              {canManage && tab === "exams" && (
+                <Link
+                  to={scope === "teacher" ? "/teacher/exams/new" : "/admin/exams/new"}
+                  className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
+                  style={{ background: "var(--gradient-brand)" }}
+                >
+                  <Plus className="h-4 w-4" /> Tạo bài tập mới
+                </Link>
+              )}
 
-          </div>
-        </div>
+            </div>
+            </>
+          }
+        />
 
         {/* Tabs: Bài luyện thi | Ngân hàng câu hỏi (chỉ giáo viên) */}
         {scope === "teacher" && (

@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import { useRole } from "@/contexts/RoleContext";
 import {
   questionBank,
@@ -352,29 +353,26 @@ export function BankPage({ scope = "admin", embedded = false }: { scope?: "admin
         </Link>
       )}
 
-        <div className="mt-4 flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <Library className="h-3.5 w-3.5" /> Ngân hàng câu hỏi
-            </span>
-            <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight">
-              Quản lý câu hỏi
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {items.length} câu hỏi • dùng để bốc ngẫu nhiên cho đề thi
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
+        <PageHeader
+          eyebrow="Ngân hàng câu hỏi"
+          eyebrowIcon={Library}
+          title="Quản lý câu hỏi"
+          description={<>{items.length} câu hỏi • dùng để bốc ngẫu nhiên cho đề thi</>}
+          actions={
+            <>
+            <div className="flex flex-wrap items-center gap-2">
 
-            <button
-              onClick={() => setPicking(true)}
-              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
-              style={{ background: "var(--gradient-brand)" }}
-            >
-              <Plus className="h-4 w-4" /> Thêm câu hỏi
-            </button>
-          </div>
-        </div>
+              <button
+                onClick={() => setPicking(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
+                style={{ background: "var(--gradient-brand)" }}
+              >
+                <Plus className="h-4 w-4" /> Thêm câu hỏi
+              </button>
+            </div>
+            </>
+          }
+        />
 
         {/* Stats */}
         <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">

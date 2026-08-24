@@ -2,6 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Megaphone, Plus, ExternalLink, Users, Copy } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import {
   createCampaign,
   listCampaigns,
@@ -79,23 +80,21 @@ function CampaignsPage() {
       <TopNav />
       <main className="min-h-screen bg-muted/20 px-6 py-8">
         <div className="mx-auto max-w-6xl space-y-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                <Megaphone className="h-3.5 w-3.5" /> Chiến dịch tuyển sinh
-              </div>
-              <h1 className="mt-2 font-display text-3xl font-bold">Chiến dịch thi test</h1>
-              <p className="text-sm text-muted-foreground">
-                Tạo landing page thu thập đăng ký test trình độ từ học viên vãng lai.
-              </p>
-            </div>
-            <button
-              onClick={() => setShowForm((v) => !v)}
-              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
-            >
-              <Plus className="h-4 w-4" /> Tạo chiến dịch
-            </button>
-          </div>
+          <PageHeader
+            eyebrow="Chiến dịch tuyển sinh"
+            eyebrowIcon={Megaphone}
+            title="Chiến dịch thi test"
+            description="Tạo landing page thu thập đăng ký test trình độ từ học viên vãng lai."
+            actions={
+              <button
+                onClick={() => setShowForm((v) => !v)}
+                className="inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
+                style={{ background: "var(--gradient-brand)" }}
+              >
+                <Plus className="h-4 w-4" /> Tạo chiến dịch
+              </button>
+            }
+          />
 
           {showForm && (
             <form

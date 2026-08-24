@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Fragment, useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import { classes, students, type TeacherStudent } from "@/lib/teacher-data";
 import { levels } from "@/lib/lms-data";
 import { orgs, classOrgMap, getOrg } from "@/lib/orgs";
@@ -293,33 +294,30 @@ function StatsPage() {
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
-        <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-          <div>
-            <span className="inline-flex w-fit items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <Sparkles className="h-3.5 w-3.5" /> Thống kê điểm học viên
-            </span>
-            <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Thống kê đa chiều
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Lọc theo đơn vị · level · lớp · khóa học · kỹ năng để theo dõi điểm số học viên toàn hệ thống.
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={resetFilters}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
-            >
-              <X className="h-3.5 w-3.5" /> Đặt lại
-            </button>
-            <button
-              onClick={exportCsv}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-2 text-xs font-semibold text-background hover:opacity-90"
-            >
-              <Download className="h-3.5 w-3.5" /> Xuất CSV
-            </button>
-          </div>
-        </div>
+        <PageHeader
+          eyebrow="Thống kê điểm học viên"
+          eyebrowIcon={Sparkles}
+          title="Thống kê đa chiều"
+          description={<>Lọc theo đơn vị · level · lớp · khóa học · kỹ năng để theo dõi điểm số học viên toàn hệ thống.</>}
+          actions={
+            <>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={resetFilters}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-surface px-3 py-2 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" /> Đặt lại
+              </button>
+              <button
+                onClick={exportCsv}
+                className="inline-flex items-center gap-1.5 rounded-lg bg-foreground px-3 py-2 text-xs font-semibold text-background hover:opacity-90"
+              >
+                <Download className="h-3.5 w-3.5" /> Xuất CSV
+              </button>
+            </div>
+            </>
+          }
+        />
 
         {/* Filter bar */}
         <div className="mt-6 rounded-2xl border border-border bg-surface p-4 shadow-soft">

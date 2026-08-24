@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import { useRole } from "@/contexts/RoleContext";
 import {
   tests as seedTests,
@@ -215,37 +216,34 @@ function AdminTestsList() {
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <ScrollText className="h-3.5 w-3.5" /> Quản lý kỳ thi
-            </span>
-            <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight sm:text-4xl">
-              Thi cử
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Danh sách đề thi. Đề mới tạo sẽ chuyển sang trạng thái{" "}
-              <b>Chờ duyệt</b> để admin khác duyệt trước khi mở.
-            </p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              to="/admin/tests/monitor"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-foreground shadow-soft hover:bg-muted"
-            >
-              <Activity className="h-4 w-4 text-emerald-500" /> Giám sát kỳ thi
-            </Link>
-            {isAdmin && (
+        <PageHeader
+          eyebrow="Quản lý kỳ thi"
+          eyebrowIcon={ScrollText}
+          title="Thi cử"
+          description={<>Danh sách đề thi. Đề mới tạo sẽ chuyển sang trạng thái{" "}
+              <b>Chờ duyệt</b> để admin khác duyệt trước khi mở.</>}
+          actions={
+            <>
+            <div className="flex flex-wrap items-center gap-2">
               <Link
-                to="/admin/tests/new"
-                className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
-                style={{ background: "var(--gradient-brand)" }}
+                to="/admin/tests/monitor"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-4 py-2.5 text-sm font-semibold text-foreground shadow-soft hover:bg-muted"
               >
-                <Plus className="h-4 w-4" /> Tạo đề mới
+                <Activity className="h-4 w-4 text-emerald-500" /> Giám sát kỳ thi
               </Link>
-            )}
-          </div>
-        </div>
+              {isAdmin && (
+                <Link
+                  to="/admin/tests/new"
+                  className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
+                  style={{ background: "var(--gradient-brand)" }}
+                >
+                  <Plus className="h-4 w-4" /> Tạo đề mới
+                </Link>
+              )}
+            </div>
+            </>
+          }
+        />
 
         {/* 5 thẻ thống kê */}
         <div className="mt-6 grid gap-3 sm:grid-cols-3 lg:grid-cols-5">

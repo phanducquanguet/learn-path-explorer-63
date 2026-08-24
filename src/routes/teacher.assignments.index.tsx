@@ -32,6 +32,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PageHeader, type PageHeaderStat } from "@/components/PageHeader";
 
 export const Route = createFileRoute("/teacher/assignments/")({
   head: () => ({ meta: [{ title: "Bài tập — UNICOM LMS" }] }),
@@ -94,16 +95,23 @@ function TeacherAssignmentsPage() {
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="mx-auto max-w-6xl px-6 pb-20 pt-10 sm:px-8">
-        <div>
-          <h1 className="font-display text-3xl font-semibold tracking-tight">
-            Bài tập
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Ra đề tự luận cho học viên, học viên nộp câu trả lời hoặc file — giáo viên chấm điểm.
-          </p>
-        </div>
+        <PageHeader
+          eyebrow="Giao bài & chấm điểm"
+          eyebrowIcon={ClipboardList}
+          title="Bài tập"
+          description="Ra đề tự luận cho học viên, học viên nộp câu trả lời hoặc file — giáo viên chấm điểm."
+          actions={
+            <button
+              onClick={() => setOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
+              style={{ background: "var(--gradient-brand)" }}
+            >
+              <Plus className="h-4 w-4" /> Tạo bài tập
+            </button>
+          }
+          stats={buildAssignmentStats(filteredItems)}
+        />
 
-        <KpiCards items={filteredItems} />
 
         {/* Search + filters + create button */}
         <div className="mt-6 rounded-2xl border border-border bg-surface p-3 shadow-soft">
@@ -168,13 +176,6 @@ function TeacherAssignmentsPage() {
                   <X className="h-3.5 w-3.5" /> Xóa lọc
                 </button>
               )}
-              <div className="mx-1 hidden h-5 w-px bg-border lg:block" />
-              <button
-                onClick={() => setOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-4 py-2 text-sm font-semibold text-background hover:opacity-90"
-              >
-                <Plus className="h-4 w-4" /> Tạo bài tập
-              </button>
             </div>
           </div>
         </div>
@@ -235,7 +236,7 @@ function FilterSelect({
   );
 }
 
-function KpiCards({ items }: { items: Assignment[] }) {
+function buildAssignmentStats(items: Assignment[]): PageHeaderStat[] {
   const now = Date.now();
   let openCount = 0;
   let closedCount = 0;
@@ -269,64 +270,38 @@ function KpiCards({ items }: { items: Assignment[] }) {
 
   const submissionRate = assigned > 0 ? Math.round((submitted / assigned) * 100) : 0;
 
-  const cards = [
+  return [
     {
       label: "Tổng bài tập",
       value: items.length,
-      sub: `${openCount} đang mở · ${closedCount} đã đóng`,
+      hint: `${openCount} đang mở · ${closedCount} đã đóng`,
       icon: ClipboardList,
-      tone: "text-primary bg-primary/10",
+      tone: "primary",
     },
     {
       label: "Tỉ lệ nộp bài",
       value: `${submissionRate}%`,
-      sub: `${submitted}/${assigned} lượt nộp`,
+      hint: `${submitted}/${assigned} lượt nộp`,
       icon: FileCheck2,
-      tone: "text-emerald-600 bg-emerald-500/10",
+      tone: "success",
     },
     {
       label: "Chờ chấm",
       value: pendingGrade,
-      sub: `${graded} đã chấm`,
+      hint: `${graded} đã chấm`,
       icon: Clock,
-      tone: "text-amber-600 bg-amber-500/10",
+      tone: "warning",
     },
     {
       label: "Quá hạn chưa nộp",
       value: overdueMissing,
-      sub: "Học viên cần nhắc / gia hạn",
+      hint: "Học viên cần nhắc / gia hạn",
       icon: AlertTriangle,
-      tone: "text-rose-600 bg-rose-500/10",
+      tone: "danger",
     },
-  ] as const;
-
-  return (
-    <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {cards.map((c) => {
-        const Icon = c.icon;
-        return (
-          <div
-            key={c.label}
-            className="rounded-2xl border border-border bg-surface p-4 shadow-soft"
-          >
-            <div className="flex items-center justify-between">
-              <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                {c.label}
-              </div>
-              <div className={cn("flex h-8 w-8 items-center justify-center rounded-lg", c.tone)}>
-                <Icon className="h-4 w-4" />
-              </div>
-            </div>
-            <div className="mt-2 font-display text-2xl font-semibold tracking-tight">
-              {c.value}
-            </div>
-            <div className="mt-0.5 text-xs text-muted-foreground">{c.sub}</div>
-          </div>
-        );
-      })}
-    </div>
-  );
+  ];
 }
+
 
 function findCourseUnits(courseId?: string, unitIds?: string[]) {
   if (!courseId) return null;

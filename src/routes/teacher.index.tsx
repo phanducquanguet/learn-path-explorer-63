@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { TopNav } from "@/components/TopNav";
+import { PageHeader } from "@/components/PageHeader";
 import { classes, students, recentActivity, teacherProfile } from "@/lib/teacher-data";
 import {
   GraduationCap,
@@ -99,39 +100,36 @@ function TeacherOverview() {
       <TopNav />
       <div className="mx-auto max-w-7xl px-6 pb-20 pt-10 sm:px-8">
         {/* Header */}
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <span className="inline-flex w-fit items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-              <Sparkles className="h-3.5 w-3.5" /> Xin chào, {teacherProfile.name}
-            </span>
-            <h1 className="mt-1 font-display text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              Tổng quan giảng dạy
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Theo dõi nhanh tiến độ lớp và học viên bạn đang chủ nhiệm / trợ giảng.
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              to="/teacher/live"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-3.5 py-2 text-xs font-semibold text-background hover:opacity-90"
-            >
-              <Video className="h-3.5 w-3.5" /> Đặt lịch buổi học
-            </Link>
-            <Link
-              to="/teacher/reports"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-muted"
-            >
-              <BarChart3 className="h-3.5 w-3.5" /> Báo cáo
-            </Link>
-            <Link
-              to="/admin/exams"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-muted"
-            >
-              <ClipboardCheck className="h-3.5 w-3.5" /> Tạo bài tập
-            </Link>
-          </div>
-        </div>
+        <PageHeader
+          eyebrow={`Xin chào, ${teacherProfile.name}`}
+          eyebrowIcon={Sparkles}
+          title="Tổng quan giảng dạy"
+          description={<>Theo dõi nhanh tiến độ lớp và học viên bạn đang chủ nhiệm / trợ giảng.</>}
+          actions={
+            <>
+            <div className="flex flex-wrap gap-2">
+              <Link
+                to="/teacher/live"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-foreground px-3.5 py-2 text-xs font-semibold text-background hover:opacity-90"
+              >
+                <Video className="h-3.5 w-3.5" /> Đặt lịch buổi học
+              </Link>
+              <Link
+                to="/teacher/reports"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-muted"
+              >
+                <BarChart3 className="h-3.5 w-3.5" /> Báo cáo
+              </Link>
+              <Link
+                to="/admin/exams"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface px-3.5 py-2 text-xs font-semibold text-foreground hover:bg-muted"
+              >
+                <ClipboardCheck className="h-3.5 w-3.5" /> Tạo bài tập
+              </Link>
+            </div>
+            </>
+          }
+        />
 
 
         {/* Stats */}
