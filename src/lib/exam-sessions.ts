@@ -196,3 +196,10 @@ export function approvedTests(): Test[] {
 export function testVersion(t: Test): number {
   return (t as Test & { version?: number }).version ?? 1;
 }
+
+/** Số mã đề (paper) của một đề thi. Đề trộn ngẫu nhiên sinh nhiều mã đề. */
+export function testPaperCount(t: Test): number {
+  const explicit = (t as Test & { paperCount?: number }).paperCount;
+  if (explicit && explicit > 0) return explicit;
+  return t.mode === "random" ? Math.max(2, Math.min(4, t.structure.length || 2)) : 1;
+}
