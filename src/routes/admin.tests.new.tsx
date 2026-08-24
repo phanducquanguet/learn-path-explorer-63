@@ -220,9 +220,12 @@ export function TestExamBuilder({
   const pageTitle = isExam ? "Tạo bài luyện thi mới" : "Tạo bài tập mới";
   const submitLabel = isExam ? "Tạo bài luyện thi" : "Tạo bài tập";
 
+  const simpleTestForm = !isExam && scope === "teacher";
   const [step, setStep] = useState(1);
   const [name, setName] = useState("");
+  const [code, setCode] = useState("");
   const [desc, setDesc] = useState("");
+
   const [levels, setLevels] = useState<QLevel[]>(["B1"]);
   const level: QLevel = levels[0] ?? "B1";
   useEffect(() => {
