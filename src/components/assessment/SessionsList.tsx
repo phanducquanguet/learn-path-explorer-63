@@ -10,6 +10,7 @@ import {
   sessionStatus,
   SESSION_STATUS_COLOR,
   SESSION_STATUS_LABEL,
+  testPaperCount,
   testVersion,
   type ExamSession,
   type SessionStatus,
