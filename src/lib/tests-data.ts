@@ -1,4 +1,4 @@
-import type { QSkill, QType, QLevel, QDifficulty, BankQuestion } from "./question-bank";
+import { questionBank, type QSkill, type QType, type QLevel, type QDifficulty, type BankQuestion } from "./question-bank";
 
 export type CustomQuestion = {
   id: string;
@@ -709,4 +709,26 @@ export function pendingApprovalCount(): number {
 /** Tổng số câu hỏi của một đề (theo cấu trúc đã tạo). */
 export function testQuestionCount(t: Test): number {
   return t.structure.reduce((s, x) => s + x.count, 0);
+}
+
+/** Tổng điểm của một đề (ưu tiên điểm câu hỏi đã soạn/chọn, mặc định 1 điểm/câu). */
+export function testTotalPoints(t: Test): number {
+  return t.structure.reduce((sum, item) => {
+    const custom = [
+      ...(item.customQuestions ?? []).map((q) => q.points ?? 1),
+      ...(item.customBank ?? []).map((q) => q.points ?? 1),
+    ];
+    if (custom.length > 0) {
+      const extra = Math.max(0, item.count - custom.length);
+      return sum + custom.reduce((a, b) => a + b, 0) + extra;
+    }
+    if (item.pickedIds?.length) {
+      const picked = item.pickedIds.map(
+        (id) => questionBank.find((q) => q.id === id)?.points ?? 1,
+      );
+      const extra = Math.max(0, item.count - picked.length);
+      return sum + picked.reduce((a, b) => a + b, 0) + extra;
+    }
+    return sum + item.count;
+  }, 0);
 }
