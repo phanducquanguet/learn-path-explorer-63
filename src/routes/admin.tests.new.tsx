@@ -38,7 +38,7 @@ import {
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/admin/tests/new")({
-  head: () => ({ meta: [{ title: "Tạo bài tập mới — UNICOM LMS" }] }),
+  head: () => ({ meta: [{ title: "Tạo bài thi mới — UNICOM LMS" }] }),
   component: () => <TestExamBuilder kind="test" scope="admin" />,
 });
 
@@ -217,7 +217,7 @@ export function TestExamBuilder({
       : "/admin/exams"
     : "/teacher/tests";
   const backLabel = isExam ? "Trở lại Luyện thi" : "Trở lại Thi cử";
-  const pageTitle = isExam ? "Tạo bài luyện thi mới" : "Tạo bài tập mới";
+  const pageTitle = isExam ? "Tạo bài luyện thi mới" : "Tạo bài thi mới";
   const submitLabel = isExam ? "Tạo bài luyện thi" : "Tạo bài tập";
 
   const simpleTestForm = !isExam && scope === "teacher";
