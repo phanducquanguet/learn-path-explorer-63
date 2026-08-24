@@ -444,7 +444,7 @@ function DistributeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Phân phối đề</DialogTitle>
+          <DialogTitle>{editing ? "Sửa bản nháp đợt thi" : "Phân phối đề"}</DialogTitle>
           <DialogDescription>
             Chọn một đề đã duyệt, giao cho lớp và thiết lập lịch thi. Không thay đổi nội dung đề.
           </DialogDescription>
