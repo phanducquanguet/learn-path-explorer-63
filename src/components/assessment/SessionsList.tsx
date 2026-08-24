@@ -556,7 +556,7 @@ function DistributeDialog({
             className="rounded-xl px-4 py-2 text-sm font-semibold text-primary-foreground shadow-soft disabled:opacity-50"
             style={{ background: "var(--gradient-brand)" }}
           >
-            Xác nhận tổ chức
+            {editing ? "Lưu bản nháp" : "Xác nhận tổ chức"}
           </button>
         </DialogFooter>
       </DialogContent>
