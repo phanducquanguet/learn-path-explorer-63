@@ -227,13 +227,21 @@ export function SessionsList({
                       </div>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {test?.name ?? s.testId}
+                      <span className="inline-flex flex-wrap items-center gap-1.5">
+                        <span>{test?.name ?? s.testId}</span>
+                        {test && testPaperCount(test) > 1 && (
+                          <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
+                            + {testPaperCount(test)} mã đề
+                          </span>
+                        )}
+                      </span>
                       {test && (
                         <div className="text-xs">
                           {test.level} · {testQuestionCount(test)} câu
                         </div>
                       )}
                     </td>
+
                     <td className="px-4 py-3 text-center tabular-nums">v{s.testVersion}</td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
