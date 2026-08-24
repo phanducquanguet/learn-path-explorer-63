@@ -2,25 +2,13 @@ import { tests, type Test } from "./tests-data";
 import { classes } from "./teacher-data";
 
 /** Trạng thái của một lần tổ chức thi (đợt thi). */
-export type SessionStatus =
-  | "draft"
-  | "upcoming"
-  | "open"
-  | "closed"
-  | "grading"
-  | "awaiting-publish"
-  | "completed"
-  | "cancelled";
+export type SessionStatus = "draft" | "upcoming" | "open" | "closed";
 
 export const SESSION_STATUS_LABEL: Record<SessionStatus, string> = {
   draft: "Bản nháp",
   upcoming: "Sắp diễn ra",
   open: "Đang mở",
   closed: "Đã đóng",
-  grading: "Chờ chấm",
-  "awaiting-publish": "Chờ công bố",
-  completed: "Hoàn tất",
-  cancelled: "Đã hủy",
 };
 
 export const SESSION_STATUS_COLOR: Record<SessionStatus, string> = {
@@ -28,10 +16,6 @@ export const SESSION_STATUS_COLOR: Record<SessionStatus, string> = {
   upcoming: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
   open: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   closed: "bg-slate-500/10 text-slate-600 dark:text-slate-300",
-  grading: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-  "awaiting-publish": "bg-violet-500/10 text-violet-600 dark:text-violet-400",
-  completed: "bg-primary/10 text-primary",
-  cancelled: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
 };
 
 /** Một lần tổ chức thi: đề đã duyệt + lớp + lịch. Không chứa nội dung đề. */
