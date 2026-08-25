@@ -30,6 +30,8 @@ import {
   LogOut,
   AlertTriangle,
 } from "lucide-react";
+import { ScrollText } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/teacher/tests/$testId")({
@@ -323,25 +325,6 @@ function StatusPill({ status }: { status: TestSubmission["status"] }) {
   const m = map[status];
   return (
     <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", m.c)}>{m.t}</span>
-  );
-}
-
-function Mini({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-xl border border-border bg-surface px-3 py-2">
-      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-        <Icon className="h-3 w-3" /> {label}
-      </div>
-      <div className="mt-0.5 text-sm font-semibold text-foreground">{value}</div>
-    </div>
   );
 }
 
