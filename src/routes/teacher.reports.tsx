@@ -17,6 +17,7 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   Tooltip,
@@ -24,12 +25,8 @@ import {
   LineChart,
   Line,
   Legend,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
 } from "recharts";
+
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/teacher/reports")({
