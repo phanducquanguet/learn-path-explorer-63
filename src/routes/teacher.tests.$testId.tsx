@@ -30,6 +30,8 @@ import {
   LogOut,
   AlertTriangle,
 } from "lucide-react";
+import { ScrollText } from "lucide-react";
+import { PageHeader } from "@/components/PageHeader";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/teacher/tests/$testId")({
@@ -51,33 +53,52 @@ function TestDetail() {
     <div className="min-h-screen bg-background">
       <TopNav />
       <div className="mx-auto max-w-6xl px-6 pb-20 pt-10 sm:px-8">
-        <Link
-          to="/teacher/tests"
-          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        <PageHeader
+          eyebrow="Chi tiết chấm thi"
+          eyebrowIcon={ScrollText}
+          title={test.name}
+          description={test.description}
+          actions={
+            <Link
+              to="/teacher/tests"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-surface-2 px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+            >
+              <ArrowLeft className="h-4 w-4" /> Quay lại danh sách
+            </Link>
+          }
+          stats={[
+            {
+              icon: Calendar,
+              label: "Mở",
+              value: new Date(test.openAt).toLocaleDateString("vi-VN"),
+            },
+            {
+              icon: Calendar,
+              label: "Đóng",
+              value: new Date(test.closeAt).toLocaleDateString("vi-VN"),
+              tone: "muted",
+            },
+            {
+              icon: Clock,
+              label: "Thời lượng",
+              value: `${test.durationMinutes} phút`,
+              tone: "warning",
+            },
+            {
+              icon: Users,
+              label: "Đã nộp",
+              value: `${test.submitted}/${test.registered}`,
+              tone: "success",
+            },
+          ]}
         >
-          <ArrowLeft className="h-4 w-4" /> Trở lại Chấm thi
-        </Link>
-
-        <div className="mt-4 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="rounded-lg bg-primary/10 px-2 py-1 text-[11px] font-bold uppercase text-primary">
-                {test.level}
-              </span>
-              <StatusBadge status={st} />
-            </div>
-            <h1 className="mt-2 font-display text-3xl font-semibold tracking-tight">
-              {test.name}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">{test.description}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-lg bg-primary/10 px-2 py-1 text-[11px] font-bold uppercase text-primary">
+              {test.level}
+            </span>
+            <StatusBadge status={st} />
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <Mini icon={Calendar} label="Mở" value={new Date(test.openAt).toLocaleDateString("vi-VN")} />
-            <Mini icon={Calendar} label="Đóng" value={new Date(test.closeAt).toLocaleDateString("vi-VN")} />
-            <Mini icon={Clock} label="Thời lượng" value={`${test.durationMinutes}'`} />
-            <Mini icon={Users} label="Đã nộp" value={`${test.submitted}/${test.registered}`} />
-          </div>
-        </div>
+        </PageHeader>
 
         <div className="mt-6 flex gap-1 rounded-xl bg-surface p-1 ring-1 ring-border w-fit">
           {(
@@ -106,6 +127,7 @@ function TestDetail() {
             );
           })}
         </div>
+
 
         {tab === "overview" && (
           <ProctorOverview
@@ -303,25 +325,6 @@ function StatusPill({ status }: { status: TestSubmission["status"] }) {
   const m = map[status];
   return (
     <span className={cn("rounded-full px-2 py-0.5 text-[11px] font-semibold", m.c)}>{m.t}</span>
-  );
-}
-
-function Mini({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: React.ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="rounded-xl border border-border bg-surface px-3 py-2">
-      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-        <Icon className="h-3 w-3" /> {label}
-      </div>
-      <div className="mt-0.5 text-sm font-semibold text-foreground">{value}</div>
-    </div>
   );
 }
 
