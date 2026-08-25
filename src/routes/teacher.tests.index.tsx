@@ -6,170 +6,135 @@ import { useRole } from "@/contexts/RoleContext";
 import {
   tests as seedTests,
   testSubmissions as seedSubmissions,
+  testStatus,
+  testTotalPoints,
   type Test,
-  type TestSubmission,
 } from "@/lib/tests-data";
 import { classes } from "@/lib/teacher-data";
 import {
   ScrollText,
-  Plus,
   Clock,
   CheckCircle2,
-  Hourglass,
   GraduationCap,
-  Sparkles,
   ClipboardCheck,
   FileEdit,
-  Filter,
+  Search,
   Eye,
+  Users,
+  Layers,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/teacher/tests/")({
-  head: () => ({ meta: [{ title: "Chấm thi — UNICOM LMS" }] }),
-  component: TestsList,
+  head: () => ({
+    meta: [
+      { title: "Chấm thi — UNICOM LMS" },
+      {
+        name: "description",
+        content:
+          "Danh sách bài thi cần chấm: theo dõi số học viên đã nộp, tiến độ chấm và mở chi tiết để chấm từng bài làm.",
+      },
+      { property: "og:title", content: "Chấm thi — UNICOM LMS" },
+      {
+        property: "og:description",
+        content: "Theo dõi tiến độ chấm thi theo từng đề và từng lớp.",
+      },
+    ],
+  }),
+  component: GradingList,
 });
 
-type ExamKind = "test" | "practice";
+type GradeStatus = "not-started" | "in-progress" | "done";
 
-type Row = {
-  submissionId: string;
-  testId: string;
-  testName: string;
-  kind: ExamKind;
-  level: string;
-  studentName: string;
-  studentClass: string;
-  submittedAt?: string;
-  durationMinutes?: number;
-  autoScore: number;
-  manualScore?: number;
-  finalScore?: number;
-  status: TestSubmission["status"];
+type ExamRow = {
+  test: Test;
+  code: string;
+  classNames: string[];
+  registered: number;
+  submitted: number;
+  needGrading: number;
+  graded: number;
+  gradeStatus: GradeStatus;
+  progress: number;
+  avgScore?: number;
 };
 
-// Một số bài làm "Luyện thi" để demo — bổ sung cho seed submissions hiện có
-// (toàn bộ seedSubmissions là loại "Bài thi").
-const PRACTICE_SUBMISSIONS: Row[] = [
-  {
-    submissionId: "ps-1",
-    testId: "seed-1",
-    testName: "B1 Mock Test 01",
-    kind: "practice",
-    level: "B1",
-    studentName: "Trần Bảo Châu",
-    studentClass: "B1 — Fastrack",
-    submittedAt: new Date(Date.now() - 6 * 3600 * 1000).toISOString(),
-    durationMinutes: 78,
-    autoScore: 26,
-    status: "needs-grading",
-  },
-  {
-    submissionId: "ps-2",
-    testId: "seed-2",
-    testName: "A2 Reading Practice",
-    kind: "practice",
-    level: "A2",
-    studentName: "Lê Quốc Khánh",
-    studentClass: "A2 — Buổi tối",
-    submittedAt: new Date(Date.now() - 26 * 3600 * 1000).toISOString(),
-    durationMinutes: 38,
-    autoScore: 14,
-    manualScore: 4,
-    finalScore: 18,
-    status: "graded",
-  },
-  {
-    submissionId: "ps-3",
-    testId: "seed-3",
-    testName: "Listening Mini Quiz",
-    kind: "practice",
-    level: "A1",
-    studentName: "Phạm Thu Hà",
-    studentClass: "A1 — Sáng thứ 7",
-    submittedAt: new Date(Date.now() - 2 * 3600 * 1000).toISOString(),
-    durationMinutes: 18,
-    autoScore: 7,
-    status: "auto-graded",
-  },
-];
+const GRADE_META: Record<GradeStatus, { label: string; cls: string }> = {
+  "not-started": { label: "Chưa chấm", cls: "bg-amber-100 text-amber-700" },
+  "in-progress": { label: "Đang chấm", cls: "bg-blue-100 text-blue-700" },
+  done: { label: "Đã chấm xong", cls: "bg-emerald-100 text-emerald-700" },
+};
 
-function statusMeta(s: TestSubmission["status"]) {
-  if (s === "needs-grading")
-    return { label: "Cần chấm", icon: FileEdit, cls: "bg-amber-100 text-amber-700" };
-  if (s === "in-progress")
-    return { label: "Đang làm", icon: Hourglass, cls: "bg-blue-100 text-blue-700" };
-  if (s === "auto-graded")
-    return { label: "Đã chấm tự động", icon: Sparkles, cls: "bg-indigo-100 text-indigo-700" };
-  return { label: "Đã chấm", icon: CheckCircle2, cls: "bg-emerald-100 text-emerald-700" };
+function buildRows(): ExamRow[] {
+  return seedTests
+    .filter((t) => (t.approvalStatus ?? "approved") === "approved")
+    .map((t) => {
+      const subs = seedSubmissions.filter((s) => s.testId === t.id);
+      const submitted = subs.filter((s) => s.status !== "in-progress").length || t.submitted;
+      const graded = subs.filter((s) => s.status === "graded").length || t.graded;
+      const needGrading =
+        subs.filter((s) => s.status === "needs-grading" || s.status === "auto-graded").length ||
+        Math.max(0, submitted - graded);
+      const gradeStatus: GradeStatus =
+        submitted === 0 || graded === 0 ? "not-started" : needGrading === 0 ? "done" : "in-progress";
+      const scored = subs.filter((s) => s.finalScore != null);
+      return {
+        test: t,
+        code: t.code ?? t.id.toUpperCase(),
+        classNames: t.classIds.map((id) => classes.find((c) => c.id === id)?.name ?? id),
+        registered: t.registered,
+        submitted,
+        graded,
+        needGrading,
+        gradeStatus,
+        progress: submitted === 0 ? 0 : Math.round((graded / submitted) * 100),
+        avgScore:
+          t.avgScore ??
+          (scored.length
+            ? Math.round((scored.reduce((s, x) => s + (x.finalScore ?? 0), 0) / scored.length) * 10) / 10
+            : undefined),
+      };
+    })
+    .sort((a, b) => b.needGrading - a.needGrading);
 }
 
-function kindMeta(k: ExamKind) {
-  return k === "test"
-    ? { label: "Bài thi", cls: "bg-primary/10 text-primary ring-primary/20" }
-    : { label: "Luyện thi", cls: "bg-emerald-500/10 text-emerald-700 ring-emerald-500/20" };
-}
-
-function rowsFromTests(): Row[] {
-  const byId = new Map<string, Test>(seedTests.map((t) => [t.id, t]));
-  return seedSubmissions.map((s) => {
-    const t = byId.get(s.testId);
-    return {
-      submissionId: s.id,
-      testId: s.testId,
-      testName: t?.name ?? s.testId,
-      kind: "test" as const,
-      level: t?.level ?? "—",
-      studentName: s.studentName,
-      studentClass: s.studentClass,
-      submittedAt: s.submittedAt,
-      durationMinutes: s.durationMinutes,
-      autoScore: s.autoScore,
-      manualScore: s.manualScore,
-      finalScore: s.finalScore,
-      status: s.status,
-    };
-  });
-}
-
-function TestsList() {
+function GradingList() {
   const { role } = useRole();
-  const isAdmin = role === "admin";
-  const [statusFilter, setStatusFilter] = useState<"need" | "all" | "graded">("need");
-  const [kindFilter, setKindFilter] = useState<"all" | ExamKind>("all");
-  const [classFilter, setClassFilter] = useState<string>("all");
+  const base = role === "admin" ? "/admin" : "/teacher";
+  const [q, setQ] = useState("");
+  const [gradeFilter, setGradeFilter] = useState<"all" | GradeStatus>("all");
+  const [levelFilter, setLevelFilter] = useState("all");
+  const [classFilter, setClassFilter] = useState("all");
 
-  const rows: Row[] = useMemo(
-    () => [...rowsFromTests(), ...PRACTICE_SUBMISSIONS],
-    [],
+  const rows = useMemo(() => buildRows(), []);
+
+  const levels = useMemo(() => Array.from(new Set(rows.map((r) => r.test.level))), [rows]);
+  const classOptions = useMemo(
+    () => Array.from(new Set(rows.flatMap((r) => r.classNames))),
+    [rows],
   );
 
   const counts = useMemo(
     () => ({
-      total: rows.length,
-      need: rows.filter((r) => r.status === "needs-grading" || r.status === "auto-graded").length,
-      graded: rows.filter((r) => r.status === "graded").length,
-      test: rows.filter((r) => r.kind === "test").length,
-      practice: rows.filter((r) => r.kind === "practice").length,
+      exams: rows.length,
+      submitted: rows.reduce((s, r) => s + r.submitted, 0),
+      need: rows.reduce((s, r) => s + r.needGrading, 0),
+      graded: rows.reduce((s, r) => s + r.graded, 0),
     }),
     [rows],
   );
 
-  const classOptions = useMemo(() => {
-    const set = new Set(rows.map((r) => r.studentClass));
-    return Array.from(set);
-  }, [rows]);
-
   const filtered = useMemo(() => {
+    const kw = q.trim().toLowerCase();
     return rows.filter((r) => {
-      if (statusFilter === "need" && !(r.status === "needs-grading" || r.status === "auto-graded"))
-        return false;
-      if (statusFilter === "graded" && r.status !== "graded") return false;
-      if (kindFilter !== "all" && r.kind !== kindFilter) return false;
-      if (classFilter !== "all" && r.studentClass !== classFilter) return false;
+      if (kw && !`${r.test.name} ${r.code}`.toLowerCase().includes(kw)) return false;
+      if (gradeFilter !== "all" && r.gradeStatus !== gradeFilter) return false;
+      if (levelFilter !== "all" && r.test.level !== levelFilter) return false;
+      if (classFilter !== "all" && !r.classNames.includes(classFilter)) return false;
       return true;
     });
-  }, [rows, statusFilter, kindFilter, classFilter]);
+  }, [rows, q, gradeFilter, levelFilter, classFilter]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -179,188 +144,202 @@ function TestsList() {
           eyebrow="Khu vực chấm bài"
           eyebrowIcon={ScrollText}
           title="Chấm thi"
-          description={<>Danh sách bài làm của học viên từ các bài thi và bài luyện thi — chọn từng bài để
-              chấm điểm tự luận hoặc rà soát kết quả.</>}
-          actions={
-            <>
-            <Link
-              to={isAdmin ? "/admin/tests/new" : "/teacher/tests/new"}
-              className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
-              style={{ background: "var(--gradient-brand)" }}
-            >
-              <Plus className="h-4 w-4" /> Tạo đề thi mới
-            </Link>
-            </>
-          }
+          description="Danh sách các bài thi đã tổ chức — nhấn vào từng bài thi để xem chi tiết bài làm của học viên và chấm điểm."
+          stats={[
+            { icon: Layers, label: "Bài thi", value: counts.exams, tone: "primary" },
+            { icon: Users, label: "Lượt nộp", value: counts.submitted },
+            { icon: FileEdit, label: "Cần chấm", value: counts.need, tone: "warning" },
+            { icon: CheckCircle2, label: "Đã chấm", value: counts.graded, tone: "success" },
+          ]}
         />
 
-
-        <div className="mt-6 grid gap-3 sm:grid-cols-4">
-          <Stat label="Tổng bài làm" value={counts.total} />
-          <Stat label="Cần chấm" value={counts.need} accent="amber" />
-          <Stat label="Đã chấm" value={counts.graded} accent="emerald" />
-          <Stat label="Bài thi / Luyện thi" value={`${counts.test} / ${counts.practice}`} />
-        </div>
-
-        {/* Toolbar filters */}
-        <div className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3">
-          <div className="inline-flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-            <Filter className="h-3.5 w-3.5" /> Lọc:
+        {/* Toolbar: tìm kiếm + bộ lọc */}
+        <div className="mt-6 flex flex-wrap items-center gap-3 rounded-2xl border border-border bg-surface px-4 py-3 shadow-soft">
+          <div className="relative min-w-[220px] flex-1">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              placeholder="Tìm theo tên đề hoặc mã đề..."
+              className="h-9 w-full rounded-xl border border-border bg-background pl-9 pr-3 text-sm outline-none focus:border-primary"
+            />
           </div>
 
-          <ChipGroup
-            value={statusFilter}
-            onChange={setStatusFilter}
+          <Select
+            value={gradeFilter}
+            onChange={(v) => setGradeFilter(v as typeof gradeFilter)}
             options={[
-              { id: "need", label: `Cần chấm (${counts.need})` },
-              { id: "graded", label: `Đã chấm (${counts.graded})` },
-              { id: "all", label: `Tất cả (${counts.total})` },
+              { value: "all", label: "Tất cả trạng thái" },
+              { value: "not-started", label: "Chưa chấm" },
+              { value: "in-progress", label: "Đang chấm" },
+              { value: "done", label: "Đã chấm xong" },
             ]}
           />
-
-          <div className="h-5 w-px bg-border" />
-
-          <ChipGroup
-            value={kindFilter}
-            onChange={setKindFilter}
+          <Select
+            value={levelFilter}
+            onChange={setLevelFilter}
             options={[
-              { id: "all", label: "Tất cả loại" },
-              { id: "test", label: `Bài thi (${counts.test})` },
-              { id: "practice", label: `Luyện thi (${counts.practice})` },
+              { value: "all", label: "Tất cả trình độ" },
+              ...levels.map((l) => ({ value: l, label: l })),
             ]}
           />
-
-          <div className="h-5 w-px bg-border" />
-
-          <div className="inline-flex items-center gap-2">
-            <span className="text-xs font-semibold text-muted-foreground">Lớp:</span>
-            <select
-              value={classFilter}
-              onChange={(e) => setClassFilter(e.target.value)}
-              className="h-8 rounded-lg border border-border bg-background px-2 text-xs font-medium text-foreground outline-none focus:border-primary"
-            >
-              <option value="all">Tất cả lớp</option>
-              {classOptions.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            value={classFilter}
+            onChange={setClassFilter}
+            options={[
+              { value: "all", label: "Tất cả lớp" },
+              ...classOptions.map((c) => ({ value: c, label: c })),
+            ]}
+          />
         </div>
 
-        {/* Table */}
+        {/* Bảng danh sách bài thi */}
         <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold">Học viên</th>
+                  <th className="px-4 py-3 text-left font-semibold">Mã</th>
+                  <th className="px-4 py-3 text-left font-semibold">Đề thi</th>
                   <th className="px-4 py-3 text-left font-semibold">Lớp</th>
-                  <th className="px-4 py-3 text-left font-semibold">Bài làm</th>
-                  <th className="px-4 py-3 text-left font-semibold">Loại</th>
                   <th className="px-4 py-3 text-left font-semibold">Trình độ</th>
-                  <th className="px-4 py-3 text-left font-semibold">Nộp lúc</th>
-                  <th className="px-4 py-3 text-right font-semibold">Điểm tự động</th>
-                  <th className="px-4 py-3 text-right font-semibold">Điểm cuối</th>
+                  <th className="px-4 py-3 text-left font-semibold">Đóng đề</th>
+                  <th className="px-4 py-3 text-right font-semibold">Đã nộp</th>
+                  <th className="px-4 py-3 text-right font-semibold">Cần chấm</th>
+                  <th className="px-4 py-3 text-left font-semibold">Tiến độ chấm</th>
+                  <th className="px-4 py-3 text-right font-semibold">Điểm TB</th>
                   <th className="px-4 py-3 text-left font-semibold">Trạng thái</th>
                   <th className="px-4 py-3 text-right font-semibold">Hành động</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
                 {filtered.map((r) => {
-                  const m = statusMeta(r.status);
-                  const Icon = m.icon;
-                  const k = kindMeta(r.kind);
-                  const isPractice = r.kind === "practice";
+                  const gm = GRADE_META[r.gradeStatus];
+                  const st = testStatus(r.test);
                   return (
-                    <tr key={r.submissionId} className="transition hover:bg-muted/30">
-                      <td className="px-4 py-3 font-medium text-foreground">{r.studentName}</td>
+                    <tr key={r.test.id} className="transition hover:bg-muted/30">
                       <td className="px-4 py-3">
-                        <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium">
-                          <GraduationCap className="h-3 w-3" />
-                          {r.studentClass}
+                        <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-[11px] font-semibold text-foreground">
+                          {r.code}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-foreground">
-                        <span className="line-clamp-1">{r.testName}</span>
-                      </td>
                       <td className="px-4 py-3">
-                        <span
-                          className={cn(
-                            "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ring-1",
-                            k.cls,
-                          )}
+                        <Link
+                          to="/teacher/tests/$testId"
+                          params={{ testId: r.test.id }}
+                          className="font-medium text-foreground hover:text-primary"
                         >
-                          {k.label}
-                        </span>
+                          {r.test.name}
+                        </Link>
+                        <div className="text-[11px] text-muted-foreground">
+                          {r.test.durationMinutes} phút · {testTotalPoints(r.test)} điểm
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          {r.classNames.slice(0, 2).map((c) => (
+                            <span
+                              key={c}
+                              className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium"
+                            >
+                              <GraduationCap className="h-3 w-3" />
+                              {c}
+                            </span>
+                          ))}
+                          {r.classNames.length > 2 && (
+                            <span className="rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium">
+                              +{r.classNames.length - 2}
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <span className="rounded-lg bg-primary/10 px-2 py-1 text-[11px] font-bold uppercase text-primary">
-                          {r.level}
+                          {r.test.level}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground" suppressHydrationWarning>
-                        {r.submittedAt ? new Date(r.submittedAt).toLocaleString("vi-VN") : "—"}
-                        {r.durationMinutes != null && (
-                          <span className="ml-1 inline-flex items-center gap-1">
-                            <Clock className="h-3 w-3" /> {r.durationMinutes}p
-                          </span>
-                        )}
+                      <td
+                        className="px-4 py-3 text-xs text-muted-foreground"
+                        suppressHydrationWarning
+                      >
+                        <span className="inline-flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {new Date(r.test.closeAt).toLocaleDateString("vi-VN")}
+                        </span>
+                        <div className="text-[11px]">
+                          {st === "open" ? "Đang mở" : st === "upcoming" ? "Sắp diễn ra" : "Đã đóng"}
+                        </div>
                       </td>
-                      <td className="px-4 py-3 text-right text-foreground">{r.autoScore}</td>
+                      <td className="px-4 py-3 text-right text-foreground">
+                        {r.submitted}
+                        <span className="text-muted-foreground">/{r.registered}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <span
+                          className={cn(
+                            "font-semibold",
+                            r.needGrading > 0 ? "text-amber-600" : "text-muted-foreground",
+                          )}
+                        >
+                          {r.needGrading}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="h-1.5 w-24 overflow-hidden rounded-full bg-muted">
+                            <div
+                              className="h-full rounded-full bg-emerald-500"
+                              style={{ width: `${r.progress}%` }}
+                            />
+                          </div>
+                          <span className="text-[11px] font-medium text-muted-foreground">
+                            {r.graded}/{r.submitted}
+                          </span>
+                        </div>
+                      </td>
                       <td className="px-4 py-3 text-right font-semibold text-foreground">
-                        {r.finalScore ?? "—"}
+                        {r.avgScore ?? "—"}
                       </td>
                       <td className="px-4 py-3">
                         <span
                           className={cn(
                             "inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold",
-                            m.cls,
+                            gm.cls,
                           )}
                         >
-                          <Icon className="h-3 w-3" /> {m.label}
+                          {gm.label}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        {isPractice ? (
-                          <button
-                            disabled
-                            title="Bài luyện thi đã chấm tự động"
-                            className="inline-flex items-center gap-1 rounded-lg border border-border bg-background px-2.5 py-1 text-[11px] font-semibold text-muted-foreground"
-                          >
-                            <Eye className="h-3 w-3" /> Xem
-                          </button>
-                        ) : (
-                          <Link
-                            to="/teacher/tests/$testId"
-                            params={{ testId: r.testId }}
-                            className={cn(
-                              "inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition",
-                              r.status === "needs-grading"
-                                ? "border-primary bg-primary text-primary-foreground hover:opacity-90"
-                                : "border-border bg-background text-foreground hover:border-primary hover:text-primary",
-                            )}
-                          >
-                            {r.status === "needs-grading" ? (
-                              <>
-                                <ClipboardCheck className="h-3 w-3" /> Chấm bài
-                              </>
-                            ) : (
-                              <>
-                                <Eye className="h-3 w-3" /> Chi tiết
-                              </>
-                            )}
-                          </Link>
-                        )}
+                        <Link
+                          to="/teacher/tests/$testId"
+                          params={{ testId: r.test.id }}
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-[11px] font-semibold transition",
+                            r.needGrading > 0
+                              ? "border-primary bg-primary text-primary-foreground hover:opacity-90"
+                              : "border-border bg-background text-foreground hover:border-primary hover:text-primary",
+                          )}
+                        >
+                          {r.needGrading > 0 ? (
+                            <>
+                              <ClipboardCheck className="h-3 w-3" /> Chấm bài
+                            </>
+                          ) : (
+                            <>
+                              <Eye className="h-3 w-3" /> Chi tiết
+                            </>
+                          )}
+                          <ChevronRight className="h-3 w-3" />
+                        </Link>
                       </td>
                     </tr>
                   );
                 })}
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={10} className="px-4 py-12 text-center text-sm text-muted-foreground">
-                      Không có bài làm nào khớp bộ lọc.
+                    <td colSpan={11} className="px-4 py-12 text-center text-sm text-muted-foreground">
+                      Không có bài thi nào khớp bộ lọc.
                     </td>
                   </tr>
                 )}
@@ -368,65 +347,37 @@ function TestsList() {
             </table>
           </div>
         </div>
+
+        <p className="mt-3 text-xs text-muted-foreground">
+          Mẹo: mở chi tiết bài thi → tab “Kết quả thi” để chấm từng bài làm, xem điểm tự động và
+          nhận xét theo từng câu.
+          {base === "/admin" && " Quản trị viên có thể công bố điểm sau khi chấm xong."}
+        </p>
       </div>
     </div>
   );
 }
 
-function Stat({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: number | string;
-  accent?: "amber" | "emerald";
-}) {
-  return (
-    <div className="rounded-2xl border border-border bg-surface p-4 shadow-soft">
-      <div className="text-xs font-medium text-muted-foreground">{label}</div>
-      <div
-        className={cn(
-          "mt-1 font-display text-2xl font-semibold tracking-tight",
-          accent === "amber" && "text-amber-600",
-          accent === "emerald" && "text-emerald-600",
-          !accent && "text-foreground",
-        )}
-      >
-        {value}
-      </div>
-    </div>
-  );
-}
-
-function ChipGroup<T extends string>({
+function Select({
   value,
   onChange,
   options,
 }: {
-  value: T;
-  onChange: (v: T) => void;
-  options: { id: T; label: string }[];
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
 }) {
   return (
-    <div className="inline-flex items-center gap-1">
-      {options.map((opt) => (
-        <button
-          key={opt.id}
-          onClick={() => onChange(opt.id)}
-          className={cn(
-            "rounded-lg px-2.5 py-1 text-xs font-semibold transition",
-            value === opt.id
-              ? "bg-foreground text-background"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-        >
-          {opt.label}
-        </button>
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className="h-9 rounded-xl border border-border bg-background px-3 text-sm font-medium text-foreground outline-none focus:border-primary"
+    >
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>
+          {o.label}
+        </option>
       ))}
-    </div>
+    </select>
   );
 }
-
-// Giữ tham chiếu để tránh warning khi `classes` chưa dùng ở các nhánh khác.
-void classes;
