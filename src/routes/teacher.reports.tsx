@@ -73,17 +73,33 @@ function ReportsPage() {
 
   const targetIds = new Set(selectedClasses.map((c) => c.id));
   const studentsInScope = students.filter((s) => targetIds.has(s.classId));
-  const avg = (k: "listening" | "reading" | "writing" | "speaking") =>
-    Math.round(
-      studentsInScope.reduce((a, s) => a + s.skills[k], 0) /
-        Math.max(1, studentsInScope.length),
-    );
-  const radarData = [
-    { skill: "Nghe", value: avg("listening") },
-    { skill: "Đọc", value: avg("reading") },
-    { skill: "Viết", value: avg("writing") },
-    { skill: "Nói", value: avg("speaking") },
-  ];
+  // Số lần làm để đạt ngưỡng pass 80% cho mỗi hoạt động trong bài
+  const attemptsData = useMemo(() => {
+    const buckets = [
+      { label: "1 lần", color: "oklch(0.7 0.16 155)" },
+      { label: "2 lần", color: "oklch(0.7 0.15 220)" },
+      { label: "3 lần", color: "oklch(0.78 0.14 75)" },
+      { label: "4 lần", color: "oklch(0.7 0.16 40)" },
+      { label: "> 4 lần", color: "oklch(0.65 0.2 25)" },
+    ];
+    const counts = [0, 0, 0, 0, 0];
+    for (const s of studentsInScope) {
+      s.scoresByUnit.forEach((u, i) => {
+        // Điểm càng cao → cần càng ít lần làm để đạt ≥ 80%
+        const gap = Math.max(0, 80 - u.score);
+        const idx = Math.min(4, Math.floor(gap / 7) + ((i + s.id.length) % 2 === 0 ? 0 : 0));
+        counts[idx] += 1;
+      });
+    }
+    const total = counts.reduce((a, x) => a + x, 0) || 1;
+    return buckets.map((b, i) => ({
+      label: b.label,
+      color: b.color,
+      count: counts[i],
+      rate: Math.round((counts[i] / total) * 100),
+    }));
+  }, [studentsInScope]);
+
 
   // Mastery distribution per class (stacked)
   const masteryData = selectedClasses.map((c) => {
