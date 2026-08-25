@@ -263,23 +263,25 @@ function ReportsPage() {
             </ResponsiveContainer>
           </Card>
 
-          <Card title="Phân bố kỹ năng" subtitle="Trung bình 4 kỹ năng của học viên trong phạm vi">
+          <Card
+            title="Số lần làm để đạt (pass ≥ 80%)"
+            subtitle="Tỉ lệ hoạt động học viên vượt qua sau 1, 2, 3, 4 hay hơn 4 lần làm"
+          >
             <ResponsiveContainer width="100%" height={260}>
-              <RadarChart data={radarData}>
-                <PolarGrid stroke="hsl(var(--border))" />
-                <PolarAngleAxis dataKey="skill" tick={{ fontSize: 12 }} />
-                <PolarRadiusAxis angle={90} domain={[0, 100]} tick={{ fontSize: 10 }} />
-                <Radar
-                  name="Điểm TB"
-                  dataKey="value"
-                  stroke="oklch(0.55 0.2 25)"
-                  fill="oklch(0.55 0.2 25)"
-                  fillOpacity={0.3}
-                />
-                <Tooltip />
-              </RadarChart>
+              <BarChart data={attemptsData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="label" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} unit="%" domain={[0, 100]} />
+                <Tooltip formatter={(v: number, _n, p) => [`${v}% (${(p?.payload as { count: number }).count} hoạt động)`, "Tỉ lệ"]} />
+                <Bar dataKey="rate" name="Tỉ lệ" radius={[6, 6, 0, 0]}>
+                  {attemptsData.map((d) => (
+                    <Cell key={d.label} fill={d.color} />
+                  ))}
+                </Bar>
+              </BarChart>
             </ResponsiveContainer>
           </Card>
+
 
           <Card
             title="Tiến độ & Điểm TB theo khóa học"
