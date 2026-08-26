@@ -10,7 +10,7 @@ import {
   CURRENT_STUDENT,
   type Assignment,
 } from "@/lib/assignments";
-import { ClipboardList, Calendar, AlertCircle, ArrowRight, CheckCircle2, Clock, AlarmClock, ListTodo } from "lucide-react";
+import { ClipboardList, Calendar, AlertCircle, ArrowRight, CheckCircle2, Clock, AlarmClock, ListTodo, Search, X, ChevronDown, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/assignments/")({
@@ -39,10 +39,44 @@ function getUrgency(dueMs: number, now: number): "overdue" | "today" | "soon" | 
   return "normal";
 }
 
+type StatusFilter = "all" | "todo" | "submitted" | "graded" | "overdue";
+type SortOption = "dueAsc" | "dueDesc" | "nameAsc" | "nameDesc";
+
 function StudentAssignmentsPage() {
   const items = useList();
   const [now, setNow] = useState(0);
   useEffect(() => setNow(Date.now()), []);
+
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [sort, setSort] = useState<SortOption>("dueAsc");
+
+  const processedItems = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const filtered = items.filter((a) => {
+      const sub = getSubmissionForStudent(a.id, CURRENT_STUDENT.id);
+      const dueMs = new Date(getEffectiveDueAt(a, CURRENT_STUDENT.id)).getTime();
+      const status = sub?.score !== undefined ? "graded" : sub ? "submitted" : dueMs < now ? "overdue" : "todo";
+      if (statusFilter !== "all" && status !== statusFilter) return false;
+      if (q && !`${a.title} ${a.description ?? ""}`.toLowerCase().includes(q)) return false;
+      return true;
+    });
+
+    return filtered.sort((a, b) => {
+      switch (sort) {
+        case "dueAsc":
+          return new Date(getEffectiveDueAt(a, CURRENT_STUDENT.id)).getTime() - new Date(getEffectiveDueAt(b, CURRENT_STUDENT.id)).getTime();
+        case "dueDesc":
+          return new Date(getEffectiveDueAt(b, CURRENT_STUDENT.id)).getTime() - new Date(getEffectiveDueAt(a, CURRENT_STUDENT.id)).getTime();
+        case "nameAsc":
+          return a.title.localeCompare(b.title);
+        case "nameDesc":
+          return b.title.localeCompare(a.title);
+        default:
+          return 0;
+      }
+    });
+  }, [items, query, statusFilter, sort, now]);
 
   const stats = useMemo(() => {
     let todo = 0, submitted = 0, graded = 0, dueSoon = 0, overdue = 0;
@@ -60,6 +94,8 @@ function StudentAssignmentsPage() {
     }
     return { total: items.length, todo, submitted, graded, dueSoon, overdue };
   }, [items, now]);
+
+  const hasFilters = query !== "" || statusFilter !== "all" || sort !== "dueAsc";
 
   return (
     <div className="min-h-screen bg-background">
@@ -84,13 +120,76 @@ function StudentAssignmentsPage() {
           </div>
         )}
 
+        {/* Search + filters + sort */}
+        <div className="mt-6 rounded-2xl border border-border bg-surface p-3 shadow-soft">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Tìm bài tập..."
+                className="h-10 w-full rounded-xl border border-border bg-background pl-9 pr-9 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20"
+              />
+              {query && (
+                <button
+                  onClick={() => setQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label="Xóa"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <FilterSelect
+                value={statusFilter}
+                onChange={(v) => setStatusFilter(v as StatusFilter)}
+                icon={<Clock className="h-4 w-4" />}
+                options={[
+                  { value: "all", label: "Tất cả trạng thái" },
+                  { value: "todo", label: "Cần làm" },
+                  { value: "submitted", label: "Chờ chấm" },
+                  { value: "graded", label: "Đã chấm" },
+                  { value: "overdue", label: "Quá hạn" },
+                ]}
+              />
+              <FilterSelect
+                value={sort}
+                onChange={(v) => setSort(v as SortOption)}
+                icon={<ArrowUpDown className="h-4 w-4" />}
+                options={[
+                  { value: "dueAsc", label: "Hạn gần nhất" },
+                  { value: "dueDesc", label: "Hạn xa nhất" },
+                  { value: "nameAsc", label: "Tên A → Z" },
+                  { value: "nameDesc", label: "Tên Z → A" },
+                ]}
+              />
+              {hasFilters && (
+                <button
+                  onClick={() => {
+                    setQuery("");
+                    setStatusFilter("all");
+                    setSort("dueAsc");
+                  }}
+                  className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
+                >
+                  <X className="h-3.5 w-3.5" /> Xóa lọc
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className="mt-6 grid gap-3">
-          {items.map((a) => (
+          {processedItems.map((a) => (
             <Row key={a.id} a={a} now={now} />
           ))}
-          {items.length === 0 && (
+          {processedItems.length === 0 && (
             <div className="rounded-2xl border border-dashed border-border bg-surface p-10 text-center text-sm text-muted-foreground">
-              Hiện chưa có bài tập nào.
+              {hasFilters
+                ? "Không tìm thấy bài tập phù hợp. Thử bỏ bớt bộ lọc hoặc tìm với từ khóa khác."
+                : "Hiện chưa có bài tập nào."}
             </div>
           )}
         </div>
@@ -99,30 +198,36 @@ function StudentAssignmentsPage() {
   );
 }
 
-function KpiCard({
-  icon,
-  label,
+function FilterSelect({
   value,
-  tone,
+  onChange,
+  options,
+  icon,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-  tone: "primary" | "amber" | "sky" | "emerald";
+  value: string;
+  onChange: (v: string) => void;
+  options: { value: string; label: string }[];
+  icon?: React.ReactNode;
 }) {
-  const toneCls = {
-    primary: "bg-primary/10 text-primary",
-    amber: "bg-amber-100 text-amber-700",
-    sky: "bg-sky-100 text-sky-700",
-    emerald: "bg-emerald-100 text-emerald-700",
-  }[tone];
   return (
-    <div className="rounded-2xl border border-border bg-surface p-4 shadow-soft">
-      <div className="flex items-center gap-2">
-        <span className={cn("inline-flex h-7 w-7 items-center justify-center rounded-lg", toneCls)}>{icon}</span>
-        <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      </div>
-      <div className="mt-2 font-display text-2xl font-semibold tracking-tight">{value}</div>
+    <div className="relative min-w-[10rem]">
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-10 w-full appearance-none rounded-xl border border-border bg-background pl-9 pr-8 text-sm font-medium text-foreground outline-none transition hover:border-primary/40 focus:border-primary focus:ring-2 focus:ring-primary/20"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      {icon && (
+        <div className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted-foreground">
+          {icon}
+        </div>
+      )}
+      <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
     </div>
   );
 }
