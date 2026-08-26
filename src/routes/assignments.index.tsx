@@ -232,34 +232,6 @@ function FilterSelect({
   );
 }
 
-function KpiCard({
-  icon,
-  label,
-  value,
-  tone,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: number;
-  tone: "primary" | "amber" | "sky" | "emerald";
-}) {
-  const toneCls = {
-    primary: "bg-primary/10 text-primary",
-    amber: "bg-amber-100 text-amber-700",
-    sky: "bg-sky-100 text-sky-700",
-    emerald: "bg-emerald-100 text-emerald-700",
-  }[tone];
-  return (
-    <div className="rounded-2xl border border-border bg-surface p-4 shadow-soft">
-      <div className="flex items-center gap-2">
-        <span className={cn("inline-flex h-7 w-7 items-center justify-center rounded-lg", toneCls)}>{icon}</span>
-        <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      </div>
-      <div className="mt-2 font-display text-2xl font-semibold tracking-tight">{value}</div>
-    </div>
-  );
-}
-
 function formatRemain(ms: number): string {
   const abs = Math.abs(ms);
   const h = Math.floor(abs / 3600000);
