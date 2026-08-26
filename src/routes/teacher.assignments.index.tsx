@@ -185,12 +185,28 @@ function TeacherAssignmentsPage() {
               />
               <FilterSelect
                 value={statusFilter}
-                onChange={(v) => setStatusFilter(v as "all" | "open" | "closed")}
+                onChange={(v) => setStatusFilter(v as "all" | "open" | "closed" | "pending")}
                 icon={<Clock className="h-4 w-4" />}
                 options={[
                   { value: "all", label: "Tất cả trạng thái" },
                   { value: "open", label: "Đang mở" },
                   { value: "closed", label: "Đã đóng" },
+                  { value: "pending", label: "Chờ chấm" },
+                ]}
+              />
+              <FilterSelect
+                value={sort}
+                onChange={(v) => setSort(v as SortOption)}
+                icon={<ArrowUpDown className="h-4 w-4" />}
+                options={[
+                  { value: "dueAsc", label: "Hạn gần nhất" },
+                  { value: "dueDesc", label: "Hạn xa nhất" },
+                  { value: "createdDesc", label: "Mới tạo" },
+                  { value: "createdAsc", label: "Cũ nhất" },
+                  { value: "nameAsc", label: "Tên A → Z" },
+                  { value: "nameDesc", label: "Tên Z → A" },
+                  { value: "submissionsDesc", label: "Nhiều bài nộp" },
+                  { value: "submissionsAsc", label: "Ít bài nộp" },
                 ]}
               />
               {hasFilters && (
@@ -200,6 +216,7 @@ function TeacherAssignmentsPage() {
                     setClassFilter("all");
                     setCourseFilter("all");
                     setStatusFilter("all");
+                    setSort("dueAsc");
                   }}
                   className="inline-flex items-center gap-1 rounded-xl px-3 py-2 text-xs font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
                 >
