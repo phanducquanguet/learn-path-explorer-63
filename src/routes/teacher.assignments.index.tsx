@@ -51,6 +51,8 @@ function useAssignments() {
   );
 }
 
+type SortOption = "dueAsc" | "dueDesc" | "createdDesc" | "createdAsc" | "nameAsc" | "nameDesc" | "submissionsDesc" | "submissionsAsc";
+
 function TeacherAssignmentsPage() {
   const items = useAssignments();
   const [open, setOpen] = useState(false);
@@ -58,7 +60,8 @@ function TeacherAssignmentsPage() {
   const [query, setQuery] = useState("");
   const [classFilter, setClassFilter] = useState<string>("all");
   const [courseFilter, setCourseFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed">("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "open" | "closed" | "pending">("all");
+  const [sort, setSort] = useState<SortOption>("dueAsc");
 
   const courseOptions = useMemo(
     () =>
@@ -71,15 +74,18 @@ function TeacherAssignmentsPage() {
   const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();
     const now = Date.now();
-    return items.filter((a) => {
+    const filtered = items.filter((a) => {
       const cls = classes.filter((c) => a.classIds.includes(c.id));
       const clsNames = cls.map((c) => c.name).join(" ");
       if (classFilter !== "all" && !a.classIds.includes(classFilter)) return false;
       if (courseFilter !== "all" && a.courseId !== courseFilter) return false;
       if (statusFilter !== "all") {
         const isOpen = new Date(a.dueAt).getTime() >= now;
+        const subs = listSubmissions(a.id);
+        const pending = subs.filter((s) => s.score === undefined).length;
         if (statusFilter === "open" && !isOpen) return false;
         if (statusFilter === "closed" && isOpen) return false;
+        if (statusFilter === "pending" && pending === 0) return false;
       }
       if (
         q &&
@@ -88,9 +94,32 @@ function TeacherAssignmentsPage() {
         return false;
       return true;
     });
-  }, [items, query, classFilter, courseFilter, statusFilter]);
 
-  const hasFilters = query !== "" || classFilter !== "all" || courseFilter !== "all" || statusFilter !== "all";
+    return filtered.sort((a, b) => {
+      switch (sort) {
+        case "dueAsc":
+          return new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime();
+        case "dueDesc":
+          return new Date(b.dueAt).getTime() - new Date(a.dueAt).getTime();
+        case "createdDesc":
+          return (b.createdAt ? new Date(b.createdAt).getTime() : 0) - (a.createdAt ? new Date(a.createdAt).getTime() : 0);
+        case "createdAsc":
+          return (a.createdAt ? new Date(a.createdAt).getTime() : 0) - (b.createdAt ? new Date(b.createdAt).getTime() : 0);
+        case "nameAsc":
+          return a.title.localeCompare(b.title);
+        case "nameDesc":
+          return b.title.localeCompare(a.title);
+        case "submissionsDesc":
+          return listSubmissions(b.id).length - listSubmissions(a.id).length;
+        case "submissionsAsc":
+          return listSubmissions(a.id).length - listSubmissions(b.id).length;
+        default:
+          return 0;
+      }
+    });
+  }, [items, query, classFilter, courseFilter, statusFilter, sort]);
+
+  const hasFilters = query !== "" || classFilter !== "all" || courseFilter !== "all" || statusFilter !== "all" || sort !== "dueAsc";
 
   return (
     <div className="min-h-screen bg-background">
