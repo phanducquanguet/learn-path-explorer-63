@@ -10,7 +10,7 @@ import {
   CURRENT_STUDENT,
   type Assignment,
 } from "@/lib/assignments";
-import { ClipboardList, Calendar, AlertCircle, ArrowRight, CheckCircle2, Clock, AlarmClock, ListTodo } from "lucide-react";
+import { ClipboardList, Calendar, AlertCircle, ArrowRight, CheckCircle2, Clock, AlarmClock, ListTodo, Search, X, ChevronDown, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/assignments/")({

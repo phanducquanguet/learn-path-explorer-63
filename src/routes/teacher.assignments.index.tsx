@@ -30,6 +30,7 @@ import {
   ChevronDown,
   GraduationCap,
   BookOpen,
+  ArrowUpDown,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { PageHeader, type PageHeaderStat } from "@/components/PageHeader";
