@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PracticeTestsRouteImport } from './routes/practice-tests'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -70,6 +71,11 @@ import { Route as AdminTestsMonitorEventIdRouteImport } from './routes/admin.tes
 import { Route as AdminTestsTestIdReviewRouteImport } from './routes/admin.tests.$testId.review'
 import { Route as AdminExamsExamIdSubmissionsRouteImport } from './routes/admin.exams.$examId.submissions'
 
+const PracticeTestsRoute = PracticeTestsRouteImport.update({
+  id: '/practice-tests',
+  path: '/practice-tests',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PracticeRoute = PracticeRouteImport.update({
   id: '/practice',
   path: '/practice',
@@ -384,6 +390,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
+  '/practice-tests': typeof PracticeTestsRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/stats': typeof AdminStatsRoute
   '/assignments/$assignmentId': typeof AssignmentsAssignmentIdRoute
@@ -445,6 +452,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
+  '/practice-tests': typeof PracticeTestsRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/stats': typeof AdminStatsRoute
   '/assignments/$assignmentId': typeof AssignmentsAssignmentIdRoute
@@ -508,6 +516,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
+  '/practice-tests': typeof PracticeTestsRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/stats': typeof AdminStatsRoute
   '/assignments/$assignmentId': typeof AssignmentsAssignmentIdRoute
@@ -572,6 +581,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/practice'
+    | '/practice-tests'
     | '/admin/question-bank'
     | '/admin/stats'
     | '/assignments/$assignmentId'
@@ -633,6 +643,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/practice'
+    | '/practice-tests'
     | '/admin/question-bank'
     | '/admin/stats'
     | '/assignments/$assignmentId'
@@ -695,6 +706,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/practice'
+    | '/practice-tests'
     | '/admin/question-bank'
     | '/admin/stats'
     | '/assignments/$assignmentId'
@@ -758,6 +770,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   PracticeRoute: typeof PracticeRoute
+  PracticeTestsRoute: typeof PracticeTestsRoute
   AdminQuestionBankRoute: typeof AdminQuestionBankRoute
   AdminStatsRoute: typeof AdminStatsRoute
   AssignmentsAssignmentIdRoute: typeof AssignmentsAssignmentIdRoute
@@ -814,6 +827,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/practice-tests': {
+      id: '/practice-tests'
+      path: '/practice-tests'
+      fullPath: '/practice-tests'
+      preLoaderRoute: typeof PracticeTestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/practice': {
       id: '/practice'
       path: '/practice'
@@ -1266,6 +1286,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   PracticeRoute: PracticeRoute,
+  PracticeTestsRoute: PracticeTestsRoute,
   AdminQuestionBankRoute: AdminQuestionBankRoute,
   AdminStatsRoute: AdminStatsRoute,
   AssignmentsAssignmentIdRoute: AssignmentsAssignmentIdRoute,
