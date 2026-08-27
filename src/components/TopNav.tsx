@@ -423,6 +423,20 @@ export function TopNav() {
                 >
                   <UserCog className="h-4 w-4" /> Giáo viên
                 </Link>
+                <Link
+                  to="/org/classes"
+                  onClick={() => { setRole("orgadmin"); setOpen(false); }}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-foreground hover:bg-muted"
+                >
+                  <Building2 className="h-4 w-4" /> Admin đơn vị {role === "orgadmin" && <Check className="ml-auto h-4 w-4 text-primary" />}
+                </Link>
+                <Link
+                  to="/admin/exams"
+                  onClick={() => { setRole("admin"); setOpen(false); }}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-foreground hover:bg-muted"
+                >
+                  <Shield className="h-4 w-4" /> Quản trị viên {role === "admin" && <Check className="ml-auto h-4 w-4 text-primary" />}
+                </Link>
                 <div className="my-1.5 h-px bg-border" />
                 <Link
                   to="/login"
