@@ -23,6 +23,7 @@ import { Route as TeacherUploadRouteImport } from './routes/teacher.upload'
 import { Route as TeacherReportsRouteImport } from './routes/teacher.reports'
 import { Route as TeacherQuestionBankRouteImport } from './routes/teacher.question-bank'
 import { Route as TeacherQaRouteImport } from './routes/teacher.qa'
+import { Route as OrgUsersRouteImport } from './routes/org.users'
 import { Route as OrgClassesRouteImport } from './routes/org.classes'
 import { Route as LiveSessionIdRouteImport } from './routes/live.$sessionId'
 import { Route as LevelsLevelRouteImport } from './routes/levels.$level'
@@ -135,6 +136,11 @@ const TeacherQuestionBankRoute = TeacherQuestionBankRouteImport.update({
 const TeacherQaRoute = TeacherQaRouteImport.update({
   id: '/teacher/qa',
   path: '/teacher/qa',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrgUsersRoute = OrgUsersRouteImport.update({
+  id: '/org/users',
+  path: '/org/users',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrgClassesRoute = OrgClassesRouteImport.update({
@@ -374,6 +380,7 @@ export interface FileRoutesByFullPath {
   '/levels/$level': typeof LevelsLevelRoute
   '/live/$sessionId': typeof LiveSessionIdRoute
   '/org/classes': typeof OrgClassesRoute
+  '/org/users': typeof OrgUsersRoute
   '/teacher/qa': typeof TeacherQaRoute
   '/teacher/question-bank': typeof TeacherQuestionBankRoute
   '/teacher/reports': typeof TeacherReportsRoute
@@ -432,6 +439,7 @@ export interface FileRoutesByTo {
   '/levels/$level': typeof LevelsLevelRoute
   '/live/$sessionId': typeof LiveSessionIdRoute
   '/org/classes': typeof OrgClassesRoute
+  '/org/users': typeof OrgUsersRoute
   '/teacher/qa': typeof TeacherQaRoute
   '/teacher/question-bank': typeof TeacherQuestionBankRoute
   '/teacher/reports': typeof TeacherReportsRoute
@@ -492,6 +500,7 @@ export interface FileRoutesById {
   '/levels/$level': typeof LevelsLevelRoute
   '/live/$sessionId': typeof LiveSessionIdRoute
   '/org/classes': typeof OrgClassesRoute
+  '/org/users': typeof OrgUsersRoute
   '/teacher/qa': typeof TeacherQaRoute
   '/teacher/question-bank': typeof TeacherQuestionBankRoute
   '/teacher/reports': typeof TeacherReportsRoute
@@ -553,6 +562,7 @@ export interface FileRouteTypes {
     | '/levels/$level'
     | '/live/$sessionId'
     | '/org/classes'
+    | '/org/users'
     | '/teacher/qa'
     | '/teacher/question-bank'
     | '/teacher/reports'
@@ -611,6 +621,7 @@ export interface FileRouteTypes {
     | '/levels/$level'
     | '/live/$sessionId'
     | '/org/classes'
+    | '/org/users'
     | '/teacher/qa'
     | '/teacher/question-bank'
     | '/teacher/reports'
@@ -670,6 +681,7 @@ export interface FileRouteTypes {
     | '/levels/$level'
     | '/live/$sessionId'
     | '/org/classes'
+    | '/org/users'
     | '/teacher/qa'
     | '/teacher/question-bank'
     | '/teacher/reports'
@@ -730,6 +742,7 @@ export interface RootRouteChildren {
   LevelsLevelRoute: typeof LevelsLevelRoute
   LiveSessionIdRoute: typeof LiveSessionIdRoute
   OrgClassesRoute: typeof OrgClassesRoute
+  OrgUsersRoute: typeof OrgUsersRoute
   TeacherQaRoute: typeof TeacherQaRoute
   TeacherQuestionBankRoute: typeof TeacherQuestionBankRoute
   TeacherReportsRoute: typeof TeacherReportsRoute
@@ -871,6 +884,13 @@ declare module '@tanstack/react-router' {
       path: '/teacher/qa'
       fullPath: '/teacher/qa'
       preLoaderRoute: typeof TeacherQaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/org/users': {
+      id: '/org/users'
+      path: '/org/users'
+      fullPath: '/org/users'
+      preLoaderRoute: typeof OrgUsersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/org/classes': {
@@ -1214,6 +1234,7 @@ const rootRouteChildren: RootRouteChildren = {
   LevelsLevelRoute: LevelsLevelRoute,
   LiveSessionIdRoute: LiveSessionIdRoute,
   OrgClassesRoute: OrgClassesRoute,
+  OrgUsersRoute: OrgUsersRoute,
   TeacherQaRoute: TeacherQaRoute,
   TeacherQuestionBankRoute: TeacherQuestionBankRoute,
   TeacherReportsRoute: TeacherReportsRoute,
