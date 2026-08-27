@@ -349,10 +349,18 @@ function ExamsPage() {
                           {s.submittedAt
                             ? new Date(s.submittedAt).toLocaleDateString("vi-VN")
                             : "—"}
+                          {s.attemptNo && (
+                            <span className="text-primary">
+                              {" "}
+                              · Lượt {s.attemptNo}
+                              {s.attemptsAllowed ? `/${s.attemptsAllowed}` : ""}
+                            </span>
+                          )}
                         </div>
                         <div className="mt-0.5 text-sm font-semibold text-foreground">
                           {t?.name ?? "Bài thi"}
                         </div>
+
                       </div>
                       <span
                         className={`inline-flex shrink-0 items-center rounded-full px-2 py-0.5 text-[10px] font-semibold ring-1 ${

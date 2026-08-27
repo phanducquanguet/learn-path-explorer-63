@@ -112,6 +112,10 @@ export type TestSubmission = {
   manualScore?: number;
   finalScore?: number;
   status: "in-progress" | "auto-graded" | "needs-grading" | "graded";
+  /** Lượt làm thứ mấy của học viên trên cùng một đề (mặc định 1). */
+  attemptNo?: number;
+  /** Số lượt tối đa được phép cho đề này (null/undefined = không giới hạn). */
+  attemptsAllowed?: number | null;
   proctorEvents?: ProctorEvent[];
   answers: {
 
@@ -458,9 +462,9 @@ export const testSubmissions: TestSubmission[] = [
     startedAt: days(-3),
     submittedAt: days(-3),
     durationMinutes: 82,
-    autoScore: 18,
-    manualScore: 4,
-    finalScore: 22,
+    autoScore: 1,
+    manualScore: 12.25,
+    finalScore: 13.25,
     status: "graded",
     proctorEvents: [
       { at: new Date(now - 3 * 86400000 + 12 * 60000).toISOString(), type: "tab-switch", severity: "medium", detail: "Chuyển sang tab khác trong 8 giây" },
@@ -635,6 +639,125 @@ export const testSubmissions: TestSubmission[] = [
     ],
   },
 ];
+
+/* ------------------------------------------------------------------ */
+/* Demo: một học viên làm cùng một đề nhiều lượt                       */
+/* ------------------------------------------------------------------ */
+
+const attemptBase = testSubmissions.find((s) => s.id === "ts-1")!;
+attemptBase.attemptNo = 3;
+attemptBase.attemptsAllowed = 3;
+
+function makeEarlierAttempt(opts: {
+  id: string;
+  attemptNo: number;
+  daysAgo: number;
+  factor: number;
+  durationMinutes: number;
+  status: TestSubmission["status"];
+  wrongMcq?: boolean;
+  highWarnings?: number;
+}): TestSubmission {
+  const at = (min: number) =>
+    new Date(now - opts.daysAgo * 86400000 + min * 60000).toISOString();
+  const answers = attemptBase.answers.map((a) => {
+    const raw = (a.awarded ?? 0) * opts.factor;
+    const awarded =
+      a.points <= 1
+        ? opts.wrongMcq
+          ? 0
+          : (a.awarded ?? 0)
+        : Math.round(raw * 4) / 4;
+    const graded = opts.status === "graded" || a.points <= 1;
+    return {
+      ...a,
+      studentAnswer:
+        a.points <= 1 && opts.wrongMcq ? "C" : a.studentAnswer,
+      awarded: graded ? awarded : undefined,
+      feedback: graded
+        ? opts.factor < 0.6
+          ? "Bài còn nhiều lỗi cơ bản, ý chưa phát triển đủ. Cần luyện thêm cấu trúc câu."
+          : "Có tiến bộ rõ so với lượt trước. Chú ý dùng từ nối và kiểm tra thời của động từ."
+        : undefined,
+      rubric: a.rubric?.map((r) => ({
+        ...r,
+        awarded: graded ? Math.round(r.max * opts.factor * 4) / 4 : undefined,
+      })),
+    };
+  });
+  const earned = answers.reduce((s, a) => s + (a.awarded ?? 0), 0);
+  const autoScore = answers
+    .filter((a) => a.type === "mcq" || a.type === "tf")
+    .reduce((s, a) => s + (a.awarded ?? 0), 0);
+  const proctorEvents: ProctorEvent[] = [
+    { at: at(9), type: "window-blur", severity: "low", detail: "Cửa sổ thi mất focus 4 giây" },
+    { at: at(24), type: "tab-switch", severity: "medium", detail: "Chuyển sang tab khác trong 11 giây" },
+  ];
+  for (let i = 0; i < (opts.highWarnings ?? 0); i++) {
+    proctorEvents.push({
+      at: at(35 + i * 12),
+      type: i % 2 === 0 ? "fullscreen-exit" : "multiple-faces",
+      severity: "high",
+      detail: i % 2 === 0 ? "Thoát chế độ toàn màn hình" : "Phát hiện 2 khuôn mặt trong khung hình",
+    });
+  }
+  return {
+    ...attemptBase,
+    id: opts.id,
+    attemptNo: opts.attemptNo,
+    attemptsAllowed: 3,
+    startedAt: at(0),
+    submittedAt: at(opts.durationMinutes),
+    durationMinutes: opts.durationMinutes,
+    autoScore,
+    manualScore: opts.status === "graded" ? Math.round((earned - autoScore) * 10) / 10 : undefined,
+    finalScore: opts.status === "graded" ? Math.round(earned * 10) / 10 : undefined,
+    status: opts.status,
+    proctorEvents,
+    answers,
+  };
+}
+
+testSubmissions.splice(
+  testSubmissions.indexOf(attemptBase),
+  0,
+  makeEarlierAttempt({
+    id: "ts-1-a1",
+    attemptNo: 1,
+    daysAgo: 24,
+    factor: 0.45,
+    durationMinutes: 95,
+    status: "graded",
+    wrongMcq: true,
+    highWarnings: 2,
+  }),
+  makeEarlierAttempt({
+    id: "ts-1-a2",
+    attemptNo: 2,
+    daysAgo: 12,
+    factor: 0.75,
+    durationMinutes: 88,
+    status: "graded",
+  }),
+);
+
+/** Tất cả các lượt làm của cùng một học viên trên cùng một đề (lượt 1 → n). */
+export function attemptsOfSubmission(sub: TestSubmission) {
+  return testSubmissions
+    .filter((s) => s.testId === sub.testId && s.studentName === sub.studentName)
+    .sort(
+      (a, b) =>
+        (a.attemptNo ?? 1) - (b.attemptNo ?? 1) ||
+        new Date(a.startedAt).getTime() - new Date(b.startedAt).getTime(),
+    );
+}
+
+export function submissionScore(sub: TestSubmission) {
+  const total = sub.answers.reduce((s, a) => s + a.points, 0);
+  const awarded = sub.answers.reduce((s, a) => s + (a.awarded ?? 0), 0);
+  const earned = Math.min(total, sub.finalScore ?? awarded);
+  return { total, earned, pct: total > 0 ? Math.round((earned / total) * 100) : 0 };
+}
 
 export function getTest(id: string) {
   return tests.find((t) => t.id === id);

@@ -8,23 +8,156 @@ import {
   ChevronRight,
   ClipboardCheck,
   Clock,
+  Crown,
   FileText,
   GraduationCap,
+  History,
   Mic,
+  Minus,
   PenLine,
   ShieldAlert,
   Sparkles,
+  TrendingDown,
+  TrendingUp,
   XCircle,
 } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
+  attemptsOfSubmission,
+  submissionScore,
   testSubmissions,
   tests,
   type ProctorEvent,
   type TestSubmission,
 } from "@/lib/tests-data";
+
+/** Thanh chọn lượt làm — chỉ hiện khi học viên làm đề nhiều hơn 1 lượt. */
+function AttemptSwitcher({
+  attempts,
+  currentId,
+  bestId,
+}: {
+  attempts: TestSubmission[];
+  currentId: string;
+  bestId?: string;
+}) {
+  const scores = attempts.map((a) => submissionScore(a).pct);
+  const bestPct = Math.max(...scores);
+  const firstPct = scores[0] ?? 0;
+  const lastPct = scores[scores.length - 1] ?? 0;
+
+  return (
+    <section className="mt-4 rounded-3xl border bg-surface p-4 shadow-soft sm:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <div className="grid h-8 w-8 place-content-center rounded-lg bg-primary/10 text-primary">
+            <History className="h-4 w-4" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-foreground">
+              Bạn đã làm đề này {attempts.length} lượt
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Chọn một lượt để xem kết quả và bài làm của lượt đó.
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 text-xs">
+          <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 font-semibold text-emerald-600">
+            Cao nhất {bestPct}%
+          </span>
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold ${
+              lastPct - firstPct >= 0
+                ? "bg-primary/10 text-primary"
+                : "bg-rose-500/10 text-rose-600"
+            }`}
+          >
+            {lastPct - firstPct >= 0 ? (
+              <TrendingUp className="h-3.5 w-3.5" />
+            ) : (
+              <TrendingDown className="h-3.5 w-3.5" />
+            )}
+            {lastPct - firstPct > 0 ? "+" : ""}
+            {lastPct - firstPct}% từ lượt 1 → {attempts.length}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-2 sm:grid-cols-3">
+        {attempts.map((a, i) => {
+          const { earned, total, pct } = submissionScore(a);
+          const active = a.id === currentId;
+          const prevPct = i > 0 ? submissionScore(attempts[i - 1]!).pct : null;
+          const delta = prevPct == null ? null : pct - prevPct;
+          return (
+            <Link
+              key={a.id}
+              to="/exams/result/$submissionId"
+              params={{ submissionId: a.id }}
+              className={`rounded-2xl border p-3 transition ${
+                active
+                  ? "border-primary bg-primary/5 ring-1 ring-primary/40"
+                  : "bg-background hover:border-primary/40 hover:bg-muted/40"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-semibold text-foreground">
+                  Lượt {a.attemptNo ?? i + 1}
+                </span>
+                <span className="flex items-center gap-1">
+                  {a.id === bestId && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600">
+                      <Crown className="h-3 w-3" /> Cao nhất
+                    </span>
+                  )}
+                  {i === attempts.length - 1 && (
+                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                      Gần nhất
+                    </span>
+                  )}
+                </span>
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-foreground">
+                {earned.toFixed(1)} / {total}
+                <span className="ml-1 text-xs font-normal text-muted-foreground">
+                  ({pct}%)
+                </span>
+              </div>
+              <Progress value={pct} className="mt-2 h-1.5" />
+              <div className="mt-1.5 flex items-center justify-between text-[11px] text-muted-foreground">
+                <span>
+                  {a.submittedAt
+                    ? new Date(a.submittedAt).toLocaleDateString("vi-VN", {
+                        timeZone: "Asia/Ho_Chi_Minh",
+                      })
+                    : "—"}
+                </span>
+                {delta != null && (
+                  <span
+                    className={`font-semibold ${
+                      delta > 0
+                        ? "text-emerald-600"
+                        : delta < 0
+                          ? "text-rose-600"
+                          : "text-muted-foreground"
+                    }`}
+                  >
+                    {delta > 0 ? "+" : ""}
+                    {delta}%
+                  </span>
+                )}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 
 export const Route = createFileRoute("/exams/result/$submissionId")({
   head: () => ({
@@ -59,6 +192,20 @@ function ResultPage() {
   const earnedPoints = sub.answers.reduce((s, a) => s + (a.awarded ?? 0), 0);
   const pct = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
 
+  /* Các lượt làm của học viên trên cùng đề này */
+  const attempts = useMemo(() => attemptsOfSubmission(sub), [sub]);
+  const multi = attempts.length > 1;
+  const attemptNo = sub.attemptNo ?? 1;
+  const prev = multi
+    ? attempts.filter((a) => (a.attemptNo ?? 1) < attemptNo).slice(-1)[0]
+    : undefined;
+  const bestAttempt = multi
+    ? attempts.reduce((acc, a) =>
+        submissionScore(a).pct > submissionScore(acc).pct ? a : acc,
+      )
+    : undefined;
+  const deltaPct = prev ? pct - submissionScore(prev).pct : null;
+
   const skillOrder: Array<{ key: string; label: string }> = [
     { key: "listening", label: "Listening" },
     { key: "reading", label: "Reading" },
@@ -70,7 +217,13 @@ function ResultPage() {
     const earned = items.reduce((s, a) => s + (a.awarded ?? 0), 0);
     const total = items.reduce((s, a) => s + a.points, 0);
     const hasPending = items.some((a) => a.awarded == null);
-    return { key, label, earned, total, hasPending, count: items.length };
+    const prevItems = prev?.answers.filter((a) => a.skill === key) ?? [];
+    const prevEarned = prevItems.reduce((s, a) => s + (a.awarded ?? 0), 0);
+    const prevTotal = prevItems.reduce((s, a) => s + a.points, 0);
+    const prevPct = prevTotal > 0 ? Math.round((prevEarned / prevTotal) * 100) : null;
+    const nowPct = total > 0 ? Math.round((earned / total) * 100) : null;
+    const delta = prevPct != null && nowPct != null ? nowPct - prevPct : null;
+    return { key, label, earned, total, hasPending, count: items.length, delta };
   });
 
 
@@ -87,11 +240,25 @@ function ResultPage() {
           <ArrowLeft className="h-3.5 w-3.5" /> Quay lại danh sách bài thi
         </Link>
 
+        {multi && (
+          <AttemptSwitcher
+            attempts={attempts}
+            currentId={sub.id}
+            bestId={bestAttempt?.id}
+          />
+        )}
+
         {/* Header */}
         <div className="mt-4 rounded-3xl border bg-surface p-6 shadow-soft">
           <div className="flex flex-col gap-2">
             <span className="inline-flex w-fit items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
               <Sparkles className="h-3.5 w-3.5" /> Kết quả bài thi
+              {multi && (
+                <span className="text-muted-foreground">
+                  · Lượt {attemptNo}
+                  {sub.attemptsAllowed ? `/${sub.attemptsAllowed}` : ""}
+                </span>
+              )}
             </span>
             <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
               {test?.name ?? "Bài thi"}
@@ -108,8 +275,41 @@ function ResultPage() {
               </span>
               <span>•</span>
               <StatusBadge status={sub.status} />
+              {multi && bestAttempt?.id === sub.id && (
+                <>
+                  <span>•</span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-semibold text-emerald-600">
+                    <Crown className="h-3 w-3" /> Lượt điểm cao nhất
+                  </span>
+                </>
+              )}
+              {deltaPct != null && (
+                <>
+                  <span>•</span>
+                  <span
+                    className={`inline-flex items-center gap-1 font-semibold ${
+                      deltaPct > 0
+                        ? "text-emerald-600"
+                        : deltaPct < 0
+                          ? "text-rose-600"
+                          : "text-muted-foreground"
+                    }`}
+                  >
+                    {deltaPct > 0 ? (
+                      <TrendingUp className="h-3.5 w-3.5" />
+                    ) : deltaPct < 0 ? (
+                      <TrendingDown className="h-3.5 w-3.5" />
+                    ) : (
+                      <Minus className="h-3.5 w-3.5" />
+                    )}
+                    {deltaPct > 0 ? "+" : ""}
+                    {deltaPct}% so với lượt {prev?.attemptNo ?? ""}
+                  </span>
+                </>
+              )}
             </div>
           </div>
+
 
           {/* Score panel */}
           <div className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_2fr]">
@@ -141,14 +341,31 @@ function ResultPage() {
                         </span>
                       </div>
                       <Progress value={noData ? 0 : sp} className="mt-2 h-1.5" />
-                      <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+                      <div className="mt-1 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
                         <span>{noData ? "Không có câu hỏi" : `${sp}%`}</span>
-                        {s.hasPending && (
-                          <span className="font-semibold text-amber-600">
-                            Đang chờ chấm
-                          </span>
-                        )}
+                        <span className="flex items-center gap-2">
+                          {s.delta != null && !noData && (
+                            <span
+                              className={`font-semibold ${
+                                s.delta > 0
+                                  ? "text-emerald-600"
+                                  : s.delta < 0
+                                    ? "text-rose-600"
+                                    : "text-muted-foreground"
+                              }`}
+                            >
+                              {s.delta > 0 ? "+" : ""}
+                              {s.delta}% vs lượt trước
+                            </span>
+                          )}
+                          {s.hasPending && (
+                            <span className="font-semibold text-amber-600">
+                              Đang chờ chấm
+                            </span>
+                          )}
+                        </span>
                       </div>
+
                     </div>
                   );
                 })}
