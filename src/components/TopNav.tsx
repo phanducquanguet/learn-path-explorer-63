@@ -315,7 +315,7 @@ export function TopNav() {
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    if (role === "admin") {
+    if (role === "admin" || role === "orgadmin") {
       document.body.style.paddingLeft = "16rem";
     } else {
       document.body.style.paddingLeft = "";
@@ -325,9 +325,16 @@ export function TopNav() {
     };
   }, [role]);
 
-  const homeFor = (r: Role) => (r === "student" ? "/" : r === "admin" ? "/admin/exams" : "/teacher");
+  const homeFor = (r: Role) =>
+    r === "student"
+      ? "/"
+      : r === "admin"
+        ? "/admin/exams"
+        : r === "orgadmin"
+          ? "/org/classes"
+          : "/teacher";
 
-  if (roleStr === "admin") {
+  if (roleStr === "admin" || roleStr === "orgadmin") {
     return (
       <>
         <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border/60 bg-background md:flex">
