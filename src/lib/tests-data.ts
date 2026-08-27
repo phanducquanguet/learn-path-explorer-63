@@ -462,9 +462,9 @@ export const testSubmissions: TestSubmission[] = [
     startedAt: days(-3),
     submittedAt: days(-3),
     durationMinutes: 82,
-    autoScore: 18,
-    manualScore: 4,
-    finalScore: 22,
+    autoScore: 1,
+    manualScore: 12.25,
+    finalScore: 13.25,
     status: "graded",
     proctorEvents: [
       { at: new Date(now - 3 * 86400000 + 12 * 60000).toISOString(), type: "tab-switch", severity: "medium", detail: "Chuyển sang tab khác trong 8 giây" },
