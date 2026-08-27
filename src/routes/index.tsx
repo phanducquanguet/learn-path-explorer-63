@@ -333,43 +333,34 @@ function DashboardPage() {
   );
 }
 
-/* ================= Lộ trình dạng stepper ================= */
+/* ================= Lộ trình dạng thẻ theo từng cấp ================= */
 
 function LevelPath({ levelsList, currentId }: { levelsList: typeof levels; currentId: string }) {
   return (
-    <div className="mt-8 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      <div className="relative flex min-w-[720px] items-start justify-between px-2">
-        {/* connector line */}
-        <div className="absolute left-10 right-10 top-8 h-1.5 rounded-full bg-muted" />
-        <div
-          className="absolute left-10 top-8 h-1.5 rounded-full transition-all duration-700"
-          style={{
-            width: `${(() => {
-              const idx = levelsList.findIndex((l) => l.status === "in-progress");
-              const done = levelsList.filter((l) => l.status === "completed").length;
-              const n = Math.max(1, levelsList.length - 1);
-              const t = idx >= 0 ? idx / n : done / n;
-              return `calc(${(t * 100).toFixed(1)}% - ${(t * 5).toFixed(1)}rem)`;
-            })()}`,
-            background: "linear-gradient(90deg, oklch(0.7 0.15 155), oklch(0.6 0.2 265))",
-          }}
-        />
-
-        {levelsList.map((lv) => {
-          const completed = lv.status === "completed";
-          const active = lv.status === "in-progress";
-          const locked = lv.status === "locked";
-          const notEnrolled = lv.status === "not-enrolled";
-
-          const node = (
-            <div className="group relative z-10 flex w-24 flex-col items-center gap-2.5 text-center">
+    <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {levelsList.map((lv) => {
+        const completed = lv.status === "completed";
+        const active = lv.status === "in-progress";
+        const locked = lv.status === "locked";
+        const notEnrolled = lv.status === "not-enrolled";
+        const card = (
+          <div
+            className={cn(
+              "group relative flex flex-col rounded-3xl p-5 ring-1 transition",
+              active
+                ? "bg-surface shadow-elevated ring-primary/30"
+                : completed
+                  ? "bg-surface shadow-soft ring-border"
+                  : "bg-muted/40 ring-border/60",
+              (locked || notEnrolled) && "opacity-70",
+            )}
+          >
+            {/* top row: badge + status */}
+            <div className="flex items-start justify-between gap-3">
               <div
                 className={cn(
-                  "relative flex items-center justify-center rounded-3xl font-black text-white transition-all duration-300",
-                  active
-                    ? "h-16 w-16 text-xl shadow-elevated group-hover:scale-110"
-                    : "h-14 w-14 text-base group-hover:scale-105",
-                  (locked || notEnrolled) && "shadow-none",
+                  "flex h-14 w-14 items-center justify-center rounded-2xl font-black text-white shadow-soft",
+                  active && "animate-pulse-slow",
                 )}
                 style={
                   completed
@@ -377,136 +368,120 @@ function LevelPath({ levelsList, currentId }: { levelsList: typeof levels; curre
                     : active
                       ? {
                           background: `linear-gradient(135deg, oklch(0.5 0.21 ${lv.hue}), oklch(0.66 0.18 ${(lv.hue + 35) % 360}))`,
-                          boxShadow: `0 14px 32px -10px oklch(0.55 0.22 ${lv.hue} / 0.65)`,
+                          boxShadow: `0 14px 32px -10px oklch(0.55 0.22 ${lv.hue} / 0.55)`,
                         }
-                      : { background: "oklch(0.9 0.012 260)", color: "oklch(0.6 0.02 260)" }
+                      : { background: "oklch(0.88 0.012 260)", color: "oklch(0.55 0.02 260)" }
                 }
               >
                 {completed ? (
                   <CheckCircle2 className="h-6 w-6" />
-                ) : locked ? (
+                ) : locked || notEnrolled ? (
                   <Lock className="h-5 w-5" />
                 ) : (
-                  lv.code
-                )}
-                {active && (
-                  <span
-                    className="absolute -inset-1.5 -z-10 rounded-[1.4rem] opacity-40 blur-md"
-                    style={{ background: `oklch(0.65 0.2 ${lv.hue})` }}
-                  />
-                )}
-                {notEnrolled && (
-                  <span className="absolute inset-0 rounded-3xl border-2 border-dashed border-border" />
+                  <span className="text-xl">{lv.code}</span>
                 )}
               </div>
-
-              <div>
-                <div
-                  className={cn(
-                    "text-sm font-bold",
-                    active
-                      ? "text-foreground"
-                      : completed
-                        ? "text-foreground"
-                        : "text-muted-foreground",
-                  )}
-                >
-                  {lv.code} · {lv.name}
-                </div>
-                <div className="mt-0.5">
-                  {completed && (
-                    <span className="inline-flex rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-bold text-success-foreground">
-                      Hoàn thành
-                    </span>
-                  )}
-                  {active && (
-                    <span
-                      className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
-                      style={{ background: `oklch(0.55 0.2 ${lv.hue})` }}
-                    >
-                      Đang học · {lv.progress}%
-                    </span>
-                  )}
-                  {locked && (
-                    <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
-                      Đã khoá
-                    </span>
-                  )}
-                  {notEnrolled && (
-                    <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
-                      Ngoài lộ trình
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          );
-
-          return locked || notEnrolled ? (
-            <div key={lv.id} aria-disabled="true" className="cursor-not-allowed">
-              {node}
-            </div>
-          ) : (
-            <Link key={lv.id} to="/levels/$level" params={{ level: lv.id }}>
-              {node}
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* Khoá học của cấp đang học — gọn, điểm màu */}
-      <CurrentLevelCourses levelsList={levelsList} currentId={currentId} />
-    </div>
-  );
-}
-
-function CurrentLevelCourses({ levelsList, currentId }: { levelsList: typeof levels; currentId: string }) {
-  const current =
-    levelsList.find((l) => l.id === currentId) ??
-    levelsList.find((l) => l.status === "in-progress");
-  if (!current || current.courses.length === 0) return null;
-  return (
-    <div className="mt-6 border-t border-border/60 pt-5">
-      <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-        Bạn đang học tại cấp {current.code}
-      </div>
-      <div className="mt-3 grid gap-3 sm:grid-cols-2">
-        {current.courses.map((c, i) => {
-          const hue = (current.hue + i * 35) % 360;
-          return (
-            <Link
-              key={c.id}
-              to="/courses/$courseId"
-              params={{ courseId: c.id }}
-              className="group flex items-center gap-3 rounded-2xl p-4 ring-1 ring-border transition hover:-translate-y-0.5 hover:shadow-elevated"
-              style={{ background: pastel(hue) }}
-            >
               <span
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-soft"
-                style={{ background: `linear-gradient(135deg, oklch(0.55 0.19 ${hue}), oklch(0.68 0.16 ${(hue + 30) % 360}))` }}
+                className={cn(
+                  "rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide",
+                  completed && "bg-success/15 text-success-foreground",
+                  active && "text-white",
+                  locked && "bg-muted text-muted-foreground",
+                  notEnrolled && "bg-muted text-muted-foreground",
+                )}
+                style={active ? { background: `oklch(0.55 0.2 ${lv.hue})` } : undefined}
               >
-                <BookOpen className="h-5 w-5" />
+                {completed
+                  ? "Hoàn thành"
+                  : active
+                    ? "Đang học"
+                    : locked
+                      ? "Đã khoá"
+                      : "Ngoài lộ trình"}
               </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-bold text-foreground">{c.title}</span>
-                <span className="mt-1 flex items-center gap-2">
-                  <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/70">
-                    <span
-                      className="block h-full rounded-full"
-                      style={{
-                        width: `${c.progress}%`,
-                        background: `oklch(0.55 0.19 ${hue})`,
-                      }}
-                    />
+            </div>
+
+            {/* title */}
+            <div className="mt-4">
+              <h3
+                className={cn(
+                  "font-display text-lg font-bold",
+                  active || completed ? "text-foreground" : "text-muted-foreground",
+                )}
+              >
+                {lv.name}
+              </h3>
+              <p className="text-xs font-semibold text-muted-foreground">{lv.code}</p>
+            </div>
+
+            {/* progress */}
+            {active && (
+              <div className="mt-3">
+                <div className="mb-1.5 flex items-center justify-between text-xs">
+                  <span className="font-semibold text-foreground/70">Tiến độ</span>
+                  <span className="font-bold" style={{ color: `oklch(0.5 0.2 ${lv.hue})` }}>
+                    {lv.progress}%
                   </span>
-                  <span className="text-xs font-bold text-foreground/70">{c.progress}%</span>
-                </span>
-              </span>
-              <ArrowUpRight className="h-4 w-4 shrink-0 text-foreground/40 transition group-hover:text-foreground" />
-            </Link>
-          );
-        })}
-      </div>
+                </div>
+                <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                  <div
+                    className="h-full rounded-full transition-all duration-700"
+                    style={{
+                      width: `${lv.progress}%`,
+                      background: `linear-gradient(90deg, oklch(0.55 0.2 ${lv.hue}), oklch(0.7 0.16 ${(lv.hue + 30) % 360}))`,
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* mini courses for active/completed */}
+            {(active || completed) && lv.courses.length > 0 && (
+              <div className="mt-4 flex flex-wrap gap-1.5">
+                {lv.courses.slice(0, 3).map((c, i) => {
+                  const hue = (lv.hue + i * 35) % 360;
+                  return (
+                    <span
+                      key={c.id}
+                      className="inline-flex max-w-[8rem] items-center gap-1 truncate rounded-full px-2 py-1 text-[10px] font-semibold ring-1 ring-inset"
+                      style={{
+                        background: pastel(hue, 0.96, 0.055),
+                        color: `oklch(0.45 0.12 ${hue})`,
+                        borderColor: `oklch(0.85 0.05 ${hue})`,
+                      }}
+                    >
+                      <BookOpen className="h-3 w-3 shrink-0" />
+                      {c.title}
+                    </span>
+                  );
+                })}
+                {lv.courses.length > 3 && (
+                  <span className="inline-flex items-center rounded-full px-2 py-1 text-[10px] font-semibold text-muted-foreground">
+                    +{lv.courses.length - 3}
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* locked overlay hint */}
+            {(locked || notEnrolled) && (
+              <div className="mt-4 inline-flex items-center gap-1 text-[10px] font-semibold text-muted-foreground">
+                <Lock className="h-3 w-3" /> {locked ? "Hoàn thành cấp trước để mở" : "Chưa tham gia lộ trình"}
+              </div>
+            )}
+          </div>
+        );
+
+        return locked || notEnrolled ? (
+          <div key={lv.id} aria-disabled="true" className="cursor-not-allowed">
+            {card}
+          </div>
+        ) : (
+          <Link key={lv.id} to="/levels/$level" params={{ level: lv.id }} className="block">
+            {card}
+          </Link>
+        );
+      })}
     </div>
   );
 }
