@@ -754,7 +754,8 @@ export function attemptsOfSubmission(sub: TestSubmission) {
 
 export function submissionScore(sub: TestSubmission) {
   const total = sub.answers.reduce((s, a) => s + a.points, 0);
-  const earned = sub.finalScore ?? sub.answers.reduce((s, a) => s + (a.awarded ?? 0), 0);
+  const awarded = sub.answers.reduce((s, a) => s + (a.awarded ?? 0), 0);
+  const earned = Math.min(total, sub.finalScore ?? awarded);
   return { total, earned, pct: total > 0 ? Math.round((earned / total) * 100) : 0 };
 }
 
