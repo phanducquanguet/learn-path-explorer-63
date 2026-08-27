@@ -9,7 +9,6 @@ import {
   Lock,
   Play,
   CheckCircle2,
-  ExternalLink,
   ClipboardCheck,
   Headphones,
   Mic,
@@ -19,9 +18,6 @@ import {
   Rocket,
   GraduationCap,
   Zap,
-  ChevronLeft,
-  ChevronRight,
-  Sparkle,
 } from "lucide-react";
 import { levels, studentStats, getLevel, newcomerLevels, newcomerStats, enrolledB2Levels, enrolledB2Stats } from "@/lib/lms-data";
 import { cn } from "@/lib/utils";
@@ -30,12 +26,15 @@ import { TopNav } from "@/components/TopNav";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Tổng quan học tập — UNICOM LMS" },
-      { name: "description", content: "Bảng điều khiển học tập dành cho học viên." },
+      { title: "Trang chủ học viên — UNICOM LMS" },
+      { name: "description", content: "Trang chủ học tập thân thiện dành cho học viên: tiếp tục học, lộ trình và thành tích." },
     ],
   }),
   component: DashboardPage,
 });
+
+/** Tông màu pastel rực rỡ cho từng loại thẻ — dùng inline oklch để giữ consistency với theme. */
+const pastel = (hue: number, l = 0.95, c = 0.07) => `oklch(${l} ${c} ${hue})`;
 
 function DashboardPage() {
   const [scenario, setScenario] = useState<"multi" | "newcomer" | "enrolledB2">("multi");
@@ -55,319 +54,230 @@ function DashboardPage() {
       : getLevel("b2")!;
   const currentCourse = currentLevel.courses[0];
 
-  const levelsScrollRef = useRef<HTMLDivElement>(null);
-  const scrollLevels = (dir: 1 | -1) =>
-    levelsScrollRef.current?.scrollBy({ left: dir * 380, behavior: "smooth" });
-  const dragState = useRef({ down: false, startX: 0, startLeft: 0, moved: false });
-  const onDragStart = (e: React.MouseEvent<HTMLDivElement>) => {
-    const el = levelsScrollRef.current;
-    if (!el) return;
-    dragState.current = { down: true, startX: e.pageX, startLeft: el.scrollLeft, moved: false };
-    el.style.cursor = "grabbing";
-  };
-  const onDragMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    const el = levelsScrollRef.current;
-    if (!el || !dragState.current.down) return;
-    const dx = e.pageX - dragState.current.startX;
-    if (Math.abs(dx) > 4) dragState.current.moved = true;
-    el.scrollLeft = dragState.current.startLeft - dx;
-  };
-  const onDragEnd = () => {
-    const el = levelsScrollRef.current;
-    if (!el) return;
-    el.style.cursor = "";
-    dragState.current.down = false;
-  };
-  const onDragClickCapture = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (dragState.current.moved) {
-      e.preventDefault();
-      e.stopPropagation();
-      dragState.current.moved = false;
-    }
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <TopNav />
-      {/* Hero background */}
-      <div className="relative">
-        <div
-          className="absolute inset-x-0 top-0 h-[640px] -z-10"
-          style={{ background: "var(--gradient-hero)" }}
-        />
-        <div
-          className="absolute inset-x-0 top-0 h-[640px] -z-10 opacity-40"
+
+      <div className="mx-auto max-w-6xl px-4 pb-16 pt-6 sm:px-8">
+        {/* Scenario switcher — demo personas (nhỏ gọn, không làm nhiễu) */}
+        <div className="mb-5 inline-flex flex-wrap items-center gap-1 rounded-full bg-surface p-1 ring-1 ring-border">
+          {([
+            { key: "multi", label: "Học viên đa cấp" },
+            { key: "newcomer", label: "Vào lớp A1" },
+            { key: "enrolledB2", label: "Vào lớp B2" },
+          ] as const).map((opt) => (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => setScenario(opt.key)}
+              className={cn(
+                "rounded-full px-3 py-1 text-xs font-semibold transition",
+                scenario === opt.key
+                  ? "bg-foreground text-background shadow-soft"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
+        {/* ===== HERO: lời chào + tiếp tục học — đầy màu sắc, 1 hành động chính ===== */}
+        <section
+          className="relative overflow-hidden rounded-[2rem] p-6 text-white shadow-elevated sm:p-10"
           style={{
-            backgroundImage:
-              "radial-gradient(circle at 1px 1px, oklch(0.7 0.05 260 / 0.25) 1px, transparent 0)",
-            backgroundSize: "24px 24px",
-            maskImage: "linear-gradient(to bottom, black, transparent)",
+            background:
+              "linear-gradient(120deg, oklch(0.52 0.22 265) 0%, oklch(0.55 0.2 290) 45%, oklch(0.6 0.17 320) 100%)",
           }}
-        />
+        >
+          {/* decorative orbs */}
+          <div className="pointer-events-none absolute -right-20 -top-24 h-72 w-72 rounded-full bg-white/15 blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 -left-16 h-64 w-64 rounded-full bg-amber-300/25 blur-3xl" />
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.12]"
+            style={{
+              backgroundImage: "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
+              backgroundSize: "22px 22px",
+            }}
+          />
 
-        <div className="mx-auto max-w-7xl px-6 pt-8 pb-12 sm:px-8">
-          {/* Hero: greeting + continue learning */}
-          <section className="mt-8 grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2 flex flex-col justify-center animate-fade-in">
-              <span className="inline-flex w-fit items-center gap-2 rounded-full bg-surface/80 px-3 py-1 text-xs font-medium text-muted-foreground backdrop-blur ring-1 ring-border">
-                <Sparkles className="h-3.5 w-3.5 text-primary" /> Chào mừng trở lại
+          <div className="relative grid gap-8 lg:grid-cols-5 lg:items-center">
+            <div className="lg:col-span-3">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold ring-1 ring-white/25 backdrop-blur">
+                <Sparkles className="h-3.5 w-3.5" /> Chào mừng trở lại
               </span>
-              {/* Scenario switcher — demo personas */}
-              <div className="mt-3 inline-flex w-fit flex-wrap items-center gap-1 rounded-full bg-surface/80 p-1 ring-1 ring-border backdrop-blur">
-                {([
-                  { key: "multi", label: "Học viên đa cấp" },
-                  { key: "newcomer", label: "Vào lớp A1" },
-                  { key: "enrolledB2", label: "Vào lớp B2" },
-                ] as const).map((opt) => (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    onClick={() => setScenario(opt.key)}
-                    className={cn(
-                      "rounded-full px-3 py-1 text-xs font-semibold transition",
-                      scenario === opt.key
-                        ? "bg-foreground text-background shadow-soft"
-                        : "text-muted-foreground hover:text-foreground",
-                    )}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-
-              <h1 className="mt-3 font-display text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
-                Xin chào, <br />
-                <span
-                  className="bg-clip-text text-transparent"
-                  style={{ backgroundImage: "var(--gradient-brand)" }}
-                >
-                  {s.name} 👋
-                </span>
+              <h1 className="mt-4 font-display text-4xl font-bold tracking-tight sm:text-5xl">
+                Xin chào, {s.name} 👋
               </h1>
-              <p className="mt-3 text-sm text-muted-foreground sm:text-base">
-                Hôm nay là một ngày tuyệt vời để học. Bạn đang trên chuỗi{" "}
-                <b className="text-foreground">{s.weeklyStreak} ngày</b> liên tục — hãy giữ vững nhé!
+              <p className="mt-3 max-w-md text-sm leading-relaxed text-white/85 sm:text-base">
+                Hôm nay là một ngày tuyệt vời để học. Bạn đang giữ chuỗi{" "}
+                <b className="text-white">{s.weeklyStreak} ngày</b> liên tiếp — cố thêm chút nữa nhé!
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
-                <Pill icon={<Flame className="h-3.5 w-3.5 text-orange-500" />}>{s.weeklyStreak} ngày streak</Pill>
-                {isNewcomer ? (
-                  <Pill icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}>Người mới bắt đầu</Pill>
-                ) : isEnrolledB2 ? (
-                  <Pill icon={<Sparkles className="h-3.5 w-3.5 text-primary" />}>Vào lớp B2</Pill>
-                ) : (
-                  <Pill icon={<Trophy className="h-3.5 w-3.5 text-amber-500" />}>Top 12% lớp</Pill>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold ring-1 ring-white/25 backdrop-blur">
+                  <Flame className="h-3.5 w-3.5 text-amber-300" /> {s.weeklyStreak} ngày streak
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold ring-1 ring-white/25 backdrop-blur">
+                  <Zap className="h-3.5 w-3.5 text-sky-200" /> {s.activeCourses} khoá đang học
+                </span>
+                {!isNewcomer && !isEnrolledB2 && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold ring-1 ring-white/25 backdrop-blur">
+                    <Trophy className="h-3.5 w-3.5 text-amber-300" /> Top 12% lớp
+                  </span>
                 )}
-
-                <Pill icon={<Zap className="h-3.5 w-3.5 text-primary" />}>{s.activeCourses} khoá đang học</Pill>
               </div>
             </div>
 
-            {/* Continue learning hero card */}
+            {/* Continue learning — thẻ kính nổi bật trong hero */}
             <Link
               to="/courses/$courseId"
               params={{ courseId: currentCourse.id }}
-              className="group lg:col-span-1 relative overflow-hidden rounded-[2rem] p-6 transition hover:-translate-y-1 animate-scale-in"
-              style={{
-                background:
-                  "linear-gradient(135deg, oklch(0.99 0.005 260) 0%, oklch(0.96 0.04 260) 100%)",
-                boxShadow:
-                  "0 0 0 2px oklch(0.65 0.18 260 / 0.35), 0 24px 50px -20px oklch(0.55 0.2 260 / 0.35)",
-              }}
+              className="group lg:col-span-2 relative overflow-hidden rounded-3xl bg-white/95 p-6 text-foreground shadow-elevated backdrop-blur transition hover:-translate-y-1 hover:shadow-2xl"
             >
-              {/* Decorative orbs like level cards */}
               <div
-                className="pointer-events-none absolute -right-20 -top-20 h-56 w-56 rounded-full opacity-70 blur-3xl transition-all duration-500 group-hover:opacity-90 group-hover:scale-110"
-                style={{ background: "oklch(0.78 0.18 260)" }}
+                className="pointer-events-none absolute -right-16 -top-16 h-44 w-44 rounded-full opacity-30 blur-3xl transition group-hover:opacity-50"
+                style={{ background: `oklch(0.7 0.2 ${currentLevel.hue})` }}
               />
-              <div
-                className="pointer-events-none absolute -left-16 -bottom-16 h-44 w-44 rounded-full opacity-40 blur-3xl"
-                style={{ background: "oklch(0.8 0.15 320)" }}
-              />
-              <div className="absolute right-4 top-4 opacity-[0.08]">
-                <GraduationCap className="h-20 w-20 text-foreground" />
-              </div>
-
               <div className="relative">
-                <div className="inline-flex items-center gap-2 rounded-full bg-background/70 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-foreground/80 ring-1 ring-border backdrop-blur">
-                  <Rocket className="h-3.5 w-3.5 text-primary" /> Tiếp tục học
+                <div className="flex items-center justify-between">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary">
+                    <Rocket className="h-3.5 w-3.5" /> Tiếp tục học
+                  </span>
+                  <GraduationCap className="h-5 w-5 text-muted-foreground/50" />
                 </div>
-                <div className="mt-5 text-xs font-medium text-muted-foreground">Cấp độ {currentLevel.code}</div>
-                <h2 className="mt-1 font-display text-xl font-bold tracking-tight text-foreground sm:text-2xl">
+                <div className="mt-4 text-xs font-semibold text-muted-foreground">
+                  Cấp độ {currentLevel.code} · {currentLevel.name}
+                </div>
+                <h2 className="mt-1 font-display text-2xl font-bold tracking-tight">
                   {currentCourse.title}
                 </h2>
-                <p className="mt-1.5 text-xs text-muted-foreground line-clamp-2">{currentCourse.subtitle}</p>
+                <p className="mt-1 text-sm text-muted-foreground line-clamp-1">{currentCourse.subtitle}</p>
 
                 <div className="mt-5">
-                  <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
-                    <span>Tiến độ</span>
-                    <span className="text-foreground font-semibold">{currentCourse.progress}%</span>
+                  <div className="flex items-center justify-between text-xs font-semibold">
+                    <span className="text-muted-foreground">Tiến độ khoá học</span>
+                    <span>{currentCourse.progress}%</span>
                   </div>
-                  <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                  <div className="mt-2 h-2.5 w-full overflow-hidden rounded-full bg-muted">
                     <div
-                      className="h-full rounded-full transition-all"
+                      className="h-full rounded-full transition-all duration-700"
                       style={{
                         width: `${currentCourse.progress}%`,
-                        background:
-                          "linear-gradient(90deg, oklch(0.6 0.2 260), oklch(0.72 0.16 290))",
-                        boxShadow: "0 0 12px oklch(0.65 0.2 260 / 0.55)",
+                        background: `linear-gradient(90deg, oklch(0.55 0.2 ${currentLevel.hue}), oklch(0.7 0.17 ${(currentLevel.hue + 40) % 360}))`,
                       }}
                     />
                   </div>
                 </div>
 
-                <div className="mt-5 flex items-center gap-2">
-                  <span
-                    className="inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-elevated transition group-hover:gap-2.5"
-                    style={{
-                      background:
-                        "linear-gradient(135deg, oklch(0.55 0.2 260), oklch(0.68 0.18 290))",
-                    }}
-                  >
-                    <Play className="h-3.5 w-3.5 fill-current" /> Vào học
-                  </span>
-                </div>
-              </div>
-            </Link>
-          </section>
-
-          {/* LEVELS — moved UP, hero feature */}
-          <section className="mt-12 animate-fade-in">
-            <div className="flex items-end justify-between gap-4">
-              <div>
-                <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-                  <Sparkles className="h-3.5 w-3.5" /> Lộ trình học của bạn
-                </div>
-                <h2 className="mt-1 font-display text-3xl font-semibold tracking-tight text-foreground">
-                  Chọn cấp độ để bắt đầu 🚀
-                </h2>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Từ A1 đến C2 — vuốt ngang để khám phá hành trình của bạn.
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="hidden rounded-full bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground ring-1 ring-border sm:inline-flex">
-                  {activeLevels.filter((l) => l.status !== "locked").length}/{activeLevels.length} cấp đã mở
+                <span
+                  className="mt-5 inline-flex items-center gap-2 rounded-2xl px-5 py-2.5 text-sm font-bold text-white shadow-elevated transition group-hover:gap-3"
+                  style={{ background: "linear-gradient(135deg, oklch(0.55 0.2 265), oklch(0.62 0.18 300))" }}
+                >
+                  <Play className="h-4 w-4 fill-current" /> Vào học ngay
                 </span>
               </div>
-            </div>
+            </Link>
+          </div>
+        </section>
 
-            <div className="relative mt-6 -mx-6 sm:-mx-8">
-              {/* Side fade overlays — don't clip card shadows vertically */}
-              <div className="pointer-events-none absolute left-0 top-0 bottom-4 w-12 z-10 bg-gradient-to-r from-background to-transparent" />
-              <div className="pointer-events-none absolute right-0 top-0 bottom-4 w-12 z-10 bg-gradient-to-l from-background to-transparent" />
-
-              {/* Overlay arrows */}
-              <button
-                type="button"
-                aria-label="Cuộn trái"
-                onClick={() => scrollLevels(-1)}
-                className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-background ring-1 ring-border text-foreground shadow-elevated hover:shadow-glow hover:scale-105 transition"
-              >
-                <ChevronLeft className="h-5 w-5" />
-              </button>
-              <button
-                type="button"
-                aria-label="Cuộn phải"
-                onClick={() => scrollLevels(1)}
-                className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full bg-background ring-1 ring-border text-foreground shadow-elevated hover:shadow-glow hover:scale-105 transition"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-
-              <div
-                ref={levelsScrollRef}
-                onMouseDown={onDragStart}
-                onMouseMove={onDragMove}
-                onMouseUp={onDragEnd}
-                onMouseLeave={onDragEnd}
-                onClickCapture={onDragClickCapture}
-                className="flex gap-5 overflow-x-auto px-6 sm:px-8 pt-3 pb-6 snap-x snap-mandatory cursor-grab select-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-              >
-                {activeLevels.map((lv, i) => {
-                  const prev = i > 0 ? activeLevels[i - 1] : undefined;
-                  return (
-                    <LevelCard
-                      key={lv.id}
-                      lv={lv}
-                      delay={i * 60}
-                      prevLevelCode={prev?.code}
-                    />
-                  );
-                })}
+        {/* ===== LỘ TRÌNH: stepper nhiều màu, ít nhiễu ===== */}
+        <section className="mt-8 rounded-[2rem] bg-surface p-6 ring-1 ring-border shadow-soft sm:p-8">
+          <div className="flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
+                <Sparkles className="h-3.5 w-3.5" /> Lộ trình của bạn
               </div>
+              <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-foreground">
+                Hành trình từ A1 đến C2 🚀
+              </h2>
             </div>
-          </section>
-        </div>
-      </div>
+            <span className="rounded-full bg-muted px-3 py-1.5 text-xs font-semibold text-muted-foreground">
+              {activeLevels.filter((l) => l.status !== "locked").length}/{activeLevels.length} cấp đã mở
+            </span>
+          </div>
 
-      {/* Stats + portal — secondary section */}
-      <div className="mx-auto max-w-7xl px-6 pb-20 sm:px-8">
-        <section className="mt-4">
-          <h2 className="font-display text-xl font-semibold tracking-tight text-foreground">
-            Tiến độ tuần này
+          <LevelPath levelsList={activeLevels} currentId={currentLevel.id} />
+        </section>
+
+        {/* ===== THÀNH TÍCH: pastel tiles nhiều màu ===== */}
+        <section className="mt-8">
+          <h2 className="font-display text-xl font-bold tracking-tight text-foreground">
+            Thành tích tuần này 🌟
           </h2>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <StatCard
+            <AchievementTile
               icon={<Clock className="h-5 w-5" />}
               label="Thời gian học"
               value={`${Math.floor(s.studyMinutesThisWeek / 60)}h ${s.studyMinutesThisWeek % 60}m`}
-              hint={`Mục tiêu ${Math.floor(s.studyMinutesGoal / 60)}h • ${goalPct}%`}
+              hint={`Mục tiêu ${Math.floor(s.studyMinutesGoal / 60)}h • đạt ${goalPct}%`}
               progress={goalPct}
-              tone="primary"
+              hue={230}
             />
-            <StatCard
+            <AchievementTile
               icon={<Target className="h-5 w-5" />}
               label="Tỷ lệ hoàn thành"
               value={`${s.completionRate}%`}
               hint={`${s.completedCourses} khoá xong • ${s.activeCourses} đang học`}
               progress={s.completionRate}
-              tone="info"
+              hue={155}
             />
-            <StatCard
+            <AchievementTile
               icon={<Trophy className="h-5 w-5" />}
               label="Điểm trung bình"
               value={`${s.averageScore}/100`}
-              hint="Top 12% trong lớp"
+              hint="Phong độ rất tốt!"
               progress={s.averageScore}
-              tone="success"
+              hue={300}
             />
-            <StatCard
+            <AchievementTile
               icon={<Flame className="h-5 w-5" />}
-              label="Chuỗi ngày"
+              label="Chuỗi ngày học"
               value={`${s.weeklyStreak} ngày`}
               hint="Hãy giữ ngọn lửa!"
-              tone="warning"
+              hue={45}
             />
           </div>
         </section>
 
+        {/* ===== Chart + cổng thi ===== */}
         <section className="mt-6 grid gap-4 lg:grid-cols-3">
-          <div className="lg:col-span-2 rounded-3xl bg-surface p-6 ring-1 ring-border shadow-soft">
+          <div className="lg:col-span-2 rounded-[2rem] bg-surface p-6 ring-1 ring-border shadow-soft">
             <div className="flex items-end justify-between">
               <div>
-                <h3 className="text-base font-semibold text-foreground">Hoạt động học tuần này</h3>
-                <p className="text-xs text-muted-foreground">Phút học mỗi ngày</p>
+                <h3 className="text-base font-bold text-foreground">Hoạt động học tuần này</h3>
+                <p className="text-xs text-muted-foreground">Số phút học mỗi ngày</p>
               </div>
-              <span className="text-xs text-muted-foreground">7 ngày qua</span>
+              <span className="rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold text-muted-foreground">
+                7 ngày qua
+              </span>
             </div>
             <div className="mt-6 flex h-44 items-end gap-3">
-              {s.weeklyChart.map((d) => {
+              {s.weeklyChart.map((d, i) => {
                 const max = Math.max(...s.weeklyChart.map((x) => x.minutes));
-                const h = (d.minutes / max) * 100;
+                const h = Math.max(6, (d.minutes / max) * 100);
+                const hue = 265 + i * 14;
+                const isBest = d.minutes === max;
                 return (
                   <div key={d.day} className="flex flex-1 flex-col items-center gap-2">
+                    <span className={cn("text-[11px] font-bold", isBest ? "text-primary" : "text-muted-foreground/70")}>
+                      {d.minutes > 0 ? `${d.minutes}p` : ""}
+                    </span>
                     <div className="relative flex h-full w-full items-end">
                       <div
-                        className="w-full rounded-xl transition-all hover:opacity-80"
+                        className="w-full rounded-xl transition-all hover:opacity-85"
                         style={{
                           height: `${h}%`,
-                          background: "var(--gradient-brand)",
-                          boxShadow: "var(--shadow-glow)",
+                          background: isBest
+                            ? "linear-gradient(180deg, oklch(0.6 0.2 300), oklch(0.52 0.22 265))"
+                            : `linear-gradient(180deg, oklch(0.8 0.1 ${hue}), oklch(0.7 0.13 ${hue}))`,
+                          boxShadow: isBest ? "var(--shadow-glow)" : undefined,
                         }}
                         title={`${d.minutes} phút`}
                       />
                     </div>
-                    <span className="text-xs font-medium text-muted-foreground">{d.day}</span>
+                    <span className={cn("text-xs font-semibold", isBest ? "text-primary" : "text-muted-foreground")}>
+                      {d.day}
+                    </span>
                   </div>
                 );
               })}
@@ -378,36 +288,39 @@ function DashboardPage() {
             href="https://exam-portal.ubos.vn"
             target="_blank"
             rel="noreferrer"
-            className="group relative overflow-hidden rounded-3xl p-6 text-primary-foreground ring-1 ring-border shadow-elevated transition hover:-translate-y-1 hover:shadow-2xl"
-            style={{ background: "var(--gradient-brand)" }}
+            className="group relative overflow-hidden rounded-[2rem] p-6 text-white ring-1 ring-border shadow-elevated transition hover:-translate-y-1 hover:shadow-2xl"
+            style={{
+              background:
+                "linear-gradient(150deg, oklch(0.5 0.19 230) 0%, oklch(0.55 0.2 265) 55%, oklch(0.58 0.19 290) 100%)",
+            }}
           >
             <div className="absolute -right-16 -top-16 h-48 w-48 rounded-full bg-white/15 blur-3xl transition group-hover:scale-125" />
-            <div className="absolute -bottom-12 -left-10 h-40 w-40 rounded-full bg-white/10 blur-3xl" />
+            <div className="absolute -bottom-12 -left-10 h-40 w-40 rounded-full bg-cyan-300/20 blur-3xl" />
             <div className="relative">
               <div className="flex items-center justify-between">
                 <div className="inline-flex rounded-2xl bg-white/15 p-2.5 ring-1 ring-white/20 backdrop-blur">
                   <ClipboardCheck className="h-5 w-5" />
                 </div>
-                <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ring-1 ring-white/20 backdrop-blur">
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ring-1 ring-white/20 backdrop-blur">
                   <Sparkles className="h-3 w-3" /> Live
                 </span>
               </div>
-              <h3 className="mt-5 font-display text-xl font-semibold tracking-tight">Cổng thi</h3>
+              <h3 className="mt-5 font-display text-xl font-bold tracking-tight">Cổng thi</h3>
               <p className="mt-1.5 text-sm leading-relaxed text-white/85">
-                Thực hiện các bài luyện thi đánh giá năng lực toàn diện với 4 kỹ năng Nghe, Nói, Đọc, Viết trên hệ thống thi chuyên biệt.
+                Luyện thi đánh giá năng lực toàn diện với 4 kỹ năng Nghe, Nói, Đọc, Viết.
               </p>
-              <div className="mt-5 flex flex-wrap gap-1.5">
+              <div className="mt-4 flex flex-wrap gap-1.5">
                 {[
                   { icon: Headphones, label: "Nghe" },
                   { icon: Mic, label: "Nói" },
                   { icon: BookOpen, label: "Đọc" },
                   { icon: PenLine, label: "Viết" },
-                ].map((s) => (
+                ].map((sk) => (
                   <span
-                    key={s.label}
+                    key={sk.label}
                     className="inline-flex items-center gap-1 rounded-full bg-white/12 px-2.5 py-1 text-[11px] font-medium ring-1 ring-white/15 backdrop-blur"
                   >
-                    <s.icon className="h-3 w-3" /> {s.label}
+                    <sk.icon className="h-3 w-3" /> {sk.label}
                   </span>
                 ))}
               </div>
@@ -423,431 +336,229 @@ function DashboardPage() {
   );
 }
 
-function Header() {
+/* ================= Lộ trình dạng stepper ================= */
+
+function LevelPath({ levelsList, currentId }: { levelsList: typeof levels; currentId: string }) {
   return (
-    <header className="flex items-center justify-between">
-      <Link to="/" className="flex items-center gap-2">
+    <div className="mt-8 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="relative flex min-w-[720px] items-start justify-between px-2">
+        {/* connector line */}
+        <div className="absolute left-10 right-10 top-8 h-1.5 rounded-full bg-muted" />
         <div
-          className="flex h-9 w-9 items-center justify-center rounded-xl text-primary-foreground shadow-soft"
-          style={{ background: "var(--gradient-brand)" }}
-        >
-          <BookOpen className="h-5 w-5" />
-        </div>
-        <div className="leading-tight">
-          <div className="text-sm font-semibold text-foreground">UNICOM LMS</div>
-          <div className="text-[11px] text-muted-foreground">Học viên</div>
-        </div>
-      </Link>
-      <div className="flex items-center gap-2">
-        <span className="hidden rounded-full bg-surface px-3 py-1.5 text-xs font-medium text-muted-foreground ring-1 ring-border sm:inline-flex">
-          🔥 12 ngày liên tục
-        </span>
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-primary to-chart-5 text-sm font-semibold text-primary-foreground">
-          BC
-        </div>
+          className="absolute left-10 top-8 h-1.5 rounded-full transition-all duration-700"
+          style={{
+            width: `${(() => {
+              const idx = levelsList.findIndex((l) => l.status === "in-progress");
+              const done = levelsList.filter((l) => l.status === "completed").length;
+              const n = Math.max(1, levelsList.length - 1);
+              const t = idx >= 0 ? idx / n : done / n;
+              return `calc(${(t * 100).toFixed(1)}% - ${(t * 5).toFixed(1)}rem)`;
+            })()}`,
+            background: "linear-gradient(90deg, oklch(0.7 0.15 155), oklch(0.6 0.2 265))",
+          }}
+        />
+
+        {levelsList.map((lv) => {
+          const completed = lv.status === "completed";
+          const active = lv.status === "in-progress";
+          const locked = lv.status === "locked";
+          const notEnrolled = lv.status === "not-enrolled";
+
+          const node = (
+            <div className="group relative z-10 flex w-24 flex-col items-center gap-2.5 text-center">
+              <div
+                className={cn(
+                  "relative flex items-center justify-center rounded-3xl font-black text-white transition-all duration-300",
+                  active
+                    ? "h-16 w-16 text-xl shadow-elevated group-hover:scale-110"
+                    : "h-14 w-14 text-base group-hover:scale-105",
+                  (locked || notEnrolled) && "shadow-none",
+                )}
+                style={
+                  completed
+                    ? { background: "linear-gradient(135deg, oklch(0.65 0.16 155), oklch(0.75 0.13 180))" }
+                    : active
+                      ? {
+                          background: `linear-gradient(135deg, oklch(0.5 0.21 ${lv.hue}), oklch(0.66 0.18 ${(lv.hue + 35) % 360}))`,
+                          boxShadow: `0 14px 32px -10px oklch(0.55 0.22 ${lv.hue} / 0.65)`,
+                        }
+                      : { background: "oklch(0.9 0.012 260)", color: "oklch(0.6 0.02 260)" }
+                }
+              >
+                {completed ? (
+                  <CheckCircle2 className="h-6 w-6" />
+                ) : locked ? (
+                  <Lock className="h-5 w-5" />
+                ) : (
+                  lv.code
+                )}
+                {active && (
+                  <span
+                    className="absolute -inset-1.5 -z-10 rounded-[1.4rem] opacity-40 blur-md"
+                    style={{ background: `oklch(0.65 0.2 ${lv.hue})` }}
+                  />
+                )}
+                {notEnrolled && (
+                  <span className="absolute inset-0 rounded-3xl border-2 border-dashed border-border" />
+                )}
+              </div>
+
+              <div>
+                <div
+                  className={cn(
+                    "text-sm font-bold",
+                    active
+                      ? "text-foreground"
+                      : completed
+                        ? "text-foreground"
+                        : "text-muted-foreground",
+                  )}
+                >
+                  {lv.code} · {lv.name}
+                </div>
+                <div className="mt-0.5">
+                  {completed && (
+                    <span className="inline-flex rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-bold text-success-foreground">
+                      Hoàn thành
+                    </span>
+                  )}
+                  {active && (
+                    <span
+                      className="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
+                      style={{ background: `oklch(0.55 0.2 ${lv.hue})` }}
+                    >
+                      Đang học · {lv.progress}%
+                    </span>
+                  )}
+                  {locked && (
+                    <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+                      Đã khoá
+                    </span>
+                  )}
+                  {notEnrolled && (
+                    <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-[10px] font-bold text-muted-foreground">
+                      Ngoài lộ trình
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+
+          return locked || notEnrolled ? (
+            <div key={lv.id} aria-disabled="true" className="cursor-not-allowed">
+              {node}
+            </div>
+          ) : (
+            <Link key={lv.id} to="/levels/$level" params={{ level: lv.id }}>
+              {node}
+            </Link>
+          );
+        })}
       </div>
-    </header>
+
+      {/* Khoá học của cấp đang học — gọn, điểm màu */}
+      <CurrentLevelCourses levelsList={levelsList} currentId={currentId} />
+    </div>
   );
 }
 
-function Pill({ icon, children }: { icon: React.ReactNode; children: React.ReactNode }) {
+function CurrentLevelCourses({ levelsList, currentId }: { levelsList: typeof levels; currentId: string }) {
+  const current =
+    levelsList.find((l) => l.id === currentId) ??
+    levelsList.find((l) => l.status === "in-progress");
+  if (!current || current.courses.length === 0) return null;
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-surface/80 px-3 py-1.5 text-xs font-medium text-foreground ring-1 ring-border backdrop-blur">
-      {icon}
-      {children}
-    </span>
+    <div className="mt-6 border-t border-border/60 pt-5">
+      <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+        Bạn đang học tại cấp {current.code}
+      </div>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
+        {current.courses.map((c, i) => {
+          const hue = (current.hue + i * 35) % 360;
+          return (
+            <Link
+              key={c.id}
+              to="/courses/$courseId"
+              params={{ courseId: c.id }}
+              className="group flex items-center gap-3 rounded-2xl p-4 ring-1 ring-border transition hover:-translate-y-0.5 hover:shadow-elevated"
+              style={{ background: pastel(hue) }}
+            >
+              <span
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl text-white shadow-soft"
+                style={{ background: `linear-gradient(135deg, oklch(0.55 0.19 ${hue}), oklch(0.68 0.16 ${(hue + 30) % 360}))` }}
+              >
+                <BookOpen className="h-5 w-5" />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-bold text-foreground">{c.title}</span>
+                <span className="mt-1 flex items-center gap-2">
+                  <span className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/70">
+                    <span
+                      className="block h-full rounded-full"
+                      style={{
+                        width: `${c.progress}%`,
+                        background: `oklch(0.55 0.19 ${hue})`,
+                      }}
+                    />
+                  </span>
+                  <span className="text-xs font-bold text-foreground/70">{c.progress}%</span>
+                </span>
+              </span>
+              <ArrowUpRight className="h-4 w-4 shrink-0 text-foreground/40 transition group-hover:text-foreground" />
+            </Link>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
-function StatCard({
+/* ================= Thẻ thành tích pastel ================= */
+
+function AchievementTile({
   icon,
   label,
   value,
   hint,
   progress,
-  tone,
+  hue,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   hint?: string;
   progress?: number;
-  tone: "primary" | "info" | "success" | "warning";
+  hue: number;
 }) {
-  const toneMap = {
-    primary: "bg-primary/10 text-primary",
-    info: "bg-info/15 text-info-foreground",
-    success: "bg-success/15 text-success-foreground",
-    warning: "bg-warning/15 text-warning-foreground",
-  };
-  const barTone = {
-    primary: "bg-primary",
-    info: "bg-info",
-    success: "bg-success",
-    warning: "bg-warning",
-  };
   return (
-    <div className="group rounded-3xl bg-surface p-5 ring-1 ring-border shadow-soft transition hover:shadow-elevated hover:-translate-y-0.5">
-      <div className="flex items-center justify-between">
-        <div className={cn("flex h-10 w-10 items-center justify-center rounded-2xl", toneMap[tone])}>
-          {icon}
-        </div>
-        <ArrowUpRight className="h-4 w-4 text-muted-foreground/60 transition group-hover:text-foreground" />
-      </div>
-      <div className="mt-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="mt-1 text-2xl font-semibold tracking-tight text-foreground">{value}</div>
-      {hint && <div className="mt-1 text-xs text-muted-foreground">{hint}</div>}
-      {typeof progress === "number" && (
-        <div className="mt-4 h-1.5 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            className={cn("h-full rounded-full transition-all", barTone[tone])}
-            style={{ width: `${Math.min(100, progress)}%` }}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
-
-function LevelCard({
-  lv,
-  delay,
-  prevLevelCode,
-}: {
-  lv: (typeof levels)[number];
-  delay: number;
-  prevLevelCode?: string;
-}) {
-  const locked = lv.status === "locked";
-  const completed = lv.status === "completed";
-  const active = lv.status === "in-progress";
-  const notEnrolled = lv.status === "not-enrolled";
-
-  // ---------- NOT-ENROLLED (ngoài lộ trình lớp của học viên) ----------
-  if (notEnrolled) {
-    // Tông pastel theo cấp độ — gợi cảm giác thân thiện, mời gọi khám phá
-    const toneMap: Record<
-      string,
-      { badgeIcon: string; chip: string; badge: string; dashed: string; hint: string }
-    > = {
-      A1: {
-        badgeIcon: "bg-sky-50 text-sky-600",
-        chip: "bg-sky-50 text-sky-600",
-        badge: "bg-sky-50 text-sky-600",
-        dashed: "border-sky-200 bg-sky-50/30 text-sky-700",
-        hint: "Sẵn sàng để bắt đầu hành trình mới của bạn bất cứ lúc nào.",
-      },
-      A2: {
-        badgeIcon: "bg-amber-50 text-amber-600",
-        chip: "bg-amber-50 text-amber-600",
-        badge: "bg-amber-50 text-amber-600",
-        dashed: "border-amber-200 bg-amber-50/30 text-amber-700",
-        hint: "Liên hệ trung tâm để ghi danh thêm cấp độ này vào tài khoản.",
-      },
-      B1: {
-        badgeIcon: "bg-indigo-50 text-indigo-600",
-        chip: "bg-indigo-50 text-indigo-600",
-        badge: "bg-indigo-50 text-indigo-600",
-        dashed: "border-indigo-200 bg-indigo-50/30 text-indigo-700",
-        hint: "Chinh phục mục tiêu tiếp theo trong kế hoạch học tập của bạn.",
-      },
-    };
-    const tone =
-      toneMap[lv.code] ?? {
-        badgeIcon: "bg-muted text-muted-foreground",
-        chip: "bg-muted text-muted-foreground",
-        badge: "bg-muted text-muted-foreground",
-        dashed: "border-border bg-muted/30 text-muted-foreground",
-        hint: "Liên hệ trung tâm nếu bạn muốn học cấp độ này.",
-      };
-
-    return (
-      <div
-        aria-disabled="true"
-        className="snap-start shrink-0 animate-fade-in w-[300px] md:w-[320px]"
-        style={{ animationDelay: `${delay}ms` }}
-      >
-        <div
-          className="group relative flex h-full flex-col overflow-hidden rounded-3xl border border-border/60 bg-card p-6 shadow-sm transition-all duration-300 hover:shadow-md"
-          style={{ minHeight: 340 }}
-        >
-          <div className="flex items-start justify-between">
-            <div
-              className={cn(
-                "flex h-12 w-12 items-center justify-center rounded-2xl text-lg font-bold",
-                tone.badgeIcon,
-              )}
-            >
-              {lv.code}
-            </div>
-            <span
-              className={cn(
-                "rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wider",
-                tone.badge,
-              )}
-            >
-              Chờ bạn khám phá
-            </span>
-          </div>
-
-          <div className="mt-6 flex-1">
-            <h3 className="text-xl font-bold tracking-tight text-foreground">{lv.name}</h3>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground line-clamp-3">
-              {lv.description}
-            </p>
-          </div>
-
-          <div className="mt-auto space-y-3 pt-6">
-            <div
-              className={cn(
-                "flex w-full items-center justify-center rounded-xl border border-dashed py-2.5",
-                tone.dashed,
-              )}
-            >
-              <span className="text-xs font-semibold">Mở rộng lộ trình</span>
-            </div>
-            <p className="px-2 text-center text-[11px] text-muted-foreground/80">{tone.hint}</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-
-
-
-  // Sizing per state — active is biggest
-  const sizing = active
-    ? "w-[340px] md:w-[380px]"
-    : "w-[300px] md:w-[320px]";
-
-  // ---------- LOCKED ----------
-  if (locked) {
-    return (
-      <div
-        aria-disabled="true"
-        className={cn(
-          "snap-start shrink-0 animate-fade-in",
-          sizing,
-        )}
-        style={{ animationDelay: `${delay}ms` }}
-      >
-        <div
-          className="group relative h-full overflow-hidden rounded-3xl p-6 ring-1 ring-white/10 cursor-not-allowed transition-all duration-300 hover:shadow-elevated"
-          style={{
-            background:
-              "linear-gradient(135deg, oklch(0.22 0.025 265) 0%, oklch(0.30 0.04 285) 100%)",
-            minHeight: 320,
-          }}
-        >
-          {/* diagonal stripes */}
-          <div
-            className="pointer-events-none absolute inset-0 opacity-[0.07]"
-            style={{
-              backgroundImage:
-                "repeating-linear-gradient(135deg, white 0 1px, transparent 1px 14px)",
-            }}
-          />
-          {/* glow behind lock */}
-          <div
-            className="pointer-events-none absolute left-1/2 top-16 -translate-x-1/2 h-40 w-40 rounded-full blur-3xl opacity-60"
-            style={{ background: `oklch(0.65 0.2 ${lv.hue})` }}
-          />
-
-          <div className="relative flex items-center justify-between">
-            <span
-              className="text-3xl font-black tracking-tight text-white/40"
-              style={{ filter: "blur(2px)" }}
-            >
-              {lv.code}
-            </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1 text-[11px] font-semibold text-white/80 ring-1 ring-white/15 backdrop-blur">
-              <Lock className="h-3 w-3" /> Đã khoá
-            </span>
-          </div>
-
-          {/* big lock medallion */}
-          <div className="relative mt-6 flex justify-center">
-            <div className="relative">
-              <div
-                className="absolute inset-0 -m-3 rounded-full opacity-60 blur-2xl"
-                style={{ background: `oklch(0.7 0.2 ${lv.hue})` }}
-              />
-              <div
-                className="absolute inset-0 -m-2 rounded-full ring-2 ring-dashed ring-white/25 animate-spin"
-                style={{ animationDuration: "12s" }}
-              />
-              <div
-                className="relative flex h-20 w-20 items-center justify-center rounded-full text-white shadow-elevated"
-                style={{
-                  background: `linear-gradient(135deg, oklch(0.55 0.2 ${lv.hue}), oklch(0.72 0.16 ${(lv.hue + 30) % 360}))`,
-                  boxShadow: `0 18px 40px -12px oklch(0.6 0.22 ${lv.hue} / 0.7)`,
-                }}
-              >
-                <Lock className="h-8 w-8" strokeWidth={2.4} />
-              </div>
-              <Sparkle className="absolute -right-2 -top-1 h-4 w-4 text-white/80" />
-            </div>
-          </div>
-
-          <div className="relative mt-5 text-center">
-            <h3 className="text-lg font-bold tracking-tight text-white">{lv.name}</h3>
-            <p className="mt-1 text-xs text-white/60 line-clamp-2">{lv.description}</p>
-          </div>
-
-          <div className="relative mt-5 border-t border-white/10 pt-4 text-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[11px] font-semibold text-white/80 ring-1 ring-white/15">
-              <Sparkles className="h-3 w-3" />
-              {prevLevelCode
-                ? `Mở khoá khi hoàn thành ${prevLevelCode}`
-                : "Sắp mở"}
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ---------- ACTIVE / COMPLETED ----------
-  const cardInner = (
     <div
-      className={cn(
-        "group relative h-full overflow-hidden rounded-3xl p-6 transition-all duration-300 cursor-pointer",
-        active
-          ? "ring-2 shadow-glow hover:-translate-y-2"
-          : "ring-1 ring-border shadow-soft hover:shadow-elevated hover:-translate-y-1 opacity-95",
-      )}
-      style={{
-        minHeight: 320,
-        ...(active
-          ? {
-              background: `linear-gradient(135deg, oklch(0.99 0.005 260) 0%, oklch(0.95 0.07 ${lv.hue}) 100%)`,
-              // ring color via boxShadow trick
-              boxShadow: `0 0 0 2px oklch(0.65 0.2 ${lv.hue} / 0.5), 0 20px 50px -20px oklch(0.6 0.22 ${lv.hue} / 0.45)`,
-            }
-          : {
-              background: `linear-gradient(135deg, oklch(0.99 0.003 260) 0%, oklch(0.97 0.025 ${lv.hue}) 100%)`,
-            }),
-      }}
+      className="group rounded-3xl p-5 ring-1 ring-border shadow-soft transition hover:-translate-y-0.5 hover:shadow-elevated"
+      style={{ background: pastel(hue, 0.955, 0.06) }}
     >
-      {/* Decorative orbs */}
-      <div
-        className={cn(
-          "pointer-events-none absolute -right-20 -top-20 h-52 w-52 rounded-full blur-3xl transition-all duration-500 group-hover:scale-110",
-          active ? "opacity-70 group-hover:opacity-90" : "opacity-30",
-        )}
-        style={{ background: `oklch(0.78 0.18 ${lv.hue})` }}
-      />
-      <div
-        className={cn(
-          "pointer-events-none absolute -left-16 -bottom-16 h-44 w-44 rounded-full blur-3xl",
-          active ? "opacity-40" : "opacity-20",
-        )}
-        style={{ background: `oklch(0.8 0.15 ${(lv.hue + 60) % 360})` }}
-      />
-
-      {/* Big level badge */}
-      <div className="relative flex items-start justify-between">
-        <div
-          className={cn(
-            "relative flex items-center justify-center rounded-3xl font-black tracking-tight text-white transition-transform duration-300 group-hover:scale-110 group-hover:rotate-3",
-            active ? "h-24 w-24 text-3xl" : "h-20 w-20 text-2xl",
-          )}
-          style={{
-            background: completed
-              ? `linear-gradient(135deg, oklch(0.7 0.05 ${lv.hue}), oklch(0.78 0.04 ${(lv.hue + 30) % 360}))`
-              : `linear-gradient(135deg, oklch(0.5 0.2 ${lv.hue}), oklch(0.65 0.18 ${(lv.hue + 30) % 360}))`,
-            boxShadow: active
-              ? `0 16px 40px -10px oklch(0.55 0.22 ${lv.hue} / 0.7), inset 0 0 0 2px oklch(1 0 0 / 0.3)`
-              : `0 12px 30px -10px oklch(0.55 0.2 ${lv.hue} / 0.4)`,
-          }}
+      <div className="flex items-center justify-between">
+        <span
+          className="flex h-10 w-10 items-center justify-center rounded-2xl text-white shadow-soft"
+          style={{ background: `linear-gradient(135deg, oklch(0.55 0.19 ${hue}), oklch(0.68 0.16 ${(hue + 30) % 360}))` }}
         >
-          {lv.code}
-          {completed && (
-            <div className="absolute -right-2 -top-2 flex h-9 w-9 items-center justify-center rounded-full bg-success ring-4 ring-background shadow-soft">
-              <CheckCircle2 className="h-5 w-5 text-white" />
-            </div>
-          )}
-        </div>
-        <StatusPill status={completed ? "completed" : "in-progress"} />
+          {icon}
+        </span>
+        <ArrowUpRight className="h-4 w-4 text-foreground/30 transition group-hover:text-foreground" />
       </div>
-
-      <div className="relative mt-5">
-        <h3 className={cn("font-bold tracking-tight text-foreground", active ? "text-2xl" : "text-xl")}>
-          {lv.name}
-        </h3>
-        <p className="mt-1 text-sm text-muted-foreground line-clamp-2">{lv.description}</p>
-      </div>
-
-      <div className="relative mt-5">
-        <div className="flex items-center justify-between text-xs font-semibold text-muted-foreground">
-          <span>Tiến độ</span>
-          <span className="text-foreground">{lv.progress}%</span>
-        </div>
-        <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-muted">
+      <div className="mt-4 text-[11px] font-bold uppercase tracking-wide text-foreground/50">{label}</div>
+      <div className="mt-1 font-display text-2xl font-bold tracking-tight text-foreground">{value}</div>
+      {hint && <div className="mt-1 text-xs text-foreground/60">{hint}</div>}
+      {typeof progress === "number" && (
+        <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-white/70">
           <div
             className="h-full rounded-full transition-all duration-700"
             style={{
-              width: `${lv.progress}%`,
-              background: completed
-                ? "var(--success)"
-                : `linear-gradient(90deg, oklch(0.6 0.2 ${lv.hue}), oklch(0.72 0.16 ${(lv.hue + 30) % 360}))`,
-              boxShadow: active
-                ? `0 0 14px oklch(0.65 0.2 ${lv.hue} / 0.6)`
-                : undefined,
+              width: `${Math.min(100, progress)}%`,
+              background: `linear-gradient(90deg, oklch(0.55 0.19 ${hue}), oklch(0.68 0.16 ${(hue + 30) % 360}))`,
             }}
           />
         </div>
-      </div>
-
-      <div className="relative mt-5 flex items-center justify-between border-t border-border/60 pt-4">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <BookOpen className="h-3.5 w-3.5" />
-          <span className="font-medium">{lv.courses.length} khoá học</span>
-        </div>
-        {active ? (
-          <span
-            className="inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold text-white shadow-elevated transition-all group-hover:gap-2.5"
-            style={{
-              background: `linear-gradient(135deg, oklch(0.55 0.2 ${lv.hue}), oklch(0.68 0.18 ${(lv.hue + 30) % 360}))`,
-            }}
-          >
-            Học tiếp
-            <ArrowUpRight className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </span>
-        ) : (
-          <span className="inline-flex items-center gap-1.5 rounded-xl bg-surface px-3 py-1.5 text-sm font-semibold text-foreground/80 ring-1 ring-border transition-all group-hover:gap-2.5 group-hover:text-foreground">
-            Xem lại
-            <ArrowUpRight className="h-4 w-4 transition group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-          </span>
-        )}
-      </div>
+      )}
     </div>
-  );
-
-  return (
-    <Link
-      to="/levels/$level"
-      params={{ level: lv.code.toLowerCase() }}
-      className={cn("snap-start shrink-0 animate-fade-in block", sizing)}
-      style={{ animationDelay: `${delay}ms` }}
-    >
-      {cardInner}
-    </Link>
-  );
-}
-
-function StatusPill({ status }: { status: "completed" | "in-progress" | "locked" }) {
-  const map = {
-    completed: { text: "Hoàn thành", cls: "bg-success/20 text-success-foreground", icon: <CheckCircle2 className="h-3.5 w-3.5" /> },
-    "in-progress": { text: "Đang học", cls: "bg-primary text-primary-foreground shadow-soft", icon: <span className="relative flex h-2 w-2"><span className="absolute inset-0 rounded-full bg-white/80 animate-ping" /><span className="relative inline-flex h-2 w-2 rounded-full bg-white" /></span> },
-    locked: { text: "Đã khoá", cls: "bg-muted text-muted-foreground", icon: <Lock className="h-3.5 w-3.5" /> },
-  } as const;
-  const m = map[status];
-  return (
-    <span className={cn("inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold backdrop-blur", m.cls)}>
-      {m.icon}
-      {m.text}
-    </span>
   );
 }
