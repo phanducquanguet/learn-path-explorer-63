@@ -104,19 +104,22 @@ function DashboardPage() {
           <div className="relative grid gap-8 lg:grid-cols-5 lg:items-center">
             <div className="lg:col-span-3">
               <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold ring-1 ring-white/25 backdrop-blur">
-                <Sparkles className="h-3.5 w-3.5" /> Chào mừng trở lại
+                <Sparkles className="h-3.5 w-3.5" /> {isNewcomer ? "Chào mừng bạn" : "Chào mừng trở lại"}
               </span>
               <h1 className="mt-4 font-display text-4xl font-bold tracking-tight sm:text-5xl">
                 Xin chào, {s.name} 👋
               </h1>
               <p className="mt-3 max-w-md text-sm leading-relaxed text-white/85 sm:text-base">
-                Hôm nay là một ngày tuyệt vời để học. Bạn đang giữ chuỗi{" "}
-                <b className="text-white">{s.weeklyStreak} ngày</b> liên tiếp — cố thêm chút nữa nhé!
+                {isNewcomer
+                  ? "Tài khoản của bạn đã sẵn sàng. Hãy bắt đầu bài học đầu tiên trên hành trình chinh phục tiếng Anh nhé!"
+                  : <>Hôm nay là một ngày tuyệt vời để học. Bạn đang giữ chuỗi{" "}<b className="text-white">{s.weeklyStreak} ngày</b> liên tiếp — cố thêm chút nữa nhé!</>}
               </p>
               <div className="mt-5 flex flex-wrap gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold ring-1 ring-white/25 backdrop-blur">
-                  <Flame className="h-3.5 w-3.5 text-amber-300" /> {s.weeklyStreak} ngày streak
-                </span>
+                {!isNewcomer && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold ring-1 ring-white/25 backdrop-blur">
+                    <Flame className="h-3.5 w-3.5 text-amber-300" /> {s.weeklyStreak} ngày streak
+                  </span>
+                )}
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1.5 text-xs font-semibold ring-1 ring-white/25 backdrop-blur">
                   <Zap className="h-3.5 w-3.5 text-sky-200" /> {s.activeCourses} khoá đang học
                 </span>
@@ -141,7 +144,7 @@ function DashboardPage() {
               <div className="relative">
                 <div className="flex items-center justify-between">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary">
-                    <Rocket className="h-3.5 w-3.5" /> Tiếp tục học
+                    <Rocket className="h-3.5 w-3.5" /> {isNewcomer ? "Bắt đầu học" : "Tiếp tục học"}
                   </span>
                   <GraduationCap className="h-5 w-5 text-muted-foreground/50" />
                 </div>
