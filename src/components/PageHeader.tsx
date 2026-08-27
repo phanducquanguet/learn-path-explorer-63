@@ -80,7 +80,11 @@ export function PageHeader({
           className={cn(
             "relative mt-6 grid gap-3",
             stats.length >= 4
-              ? (stats.length >= 5 ? "sm:grid-cols-3 lg:grid-cols-5" : "sm:grid-cols-2 lg:grid-cols-4")
+              ? stats.length >= 6
+                ? "sm:grid-cols-3 lg:grid-cols-6"
+                : stats.length === 5
+                  ? "sm:grid-cols-3 lg:grid-cols-5"
+                  : "sm:grid-cols-2 lg:grid-cols-4"
               : stats.length === 3
                 ? "sm:grid-cols-3"
                 : "sm:grid-cols-2",
