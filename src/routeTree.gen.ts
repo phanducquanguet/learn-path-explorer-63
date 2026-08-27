@@ -9,12 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as PracticeTestsRouteImport } from './routes/practice-tests'
 import { Route as PracticeRouteImport } from './routes/practice'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as ExamsRouteImport } from './routes/exams'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TeacherIndexRouteImport } from './routes/teacher.index'
+import { Route as PracticeTestsIndexRouteImport } from './routes/practice-tests.index'
 import { Route as LiveIndexRouteImport } from './routes/live.index'
 import { Route as ExamsIndexRouteImport } from './routes/exams.index'
 import { Route as CoursesIndexRouteImport } from './routes/courses.index'
@@ -23,6 +25,7 @@ import { Route as TeacherUploadRouteImport } from './routes/teacher.upload'
 import { Route as TeacherReportsRouteImport } from './routes/teacher.reports'
 import { Route as TeacherQuestionBankRouteImport } from './routes/teacher.question-bank'
 import { Route as TeacherQaRouteImport } from './routes/teacher.qa'
+import { Route as PracticeTestsTestIdRouteImport } from './routes/practice-tests.$testId'
 import { Route as OrgUsersRouteImport } from './routes/org.users'
 import { Route as OrgLogsRouteImport } from './routes/org.logs'
 import { Route as OrgDashboardRouteImport } from './routes/org.dashboard'
@@ -70,6 +73,11 @@ import { Route as AdminTestsMonitorEventIdRouteImport } from './routes/admin.tes
 import { Route as AdminTestsTestIdReviewRouteImport } from './routes/admin.tests.$testId.review'
 import { Route as AdminExamsExamIdSubmissionsRouteImport } from './routes/admin.exams.$examId.submissions'
 
+const PracticeTestsRoute = PracticeTestsRouteImport.update({
+  id: '/practice-tests',
+  path: '/practice-tests',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PracticeRoute = PracticeRouteImport.update({
   id: '/practice',
   path: '/practice',
@@ -99,6 +107,11 @@ const TeacherIndexRoute = TeacherIndexRouteImport.update({
   id: '/teacher/',
   path: '/teacher/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeTestsIndexRoute = PracticeTestsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => PracticeTestsRoute,
 } as any)
 const LiveIndexRoute = LiveIndexRouteImport.update({
   id: '/live/',
@@ -139,6 +152,11 @@ const TeacherQaRoute = TeacherQaRouteImport.update({
   id: '/teacher/qa',
   path: '/teacher/qa',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeTestsTestIdRoute = PracticeTestsTestIdRouteImport.update({
+  id: '/$testId',
+  path: '/$testId',
+  getParentRoute: () => PracticeTestsRoute,
 } as any)
 const OrgUsersRoute = OrgUsersRouteImport.update({
   id: '/org/users',
@@ -384,6 +402,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
+  '/practice-tests': typeof PracticeTestsRouteWithChildren
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/stats': typeof AdminStatsRoute
   '/assignments/$assignmentId': typeof AssignmentsAssignmentIdRoute
@@ -395,6 +414,7 @@ export interface FileRoutesByFullPath {
   '/org/dashboard': typeof OrgDashboardRoute
   '/org/logs': typeof OrgLogsRoute
   '/org/users': typeof OrgUsersRoute
+  '/practice-tests/$testId': typeof PracticeTestsTestIdRoute
   '/teacher/qa': typeof TeacherQaRoute
   '/teacher/question-bank': typeof TeacherQuestionBankRoute
   '/teacher/reports': typeof TeacherReportsRoute
@@ -403,6 +423,7 @@ export interface FileRoutesByFullPath {
   '/courses/': typeof CoursesIndexRoute
   '/exams/': typeof ExamsIndexRoute
   '/live/': typeof LiveIndexRoute
+  '/practice-tests/': typeof PracticeTestsIndexRoute
   '/teacher/': typeof TeacherIndexRoute
   '/admin/campaigns/$campaignId': typeof AdminCampaignsCampaignIdRoute
   '/admin/course-approvals/$draftId': typeof AdminCourseApprovalsDraftIdRoute
@@ -456,6 +477,7 @@ export interface FileRoutesByTo {
   '/org/dashboard': typeof OrgDashboardRoute
   '/org/logs': typeof OrgLogsRoute
   '/org/users': typeof OrgUsersRoute
+  '/practice-tests/$testId': typeof PracticeTestsTestIdRoute
   '/teacher/qa': typeof TeacherQaRoute
   '/teacher/question-bank': typeof TeacherQuestionBankRoute
   '/teacher/reports': typeof TeacherReportsRoute
@@ -464,6 +486,7 @@ export interface FileRoutesByTo {
   '/courses': typeof CoursesIndexRoute
   '/exams': typeof ExamsIndexRoute
   '/live': typeof LiveIndexRoute
+  '/practice-tests': typeof PracticeTestsIndexRoute
   '/teacher': typeof TeacherIndexRoute
   '/admin/campaigns/$campaignId': typeof AdminCampaignsCampaignIdRoute
   '/admin/course-approvals/$draftId': typeof AdminCourseApprovalsDraftIdRoute
@@ -508,6 +531,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
+  '/practice-tests': typeof PracticeTestsRouteWithChildren
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/stats': typeof AdminStatsRoute
   '/assignments/$assignmentId': typeof AssignmentsAssignmentIdRoute
@@ -519,6 +543,7 @@ export interface FileRoutesById {
   '/org/dashboard': typeof OrgDashboardRoute
   '/org/logs': typeof OrgLogsRoute
   '/org/users': typeof OrgUsersRoute
+  '/practice-tests/$testId': typeof PracticeTestsTestIdRoute
   '/teacher/qa': typeof TeacherQaRoute
   '/teacher/question-bank': typeof TeacherQuestionBankRoute
   '/teacher/reports': typeof TeacherReportsRoute
@@ -527,6 +552,7 @@ export interface FileRoutesById {
   '/courses/': typeof CoursesIndexRoute
   '/exams/': typeof ExamsIndexRoute
   '/live/': typeof LiveIndexRoute
+  '/practice-tests/': typeof PracticeTestsIndexRoute
   '/teacher/': typeof TeacherIndexRoute
   '/admin/campaigns/$campaignId': typeof AdminCampaignsCampaignIdRoute
   '/admin/course-approvals/$draftId': typeof AdminCourseApprovalsDraftIdRoute
@@ -572,6 +598,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/practice'
+    | '/practice-tests'
     | '/admin/question-bank'
     | '/admin/stats'
     | '/assignments/$assignmentId'
@@ -583,6 +610,7 @@ export interface FileRouteTypes {
     | '/org/dashboard'
     | '/org/logs'
     | '/org/users'
+    | '/practice-tests/$testId'
     | '/teacher/qa'
     | '/teacher/question-bank'
     | '/teacher/reports'
@@ -591,6 +619,7 @@ export interface FileRouteTypes {
     | '/courses/'
     | '/exams/'
     | '/live/'
+    | '/practice-tests/'
     | '/teacher/'
     | '/admin/campaigns/$campaignId'
     | '/admin/course-approvals/$draftId'
@@ -644,6 +673,7 @@ export interface FileRouteTypes {
     | '/org/dashboard'
     | '/org/logs'
     | '/org/users'
+    | '/practice-tests/$testId'
     | '/teacher/qa'
     | '/teacher/question-bank'
     | '/teacher/reports'
@@ -652,6 +682,7 @@ export interface FileRouteTypes {
     | '/courses'
     | '/exams'
     | '/live'
+    | '/practice-tests'
     | '/teacher'
     | '/admin/campaigns/$campaignId'
     | '/admin/course-approvals/$draftId'
@@ -695,6 +726,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/practice'
+    | '/practice-tests'
     | '/admin/question-bank'
     | '/admin/stats'
     | '/assignments/$assignmentId'
@@ -706,6 +738,7 @@ export interface FileRouteTypes {
     | '/org/dashboard'
     | '/org/logs'
     | '/org/users'
+    | '/practice-tests/$testId'
     | '/teacher/qa'
     | '/teacher/question-bank'
     | '/teacher/reports'
@@ -714,6 +747,7 @@ export interface FileRouteTypes {
     | '/courses/'
     | '/exams/'
     | '/live/'
+    | '/practice-tests/'
     | '/teacher/'
     | '/admin/campaigns/$campaignId'
     | '/admin/course-approvals/$draftId'
@@ -758,6 +792,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   PracticeRoute: typeof PracticeRoute
+  PracticeTestsRoute: typeof PracticeTestsRouteWithChildren
   AdminQuestionBankRoute: typeof AdminQuestionBankRoute
   AdminStatsRoute: typeof AdminStatsRoute
   AssignmentsAssignmentIdRoute: typeof AssignmentsAssignmentIdRoute
@@ -814,6 +849,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/practice-tests': {
+      id: '/practice-tests'
+      path: '/practice-tests'
+      fullPath: '/practice-tests'
+      preLoaderRoute: typeof PracticeTestsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/practice': {
       id: '/practice'
       path: '/practice'
@@ -855,6 +897,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/teacher/'
       preLoaderRoute: typeof TeacherIndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/practice-tests/': {
+      id: '/practice-tests/'
+      path: '/'
+      fullPath: '/practice-tests/'
+      preLoaderRoute: typeof PracticeTestsIndexRouteImport
+      parentRoute: typeof PracticeTestsRoute
     }
     '/live/': {
       id: '/live/'
@@ -911,6 +960,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/teacher/qa'
       preLoaderRoute: typeof TeacherQaRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/practice-tests/$testId': {
+      id: '/practice-tests/$testId'
+      path: '/$testId'
+      fullPath: '/practice-tests/$testId'
+      preLoaderRoute: typeof PracticeTestsTestIdRouteImport
+      parentRoute: typeof PracticeTestsRoute
     }
     '/org/users': {
       id: '/org/users'
@@ -1249,6 +1305,20 @@ const ExamsRouteChildren: ExamsRouteChildren = {
 
 const ExamsRouteWithChildren = ExamsRoute._addFileChildren(ExamsRouteChildren)
 
+interface PracticeTestsRouteChildren {
+  PracticeTestsTestIdRoute: typeof PracticeTestsTestIdRoute
+  PracticeTestsIndexRoute: typeof PracticeTestsIndexRoute
+}
+
+const PracticeTestsRouteChildren: PracticeTestsRouteChildren = {
+  PracticeTestsTestIdRoute: PracticeTestsTestIdRoute,
+  PracticeTestsIndexRoute: PracticeTestsIndexRoute,
+}
+
+const PracticeTestsRouteWithChildren = PracticeTestsRoute._addFileChildren(
+  PracticeTestsRouteChildren,
+)
+
 interface AdminExamsExamIdRouteChildren {
   AdminExamsExamIdSubmissionsRoute: typeof AdminExamsExamIdSubmissionsRoute
 }
@@ -1266,6 +1336,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   PracticeRoute: PracticeRoute,
+  PracticeTestsRoute: PracticeTestsRouteWithChildren,
   AdminQuestionBankRoute: AdminQuestionBankRoute,
   AdminStatsRoute: AdminStatsRoute,
   AssignmentsAssignmentIdRoute: AssignmentsAssignmentIdRoute,

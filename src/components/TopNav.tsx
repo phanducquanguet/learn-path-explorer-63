@@ -85,7 +85,7 @@ const studentTabs: NavItem[] = [
   { to: "/courses" as const, label: "Khóa học", icon: GraduationCap },
   { to: "/live" as const, label: "Lớp trực tuyến", icon: Video },
   { to: "/assignments" as const, label: "Bài tập", icon: ClipboardList },
-
+  { to: "/practice-tests" as const, label: "Luyện thi", icon: ClipboardCheck },
   { to: "/exams" as const, label: "Thi cử", icon: ScrollText },
 ];
 
