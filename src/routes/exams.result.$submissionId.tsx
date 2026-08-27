@@ -59,6 +59,20 @@ function ResultPage() {
   const earnedPoints = sub.answers.reduce((s, a) => s + (a.awarded ?? 0), 0);
   const pct = totalPoints > 0 ? Math.round((earnedPoints / totalPoints) * 100) : 0;
 
+  /* Các lượt làm của học viên trên cùng đề này */
+  const attempts = useMemo(() => attemptsOfSubmission(sub), [sub]);
+  const multi = attempts.length > 1;
+  const attemptNo = sub.attemptNo ?? 1;
+  const prev = multi
+    ? attempts.filter((a) => (a.attemptNo ?? 1) < attemptNo).slice(-1)[0]
+    : undefined;
+  const bestAttempt = multi
+    ? attempts.reduce((acc, a) =>
+        submissionScore(a).pct > submissionScore(acc).pct ? a : acc,
+      )
+    : undefined;
+  const deltaPct = prev ? pct - submissionScore(prev).pct : null;
+
   const skillOrder: Array<{ key: string; label: string }> = [
     { key: "listening", label: "Listening" },
     { key: "reading", label: "Reading" },
@@ -70,7 +84,13 @@ function ResultPage() {
     const earned = items.reduce((s, a) => s + (a.awarded ?? 0), 0);
     const total = items.reduce((s, a) => s + a.points, 0);
     const hasPending = items.some((a) => a.awarded == null);
-    return { key, label, earned, total, hasPending, count: items.length };
+    const prevItems = prev?.answers.filter((a) => a.skill === key) ?? [];
+    const prevEarned = prevItems.reduce((s, a) => s + (a.awarded ?? 0), 0);
+    const prevTotal = prevItems.reduce((s, a) => s + a.points, 0);
+    const prevPct = prevTotal > 0 ? Math.round((prevEarned / prevTotal) * 100) : null;
+    const nowPct = total > 0 ? Math.round((earned / total) * 100) : null;
+    const delta = prevPct != null && nowPct != null ? nowPct - prevPct : null;
+    return { key, label, earned, total, hasPending, count: items.length, delta };
   });
 
 
@@ -87,11 +107,25 @@ function ResultPage() {
           <ArrowLeft className="h-3.5 w-3.5" /> Quay lại danh sách bài thi
         </Link>
 
+        {multi && (
+          <AttemptSwitcher
+            attempts={attempts}
+            currentId={sub.id}
+            bestId={bestAttempt?.id}
+          />
+        )}
+
         {/* Header */}
         <div className="mt-4 rounded-3xl border bg-surface p-6 shadow-soft">
           <div className="flex flex-col gap-2">
             <span className="inline-flex w-fit items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
               <Sparkles className="h-3.5 w-3.5" /> Kết quả bài thi
+              {multi && (
+                <span className="text-muted-foreground">
+                  · Lượt {attemptNo}
+                  {sub.attemptsAllowed ? `/${sub.attemptsAllowed}` : ""}
+                </span>
+              )}
             </span>
             <h1 className="font-display text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
               {test?.name ?? "Bài thi"}
@@ -108,8 +142,41 @@ function ResultPage() {
               </span>
               <span>•</span>
               <StatusBadge status={sub.status} />
+              {multi && bestAttempt?.id === sub.id && (
+                <>
+                  <span>•</span>
+                  <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 font-semibold text-emerald-600">
+                    <Crown className="h-3 w-3" /> Lượt điểm cao nhất
+                  </span>
+                </>
+              )}
+              {deltaPct != null && (
+                <>
+                  <span>•</span>
+                  <span
+                    className={`inline-flex items-center gap-1 font-semibold ${
+                      deltaPct > 0
+                        ? "text-emerald-600"
+                        : deltaPct < 0
+                          ? "text-rose-600"
+                          : "text-muted-foreground"
+                    }`}
+                  >
+                    {deltaPct > 0 ? (
+                      <TrendingUp className="h-3.5 w-3.5" />
+                    ) : deltaPct < 0 ? (
+                      <TrendingDown className="h-3.5 w-3.5" />
+                    ) : (
+                      <Minus className="h-3.5 w-3.5" />
+                    )}
+                    {deltaPct > 0 ? "+" : ""}
+                    {deltaPct}% so với lượt {prev?.attemptNo ?? ""}
+                  </span>
+                </>
+              )}
             </div>
           </div>
+
 
           {/* Score panel */}
           <div className="mt-6 grid gap-4 lg:grid-cols-[1.1fr_2fr]">
