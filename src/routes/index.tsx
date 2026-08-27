@@ -338,7 +338,7 @@ function DashboardPage() {
 
 /* ================= Lộ trình dạng stepper ================= */
 
-function LevelPath({ levelsList }: { levelsList: typeof levels }) {
+function LevelPath({ levelsList, currentId }: { levelsList: typeof levels; currentId: string }) {
   return (
     <div className="mt-8 overflow-x-auto pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <div className="relative flex min-w-[720px] items-start justify-between px-2">
@@ -458,13 +458,15 @@ function LevelPath({ levelsList }: { levelsList: typeof levels }) {
       </div>
 
       {/* Khoá học của cấp đang học — gọn, điểm màu */}
-      <CurrentLevelCourses levelsList={levelsList} />
+      <CurrentLevelCourses levelsList={levelsList} currentId={currentId} />
     </div>
   );
 }
 
-function CurrentLevelCourses({ levelsList }: { levelsList: typeof levels }) {
-  const current = levelsList.find((l) => l.status === "in-progress");
+function CurrentLevelCourses({ levelsList, currentId }: { levelsList: typeof levels; currentId: string }) {
+  const current =
+    levelsList.find((l) => l.id === currentId) ??
+    levelsList.find((l) => l.status === "in-progress");
   if (!current || current.courses.length === 0) return null;
   return (
     <div className="mt-6 border-t border-border/60 pt-5">
