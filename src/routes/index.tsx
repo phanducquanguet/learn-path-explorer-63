@@ -184,10 +184,7 @@ function DashboardPage() {
         <section className="mt-8 rounded-[2rem] bg-surface p-6 ring-1 ring-border shadow-soft sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-primary">
-                <Sparkles className="h-3.5 w-3.5" /> Lộ trình của bạn
-              </div>
-              <h2 className="mt-1 font-display text-2xl font-bold tracking-tight text-foreground">
+              <h2 className="font-display text-2xl font-bold tracking-tight text-foreground">
                 Hành trình từ A1 đến C2 🚀
               </h2>
             </div>
