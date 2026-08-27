@@ -144,7 +144,7 @@ function DashboardPage() {
               <div className="relative">
                 <div className="flex items-center justify-between">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-primary">
-                    <Rocket className="h-3.5 w-3.5" /> Tiếp tục học
+                    <Rocket className="h-3.5 w-3.5" /> {isNewcomer ? "Bắt đầu học" : "Tiếp tục học"}
                   </span>
                   <GraduationCap className="h-5 w-5 text-muted-foreground/50" />
                 </div>
