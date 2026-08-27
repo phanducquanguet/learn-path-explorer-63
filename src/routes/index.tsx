@@ -196,7 +196,7 @@ function DashboardPage() {
             </span>
           </div>
 
-          <LevelPath levelsList={activeLevels} />
+          <LevelPath levelsList={activeLevels} currentId={currentLevel.id} />
         </section>
 
         {/* ===== THÀNH TÍCH: pastel tiles nhiều màu ===== */}
