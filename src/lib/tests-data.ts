@@ -112,6 +112,10 @@ export type TestSubmission = {
   manualScore?: number;
   finalScore?: number;
   status: "in-progress" | "auto-graded" | "needs-grading" | "graded";
+  /** Lượt làm thứ mấy của học viên trên cùng một đề (mặc định 1). */
+  attemptNo?: number;
+  /** Số lượt tối đa được phép cho đề này (null/undefined = không giới hạn). */
+  attemptsAllowed?: number | null;
   proctorEvents?: ProctorEvent[];
   answers: {
 
