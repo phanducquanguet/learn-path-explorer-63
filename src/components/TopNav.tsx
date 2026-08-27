@@ -290,7 +290,14 @@ function roleMeta(role: Role) {
 export function TopNav() {
   const { role, setRole } = useRole();
   const roleStr: string = role;
-  const tabs = role === "admin" ? adminTabs : role === "teacher" ? teacherTabs : studentTabs;
+  const tabs =
+    role === "admin"
+      ? adminTabs
+      : role === "orgadmin"
+        ? orgAdminTabs
+        : role === "teacher"
+          ? teacherTabs
+          : studentTabs;
   const meta = roleMeta(role);
   const hasLive = useHasLiveNow();
   const [open, setOpen] = useState(false);
