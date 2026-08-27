@@ -25,6 +25,7 @@ import { Route as TeacherUploadRouteImport } from './routes/teacher.upload'
 import { Route as TeacherReportsRouteImport } from './routes/teacher.reports'
 import { Route as TeacherQuestionBankRouteImport } from './routes/teacher.question-bank'
 import { Route as TeacherQaRouteImport } from './routes/teacher.qa'
+import { Route as PracticeTestsTestIdRouteImport } from './routes/practice-tests.$testId'
 import { Route as OrgUsersRouteImport } from './routes/org.users'
 import { Route as OrgLogsRouteImport } from './routes/org.logs'
 import { Route as OrgDashboardRouteImport } from './routes/org.dashboard'
@@ -151,6 +152,11 @@ const TeacherQaRoute = TeacherQaRouteImport.update({
   id: '/teacher/qa',
   path: '/teacher/qa',
   getParentRoute: () => rootRouteImport,
+} as any)
+const PracticeTestsTestIdRoute = PracticeTestsTestIdRouteImport.update({
+  id: '/$testId',
+  path: '/$testId',
+  getParentRoute: () => PracticeTestsRoute,
 } as any)
 const OrgUsersRoute = OrgUsersRouteImport.update({
   id: '/org/users',
@@ -408,6 +414,7 @@ export interface FileRoutesByFullPath {
   '/org/dashboard': typeof OrgDashboardRoute
   '/org/logs': typeof OrgLogsRoute
   '/org/users': typeof OrgUsersRoute
+  '/practice-tests/$testId': typeof PracticeTestsTestIdRoute
   '/teacher/qa': typeof TeacherQaRoute
   '/teacher/question-bank': typeof TeacherQuestionBankRoute
   '/teacher/reports': typeof TeacherReportsRoute
@@ -470,6 +477,7 @@ export interface FileRoutesByTo {
   '/org/dashboard': typeof OrgDashboardRoute
   '/org/logs': typeof OrgLogsRoute
   '/org/users': typeof OrgUsersRoute
+  '/practice-tests/$testId': typeof PracticeTestsTestIdRoute
   '/teacher/qa': typeof TeacherQaRoute
   '/teacher/question-bank': typeof TeacherQuestionBankRoute
   '/teacher/reports': typeof TeacherReportsRoute
@@ -535,6 +543,7 @@ export interface FileRoutesById {
   '/org/dashboard': typeof OrgDashboardRoute
   '/org/logs': typeof OrgLogsRoute
   '/org/users': typeof OrgUsersRoute
+  '/practice-tests/$testId': typeof PracticeTestsTestIdRoute
   '/teacher/qa': typeof TeacherQaRoute
   '/teacher/question-bank': typeof TeacherQuestionBankRoute
   '/teacher/reports': typeof TeacherReportsRoute
@@ -601,6 +610,7 @@ export interface FileRouteTypes {
     | '/org/dashboard'
     | '/org/logs'
     | '/org/users'
+    | '/practice-tests/$testId'
     | '/teacher/qa'
     | '/teacher/question-bank'
     | '/teacher/reports'
@@ -663,6 +673,7 @@ export interface FileRouteTypes {
     | '/org/dashboard'
     | '/org/logs'
     | '/org/users'
+    | '/practice-tests/$testId'
     | '/teacher/qa'
     | '/teacher/question-bank'
     | '/teacher/reports'
@@ -727,6 +738,7 @@ export interface FileRouteTypes {
     | '/org/dashboard'
     | '/org/logs'
     | '/org/users'
+    | '/practice-tests/$testId'
     | '/teacher/qa'
     | '/teacher/question-bank'
     | '/teacher/reports'
@@ -948,6 +960,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/teacher/qa'
       preLoaderRoute: typeof TeacherQaRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/practice-tests/$testId': {
+      id: '/practice-tests/$testId'
+      path: '/$testId'
+      fullPath: '/practice-tests/$testId'
+      preLoaderRoute: typeof PracticeTestsTestIdRouteImport
+      parentRoute: typeof PracticeTestsRoute
     }
     '/org/users': {
       id: '/org/users'
@@ -1287,10 +1306,12 @@ const ExamsRouteChildren: ExamsRouteChildren = {
 const ExamsRouteWithChildren = ExamsRoute._addFileChildren(ExamsRouteChildren)
 
 interface PracticeTestsRouteChildren {
+  PracticeTestsTestIdRoute: typeof PracticeTestsTestIdRoute
   PracticeTestsIndexRoute: typeof PracticeTestsIndexRoute
 }
 
 const PracticeTestsRouteChildren: PracticeTestsRouteChildren = {
+  PracticeTestsTestIdRoute: PracticeTestsTestIdRoute,
   PracticeTestsIndexRoute: PracticeTestsIndexRoute,
 }
 
