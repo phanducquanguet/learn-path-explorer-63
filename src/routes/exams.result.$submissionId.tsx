@@ -208,14 +208,31 @@ function ResultPage() {
                         </span>
                       </div>
                       <Progress value={noData ? 0 : sp} className="mt-2 h-1.5" />
-                      <div className="mt-1 flex items-center justify-between text-[11px] text-muted-foreground">
+                      <div className="mt-1 flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
                         <span>{noData ? "Không có câu hỏi" : `${sp}%`}</span>
-                        {s.hasPending && (
-                          <span className="font-semibold text-amber-600">
-                            Đang chờ chấm
-                          </span>
-                        )}
+                        <span className="flex items-center gap-2">
+                          {s.delta != null && !noData && (
+                            <span
+                              className={`font-semibold ${
+                                s.delta > 0
+                                  ? "text-emerald-600"
+                                  : s.delta < 0
+                                    ? "text-rose-600"
+                                    : "text-muted-foreground"
+                              }`}
+                            >
+                              {s.delta > 0 ? "+" : ""}
+                              {s.delta}% vs lượt trước
+                            </span>
+                          )}
+                          {s.hasPending && (
+                            <span className="font-semibold text-amber-600">
+                              Đang chờ chấm
+                            </span>
+                          )}
+                        </span>
                       </div>
+
                     </div>
                   );
                 })}
