@@ -8,23 +8,156 @@ import {
   ChevronRight,
   ClipboardCheck,
   Clock,
+  Crown,
   FileText,
   GraduationCap,
+  History,
   Mic,
+  Minus,
   PenLine,
   ShieldAlert,
   Sparkles,
+  TrendingDown,
+  TrendingUp,
   XCircle,
 } from "lucide-react";
 import { TopNav } from "@/components/TopNav";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import {
+  attemptsOfSubmission,
+  submissionScore,
   testSubmissions,
   tests,
   type ProctorEvent,
   type TestSubmission,
 } from "@/lib/tests-data";
+
+/** Thanh chọn lượt làm — chỉ hiện khi học viên làm đề nhiều hơn 1 lượt. */
+function AttemptSwitcher({
+  attempts,
+  currentId,
+  bestId,
+}: {
+  attempts: TestSubmission[];
+  currentId: string;
+  bestId?: string;
+}) {
+  const scores = attempts.map((a) => submissionScore(a).pct);
+  const bestPct = Math.max(...scores);
+  const firstPct = scores[0] ?? 0;
+  const lastPct = scores[scores.length - 1] ?? 0;
+
+  return (
+    <section className="mt-4 rounded-3xl border bg-surface p-4 shadow-soft sm:p-5">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <div className="grid h-8 w-8 place-content-center rounded-lg bg-primary/10 text-primary">
+            <History className="h-4 w-4" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-foreground">
+              Bạn đã làm đề này {attempts.length} lượt
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Chọn một lượt để xem kết quả và bài làm của lượt đó.
+            </p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-3 text-xs">
+          <span className="rounded-full bg-emerald-500/10 px-2.5 py-1 font-semibold text-emerald-600">
+            Cao nhất {bestPct}%
+          </span>
+          <span
+            className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 font-semibold ${
+              lastPct - firstPct >= 0
+                ? "bg-primary/10 text-primary"
+                : "bg-rose-500/10 text-rose-600"
+            }`}
+          >
+            {lastPct - firstPct >= 0 ? (
+              <TrendingUp className="h-3.5 w-3.5" />
+            ) : (
+              <TrendingDown className="h-3.5 w-3.5" />
+            )}
+            {lastPct - firstPct > 0 ? "+" : ""}
+            {lastPct - firstPct}% từ lượt 1 → {attempts.length}
+          </span>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-2 sm:grid-cols-3">
+        {attempts.map((a, i) => {
+          const { earned, total, pct } = submissionScore(a);
+          const active = a.id === currentId;
+          const prevPct = i > 0 ? submissionScore(attempts[i - 1]!).pct : null;
+          const delta = prevPct == null ? null : pct - prevPct;
+          return (
+            <Link
+              key={a.id}
+              to="/exams/result/$submissionId"
+              params={{ submissionId: a.id }}
+              className={`rounded-2xl border p-3 transition ${
+                active
+                  ? "border-primary bg-primary/5 ring-1 ring-primary/40"
+                  : "bg-background hover:border-primary/40 hover:bg-muted/40"
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-semibold text-foreground">
+                  Lượt {a.attemptNo ?? i + 1}
+                </span>
+                <span className="flex items-center gap-1">
+                  {a.id === bestId && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600">
+                      <Crown className="h-3 w-3" /> Cao nhất
+                    </span>
+                  )}
+                  {i === attempts.length - 1 && (
+                    <span className="rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                      Gần nhất
+                    </span>
+                  )}
+                </span>
+              </div>
+              <div className="mt-1 font-mono text-sm font-semibold text-foreground">
+                {earned.toFixed(1)} / {total}
+                <span className="ml-1 text-xs font-normal text-muted-foreground">
+                  ({pct}%)
+                </span>
+              </div>
+              <Progress value={pct} className="mt-2 h-1.5" />
+              <div className="mt-1.5 flex items-center justify-between text-[11px] text-muted-foreground">
+                <span>
+                  {a.submittedAt
+                    ? new Date(a.submittedAt).toLocaleDateString("vi-VN", {
+                        timeZone: "Asia/Ho_Chi_Minh",
+                      })
+                    : "—"}
+                </span>
+                {delta != null && (
+                  <span
+                    className={`font-semibold ${
+                      delta > 0
+                        ? "text-emerald-600"
+                        : delta < 0
+                          ? "text-rose-600"
+                          : "text-muted-foreground"
+                    }`}
+                  >
+                    {delta > 0 ? "+" : ""}
+                    {delta}%
+                  </span>
+                )}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
 
 export const Route = createFileRoute("/exams/result/$submissionId")({
   head: () => ({
