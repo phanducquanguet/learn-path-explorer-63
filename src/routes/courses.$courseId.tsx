@@ -594,12 +594,14 @@ function CoursePage() {
               )}
               {tab === "competence" && <CompetenceView />}
               {tab === "notes" && <CourseNotesView course={course} hue={level.hue} />}
-              {tab === "qa" && <CourseQAView course={course} role={role} />}
+              {tab === "qa" && (
+                <CourseQAView course={course} role={role === "orgadmin" ? "admin" : role} />
+              )}
               {tab === "reviews" && (
                 <CourseReviewsView
                   courseId={course.id}
                   teacherName="Cô Mai Lan"
-                  role={isStaff ? role : "student"}
+                  role={isStaff ? (role === "orgadmin" ? "admin" : role) : "student"}
                 />
               )}
             </>
