@@ -144,10 +144,10 @@ export const STATUS_LABEL: Record<OrgStudentStatus, string> = {
 };
 
 export const STATUS_COLOR: Record<OrgStudentStatus, string> = {
-  "on-track": "hsl(160 70% 42%)",
-  watch: "hsl(38 92% 50%)",
-  "at-risk": "hsl(0 72% 55%)",
-  "not-started": "hsl(220 9% 65%)",
+  "on-track": "#10b981",
+  watch: "#f59e0b",
+  "at-risk": "#ef4444",
+  "not-started": "#9ca3af",
 };
 
 /** Xu hướng tiến độ theo tuần (T1 → T6). */
