@@ -242,6 +242,17 @@ function HeaderGroup({ item }: { item: NavItem }) {
 
 
 function roleMeta(role: Role) {
+  if (role === "orgadmin")
+    return {
+      label: "Admin đơn vị",
+      initials: "DH",
+      gradient: "bg-gradient-to-br from-blue-500 to-cyan-600",
+      name: "Nguyễn Duy Hưng",
+      email: "hung.nd@unicom.edu.vn",
+      tag: "🏢 UNICOM Hà Nội",
+      phone: "+84 90 123 4567",
+      org: "UNICOM Hà Nội",
+    };
   if (role === "admin")
     return {
       label: "Quản trị viên",
