@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-export type Role = "student" | "teacher" | "admin";
+export type Role = "student" | "teacher" | "admin" | "orgadmin";
 
 type RoleCtx = {
   role: Role;
@@ -16,7 +16,7 @@ export function RoleProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const v = window.localStorage.getItem(KEY);
-    if (v === "teacher" || v === "student" || v === "admin") setRoleState(v);
+    if (v === "teacher" || v === "student" || v === "admin" || v === "orgadmin") setRoleState(v);
   }, []);
 
   const setRole = (r: Role) => {

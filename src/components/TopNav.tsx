@@ -28,6 +28,7 @@ import {
   Video,
   Megaphone,
   ClipboardList,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRole, type Role } from "@/contexts/RoleContext";
@@ -126,6 +127,19 @@ const adminTabs: NavItem[] = [
   },
   { to: "/admin/campaigns", label: "Chiến dịch", icon: Megaphone },
   { to: "/admin/stats", label: "Thống kê", icon: BarChart3 },
+];
+
+const orgAdminTabs: NavItem[] = [
+  { to: "/org/classes", label: "Quản lý đơn vị", icon: Building2 },
+  { to: "/org/users", label: "Quản lý user", icon: Users },
+  {
+    to: "/admin/tests/monitor",
+    label: "Thi cử",
+    icon: ScrollText,
+    children: [{ to: "/admin/tests/monitor", label: "Giám sát thi", icon: ClipboardCheck }],
+  },
+  { to: "/admin/stats", label: "Thống kê", icon: BarChart3 },
+  { to: "/org/logs", label: "Nhật ký hệ thống", icon: ScrollText },
 ];
 
 function useOutsideClose(onClose: () => void) {
@@ -228,6 +242,17 @@ function HeaderGroup({ item }: { item: NavItem }) {
 
 
 function roleMeta(role: Role) {
+  if (role === "orgadmin")
+    return {
+      label: "Admin đơn vị",
+      initials: "DH",
+      gradient: "bg-gradient-to-br from-blue-500 to-cyan-600",
+      name: "Nguyễn Duy Hưng",
+      email: "hung.nd@unicom.edu.vn",
+      tag: "🏢 UNICOM Hà Nội",
+      phone: "+84 90 123 4567",
+      org: "UNICOM Hà Nội",
+    };
   if (role === "admin")
     return {
       label: "Quản trị viên",
@@ -265,7 +290,14 @@ function roleMeta(role: Role) {
 export function TopNav() {
   const { role, setRole } = useRole();
   const roleStr: string = role;
-  const tabs = role === "admin" ? adminTabs : role === "teacher" ? teacherTabs : studentTabs;
+  const tabs =
+    role === "admin"
+      ? adminTabs
+      : role === "orgadmin"
+        ? orgAdminTabs
+        : role === "teacher"
+          ? teacherTabs
+          : studentTabs;
   const meta = roleMeta(role);
   const hasLive = useHasLiveNow();
   const [open, setOpen] = useState(false);
@@ -283,7 +315,7 @@ export function TopNav() {
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    if (role === "admin") {
+    if (role === "admin" || role === "orgadmin") {
       document.body.style.paddingLeft = "16rem";
     } else {
       document.body.style.paddingLeft = "";
@@ -293,9 +325,16 @@ export function TopNav() {
     };
   }, [role]);
 
-  const homeFor = (r: Role) => (r === "student" ? "/" : r === "admin" ? "/admin/exams" : "/teacher");
+  const homeFor = (r: Role) =>
+    r === "student"
+      ? "/"
+      : r === "admin"
+        ? "/admin/exams"
+        : r === "orgadmin"
+          ? "/org/classes"
+          : "/teacher";
 
-  if (roleStr === "admin") {
+  if (roleStr === "admin" || roleStr === "orgadmin") {
     return (
       <>
         <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-border/60 bg-background md:flex">
@@ -383,6 +422,20 @@ export function TopNav() {
                   className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-foreground hover:bg-muted"
                 >
                   <UserCog className="h-4 w-4" /> Giáo viên
+                </Link>
+                <Link
+                  to="/org/classes"
+                  onClick={() => { setRole("orgadmin"); setOpen(false); }}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-foreground hover:bg-muted"
+                >
+                  <Building2 className="h-4 w-4" /> Admin đơn vị {role === "orgadmin" && <Check className="ml-auto h-4 w-4 text-primary" />}
+                </Link>
+                <Link
+                  to="/admin/exams"
+                  onClick={() => { setRole("admin"); setOpen(false); }}
+                  className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-foreground hover:bg-muted"
+                >
+                  <Shield className="h-4 w-4" /> Quản trị viên {role === "admin" && <Check className="ml-auto h-4 w-4 text-primary" />}
                 </Link>
                 <div className="my-1.5 h-px bg-border" />
                 <Link
@@ -552,6 +605,18 @@ export function TopNav() {
                 <Shield className="h-4 w-4" />
                 <span className="flex-1 text-left">Quản trị viên</span>
                 {role === "admin" && <Check className="h-4 w-4 text-primary" />}
+              </Link>
+              <Link
+                to="/org/classes"
+                onClick={() => {
+                  setRole("orgadmin");
+                  setOpen(false);
+                }}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
+              >
+                <Building2 className="h-4 w-4" />
+                <span className="flex-1 text-left">Admin đơn vị</span>
+                {role === "orgadmin" && <Check className="h-4 w-4 text-primary" />}
               </Link>
 
               <div className="my-1.5 h-px bg-border" />
