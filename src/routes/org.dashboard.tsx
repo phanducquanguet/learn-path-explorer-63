@@ -347,9 +347,9 @@ function OrgDashboardPage() {
           <Card title="Tiến độ học tập theo Level" hint="Bấm vào cột để lọc theo Level">
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={levelData} margin={{ top: 8, right: 8, left: -18, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="level" tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" />
-                <YAxis unit="%" tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                <XAxis dataKey="level" tick={{ fontSize: 12 }} stroke="#6b7280" />
+                <YAxis unit="%" tick={{ fontSize: 12 }} stroke="#6b7280" />
                 <Tooltip
                   formatter={(v: number) => [`${v}%`, "Tiến độ TB"]}
                   contentStyle={tooltipStyle}
@@ -363,7 +363,7 @@ function OrgDashboardPage() {
                     <Cell
                       key={d.level}
                       cursor="pointer"
-                      fill={d.progress < 45 ? "hsl(0 72% 55%)" : d.progress < 60 ? "hsl(38 92% 50%)" : "var(--primary)"}
+                      fill={d.progress < 45 ? "#ef4444" : d.progress < 60 ? "#f59e0b" : "#2563eb"}
                     />
                   ))}
                 </Bar>
@@ -392,16 +392,16 @@ function OrgDashboardPage() {
           <Card title="Xu hướng học tập theo thời gian" hint="Tiến độ trung bình & pass lần đầu theo tuần">
             <ResponsiveContainer width="100%" height={260}>
               <LineChart data={weeklyTrend} margin={{ top: 8, right: 12, left: -18, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-                <XAxis dataKey="week" tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" />
-                <YAxis unit="%" tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" vertical={false} />
+                <XAxis dataKey="week" tick={{ fontSize: 12 }} stroke="#6b7280" />
+                <YAxis unit="%" tick={{ fontSize: 12 }} stroke="#6b7280" />
                 <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => `${v}%`} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
                 <Line
                   type="monotone"
                   dataKey="progress"
                   name="Tiến độ TB"
-                  stroke="var(--primary)"
+                  stroke="#2563eb"
                   strokeWidth={2.5}
                   dot={{ r: 3 }}
                 />
@@ -409,7 +409,7 @@ function OrgDashboardPage() {
                   type="monotone"
                   dataKey="firstPass"
                   name="Pass lần đầu"
-                  stroke="hsl(160 70% 42%)"
+                  stroke="#10b981"
                   strokeWidth={2}
                   strokeDasharray="5 4"
                   dot={{ r: 3 }}
@@ -429,13 +429,13 @@ function OrgDashboardPage() {
                 margin={{ top: 4, right: 16, left: 4, bottom: 0 }}
                 barGap={2}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
-                <XAxis type="number" unit="%" domain={[0, 100]} tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" />
-                <YAxis type="category" dataKey="id" width={58} tick={{ fontSize: 12 }} stroke="var(--muted-foreground)" />
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={false} />
+                <XAxis type="number" unit="%" domain={[0, 100]} tick={{ fontSize: 12 }} stroke="#6b7280" />
+                <YAxis type="category" dataKey="id" width={58} tick={{ fontSize: 12 }} stroke="#6b7280" />
                 <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => `${v}%`} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Bar dataKey="progress" name="Tiến độ" fill="var(--primary)" radius={[0, 6, 6, 0]} />
-                <Bar dataKey="firstPass" name="Pass lần đầu" fill="hsl(160 70% 42%)" radius={[0, 6, 6, 0]} />
+                <Bar dataKey="progress" name="Tiến độ" fill="#2563eb" radius={[0, 6, 6, 0]} />
+                <Bar dataKey="firstPass" name="Pass lần đầu" fill="#10b981" radius={[0, 6, 6, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </Card>
@@ -617,9 +617,9 @@ function agg(list: DashStudent[]) {
 
 const tooltipStyle = {
   borderRadius: 12,
-  border: "1px solid var(--border)",
-  background: "var(--popover)",
-  color: "var(--popover-foreground)",
+  border: "1px solid #e5e7eb",
+  background: "#ffffff",
+  color: "#111827",
   fontSize: 12,
 };
 
