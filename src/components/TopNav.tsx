@@ -130,6 +130,7 @@ const adminTabs: NavItem[] = [
 ];
 
 const orgAdminTabs: NavItem[] = [
+  { to: "/org/dashboard", label: "Tổng quan", icon: LayoutDashboard },
   { to: "/org/classes", label: "Quản lý đơn vị", icon: Building2 },
   { to: "/org/users", label: "Quản lý user", icon: Users },
   {
@@ -331,7 +332,7 @@ export function TopNav() {
       : r === "admin"
         ? "/admin/exams"
         : r === "orgadmin"
-          ? "/org/classes"
+          ? "/org/dashboard"
           : "/teacher";
 
   if (roleStr === "admin" || roleStr === "orgadmin") {
@@ -424,7 +425,7 @@ export function TopNav() {
                   <UserCog className="h-4 w-4" /> Giáo viên
                 </Link>
                 <Link
-                  to="/org/classes"
+                  to="/org/dashboard"
                   onClick={() => { setRole("orgadmin"); setOpen(false); }}
                   className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm text-foreground hover:bg-muted"
                 >
@@ -607,7 +608,7 @@ export function TopNav() {
                 {role === "admin" && <Check className="h-4 w-4 text-primary" />}
               </Link>
               <Link
-                to="/org/classes"
+                to="/org/dashboard"
                 onClick={() => {
                   setRole("orgadmin");
                   setOpen(false);

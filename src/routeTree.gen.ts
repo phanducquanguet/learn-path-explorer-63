@@ -25,6 +25,7 @@ import { Route as TeacherQuestionBankRouteImport } from './routes/teacher.questi
 import { Route as TeacherQaRouteImport } from './routes/teacher.qa'
 import { Route as OrgUsersRouteImport } from './routes/org.users'
 import { Route as OrgLogsRouteImport } from './routes/org.logs'
+import { Route as OrgDashboardRouteImport } from './routes/org.dashboard'
 import { Route as OrgClassesRouteImport } from './routes/org.classes'
 import { Route as LiveSessionIdRouteImport } from './routes/live.$sessionId'
 import { Route as LevelsLevelRouteImport } from './routes/levels.$level'
@@ -147,6 +148,11 @@ const OrgUsersRoute = OrgUsersRouteImport.update({
 const OrgLogsRoute = OrgLogsRouteImport.update({
   id: '/org/logs',
   path: '/org/logs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrgDashboardRoute = OrgDashboardRouteImport.update({
+  id: '/org/dashboard',
+  path: '/org/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OrgClassesRoute = OrgClassesRouteImport.update({
@@ -386,6 +392,7 @@ export interface FileRoutesByFullPath {
   '/levels/$level': typeof LevelsLevelRoute
   '/live/$sessionId': typeof LiveSessionIdRoute
   '/org/classes': typeof OrgClassesRoute
+  '/org/dashboard': typeof OrgDashboardRoute
   '/org/logs': typeof OrgLogsRoute
   '/org/users': typeof OrgUsersRoute
   '/teacher/qa': typeof TeacherQaRoute
@@ -446,6 +453,7 @@ export interface FileRoutesByTo {
   '/levels/$level': typeof LevelsLevelRoute
   '/live/$sessionId': typeof LiveSessionIdRoute
   '/org/classes': typeof OrgClassesRoute
+  '/org/dashboard': typeof OrgDashboardRoute
   '/org/logs': typeof OrgLogsRoute
   '/org/users': typeof OrgUsersRoute
   '/teacher/qa': typeof TeacherQaRoute
@@ -508,6 +516,7 @@ export interface FileRoutesById {
   '/levels/$level': typeof LevelsLevelRoute
   '/live/$sessionId': typeof LiveSessionIdRoute
   '/org/classes': typeof OrgClassesRoute
+  '/org/dashboard': typeof OrgDashboardRoute
   '/org/logs': typeof OrgLogsRoute
   '/org/users': typeof OrgUsersRoute
   '/teacher/qa': typeof TeacherQaRoute
@@ -571,6 +580,7 @@ export interface FileRouteTypes {
     | '/levels/$level'
     | '/live/$sessionId'
     | '/org/classes'
+    | '/org/dashboard'
     | '/org/logs'
     | '/org/users'
     | '/teacher/qa'
@@ -631,6 +641,7 @@ export interface FileRouteTypes {
     | '/levels/$level'
     | '/live/$sessionId'
     | '/org/classes'
+    | '/org/dashboard'
     | '/org/logs'
     | '/org/users'
     | '/teacher/qa'
@@ -692,6 +703,7 @@ export interface FileRouteTypes {
     | '/levels/$level'
     | '/live/$sessionId'
     | '/org/classes'
+    | '/org/dashboard'
     | '/org/logs'
     | '/org/users'
     | '/teacher/qa'
@@ -754,6 +766,7 @@ export interface RootRouteChildren {
   LevelsLevelRoute: typeof LevelsLevelRoute
   LiveSessionIdRoute: typeof LiveSessionIdRoute
   OrgClassesRoute: typeof OrgClassesRoute
+  OrgDashboardRoute: typeof OrgDashboardRoute
   OrgLogsRoute: typeof OrgLogsRoute
   OrgUsersRoute: typeof OrgUsersRoute
   TeacherQaRoute: typeof TeacherQaRoute
@@ -911,6 +924,13 @@ declare module '@tanstack/react-router' {
       path: '/org/logs'
       fullPath: '/org/logs'
       preLoaderRoute: typeof OrgLogsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/org/dashboard': {
+      id: '/org/dashboard'
+      path: '/org/dashboard'
+      fullPath: '/org/dashboard'
+      preLoaderRoute: typeof OrgDashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/org/classes': {
@@ -1254,6 +1274,7 @@ const rootRouteChildren: RootRouteChildren = {
   LevelsLevelRoute: LevelsLevelRoute,
   LiveSessionIdRoute: LiveSessionIdRoute,
   OrgClassesRoute: OrgClassesRoute,
+  OrgDashboardRoute: OrgDashboardRoute,
   OrgLogsRoute: OrgLogsRoute,
   OrgUsersRoute: OrgUsersRoute,
   TeacherQaRoute: TeacherQaRoute,
