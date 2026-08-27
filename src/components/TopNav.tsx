@@ -606,6 +606,18 @@ export function TopNav() {
                 <span className="flex-1 text-left">Quản trị viên</span>
                 {role === "admin" && <Check className="h-4 w-4 text-primary" />}
               </Link>
+              <Link
+                to="/org/classes"
+                onClick={() => {
+                  setRole("orgadmin");
+                  setOpen(false);
+                }}
+                className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium text-foreground hover:bg-muted"
+              >
+                <Building2 className="h-4 w-4" />
+                <span className="flex-1 text-left">Admin đơn vị</span>
+                {role === "orgadmin" && <Check className="h-4 w-4 text-primary" />}
+              </Link>
 
               <div className="my-1.5 h-px bg-border" />
               <Link
