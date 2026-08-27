@@ -210,7 +210,7 @@ function buildAttempt(
       // Phân bổ đúng/sai theo tỉ lệ pct một cách xác định.
       const ratio = (i + 1) / count;
       const full = ratio <= pct / 100;
-      const partial = !full && skill !== "mcq" && (skill === "writing" || skill === "speaking");
+      const partial = !full && (skill === "writing" || skill === "speaking");
       const awarded = full ? points : partial ? Math.round(points * 0.6 * 10) / 10 : 0;
       no += 1;
       answers.push({
