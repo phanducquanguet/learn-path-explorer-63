@@ -128,6 +128,19 @@ const adminTabs: NavItem[] = [
   { to: "/admin/stats", label: "Thống kê", icon: BarChart3 },
 ];
 
+const orgAdminTabs: NavItem[] = [
+  { to: "/org/classes", label: "Quản lý đơn vị", icon: Building2 },
+  { to: "/org/users", label: "Quản lý user", icon: Users },
+  {
+    to: "/admin/tests/monitor",
+    label: "Thi cử",
+    icon: ScrollText,
+    children: [{ to: "/admin/tests/monitor", label: "Giám sát thi", icon: ClipboardCheck }],
+  },
+  { to: "/admin/stats", label: "Thống kê", icon: BarChart3 },
+  { to: "/org/logs", label: "Nhật ký hệ thống", icon: ScrollText },
+];
+
 function useOutsideClose(onClose: () => void) {
   const ref = useRef<HTMLDivElement>(null);
   useEffect(() => {
