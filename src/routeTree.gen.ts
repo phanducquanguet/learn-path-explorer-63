@@ -37,6 +37,7 @@ import { Route as CampaignsSlugRouteImport } from './routes/campaigns.$slug'
 import { Route as AssignmentsAssignmentIdRouteImport } from './routes/assignments.$assignmentId'
 import { Route as AdminStatsRouteImport } from './routes/admin.stats'
 import { Route as AdminQuestionBankRouteImport } from './routes/admin.question-bank'
+import { Route as AdminLandingRouteImport } from './routes/admin.landing'
 import { Route as TeacherTestsIndexRouteImport } from './routes/teacher.tests.index'
 import { Route as TeacherLiveIndexRouteImport } from './routes/teacher.live.index'
 import { Route as TeacherGuideIndexRouteImport } from './routes/teacher.guide.index'
@@ -211,6 +212,11 @@ const AdminStatsRoute = AdminStatsRouteImport.update({
 const AdminQuestionBankRoute = AdminQuestionBankRouteImport.update({
   id: '/admin/question-bank',
   path: '/admin/question-bank',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminLandingRoute = AdminLandingRouteImport.update({
+  id: '/admin/landing',
+  path: '/admin/landing',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TeacherTestsIndexRoute = TeacherTestsIndexRouteImport.update({
@@ -403,6 +409,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/practice-tests': typeof PracticeTestsRouteWithChildren
+  '/admin/landing': typeof AdminLandingRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/stats': typeof AdminStatsRoute
   '/assignments/$assignmentId': typeof AssignmentsAssignmentIdRoute
@@ -466,6 +473,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
+  '/admin/landing': typeof AdminLandingRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/stats': typeof AdminStatsRoute
   '/assignments/$assignmentId': typeof AssignmentsAssignmentIdRoute
@@ -532,6 +540,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/practice': typeof PracticeRoute
   '/practice-tests': typeof PracticeTestsRouteWithChildren
+  '/admin/landing': typeof AdminLandingRoute
   '/admin/question-bank': typeof AdminQuestionBankRoute
   '/admin/stats': typeof AdminStatsRoute
   '/assignments/$assignmentId': typeof AssignmentsAssignmentIdRoute
@@ -599,6 +608,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/practice'
     | '/practice-tests'
+    | '/admin/landing'
     | '/admin/question-bank'
     | '/admin/stats'
     | '/assignments/$assignmentId'
@@ -662,6 +672,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/practice'
+    | '/admin/landing'
     | '/admin/question-bank'
     | '/admin/stats'
     | '/assignments/$assignmentId'
@@ -727,6 +738,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/practice'
     | '/practice-tests'
+    | '/admin/landing'
     | '/admin/question-bank'
     | '/admin/stats'
     | '/assignments/$assignmentId'
@@ -793,6 +805,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   PracticeRoute: typeof PracticeRoute
   PracticeTestsRoute: typeof PracticeTestsRouteWithChildren
+  AdminLandingRoute: typeof AdminLandingRoute
   AdminQuestionBankRoute: typeof AdminQuestionBankRoute
   AdminStatsRoute: typeof AdminStatsRoute
   AssignmentsAssignmentIdRoute: typeof AssignmentsAssignmentIdRoute
@@ -1043,6 +1056,13 @@ declare module '@tanstack/react-router' {
       path: '/admin/question-bank'
       fullPath: '/admin/question-bank'
       preLoaderRoute: typeof AdminQuestionBankRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin/landing': {
+      id: '/admin/landing'
+      path: '/admin/landing'
+      fullPath: '/admin/landing'
+      preLoaderRoute: typeof AdminLandingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/teacher/tests/': {
@@ -1337,6 +1357,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   PracticeRoute: PracticeRoute,
   PracticeTestsRoute: PracticeTestsRouteWithChildren,
+  AdminLandingRoute: AdminLandingRoute,
   AdminQuestionBankRoute: AdminQuestionBankRoute,
   AdminStatsRoute: AdminStatsRoute,
   AssignmentsAssignmentIdRoute: AssignmentsAssignmentIdRoute,

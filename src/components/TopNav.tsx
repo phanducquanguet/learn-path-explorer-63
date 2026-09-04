@@ -29,7 +29,9 @@ import {
   Megaphone,
   ClipboardList,
   Building2,
+  LayoutTemplate,
 } from "lucide-react";
+
 import { cn } from "@/lib/utils";
 import { useRole, type Role } from "@/contexts/RoleContext";
 import {
@@ -126,7 +128,9 @@ const adminTabs: NavItem[] = [
     ],
   },
   { to: "/admin/campaigns", label: "Chiến dịch", icon: Megaphone },
+  { to: "/admin/landing", label: "Landing page", icon: LayoutTemplate },
   { to: "/admin/stats", label: "Thống kê", icon: BarChart3 },
+
 ];
 
 const orgAdminTabs: NavItem[] = [
