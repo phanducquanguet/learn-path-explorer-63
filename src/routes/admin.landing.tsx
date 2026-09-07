@@ -264,25 +264,6 @@ function LandingBuilderPage() {
                           />
                         </div>
                       </Field>
-                      <div className="flex items-center justify-between rounded-lg border border-border bg-surface-2 px-3 py-2">
-                        <span className="text-xs font-medium text-muted-foreground">
-                          Hiển thị khu vực đăng nhập ở header
-                        </span>
-                        <Switch
-                          checked={cfg.brand.showLogin}
-                          onCheckedChange={(v) => update((d) => void (d.brand.showLogin = v))}
-                        />
-                      </div>
-                      {cfg.brand.showLogin && (
-                        <Field label="Nhãn nút đăng nhập">
-                          <Input
-                            value={cfg.brand.loginLabel}
-                            onChange={(e) =>
-                              update((d) => void (d.brand.loginLabel = e.target.value))
-                            }
-                          />
-                        </Field>
-                      )}
                     </>
                   )}
 
