@@ -164,13 +164,6 @@ function LandingBuilderPage() {
     toast.info("Đã đưa về mẫu mặc định (chưa lưu)");
   };
 
-  /** Lưu cấu hình của 1 đơn vị ngay trên danh sách. */
-  const onSaveOrg = (id: string) => {
-    const next = id === orgId ? cfg : (configs[id] ?? defaultConfig(id));
-    persist(next);
-    if (id === orgId) setDirty(false);
-    toast.success("Đã lưu landing page", { description: next.brand.orgName });
-  };
 
   const onPublishOrg = (id: string) => {
     const base = id === orgId ? cfg : (configs[id] ?? defaultConfig(id));
@@ -261,9 +254,6 @@ function LandingBuilderPage() {
                 <div className="flex flex-wrap items-center gap-2">
                   <Button size="sm" variant={isEditing ? "default" : "outline"} onClick={() => { setOrgId(o.id); setView("editor"); }}>
                     <Pencil className="mr-2 h-4 w-4" /> Sửa
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={(event) => { event.stopPropagation(); onSaveOrg(o.id); }}>
-                    <Save className="mr-2 h-4 w-4" /> Lưu
                   </Button>
                   <Button size="sm" variant="outline" onClick={(event) => { event.stopPropagation(); onPublishOrg(o.id); }}>
                     <Globe className="mr-2 h-4 w-4" /> Xuất bản
