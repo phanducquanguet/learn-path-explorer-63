@@ -64,18 +64,8 @@ export function defaultConfig(orgId: string): LandingConfig {
     banner: {
       enabled: true,
       slides: [
-        {
-          id: uid("sl"),
-          title: "Chứng nhận đạt kiểm định chất lượng giáo dục",
-          subtitle: "Theo tiêu chuẩn quốc gia (2018 - 2029)",
-          imageUrl: "",
-        },
-        {
-          id: uid("sl"),
-          title: "Cơ sở vật chất hiện đại",
-          subtitle: "Phòng lab tiếng Anh, thi trực tuyến trên máy",
-          imageUrl: "",
-        },
+        { id: uid("sl"), title: "", subtitle: "", imageUrl: "" },
+        { id: uid("sl"), title: "", subtitle: "", imageUrl: "" },
       ],
     },
     about: {
@@ -137,7 +127,7 @@ export function defaultConfig(orgId: string): LandingConfig {
   };
 }
 
-export const newSlide = (): BannerSlide => ({ id: uid("sl"), title: "Tiêu đề banner", subtitle: "Mô tả ngắn", imageUrl: "" });
+export const newSlide = (): BannerSlide => ({ id: uid("sl"), title: "", subtitle: "", imageUrl: "" });
 export const newReason = (): ReasonItem => ({ id: uid("rs"), title: "Lý do mới", description: "Mô tả ngắn" });
 export const newSkill = (): SkillRow => ({ id: uid("sk"), skill: "Kỹ năng", duration: "30 phút", format: "Trắc nghiệm", count: "—" });
 export const newBand = (): BandRow => ({ id: uid("bd"), score: "100–119", cefr: "A1", label: "Nhập môn" });

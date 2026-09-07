@@ -92,21 +92,19 @@ export function LandingPreview({
                 <div
                   key={s.id}
                   style={{
-                    position: "relative",
                     overflow: "hidden",
                     borderRadius: 12,
                     minHeight: 150,
-                    background: s.imageUrl ? `center/cover no-repeat url(${s.imageUrl})` : `linear-gradient(120deg, ${accent}, ${accent}22)`,
-                    color: "#fff",
-                    display: "flex",
-                    alignItems: "flex-end",
-                    padding: 16,
+                    background: s.imageUrl
+                      ? `center/cover no-repeat url(${s.imageUrl})`
+                      : `linear-gradient(120deg, ${accent}, ${accent}22)`,
+                    display: "grid",
+                    placeItems: "center",
+                    color: "rgba(255,255,255,.8)",
+                    fontSize: 11,
                   }}
                 >
-                  <div>
-                    <div style={{ fontSize: 20, fontWeight: 700, textTransform: "uppercase", lineHeight: 1.25 }}>{s.title}</div>
-                    <div style={{ opacity: 0.9, marginTop: 4 }}>{s.subtitle}</div>
-                  </div>
+                  {!s.imageUrl && "Banner slide"}
                 </div>
               ))}
               {cfg.banner.slides.length > 1 && (
@@ -118,14 +116,11 @@ export function LandingPreview({
                         flex: 1,
                         borderRadius: 10,
                         minHeight: 56,
-                        padding: 8,
-                        fontSize: 11,
-                        color: "#fff",
-                        background: s.imageUrl ? `center/cover no-repeat url(${s.imageUrl})` : `linear-gradient(120deg, ${accent}cc, ${accent}55)`,
+                        background: s.imageUrl
+                          ? `center/cover no-repeat url(${s.imageUrl})`
+                          : `linear-gradient(120deg, ${accent}cc, ${accent}55)`,
                       }}
-                    >
-                      {s.title}
-                    </div>
+                    />
                   ))}
                 </div>
               )}
