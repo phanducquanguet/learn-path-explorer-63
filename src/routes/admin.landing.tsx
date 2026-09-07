@@ -290,27 +290,57 @@ function LandingBuilderPage() {
                               <Trash2 className="h-4 w-4 text-destructive" />
                             </Button>
                           </div>
-                          <Input
-                            value={s.title}
-                            placeholder="Tiêu đề"
-                            onChange={(e) =>
-                              update((d) => void (d.banner.slides[i].title = e.target.value))
-                            }
-                          />
-                          <Input
-                            value={s.subtitle}
-                            placeholder="Mô tả ngắn"
-                            onChange={(e) =>
-                              update((d) => void (d.banner.slides[i].subtitle = e.target.value))
-                            }
-                          />
-                          <Input
-                            value={s.imageUrl}
-                            placeholder="URL hình ảnh"
-                            onChange={(e) =>
-                              update((d) => void (d.banner.slides[i].imageUrl = e.target.value))
-                            }
-                          />
+                          {s.imageUrl ? (
+                            <div className="relative overflow-hidden rounded-lg">
+                              <img
+                                src={s.imageUrl}
+                                alt={`Slide ${i + 1}`}
+                                className="h-24 w-full rounded-lg object-cover"
+                              />
+                              <label className="absolute inset-0 grid cursor-pointer place-items-center bg-black/40 text-xs font-medium text-white opacity-0 transition-opacity hover:opacity-100">
+                                Đổi ảnh
+                                <input
+                                  type="file"
+                                  accept="image/*"
+                                  className="hidden"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0];
+                                    if (!file) return;
+                                    const reader = new FileReader();
+                                    reader.onload = () =>
+                                      update(
+                                        (d) =>
+                                          void (d.banner.slides[i].imageUrl = String(
+                                            reader.result,
+                                          )),
+                                      );
+                                    reader.readAsDataURL(file);
+                                  }}
+                                />
+                              </label>
+                            </div>
+                          ) : (
+                            <label className="flex h-24 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground">
+                              <Plus className="h-4 w-4" />
+                              Upload ảnh slide
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  const reader = new FileReader();
+                                  reader.onload = () =>
+                                    update(
+                                      (d) =>
+                                        void (d.banner.slides[i].imageUrl = String(reader.result)),
+                                    );
+                                  reader.readAsDataURL(file);
+                                }}
+                              />
+                            </label>
+                          )}
                         </div>
                       ))}
                       <Button
@@ -320,6 +350,10 @@ function LandingBuilderPage() {
                       >
                         <Plus className="mr-2 h-4 w-4" /> Thêm slide
                       </Button>
+                      <p className="text-xs text-muted-foreground">
+                        Mỗi slide chỉ cần upload 1 ảnh banner (khuyến nghị tỷ lệ ngang, vd
+                        1200×400).
+                      </p>
                     </>
                   )}
 
