@@ -17,9 +17,11 @@ import {
   GraduationCap,
   Phone,
   ListChecks,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
+import { TopNav } from "@/components/TopNav";
 import { LandingPreview, type LandingSectionId } from "@/components/LandingPreview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +39,7 @@ import {
   newSlide,
   newSocial,
   newQuickLink,
+  removeConfig,
   saveConfig,
   type LandingConfig,
 } from "@/lib/landing-config";
@@ -101,11 +104,13 @@ function LandingBuilderPage() {
   const [focus, setFocus] = useState<LandingSectionId | null>("brand");
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [dirty, setDirty] = useState(false);
+  const [configs, setConfigs] = useState<Record<string, LandingConfig>>({});
 
   // Nạp cấu hình đã lưu (localStorage) sau khi hydrate.
   useEffect(() => {
-    const saved = loadConfigs()[orgId];
-    setCfg(saved ?? defaultConfig(orgId));
+    const all = loadConfigs();
+    setConfigs(all);
+    setCfg(all[orgId] ?? defaultConfig(orgId));
     setDirty(false);
   }, [orgId]);
 
@@ -124,8 +129,18 @@ function LandingBuilderPage() {
     [cfg],
   );
 
+  const customCount = useMemo(
+    () => orgs.filter((o) => configs[o.id]).length,
+    [configs],
+  );
+
+  const persist = (next: LandingConfig) => {
+    saveConfig(next);
+    setConfigs((prev) => ({ ...prev, [next.orgId]: next }));
+  };
+
   const onSave = () => {
-    saveConfig(cfg);
+    persist(cfg);
     setDirty(false);
     toast.success("Đã lưu thiết lập landing page", { description: cfg.brand.orgName });
   };
@@ -133,7 +148,7 @@ function LandingBuilderPage() {
   const onPublish = () => {
     const next = { ...cfg, published: true };
     setCfg(next);
-    saveConfig(next);
+    persist(next);
     setDirty(false);
     toast.success("Đã xuất bản landing page", { description: cfg.brand.orgName });
   };
@@ -144,57 +159,136 @@ function LandingBuilderPage() {
     toast.info("Đã đưa về mẫu mặc định (chưa lưu)");
   };
 
+  /** Lưu cấu hình của 1 đơn vị ngay trên danh sách. */
+  const onSaveOrg = (id: string) => {
+    const next = id === orgId ? cfg : (configs[id] ?? defaultConfig(id));
+    persist(next);
+    if (id === orgId) setDirty(false);
+    toast.success("Đã lưu landing page", { description: next.brand.orgName });
+  };
+
+  const onPublishOrg = (id: string) => {
+    const base = id === orgId ? cfg : (configs[id] ?? defaultConfig(id));
+    const next = { ...base, published: true };
+    persist(next);
+    if (id === orgId) {
+      setCfg(next);
+      setDirty(false);
+    }
+    toast.success("Đã xuất bản landing page", { description: next.brand.orgName });
+  };
+
+  /** Đưa đơn vị về dùng landing mặc định (xóa thiết lập riêng). */
+  const onUseDefault = (id: string) => {
+    removeConfig(id);
+    setConfigs((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    if (id === orgId) {
+      setCfg(defaultConfig(id));
+      setDirty(false);
+    }
+    toast.info("Đơn vị đang dùng landing page mặc định");
+  };
+
+
+
   return (
-    <div className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 sm:px-6">
+    <div className="min-h-screen bg-background">
+      <TopNav />
+      <div className="mx-auto max-w-[1600px] space-y-6 px-4 py-6 sm:px-6">
       <PageHeader
         eyebrow="Admin platform"
         eyebrowIcon={LayoutTemplate}
         title="Thiết lập Landing page đơn vị"
         description="Chọn đơn vị, cấu hình từng khối nội dung và xem trước ngay bên phải. Khi chỉnh sửa mục nào, preview sẽ tự cuộn và làm nổi bật đúng mục đó."
-        actions={
-          <>
-            <Select value={orgId} onValueChange={setOrgId}>
-              <SelectTrigger className="w-[220px]">
-                <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {orgs.map((o) => (
-                  <SelectItem key={o.id} value={o.id}>
-                    {o.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={onReset}>
-              <RotateCcw className="mr-2 h-4 w-4" /> Mẫu mặc định
-            </Button>
-            <Button variant="outline" onClick={onSave}>
-              <Save className="mr-2 h-4 w-4" /> Lưu nháp
-            </Button>
-            <Button onClick={onPublish}>
-              <Globe className="mr-2 h-4 w-4" /> Xuất bản
-            </Button>
-          </>
-        }
-        stats={[
-          { icon: Building2, label: "Đơn vị", value: cfg.brand.shortName, tone: "primary" },
-          { icon: ListChecks, label: "Khối đang bật", value: `${enabledCount}/5`, tone: "success" },
-          {
-            icon: GraduationCap,
-            label: "Khóa hiển thị",
-            value: cfg.courses.selectedIds.length,
-            tone: "muted",
-          },
-          {
-            icon: Eye,
-            label: "Trạng thái",
-            value: cfg.published ? "Đã xuất bản" : "Bản nháp",
-            hint: dirty ? "Có thay đổi chưa lưu" : "Đã đồng bộ",
-            tone: cfg.published ? "success" : "warning",
-          },
-        ]}
       />
+
+      {/* Danh sách đơn vị & trạng thái landing */}
+      <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
+        <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-4 py-3">
+          <Building2 className="h-4 w-4 text-primary" />
+          <span className="text-sm font-semibold">Đơn vị & landing page</span>
+          <Badge variant="secondary">{customCount} đơn vị thiết lập riêng</Badge>
+          <Badge variant="outline">{orgs.length - customCount} đơn vị dùng landing mặc định</Badge>
+        </div>
+        <div className="divide-y divide-border">
+          {orgs.map((o) => {
+            const saved = configs[o.id];
+            const isEditing = o.id === orgId;
+            const status = !saved
+              ? { label: "Dùng landing mặc định", variant: "outline" as const }
+              : saved.published
+                ? { label: "Đã xuất bản", variant: "default" as const }
+                : { label: "Bản nháp", variant: "secondary" as const };
+            return (
+              <div key={o.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+                <div className="min-w-[220px] flex-1">
+                  <div className="flex items-center gap-2 text-sm font-semibold">
+                    {o.name}
+                    {isEditing && <Badge variant="secondary">Đang chỉnh</Badge>}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {o.city} · /{o.shortName.toLowerCase().replace(/\s+/g, "-")}
+                  </p>
+                </div>
+                <Badge variant={status.variant}>{status.label}</Badge>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button size="sm" variant={isEditing ? "default" : "outline"} onClick={() => setOrgId(o.id)}>
+                    <Pencil className="mr-2 h-4 w-4" /> Sửa
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => onSaveOrg(o.id)}>
+                    <Save className="mr-2 h-4 w-4" /> Lưu
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => onPublishOrg(o.id)}>
+                    <Globe className="mr-2 h-4 w-4" /> Xuất bản
+                  </Button>
+                  <Button size="sm" variant="ghost" onClick={() => onUseDefault(o.id)}>
+                    <RotateCcw className="mr-2 h-4 w-4" /> Landing mặc định
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Thanh chức năng của đơn vị đang chỉnh */}
+      <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-surface p-3 shadow-soft">
+        <Select value={orgId} onValueChange={setOrgId}>
+          <SelectTrigger className="w-[220px]">
+            <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {orgs.map((o) => (
+              <SelectItem key={o.id} value={o.id}>
+                {o.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Badge variant="outline" className="gap-1">
+          <ListChecks className="h-3.5 w-3.5" /> {enabledCount}/5 khối đang bật
+        </Badge>
+        <Badge variant={dirty ? "secondary" : "outline"}>
+          {dirty ? "Có thay đổi chưa lưu" : "Đã đồng bộ"}
+        </Badge>
+        <div className="ml-auto flex flex-wrap items-center gap-2">
+          <Button variant="outline" onClick={onReset}>
+            <RotateCcw className="mr-2 h-4 w-4" /> Mẫu mặc định
+          </Button>
+          <Button variant="outline" onClick={onSave}>
+            <Save className="mr-2 h-4 w-4" /> Lưu nháp
+          </Button>
+          <Button onClick={onPublish}>
+            <Globe className="mr-2 h-4 w-4" /> Xuất bản
+          </Button>
+        </div>
+      </div>
+
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,440px)_minmax(0,1fr)]">
         {/* Bảng thiết lập */}
@@ -672,6 +766,8 @@ function LandingBuilderPage() {
           </div>
         </div>
       </div>
+      </div>
     </div>
   );
 }
+
