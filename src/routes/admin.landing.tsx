@@ -715,6 +715,8 @@ function LandingBuilderPage() {
           </div>
         </div>
       </div>
+      </div>
     </div>
   );
 }
+
