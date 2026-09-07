@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
+  ArrowLeft,
   Building2,
   ChevronDown,
   Eye,
@@ -33,7 +34,6 @@ import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { orgs } from "@/lib/orgs";
 import {
   allCourses,
@@ -108,7 +108,7 @@ function LandingBuilderPage() {
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [dirty, setDirty] = useState(false);
   const [configs, setConfigs] = useState<Record<string, LandingConfig>>({});
-  const [activeTab, setActiveTab] = useState("organizations");
+  const [view, setView] = useState<"organizations" | "editor">("organizations");
   const [orgListOpen, setOrgListOpen] = useState(true);
 
   // Nạp cấu hình đã lưu (localStorage) sau khi hydrate.
@@ -211,17 +211,7 @@ function LandingBuilderPage() {
         description="Chọn đơn vị, cấu hình từng khối nội dung và xem trước ngay bên phải. Khi chỉnh sửa mục nào, preview sẽ tự cuộn và làm nổi bật đúng mục đó."
       />
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="h-11 w-full justify-start rounded-xl border border-border bg-surface p-1">
-          <TabsTrigger value="organizations" className="h-9 gap-2 px-5">
-            <Building2 className="h-4 w-4" /> Đơn vị
-          </TabsTrigger>
-          <TabsTrigger value="landing" className="h-9 gap-2 px-5">
-            <LayoutTemplate className="h-4 w-4" /> Landing page
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="organizations" className="mt-0">
+      {view === "organizations" ? (
           <Collapsible open={orgListOpen} onOpenChange={setOrgListOpen} className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
             <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-4 py-3">
               <Building2 className="h-4 w-4 text-primary" />
@@ -244,7 +234,20 @@ function LandingBuilderPage() {
                 ? { label: "Đã xuất bản", variant: "default" as const }
                 : { label: "Bản nháp", variant: "secondary" as const };
             return (
-              <div key={o.id} className="flex flex-wrap items-center gap-3 px-4 py-3">
+              <div
+                key={o.id}
+                role="button"
+                tabIndex={0}
+                onClick={() => { setOrgId(o.id); setView("editor"); }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setOrgId(o.id);
+                    setView("editor");
+                  }
+                }}
+                className="flex cursor-pointer flex-wrap items-center gap-3 px-4 py-3 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
+              >
                 <div className="min-w-[220px] flex-1">
                   <div className="flex items-center gap-2 text-sm font-semibold">
                     {o.name}
@@ -256,16 +259,16 @@ function LandingBuilderPage() {
                 </div>
                 <Badge variant={status.variant}>{status.label}</Badge>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Button size="sm" variant={isEditing ? "default" : "outline"} onClick={() => { setOrgId(o.id); setActiveTab("landing"); }}>
+                  <Button size="sm" variant={isEditing ? "default" : "outline"} onClick={() => { setOrgId(o.id); setView("editor"); }}>
                     <Pencil className="mr-2 h-4 w-4" /> Sửa
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => onSaveOrg(o.id)}>
+                  <Button size="sm" variant="outline" onClick={(event) => { event.stopPropagation(); onSaveOrg(o.id); }}>
                     <Save className="mr-2 h-4 w-4" /> Lưu
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => onPublishOrg(o.id)}>
+                  <Button size="sm" variant="outline" onClick={(event) => { event.stopPropagation(); onPublishOrg(o.id); }}>
                     <Globe className="mr-2 h-4 w-4" /> Xuất bản
                   </Button>
-                  <Button size="sm" variant="ghost" onClick={() => onUseDefault(o.id)}>
+                  <Button size="sm" variant="ghost" onClick={(event) => { event.stopPropagation(); onUseDefault(o.id); }}>
                     <RotateCcw className="mr-2 h-4 w-4" /> Landing mặc định
                   </Button>
                 </div>
@@ -274,12 +277,14 @@ function LandingBuilderPage() {
           })}
             </CollapsibleContent>
           </Collapsible>
-        </TabsContent>
-
-        <TabsContent value="landing" className="mt-0 space-y-6">
+      ) : (
+        <div className="space-y-6">
 
       {/* Thanh chức năng của đơn vị đang chỉnh */}
       <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-surface p-3 shadow-soft">
+        <Button size="icon" variant="ghost" aria-label="Quay lại danh sách đơn vị" onClick={() => setView("organizations")}>
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
         <Select value={orgId} onValueChange={setOrgId}>
           <SelectTrigger className="w-[220px]">
             <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -782,8 +787,8 @@ function LandingBuilderPage() {
           </div>
         </div>
       </div>
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
       </div>
     </div>
   );
