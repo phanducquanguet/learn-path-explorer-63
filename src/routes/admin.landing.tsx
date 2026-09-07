@@ -181,7 +181,7 @@ function LandingBuilderPage() {
         }
         stats={[
           { icon: Building2, label: "Đơn vị", value: cfg.brand.shortName, tone: "primary" },
-          { icon: ListChecks, label: "Khối đang bật", value: `${enabledCount}/7`, tone: "success" },
+          { icon: ListChecks, label: "Khối đang bật", value: `${enabledCount}/5`, tone: "success" },
           {
             icon: GraduationCap,
             label: "Khóa hiển thị",
