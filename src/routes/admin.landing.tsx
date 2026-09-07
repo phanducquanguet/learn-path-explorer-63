@@ -435,12 +435,6 @@ function LandingBuilderPage() {
                           onChange={(e) => update((d) => void (d.courses.title = e.target.value))}
                         />
                       </Field>
-                      <Field label="Ghi chú dưới tên khóa (niên khóa...)">
-                        <Input
-                          value={cfg.courses.note}
-                          onChange={(e) => update((d) => void (d.courses.note = e.target.value))}
-                        />
-                      </Field>
                       <div className="space-y-1.5">
                         <Label className="text-xs font-semibold text-muted-foreground">
                           Khóa học hiển thị ({cfg.courses.selectedIds.length}/{allCourses.length})
