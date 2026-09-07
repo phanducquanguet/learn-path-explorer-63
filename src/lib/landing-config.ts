@@ -7,6 +7,7 @@ export type ReasonItem = { id: string; title: string; description: string };
 export type SkillRow = { id: string; skill: string; duration: string; format: string; count: string };
 export type BandRow = { id: string; score: string; cefr: string; label: string };
 export type SocialLink = { id: string; platform: string; url: string };
+export type QuickLink = { id: string; title: string; url: string };
 
 export type LandingConfig = {
   orgId: string;
@@ -32,13 +33,13 @@ export type LandingConfig = {
   courses: { enabled: boolean; title: string; selectedIds: string[] };
   contact: {
     enabled: boolean;
-    title: string;
     address: string;
     phone: string;
     email: string;
     website: string;
     taxCode: string;
     socials: SocialLink[];
+    quickLinks: { enabled: boolean; title: string; links: QuickLink[] };
   };
 };
 
@@ -111,7 +112,6 @@ export function defaultConfig(orgId: string): LandingConfig {
     },
     contact: {
       enabled: true,
-      title: "Thông tin liên hệ",
       address: "Số 18, Phố Viên – Phường Đông Ngạc – TP. Hà Nội",
       phone: "024 3838 9633",
       email: `tuyensinh@${org.shortName.toLowerCase().replace(/\s+/g, "")}.edu.vn`,
@@ -122,6 +122,14 @@ export function defaultConfig(orgId: string): LandingConfig {
         { id: uid("so"), platform: "TikTok", url: "https://tiktok.com/" },
         { id: uid("so"), platform: "YouTube", url: "https://youtube.com/" },
       ],
+      quickLinks: {
+        enabled: true,
+        title: "Liên kết nhanh",
+        links: [
+          { id: uid("ql"), title: "Về chúng tôi", url: "https://unicom.edu.vn/about" },
+          { id: uid("ql"), title: "Khóa học", url: "https://unicom.edu.vn/courses" },
+        ],
+      },
     },
   };
 }
@@ -131,6 +139,7 @@ export const newReason = (): ReasonItem => ({ id: uid("rs"), title: "Lý do mớ
 export const newSkill = (): SkillRow => ({ id: uid("sk"), skill: "Kỹ năng", duration: "30 phút", format: "Trắc nghiệm", count: "—" });
 export const newBand = (): BandRow => ({ id: uid("bd"), score: "100–119", cefr: "A1", label: "Nhập môn" });
 export const newSocial = (): SocialLink => ({ id: uid("so"), platform: "Instagram", url: "https://instagram.com/" });
+export const newQuickLink = (): QuickLink => ({ id: uid("ql"), title: "Liên kết mới", url: "https://" });
 
 const KEY = "unicom.landingConfigs.v1";
 
