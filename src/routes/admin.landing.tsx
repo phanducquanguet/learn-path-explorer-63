@@ -101,11 +101,13 @@ function LandingBuilderPage() {
   const [focus, setFocus] = useState<LandingSectionId | null>("brand");
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [dirty, setDirty] = useState(false);
+  const [configs, setConfigs] = useState<Record<string, LandingConfig>>({});
 
   // Nạp cấu hình đã lưu (localStorage) sau khi hydrate.
   useEffect(() => {
-    const saved = loadConfigs()[orgId];
-    setCfg(saved ?? defaultConfig(orgId));
+    const all = loadConfigs();
+    setConfigs(all);
+    setCfg(all[orgId] ?? defaultConfig(orgId));
     setDirty(false);
   }, [orgId]);
 
@@ -124,8 +126,18 @@ function LandingBuilderPage() {
     [cfg],
   );
 
+  const customCount = useMemo(
+    () => orgs.filter((o) => configs[o.id]).length,
+    [configs],
+  );
+
+  const persist = (next: LandingConfig) => {
+    saveConfig(next);
+    setConfigs((prev) => ({ ...prev, [next.orgId]: next }));
+  };
+
   const onSave = () => {
-    saveConfig(cfg);
+    persist(cfg);
     setDirty(false);
     toast.success("Đã lưu thiết lập landing page", { description: cfg.brand.orgName });
   };
@@ -133,7 +145,7 @@ function LandingBuilderPage() {
   const onPublish = () => {
     const next = { ...cfg, published: true };
     setCfg(next);
-    saveConfig(next);
+    persist(next);
     setDirty(false);
     toast.success("Đã xuất bản landing page", { description: cfg.brand.orgName });
   };
@@ -143,6 +155,42 @@ function LandingBuilderPage() {
     setDirty(true);
     toast.info("Đã đưa về mẫu mặc định (chưa lưu)");
   };
+
+  /** Lưu cấu hình của 1 đơn vị ngay trên danh sách. */
+  const onSaveOrg = (id: string) => {
+    const next = id === orgId ? cfg : (configs[id] ?? defaultConfig(id));
+    persist(next);
+    if (id === orgId) setDirty(false);
+    toast.success("Đã lưu landing page", { description: next.brand.orgName });
+  };
+
+  const onPublishOrg = (id: string) => {
+    const base = id === orgId ? cfg : (configs[id] ?? defaultConfig(id));
+    const next = { ...base, published: true };
+    persist(next);
+    if (id === orgId) {
+      setCfg(next);
+      setDirty(false);
+    }
+    toast.success("Đã xuất bản landing page", { description: next.brand.orgName });
+  };
+
+  /** Đưa đơn vị về dùng landing mặc định (xóa thiết lập riêng). */
+  const onUseDefault = (id: string) => {
+    removeConfig(id);
+    setConfigs((prev) => {
+      const next = { ...prev };
+      delete next[id];
+      return next;
+    });
+    if (id === orgId) {
+      setCfg(defaultConfig(id));
+      setDirty(false);
+    }
+    toast.info("Đơn vị đang dùng landing page mặc định");
+  };
+
+
 
   return (
     <div className="min-h-screen bg-background">
