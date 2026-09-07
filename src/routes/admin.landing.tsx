@@ -164,13 +164,6 @@ function LandingBuilderPage() {
     toast.info("Đã đưa về mẫu mặc định (chưa lưu)");
   };
 
-  /** Lưu cấu hình của 1 đơn vị ngay trên danh sách. */
-  const onSaveOrg = (id: string) => {
-    const next = id === orgId ? cfg : (configs[id] ?? defaultConfig(id));
-    persist(next);
-    if (id === orgId) setDirty(false);
-    toast.success("Đã lưu landing page", { description: next.brand.orgName });
-  };
 
   const onPublishOrg = (id: string) => {
     const base = id === orgId ? cfg : (configs[id] ?? defaultConfig(id));
