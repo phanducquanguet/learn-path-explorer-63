@@ -262,9 +262,6 @@ function LandingBuilderPage() {
                   <Button size="sm" variant={isEditing ? "default" : "outline"} onClick={() => { setOrgId(o.id); setView("editor"); }}>
                     <Pencil className="mr-2 h-4 w-4" /> Sửa
                   </Button>
-                  <Button size="sm" variant="outline" onClick={(event) => { event.stopPropagation(); onSaveOrg(o.id); }}>
-                    <Save className="mr-2 h-4 w-4" /> Lưu
-                  </Button>
                   <Button size="sm" variant="outline" onClick={(event) => { event.stopPropagation(); onPublishOrg(o.id); }}>
                     <Globe className="mr-2 h-4 w-4" /> Xuất bản
                   </Button>
