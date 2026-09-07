@@ -165,3 +165,10 @@ export function saveConfig(cfg: LandingConfig) {
   all[cfg.orgId] = cfg;
   window.localStorage.setItem(KEY, JSON.stringify(all));
 }
+
+export function removeConfig(orgId: string) {
+  if (typeof window === "undefined") return;
+  const all = loadConfigs();
+  delete all[orgId];
+  window.localStorage.setItem(KEY, JSON.stringify(all));
+}

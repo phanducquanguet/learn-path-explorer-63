@@ -17,9 +17,11 @@ import {
   GraduationCap,
   Phone,
   ListChecks,
+  Pencil,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/PageHeader";
+import { TopNav } from "@/components/TopNav";
 import { LandingPreview, type LandingSectionId } from "@/components/LandingPreview";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +39,7 @@ import {
   newSlide,
   newSocial,
   newQuickLink,
+  removeConfig,
   saveConfig,
   type LandingConfig,
 } from "@/lib/landing-config";
