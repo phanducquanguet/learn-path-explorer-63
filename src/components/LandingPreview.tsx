@@ -153,69 +153,6 @@ export function LandingPreview({
           </section>
         )}
 
-        {/* Lý do chọn Linguaskill */}
-        {cfg.reasons.enabled && (
-          <section ref={reg("reasons")} style={{ ...box("reasons"), background: "#f9fafb", padding: 16 }}>
-            <h2 style={{ textAlign: "center", fontSize: 16, fontWeight: 700, marginBottom: 12 }}>{cfg.reasons.title}</h2>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
-              {cfg.reasons.items.map((r, i) => (
-                <div key={r.id} style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10, padding: 10 }}>
-                  <div style={{ color: accent, fontWeight: 700, fontSize: 12 }}>{i + 1}. {r.title}</div>
-                  <p style={{ color: "#6b7280", marginTop: 4, fontSize: 11, lineHeight: 1.6 }}>{r.description}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Giới thiệu bài thi Linguaskill */}
-        {cfg.linguaskill.enabled && (
-          <section ref={reg("linguaskill")} style={{ ...box("linguaskill"), border: "1px solid #e5e7eb", padding: 16 }}>
-            <h2 style={{ fontSize: 17, fontWeight: 700, color: accent }}>{cfg.linguaskill.title}</h2>
-            <p style={{ color: "#4b5563", marginTop: 6, lineHeight: 1.7 }}>{cfg.linguaskill.intro}</p>
-            <div style={{ display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 12, marginTop: 12 }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-                <thead>
-                  <tr style={{ background: `${accent}14`, textAlign: "left" }}>
-                    <th style={{ padding: 6 }}>Phần thi</th>
-                    <th style={{ padding: 6 }}>Thời lượng</th>
-                    <th style={{ padding: 6 }}>Hình thức</th>
-                    <th style={{ padding: 6 }}>Số câu</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cfg.linguaskill.skills.map((s) => (
-                    <tr key={s.id} style={{ borderTop: "1px solid #e5e7eb" }}>
-                      <td style={{ padding: 6, fontWeight: 600 }}>{s.skill}</td>
-                      <td style={{ padding: 6 }}>{s.duration}</td>
-                      <td style={{ padding: 6 }}>{s.format}</td>
-                      <td style={{ padding: 6 }}>{s.count}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11 }}>
-                <thead>
-                  <tr style={{ background: "#f3f4f6", textAlign: "left" }}>
-                    <th style={{ padding: 6 }}>Điểm</th>
-                    <th style={{ padding: 6 }}>CEFR</th>
-                    <th style={{ padding: 6 }}>Xếp loại</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {cfg.linguaskill.bands.map((b) => (
-                    <tr key={b.id} style={{ borderTop: "1px solid #e5e7eb" }}>
-                      <td style={{ padding: 6 }}>{b.score}</td>
-                      <td style={{ padding: 6, fontWeight: 700, color: accent }}>{b.cefr}</td>
-                      <td style={{ padding: 6 }}>{b.label}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        )}
-
         {/* Khóa học */}
         {cfg.courses.enabled && (
           <section ref={reg("courses")} style={box("courses")}>
