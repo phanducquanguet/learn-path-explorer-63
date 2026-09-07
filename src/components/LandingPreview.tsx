@@ -176,7 +176,6 @@ export function LandingPreview({
                   </div>
                   <div style={{ padding: 8 }}>
                     <div style={{ fontWeight: 600, fontSize: 11, color: accent }}>{c.title}</div>
-                    <div style={{ color: "#9ca3af", fontSize: 10, marginTop: 2 }}>{cfg.courses.note}</div>
                     <div style={{ marginTop: 6, display: "inline-flex", alignItems: "center", gap: 2, fontSize: 10, color: accent, fontWeight: 600 }}>
                       Đăng ký / Tìm hiểu <ChevronRight size={11} />
                     </div>
