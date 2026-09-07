@@ -69,10 +69,8 @@ const SECTION_META: { id: LandingSectionId; label: string; icon: typeof Info }[]
   { id: "brand", label: "1. Nhận diện thương hiệu", icon: Sparkles },
   { id: "banner", label: "2. Banner & hình ảnh động", icon: Images },
   { id: "about", label: "3. Giới thiệu nhà trường", icon: Info },
-  { id: "reasons", label: "4. Lý do chọn Linguaskill", icon: ListChecks },
-  { id: "linguaskill", label: "5. Giới thiệu bài thi Linguaskill", icon: LayoutTemplate },
-  { id: "courses", label: "6. Giới thiệu khóa học", icon: GraduationCap },
-  { id: "contact", label: "7. Liên hệ & mạng xã hội", icon: Phone },
+  { id: "courses", label: "4. Giới thiệu khóa học", icon: GraduationCap },
+  { id: "contact", label: "5. Liên hệ & mạng xã hội", icon: Phone },
 ];
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
