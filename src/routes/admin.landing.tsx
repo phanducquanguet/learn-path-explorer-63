@@ -36,6 +36,7 @@ import {
   loadConfigs,
   newSlide,
   newSocial,
+  newQuickLink,
   saveConfig,
   type LandingConfig,
 } from "@/lib/landing-config";
