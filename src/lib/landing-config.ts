@@ -107,7 +107,6 @@ export function defaultConfig(orgId: string): LandingConfig {
     courses: {
       enabled: true,
       title: "Khóa học đang triển khai",
-      note: "Empower 2026–2027",
       selectedIds: allCourses.slice(0, 6).map((c) => c.id),
     },
     contact: {
