@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
   Building2,
+  ChevronDown,
   Eye,
   Globe,
   Images,
@@ -30,7 +31,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { orgs } from "@/lib/orgs";
 import {
   allCourses,
@@ -105,6 +108,8 @@ function LandingBuilderPage() {
   const [device, setDevice] = useState<"desktop" | "mobile">("desktop");
   const [dirty, setDirty] = useState(false);
   const [configs, setConfigs] = useState<Record<string, LandingConfig>>({});
+  const [activeTab, setActiveTab] = useState("organizations");
+  const [orgListOpen, setOrgListOpen] = useState(true);
 
   // Nạp cấu hình đã lưu (localStorage) sau khi hydrate.
   useEffect(() => {
@@ -206,15 +211,30 @@ function LandingBuilderPage() {
         description="Chọn đơn vị, cấu hình từng khối nội dung và xem trước ngay bên phải. Khi chỉnh sửa mục nào, preview sẽ tự cuộn và làm nổi bật đúng mục đó."
       />
 
-      {/* Danh sách đơn vị & trạng thái landing */}
-      <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
-        <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-4 py-3">
-          <Building2 className="h-4 w-4 text-primary" />
-          <span className="text-sm font-semibold">Đơn vị & landing page</span>
-          <Badge variant="secondary">{customCount} đơn vị thiết lập riêng</Badge>
-          <Badge variant="outline">{orgs.length - customCount} đơn vị dùng landing mặc định</Badge>
-        </div>
-        <div className="divide-y divide-border">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="h-11 w-full justify-start rounded-xl border border-border bg-surface p-1">
+          <TabsTrigger value="organizations" className="h-9 gap-2 px-5">
+            <Building2 className="h-4 w-4" /> Đơn vị
+          </TabsTrigger>
+          <TabsTrigger value="landing" className="h-9 gap-2 px-5">
+            <LayoutTemplate className="h-4 w-4" /> Landing page
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="organizations" className="mt-0">
+          <Collapsible open={orgListOpen} onOpenChange={setOrgListOpen} className="overflow-hidden rounded-2xl border border-border bg-surface shadow-soft">
+            <div className="flex flex-wrap items-center gap-2 border-b border-border bg-surface-2 px-4 py-3">
+              <Building2 className="h-4 w-4 text-primary" />
+              <span className="text-sm font-semibold">Danh sách đơn vị</span>
+              <Badge variant="secondary">{customCount} thiết lập riêng</Badge>
+              <Badge variant="outline">{orgs.length - customCount} dùng mặc định</Badge>
+              <CollapsibleTrigger asChild>
+                <Button size="icon" variant="ghost" className="ml-auto" aria-label={orgListOpen ? "Thu gọn danh sách" : "Mở rộng danh sách"}>
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", orgListOpen && "rotate-180")} />
+                </Button>
+              </CollapsibleTrigger>
+            </div>
+            <CollapsibleContent className="divide-y divide-border">
           {orgs.map((o) => {
             const saved = configs[o.id];
             const isEditing = o.id === orgId;
@@ -236,7 +256,7 @@ function LandingBuilderPage() {
                 </div>
                 <Badge variant={status.variant}>{status.label}</Badge>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Button size="sm" variant={isEditing ? "default" : "outline"} onClick={() => setOrgId(o.id)}>
+                  <Button size="sm" variant={isEditing ? "default" : "outline"} onClick={() => { setOrgId(o.id); setActiveTab("landing"); }}>
                     <Pencil className="mr-2 h-4 w-4" /> Sửa
                   </Button>
                   <Button size="sm" variant="outline" onClick={() => onSaveOrg(o.id)}>
@@ -252,8 +272,11 @@ function LandingBuilderPage() {
               </div>
             );
           })}
-        </div>
-      </div>
+            </CollapsibleContent>
+          </Collapsible>
+        </TabsContent>
+
+        <TabsContent value="landing" className="mt-0 space-y-6">
 
       {/* Thanh chức năng của đơn vị đang chỉnh */}
       <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-border bg-surface p-3 shadow-soft">
@@ -328,13 +351,6 @@ function LandingBuilderPage() {
                         <Input
                           value={cfg.brand.shortName}
                           onChange={(e) => update((d) => void (d.brand.shortName = e.target.value))}
-                        />
-                      </Field>
-                      <Field label="Đường dẫn logo (URL)">
-                        <Input
-                          placeholder="https://..."
-                          value={cfg.brand.logoUrl}
-                          onChange={(e) => update((d) => void (d.brand.logoUrl = e.target.value))}
                         />
                       </Field>
                       <Field label="Màu thương hiệu">
@@ -766,6 +782,8 @@ function LandingBuilderPage() {
           </div>
         </div>
       </div>
+        </TabsContent>
+      </Tabs>
       </div>
     </div>
   );
