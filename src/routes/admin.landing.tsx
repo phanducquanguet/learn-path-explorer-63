@@ -34,9 +34,6 @@ import {
   allCourses,
   defaultConfig,
   loadConfigs,
-  newBand,
-  newReason,
-  newSkill,
   newSlide,
   newSocial,
   saveConfig,
@@ -69,10 +66,8 @@ const SECTION_META: { id: LandingSectionId; label: string; icon: typeof Info }[]
   { id: "brand", label: "1. Nhận diện thương hiệu", icon: Sparkles },
   { id: "banner", label: "2. Banner & hình ảnh động", icon: Images },
   { id: "about", label: "3. Giới thiệu nhà trường", icon: Info },
-  { id: "reasons", label: "4. Lý do chọn Linguaskill", icon: ListChecks },
-  { id: "linguaskill", label: "5. Giới thiệu bài thi Linguaskill", icon: LayoutTemplate },
-  { id: "courses", label: "6. Giới thiệu khóa học", icon: GraduationCap },
-  { id: "contact", label: "7. Liên hệ & mạng xã hội", icon: Phone },
+  { id: "courses", label: "4. Giới thiệu khóa học", icon: GraduationCap },
+  { id: "contact", label: "5. Liên hệ & mạng xã hội", icon: Phone },
 ];
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -124,9 +119,7 @@ function LandingBuilderPage() {
 
   const enabledCount = useMemo(
     () =>
-      [cfg.banner, cfg.about, cfg.reasons, cfg.linguaskill, cfg.courses, cfg.contact].filter(
-        (s) => s.enabled,
-      ).length + 1,
+      [cfg.banner, cfg.about, cfg.courses, cfg.contact].filter((s) => s.enabled).length + 1,
     [cfg],
   );
 
@@ -185,7 +178,7 @@ function LandingBuilderPage() {
         }
         stats={[
           { icon: Building2, label: "Đơn vị", value: cfg.brand.shortName, tone: "primary" },
-          { icon: ListChecks, label: "Khối đang bật", value: `${enabledCount}/7`, tone: "success" },
+          { icon: ListChecks, label: "Khối đang bật", value: `${enabledCount}/5`, tone: "success" },
           {
             icon: GraduationCap,
             label: "Khóa hiển thị",
@@ -427,190 +420,6 @@ function LandingBuilderPage() {
                           </label>
                         )}
                       </Field>
-                    </>
-                  )}
-
-                  {id === "reasons" && (
-                    <>
-                      <SectionToggle
-                        enabled={cfg.reasons.enabled}
-                        onChange={(v) => update((d) => void (d.reasons.enabled = v))}
-                      />
-                      <Field label="Tiêu đề mục">
-                        <Input
-                          value={cfg.reasons.title}
-                          onChange={(e) => update((d) => void (d.reasons.title = e.target.value))}
-                        />
-                      </Field>
-                      {cfg.reasons.items.map((r, i) => (
-                        <div key={r.id} className="space-y-2 rounded-lg border border-border p-3">
-                          <div className="flex items-center justify-between">
-                            <Badge variant="secondary">Lý do {i + 1}</Badge>
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              aria-label="Xóa lý do"
-                              onClick={() =>
-                                update((d) => {
-                                  d.reasons.items = d.reasons.items.filter((x) => x.id !== r.id);
-                                })
-                              }
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                          <Input
-                            value={r.title}
-                            onChange={(e) =>
-                              update((d) => void (d.reasons.items[i].title = e.target.value))
-                            }
-                          />
-                          <Textarea
-                            rows={2}
-                            value={r.description}
-                            onChange={(e) =>
-                              update((d) => void (d.reasons.items[i].description = e.target.value))
-                            }
-                          />
-                        </div>
-                      ))}
-                      <Button
-                        variant="outline"
-                        className="w-full"
-                        onClick={() => update((d) => void d.reasons.items.push(newReason()))}
-                      >
-                        <Plus className="mr-2 h-4 w-4" /> Thêm lý do
-                      </Button>
-                    </>
-                  )}
-
-                  {id === "linguaskill" && (
-                    <>
-                      <SectionToggle
-                        enabled={cfg.linguaskill.enabled}
-                        onChange={(v) => update((d) => void (d.linguaskill.enabled = v))}
-                      />
-                      <Field label="Tiêu đề">
-                        <Input
-                          value={cfg.linguaskill.title}
-                          onChange={(e) =>
-                            update((d) => void (d.linguaskill.title = e.target.value))
-                          }
-                        />
-                      </Field>
-                      <Field label="Mô tả bài thi">
-                        <Textarea
-                          rows={4}
-                          value={cfg.linguaskill.intro}
-                          onChange={(e) =>
-                            update((d) => void (d.linguaskill.intro = e.target.value))
-                          }
-                        />
-                      </Field>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-muted-foreground">
-                          Nội dung bài thi & thời gian
-                        </Label>
-                        {cfg.linguaskill.skills.map((s, i) => (
-                          <div key={s.id} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] gap-1.5">
-                            <Input
-                              value={s.skill}
-                              onChange={(e) =>
-                                update((d) => void (d.linguaskill.skills[i].skill = e.target.value))
-                              }
-                            />
-                            <Input
-                              value={s.duration}
-                              onChange={(e) =>
-                                update(
-                                  (d) => void (d.linguaskill.skills[i].duration = e.target.value),
-                                )
-                              }
-                            />
-                            <Input
-                              value={s.format}
-                              onChange={(e) =>
-                                update((d) => void (d.linguaskill.skills[i].format = e.target.value))
-                              }
-                            />
-                            <Input
-                              value={s.count}
-                              onChange={(e) =>
-                                update((d) => void (d.linguaskill.skills[i].count = e.target.value))
-                              }
-                            />
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              aria-label="Xóa phần thi"
-                              onClick={() =>
-                                update((d) => {
-                                  d.linguaskill.skills = d.linguaskill.skills.filter(
-                                    (x) => x.id !== s.id,
-                                  );
-                                })
-                              }
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        ))}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => update((d) => void d.linguaskill.skills.push(newSkill()))}
-                        >
-                          <Plus className="mr-2 h-4 w-4" /> Thêm phần thi
-                        </Button>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs font-semibold text-muted-foreground">
-                          Thang điểm quy đổi CEFR
-                        </Label>
-                        {cfg.linguaskill.bands.map((b, i) => (
-                          <div key={b.id} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-1.5">
-                            <Input
-                              value={b.score}
-                              onChange={(e) =>
-                                update((d) => void (d.linguaskill.bands[i].score = e.target.value))
-                              }
-                            />
-                            <Input
-                              value={b.cefr}
-                              onChange={(e) =>
-                                update((d) => void (d.linguaskill.bands[i].cefr = e.target.value))
-                              }
-                            />
-                            <Input
-                              value={b.label}
-                              onChange={(e) =>
-                                update((d) => void (d.linguaskill.bands[i].label = e.target.value))
-                              }
-                            />
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              aria-label="Xóa mức điểm"
-                              onClick={() =>
-                                update((d) => {
-                                  d.linguaskill.bands = d.linguaskill.bands.filter(
-                                    (x) => x.id !== b.id,
-                                  );
-                                })
-                              }
-                            >
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </div>
-                        ))}
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => update((d) => void d.linguaskill.bands.push(newBand()))}
-                        >
-                          <Plus className="mr-2 h-4 w-4" /> Thêm mức điểm
-                        </Button>
-                      </div>
                     </>
                   )}
 
