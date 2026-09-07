@@ -555,7 +555,7 @@ function LandingBuilderPage() {
                         </Button>
                       </div>
 
-                      <div className="space-y-2 rounded-xl border border-border p-3">
+                      <div className="space-y-2">
                         <div className="flex items-center justify-between gap-2">
                           <Label className="text-xs font-semibold text-muted-foreground">
                             Liên kết nhanh ở footer
