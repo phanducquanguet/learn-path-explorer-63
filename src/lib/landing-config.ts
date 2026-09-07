@@ -29,7 +29,7 @@ export type LandingConfig = {
     skills: SkillRow[];
     bands: BandRow[];
   };
-  courses: { enabled: boolean; title: string; note: string; selectedIds: string[] };
+  courses: { enabled: boolean; title: string; selectedIds: string[] };
   contact: {
     enabled: boolean;
     title: string;
