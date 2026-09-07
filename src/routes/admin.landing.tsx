@@ -475,12 +475,6 @@ function LandingBuilderPage() {
                         enabled={cfg.contact.enabled}
                         onChange={(v) => update((d) => void (d.contact.enabled = v))}
                       />
-                      <Field label="Tiêu đề khối mạng xã hội">
-                        <Input
-                          value={cfg.contact.title}
-                          onChange={(e) => update((d) => void (d.contact.title = e.target.value))}
-                        />
-                      </Field>
                       <Field label="Địa chỉ">
                         <Input
                           value={cfg.contact.address}

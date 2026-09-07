@@ -194,20 +194,24 @@ export function LandingPreview({
       {cfg.contact.enabled && (
         <footer
           ref={reg("contact")}
-          style={{ ...box("contact"), background: "#0f172a", color: "#e5e7eb", padding: 16, display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 16 }}
-        >
-          <div>
-            <div style={{ fontWeight: 700, textTransform: "uppercase", fontSize: 12 }}>{cfg.brand.orgName}</div>
-            <div style={{ fontSize: 11, marginTop: 8, display: "grid", gap: 4, color: "#cbd5e1" }}>
-              <span style={{ display: "flex", gap: 6 }}><MapPin size={12} /> {cfg.contact.address}</span>
-              <span style={{ display: "flex", gap: 6 }}><Phone size={12} /> {cfg.contact.phone}</span>
-              <span style={{ display: "flex", gap: 6 }}><Mail size={12} /> {cfg.contact.email}</span>
-              <span style={{ display: "flex", gap: 6 }}><Globe size={12} /> {cfg.contact.website}</span>
-              {cfg.contact.taxCode && <span style={{ opacity: 0.7 }}>MST: {cfg.contact.taxCode}</span>}
+          style={{ ...box("contact"), background: "#0f172a", color: "#e5e7eb", padding: 16, display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", gap: 16 }}
+...
+          {cfg.contact.quickLinks.enabled && (
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 12 }}>{cfg.contact.quickLinks.title}</div>
+              <div style={{ display: "grid", gap: 4, marginTop: 8 }}>
+                {cfg.contact.quickLinks.links.map((l) => (
+                  <span key={l.id} style={{ fontSize: 11, color: "#cbd5e1" }}>
+                    {l.title}
+                  </span>
+                ))}
+                {cfg.contact.quickLinks.links.length === 0 && (
+                  <span style={{ fontSize: 11, color: "#64748b" }}>Chưa có liên kết nào.</span>
+                )}
+              </div>
             </div>
-          </div>
+          )}
           <div>
-            <div style={{ fontWeight: 700, fontSize: 12 }}>{cfg.contact.title}</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
               {cfg.contact.socials.map((s) => (
                 <span key={s.id} style={{ background: accent, color: "#fff", borderRadius: 999, padding: "4px 10px", fontSize: 10 }}>
