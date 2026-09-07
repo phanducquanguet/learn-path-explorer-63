@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { GraduationCap, Globe, Mail, MapPin, Phone, ChevronRight } from "lucide-react";
+import { Globe, Mail, MapPin, Phone, ChevronRight } from "lucide-react";
 import { allCourses, type LandingConfig } from "@/lib/landing-config";
 
 export type LandingSectionId =
@@ -43,44 +43,6 @@ export function LandingPreview({
 
   return (
     <div style={{ background: "#ffffff", color: "#111827", fontSize: 13 }}>
-      {/* Header / nhận diện thương hiệu */}
-      <header
-        ref={reg("brand")}
-        style={{
-          ...box("brand"),
-          background: accent,
-          color: "#fff",
-          padding: "12px 16px",
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-        }}
-      >
-        {cfg.brand.logoUrl ? (
-          <img src={cfg.brand.logoUrl} alt={cfg.brand.orgName} style={{ height: 36, width: 36, borderRadius: 999, objectFit: "cover", background: "#fff" }} />
-        ) : (
-          <span style={{ height: 36, width: 36, borderRadius: 999, background: "rgba(255,255,255,.2)", display: "grid", placeItems: "center" }}>
-            <GraduationCap size={18} />
-          </span>
-        )}
-        <span style={{ minWidth: 0 }}>
-          <strong style={{ display: "block", fontSize: 15, lineHeight: 1.2 }}>{cfg.brand.orgName}</strong>
-          {cfg.brand.shortName && (
-            <span style={{ fontSize: 11, opacity: 0.85 }}>{cfg.brand.shortName}</span>
-          )}
-        </span>
-        {cfg.brand.showLogin && (
-          <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ background: "rgba(255,255,255,.15)", borderRadius: 8, padding: "6px 10px", fontSize: 11 }}>
-              email / mật khẩu
-            </span>
-            <span style={{ background: "#fff", color: accent, borderRadius: 8, padding: "6px 12px", fontSize: 12, fontWeight: 600 }}>
-              {cfg.brand.loginLabel || "Đăng nhập"}
-            </span>
-          </span>
-        )}
-      </header>
-
       <div style={{ padding: 16, display: "grid", gap: 20 }}>
         {/* Banner */}
         {cfg.banner.enabled && (
