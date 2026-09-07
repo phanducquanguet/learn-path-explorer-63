@@ -382,11 +382,50 @@ function LandingBuilderPage() {
                           onChange={(e) => update((d) => void (d.about.body = e.target.value))}
                         />
                       </Field>
-                      <Field label="URL hình ảnh minh họa">
-                        <Input
-                          value={cfg.about.imageUrl}
-                          onChange={(e) => update((d) => void (d.about.imageUrl = e.target.value))}
-                        />
+                      <Field label="Hình ảnh minh họa">
+                        {cfg.about.imageUrl ? (
+                          <div className="relative overflow-hidden rounded-lg">
+                            <img
+                              src={cfg.about.imageUrl}
+                              alt="Ảnh giới thiệu"
+                              className="h-32 w-full rounded-lg object-cover"
+                            />
+                            <label className="absolute inset-0 grid cursor-pointer place-items-center bg-black/40 text-xs font-medium text-white opacity-0 transition-opacity hover:opacity-100">
+                              Đổi ảnh
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  const reader = new FileReader();
+                                  reader.onload = () =>
+                                    update((d) => void (d.about.imageUrl = String(reader.result)));
+                                  reader.readAsDataURL(file);
+                                }}
+                              />
+                            </label>
+                          </div>
+                        ) : (
+                          <label className="flex h-32 w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-lg border border-dashed border-border text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:text-foreground">
+                            <Plus className="h-4 w-4" />
+                            Upload ảnh minh họa
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              onChange={(e) => {
+                                const file = e.target.files?.[0];
+                                if (!file) return;
+                                const reader = new FileReader();
+                                reader.onload = () =>
+                                  update((d) => void (d.about.imageUrl = String(reader.result)));
+                                reader.readAsDataURL(file);
+                              }}
+                            />
+                          </label>
+                        )}
                       </Field>
                     </>
                   )}
