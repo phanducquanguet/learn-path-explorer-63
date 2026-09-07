@@ -6,8 +6,6 @@ export type LandingSectionId =
   | "brand"
   | "banner"
   | "about"
-  | "reasons"
-  | "linguaskill"
   | "courses"
   | "contact";
 
