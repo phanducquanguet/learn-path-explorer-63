@@ -146,7 +146,14 @@ const KEY = "unicom.landingConfigs.v1";
 export function loadConfigs(): Record<string, LandingConfig> {
   if (typeof window === "undefined") return {};
   try {
-    return JSON.parse(window.localStorage.getItem(KEY) ?? "{}") as Record<string, LandingConfig>;
+    const all = JSON.parse(window.localStorage.getItem(KEY) ?? "{}") as Record<string, LandingConfig>;
+    for (const cfg of Object.values(all)) {
+      // Chuẩn hóa cấu hình cũ chưa có mục liên kết nhanh.
+      if (cfg.contact && !cfg.contact.quickLinks) {
+        cfg.contact.quickLinks = { enabled: false, title: "Liên kết nhanh", links: [] };
+      }
+    }
+    return all;
   } catch {
     return {};
   }
