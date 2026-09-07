@@ -36,6 +36,7 @@ import {
   loadConfigs,
   newSlide,
   newSocial,
+  newQuickLink,
   saveConfig,
   type LandingConfig,
 } from "@/lib/landing-config";
@@ -475,12 +476,6 @@ function LandingBuilderPage() {
                         enabled={cfg.contact.enabled}
                         onChange={(v) => update((d) => void (d.contact.enabled = v))}
                       />
-                      <Field label="Tiêu đề khối mạng xã hội">
-                        <Input
-                          value={cfg.contact.title}
-                          onChange={(e) => update((d) => void (d.contact.title = e.target.value))}
-                        />
-                      </Field>
                       <Field label="Địa chỉ">
                         <Input
                           value={cfg.contact.address}
@@ -558,6 +553,75 @@ function LandingBuilderPage() {
                         >
                           <Plus className="mr-2 h-4 w-4" /> Thêm liên kết
                         </Button>
+                      </div>
+
+                      <div className="space-y-2 rounded-xl border border-border p-3">
+                        <div className="flex items-center justify-between gap-2">
+                          <Label className="text-xs font-semibold text-muted-foreground">
+                            Liên kết nhanh ở footer
+                          </Label>
+                          <SectionToggle
+                            enabled={cfg.contact.quickLinks.enabled}
+                            onChange={(v) => update((d) => void (d.contact.quickLinks.enabled = v))}
+                          />
+                        </div>
+                        {cfg.contact.quickLinks.enabled && (
+                          <>
+                            <Field label="Tiêu đề mục liên kết nhanh">
+                              <Input
+                                value={cfg.contact.quickLinks.title}
+                                onChange={(e) =>
+                                  update((d) => void (d.contact.quickLinks.title = e.target.value))
+                                }
+                              />
+                            </Field>
+                            {cfg.contact.quickLinks.links.map((l, i) => (
+                              <div key={l.id} className="grid grid-cols-[140px_1fr_auto] gap-1.5">
+                                <Input
+                                  value={l.title}
+                                  placeholder="Tiêu đề"
+                                  onChange={(e) =>
+                                    update(
+                                      (d) => void (d.contact.quickLinks.links[i].title = e.target.value),
+                                    )
+                                  }
+                                />
+                                <Input
+                                  value={l.url}
+                                  placeholder="https://"
+                                  onChange={(e) =>
+                                    update(
+                                      (d) => void (d.contact.quickLinks.links[i].url = e.target.value),
+                                    )
+                                  }
+                                />
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  aria-label="Xóa liên kết nhanh"
+                                  onClick={() =>
+                                    update((d) => {
+                                      d.contact.quickLinks.links = d.contact.quickLinks.links.filter(
+                                        (x) => x.id !== l.id,
+                                      );
+                                    })
+                                  }
+                                >
+                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                </Button>
+                              </div>
+                            ))}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                update((d) => void d.contact.quickLinks.links.push(newQuickLink()))
+                              }
+                            >
+                              <Plus className="mr-2 h-4 w-4" /> Thêm liên kết nhanh
+                            </Button>
+                          </>
+                        )}
                       </div>
                     </>
                   )}

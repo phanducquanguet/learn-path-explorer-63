@@ -194,7 +194,7 @@ export function LandingPreview({
       {cfg.contact.enabled && (
         <footer
           ref={reg("contact")}
-          style={{ ...box("contact"), background: "#0f172a", color: "#e5e7eb", padding: 16, display: "grid", gridTemplateColumns: "1.4fr 1fr", gap: 16 }}
+          style={{ ...box("contact"), background: "#0f172a", color: "#e5e7eb", padding: 16, display: "grid", gridTemplateColumns: "1.4fr 1fr 1fr", gap: 16 }}
         >
           <div>
             <div style={{ fontWeight: 700, textTransform: "uppercase", fontSize: 12 }}>{cfg.brand.orgName}</div>
@@ -206,8 +206,22 @@ export function LandingPreview({
               {cfg.contact.taxCode && <span style={{ opacity: 0.7 }}>MST: {cfg.contact.taxCode}</span>}
             </div>
           </div>
+          {cfg.contact.quickLinks.enabled && (
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 12 }}>{cfg.contact.quickLinks.title}</div>
+              <div style={{ display: "grid", gap: 4, marginTop: 8 }}>
+                {cfg.contact.quickLinks.links.map((l) => (
+                  <span key={l.id} style={{ fontSize: 11, color: "#cbd5e1" }}>
+                    {l.title}
+                  </span>
+                ))}
+                {cfg.contact.quickLinks.links.length === 0 && (
+                  <span style={{ fontSize: 11, color: "#64748b" }}>Chưa có liên kết nào.</span>
+                )}
+              </div>
+            </div>
+          )}
           <div>
-            <div style={{ fontWeight: 700, fontSize: 12 }}>{cfg.contact.title}</div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
               {cfg.contact.socials.map((s) => (
                 <span key={s.id} style={{ background: accent, color: "#fff", borderRadius: 999, padding: "4px 10px", fontSize: 10 }}>
