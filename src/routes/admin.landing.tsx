@@ -122,9 +122,7 @@ function LandingBuilderPage() {
 
   const enabledCount = useMemo(
     () =>
-      [cfg.banner, cfg.about, cfg.reasons, cfg.linguaskill, cfg.courses, cfg.contact].filter(
-        (s) => s.enabled,
-      ).length + 1,
+      [cfg.banner, cfg.about, cfg.courses, cfg.contact].filter((s) => s.enabled).length + 1,
     [cfg],
   );
 
